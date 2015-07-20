@@ -1,0 +1,24 @@
+*.Rout
+.local
+*.aux
+*.log
+*.pdf
+*.fdb_latexmk
+*.synctex.gz
+*.nav
+*.out
+*.snm
+*.toc
+*.db
+*.db.yaml
+*.swp
+*\#*
+*.pid
+*.fls
+*.bak
+
+
+# biblatex stuff
+*.bbl
+*.blg
+
