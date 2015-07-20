@@ -1,0 +1,282 @@
+%  For slides only
+%\input{slidesonly}
+
+% % For handout
+\input{handout}
+
+%For handout + mynotes
+%\input{handout+mynotes}
+
+\input{beamer-preamble-bbh-all}
+\input{defs-all}
+
+\title{Unit 1: Documenting causation with experiments}
+% \autho moved to beamer-preamble-*-all.tex
+\date{July 2015}
+
+\begin{document}
+
+
+  \begin{frame}
+    \frametitle{Outline \& Readings}
+
+\tableofcontents[subsectionstyle=show/hide/hide]
+
+  \alert{Announcements:}\\
+  \begin{itemize}
+\item Please fill out an index card w/ your 1st \& last name,
+  preferred email,
+  laptop?.  Also, discipline, institution, interests. Leave a little space.  Turn in
+  at end \textit{if} you're likely to keep attending.
+\item Readings for Tues:
+   \begin{enumerate}
+     \item Kinder \& Palfrey (1993), particularly \S 1.2, 3
+    (pp.5--10). (Course \url{umich.instructure.com} site, or \url{http://tinyurl.com/pnqk48n})
+  \item Rosenbaum, \textit{Design of Observational Studies} (2009), \S
+    2.1. (Course site on \url{umich.instructure.com}.)
+   \end{enumerate}
+  \item Related courses: LaTeX, today at 5:30; R, starting tomorrow at 5:30.
+%  \item Fisher (1935), \S 1--10. later
+  \end{itemize}
+  \end{frame}
+
+\itnote{
+\item Re emails: (1) UM address, if you have it and you use it for UM
+  resources; (2) address you gave the s.p., provided that you use it;
+  (3) another address if you prefer to receive email there (clearly
+  mark!). 
+}
+
+\section{Overview}
+
+\begin{frame}{``Causal Inference''}
+
+ \textit{Causal inference} is about design and analysis of randomized and nonrandomized studies, aiming to create meaningful comparisons that justify inferences about causation with varying, but clearly specified, degrees of certainty.  
+\pause
+
+\end{frame}
+
+\begin{frame}[label=whatWeWillCoverFr]{Methods we'll study in the course}
+  \begin{itemize}
+  \item Randomization-based analysis for experiments
+  \item Instrumental variables
+  \item Natural experiments, quasi-experiments,
+    difference-in-differences
+  \item Propensity scores, propensity score matching
+  \item Regression discontinuity
+  \item Interference
+  \item Omitted variable sensitivity analysis
+  \item \ldots
+  \end{itemize}
+\end{frame}
+
+\Note{Don't linger, I come back to this slide after Causal Inference
+  in Experiments section}
+
+\begin{frame}{Three traditions in quantitative analysis}
+\framesubtitle{A brief, tendentious review}
+
+Modern causal inference in the 19th c., emerges over the 20th c, hits
+it stride during this century. Dominant strains of quantitative
+analysis in social science, by century:
+
+\begin{itemize}
+\item[19th] social physics
+\item[20th] sampling of populations
+\item[21st] causal inference (BH prediction)
+\end{itemize}
+
+  
+\end{frame}
+
+\section{Causal inference in simple experiments}
+
+\begin{frame}{Centrality of experiment to modern CI}
+  \begin{itemize}
+  \item Experiments are conceptually and practically central
+  \item Not just any experiments, particular types, featuring
+    \textit{control groups} and \textit{random assignment}
+  \item Central characteristics of an ideal situation
+  \item The ideal reveals its merits in a variety of disciplines over
+    the 20th c.  
+  \end{itemize}
+\end{frame}
+
+\subsection{Two influential examples}
+\begin{frame}{Example 1a: The Salk vaccine trial}
+
+
+\igrphx{SalkVtable-rctonly}
+
+\end{frame}
+\itnote{
+\item Vaccines contentious
+\item Geographic variation
+\item year to year variation
+\item randomized
+\item double blinded
+\item large, national sample
+\item Exercise: Abstract a relevant 2x2 table
+}
+
+\begin{frame}{The other Salk trial}
+
+\igrphx{SalkVtable-full}
+\end{frame}
+\itnote{
+\item Explain differences
+\item both versions are experiments in the everyday sense
+\item both control for age and physical locale
+\item large size, presence of these controls lends legitimacy to both
+\item Demonstration of advantage of random assigment per se
+\item We'll see how to get the ``right answer'', despite shortcomings.  The move is
+  primarily conceptual, not technical, having to do w/ IVs.
+}
+
+\begin{frame}{Example 2: Did ideological innocence end in 1964?}
+  \begin{enumerate}
+  \item Converse (1964): political ideology, workings of gov't
+    bewildering to ordinary Americans.
+  \item Nie, Verba and Petrocik (1979): Only before 1964!
+  \item Both analyses based on national election \textit{surveys}.
+  \item Sullivan, Piereson \& Marcus's (1978)  split ballot experiment
+    in Minneapolis-St. Paul
+  \end{enumerate}
+  
+\end{frame}
+
+\subsection{Conceptual framework}
+\begin{frame}{Goals of experimental design}
+
+Experiment design aims to create a situation in which causation is
+readily detected, in the following sense. First, if the putative causes
+really do have their intended effects, they'll manifest themselves in
+such a way that the inference of causation is natural to make. Second,
+when such inferences suggest themselves they also withstand scrutiny, in
+that logic reveals that either the inference of causation was correct or
+a freak occurrence, something objectively unlikely, has occurred.
+
+From this perspective, random assignment brough substantial benefits. But there were others\ldots
+
+\end{frame}
+
+\begin{frame}{Potential outcomes}
+  
+  \begin{itemize}[<+->]
+  \item Distributions of response under treatment and control: $\mu_{t},
+    \mu_{c}$; $\mu_{t}(x), \mu_{c}(x)$.
+  \item Counterfactual conditional.
+  \item $x$ or $\mathbf{x}$?\ldots
+  \item Unit-level potential outcomes (Rubin, 1970s): $y_{t}, y_{c}$.
+  \end{itemize}
+
+The Rosenbaum reading covers this material in detail, in context of an experiment.
+\end{frame}
+
+\begin{frame}<1-3>[label=quasivstrueFr]{Quasi-experiments as
+    experiments?}
+  \begin{itemize}[<+->]
+  \item Controlled experiments vs found ``experiments''
+  \item Found randomization as a hypothesis
+  \item Theoretical vs empirical scrutiny of hypothesis
+  \item Informal empirical scrutiny
+  \item Formal hypothesis testing (instructor agenda alert!)
+  \end{itemize}
+\end{frame}
+
+\section*{Preview}
+\againframe<\nottheirhandout>{whatWeWillCoverFr}
+
+\againframe<4\mynoteonly>{quasivstrueFr}
+
+\begin{frame}{Balance after random assignment}
+  \begin{center}
+    \igrphx[height=.8\textheight]{rb2010tab21}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Checking/displaying balance after a PS matching}
+  \begin{center}
+  \igrphx[height=.8\textheight]{tomlovepic-lb-flat}    
+  \end{center}
+\end{frame}
+
+
+\againframe<5\mynoteonly>{quasivstrueFr}
+
+\begin{frame}{Validating an RCT via balance checking}
+  \begin{center}
+    \igrphx[height=.8\textheight]{hb09jasa-fig3}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Course prerequisites}
+  \begin{enumerate}
+  \item mathematical proofs, enough to distinguish correct from incorrect 
+\item experience using a command-based computer program (as opposed to a menu-driven one)
+\item willingness to adopt a try-it-and-see-what-happens approach to software
+\item willingness to learn R  (if it's new to you, consider taking the course)
+\item willingness to learn markdown (you can do this on your own)
+\item willingness to learn to read LaTeX
+
+  \end{enumerate}
+\end{frame}
+
+\end{document}
+\section{Matching in nonrandomized studies}
+
+\begin{frame}[label=CIFr]{``Causal inference'' again}
+
+`Causal inference'' is about design and analysis of randomized and
+nonrandomized studies with goals:
+\begin{enumerate}
+\item Meaningful comparisons, ie comparisons that reveal causation (if present) simply and w/ minimal overhead;
+\item On scrutiny, EITHER indicated causation occurred OR \ldots
+\end{enumerate}
+
+
+(where a short, circumscribed list follows the ``OR'')
+
+\end{frame}
+
+\begin{frame}{Example 4: 3 ways to evaluate effectiveness of charter schools }
+
+\begin{enumerate}
+\item (The debate)
+\item Lottery
+\item ``Exact match''
+\item Propensity score matching
+\item Fortson et al (2012)'s conclusion. (See also Bifulco 2012.)
+\item Relating to our characterization of causal inference\ldots
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Example 4: Fortson et al (2012), matching vs lotteries}
+\framesubtitle{An experimental benchmark}
+
+\igrphx[height=.8\textheight]{fortsonetal-tabiv5a}
+
+\end{frame}
+
+
+\begin{frame}{Example 4: Fortson et al (2012), matching vs lotteries}
+\framesubtitle{Propensity score matches}
+
+\begin{tabular}{cc}
+\igrphx[height=.8\textheight,width=.2\linewidth]{fortsonetal-tabiv5b} & 
+\igrphx[height=.8\textheight]{fortsonetal-tabiv5c} \\
+\end{tabular}
+\end{frame}
+
+
+\begin{frame}{Example 5: Arceneaux et al 2010}
+\framesubtitle{Matching to address response bias in GOTV experiments}
+
+\igrphx[height=.8\textheight]{arceneauxetal2010table2}
+
+\end{frame}
+\section{recap}
+
+\againframe{CIFr}
+
+\end{document}
