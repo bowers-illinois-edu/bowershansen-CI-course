@@ -1,0 +1,93 @@
+\documentclass[10pt]{article}
+\usepackage{ulem,setspace}
+\usepackage[letterpaper,hmargin=1cm,vmargin=1cm]{geometry}
+\usepackage[compact,small,noindentafter]{titlesec} %small? tiny?
+\titlelabel{\thetitle.\quad}
+
+%%BEGIN create new title appearance
+\makeatletter                                                                                                                  
+\def\maketitle{%
+  %\null
+  %\thispagestyle{empty}%
+  \begin{center} %\leavevmode
+    \singlespacing
+    \let \footnote \thanks
+    \normalfont
+    { \Large\@title\par}%
+    { \@author\par}%
+    { \@date\par}%
+  \end{center}%
+  \@thanks
+  %\null
+  }
+\makeatother   
+%%END create new title appearance
+
+\title{Fisher teatasting worksheet}
+% \author{ICPSR Causal Inference '14\\
+% J. Bowers, B. Hansen, T. Leavitt}
+\date{ICPSR Causal Inference; Unit 1}
+\input{./defs-all}
+\pagestyle{empty}
+% \usepackage{tikz}
+% \def\width{10}
+% \def\hauteur{8}
+
+\begin{document}
+\maketitle
+
+<<echo=FALSE>>=
+library(xtable)
+@ 
+
+Here is a custom function in R to assemble a representation of the
+various treatment assignments in Fisher's tea-tasting experiment.
+(We don't expect anyone to follow this just by reading. It is
+reproducible, though.)
+
+<<>>=
+combmat <- function(n,k, group1="\\textbullet")
+  {
+   nrow <- choose(n,k)
+   out <- matrix("\\hspace*{.8em}",nrow, n+1)
+   powersof2 <- 2^(1:n)
+   thecombs <- combn(n,k)
+   for (ii in 1:nrow) {
+     out[ii,1] <- as.character(as.hexmode(sum(powersof2[thecombs[,ii]])))
+     out[ii,1+thecombs[,ii]] <- group1
+   }
+   out
+  }
+@ 
+
+<<echo=TRUE,eval=FALSE>>=
+themat <- combmat(8,4)
+@ 
+After some formatting (code suppressed), we get:
+
+
+<<echo=FALSE,results=tex>>=
+ncups <- 8
+themat <- combmat(ncups,floor(ncups/2))
+themat <- cbind(themat[1:floor(dim(themat)[1]/2),],
+                   (floor(dim(themat)[1]/2)+1):dim(themat)[1],
+                   themat[(floor(dim(themat)[1]/2)+1):dim(themat)[1],])
+colnames(themat) <- c( "(hex)",paste0("c",1:8)  , " ", "(hex)",paste0("c",1:8) ) 
+
+print(xtable(themat, 
+             align=c(rep(c('|c|', 'c|', rep('c',ncups-1),'c|'), 2)),
+             display=rep(c('d', rep("s", ncups+1)), 2)), 
+      sanitize.text.function=function(x) {x},
+      latex.environment=NULL, floating=FALSE)
+@
+
+% \begin{center}
+% \begin{tikzpicture}[x=1cm, y=1cm, semitransparent]
+% \draw[step=1mm, line width=0.1mm, black!30!white] (0,0) grid (\width,\hauteur);
+% \draw[step=5mm, line width=0.2mm, black!40!white] (0,0) grid (\width,\hauteur);
+% \draw[step=5cm, line width=0.5mm, black!50!white] (0,0) grid (\width,\hauteur);
+% \draw[step=1cm, line width=0.3mm, black!90!white] (0,0) grid (\width,\hauteur);
+% \end{tikzpicture}
+% \end{center}
+
+\end{document}
