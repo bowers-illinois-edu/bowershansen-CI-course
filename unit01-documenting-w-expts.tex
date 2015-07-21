@@ -1,8 +1,8 @@
 %  For slides only
-%\input{slidesonly}
+\input{slidesonly}
 
 % % For handout
-\input{handout}
+%\input{handout}
 
 %For handout + mynotes
 %\input{handout+mynotes}
@@ -158,6 +158,34 @@ a freak occurrence, something objectively unlikely, has occurred.
 
 From this perspective, random assignment brough substantial benefits. But there were others\ldots
 
+\end{frame}
+
+\begin{frame}<1>[label=timelineFr]{Timeline, with entry points for biases}
+  % commands I'll want to renew, to get slides right in different versions
+  \newcommand{\selpt}{ }%{{\fbox{\strut \hspace{2em} \strut}}}
+  \newcommand{\biasrow}{}%{ Biases: &   & & & & \\ }
+
+  \begin{center}
+    \begin{tabular}{lp{.15\linewidth}p{.15\linewidth}p{.15\linewidth}p{.15\linewidth}p{.15\linewidth}}
+      & \multicolumn{2}{c}{\underline{$T< 0$}} & \underline{$T=0$} & \multicolumn{2}{c|}{\underline{$T>
+        0$}} \\
+& subjects identified & subjects recruited & treatment assigned &
+treatment delivered & outcomes  measured\\ \hline
+& \fbox{Healthy}   &            &          & & \\
+ & \fbox{Sick}        &  \selpt      &     & & \\
+ &                           &            &   \fbox{T}  & &  \\
+ & \fbox{Urban}       &            &               & \fbox{T} & \\
+ & \fbox{Rural}  &  \selpt      &           &  & \\
+ &                            &            &                 & \fbox{C} & \\
+ & \fbox{Rich}         &            &    \fbox{C} &  & \\
+ & \fbox{Poor}        &  \selpt      &             &  & \\
+ &   (etc)                        &            &                &  \\ 
+\biasrow% T unlike C at beginning of study, 
+                        %sample not rep of pop,
+                        % differential uptake, placebo effects,
+                        % differential attrition
+   \end{tabular}
+  \end{center}
 \end{frame}
 
 \begin{frame}{Potential outcomes}
