@@ -2,7 +2,7 @@
 .local
 *.aux
 *.log
-*.pdf
+./*.pdf
 *.fdb_latexmk
 *.synctex.gz
 *.nav
@@ -16,7 +16,7 @@
 *.pid
 *.fls
 *.bak
-
+./announcement-of-the-day.tex
 
 # biblatex stuff
 *.bbl
