@@ -41,3 +41,6 @@ Sweave("foo.Rnw")
 ```
 Separately (outside of R), use pdflatex to compile `foo.tex`.
 
+# Improving these hints
+
+Please don't hesitate to [fork](https://help.github.com/articles/fork-a-repo/) this repository, improve these hints (or any other aspect) and then shoot us a [pull request](https://help.github.com/articles/using-pull-requests/) explaining your fix.
