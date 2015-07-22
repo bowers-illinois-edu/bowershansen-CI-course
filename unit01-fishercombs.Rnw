@@ -46,15 +46,15 @@ various treatment assignments in Fisher's tea-tasting experiment.
 reproducible, though.)
 
 <<>>=
-combmat <- function(n,k, group1="\\textbullet")
+combmat <- function(n,k, picked="O", not.picked=" ")
   {
    nrow <- choose(n,k)
-   out <- matrix("\\hspace*{.8em}",nrow, n+1)
+   out <- matrix(not.picked,nrow, n+1)
    powersof2 <- 2^(1:n)
    thecombs <- combn(n,k)
    for (ii in 1:nrow) {
      out[ii,1] <- as.character(as.hexmode(sum(powersof2[thecombs[,ii]])))
-     out[ii,1+thecombs[,ii]] <- group1
+     out[ii,1+thecombs[,ii]] <- picked
    }
    out
   }
@@ -68,7 +68,7 @@ After some formatting (code suppressed), we get:
 
 <<echo=FALSE,results=tex>>=
 ncups <- 8
-themat <- combmat(ncups,floor(ncups/2))
+themat <- combmat(ncups,floor(ncups/2), picked="\\textbullet", not.picked="\\hspace*{.8em}")
 themat <- cbind(themat[1:floor(dim(themat)[1]/2),],
                    (floor(dim(themat)[1]/2)+1):dim(themat)[1],
                    themat[(floor(dim(themat)[1]/2)+1):dim(themat)[1],])

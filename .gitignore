@@ -17,6 +17,8 @@
 *.fls
 *.bak
 ./announcement-of-the-day.tex
+./2014
+./2015
 
 # biblatex stuff
 *.bbl
