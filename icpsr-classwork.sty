@@ -1,0 +1,92 @@
+%\usepackage{tgtermes}
+\usepackage{amsmath,parskip,url,fancyvrb,graphicx,float,ulem}
+\usepackage[letterpaper,bottom=.75in,top=.75in,right=.75in,left=.5in,includemp=FALSE]{geometry}
+\usepackage{sometexdefs}
+
+\setcounter{secnumdepth}{0}
+\usepackage[compact]{titlesec}
+\titleformat{\section}[hang]{\large\bfseries}{\thesection}{.5em}{\hspace{0in}}[\vspace{-.2\baselineskip}]
+\titleformat{\subsection}[hang]{\raggedright\bfseries}{\thesubsection}{.5em}{\hspace{0in}}[\vspace{-.2\baselineskip}]
+% \titleformat*{\subsection}{\bfseries\scshape}
+% \titleformat{\subsubsection}[leftmargin]{\footnotesize\filleft}{\thesubsubsection}{.5em}{}{}
+\titleformat{\subsubsection}[hang]{\small\raggedright\bfseries}{\thesubsubsection}{.5em}{\hspace{0in}}[\vspace{-.2\baselineskip}]
+\titleformat{\paragraph}[runin]{\itshape}{\theparagraph}{1ex}{}{\vspace{-.5\baselineskip}}
+% \titlespacing{\subsubsection}{6pc}{1.5ex plus .1ex minus .2ex}{1pc} 
+
+
+
+% Create new title appearance
+\makeatletter
+\def\maketitle{%
+  \null
+  \thispagestyle{empty}%
+  \begin{center}\leavevmode
+    \normalfont
+    {\large \bfseries\@title\par}%
+    { \@author\par}%
+    { \@date\par}%
+  \end{center}%
+  \null
+}
+\makeatother
+
+\makeatletter
+\let\Title\@title
+\let\Author\@author
+\makeatother
+
+\usepackage{fancyhdr}
+% \renewcommand{\sectionmark}[1]{\markright{#1}{}}  
+\fancypagestyle{myfancy}{%
+  \fancyhf{}
+  % \fancyhead[R]{\small{Page~\thepage}}
+  \fancyhead[R]{\small{\Title -- \today -- \thepage}}
+  % \fancyfoot[R]{\small{\today -- Jake Bowers}}
+  \renewcommand{\headrulewidth}{0pt}
+  \renewcommand{\footrulewidth}{0pt}}
+
+\pagestyle{myfancy}
+
+\fvset{fontsize=\normalsize} %slightly smaller verbatim font
+
+%%\usepackage{tikz}
+%\usepackage[x11names]{xcolor}
+%\usetikzlibrary{positioning,shapes.geometric,arrows}
+
+%\pgfrealjobname{handout4}
+
+% \newcommand{\VN}[1]{{\mbox{{\sf #1}}}}
+
+% \newcommand{\modelValues}[1]{\VN{{\tiny\begin{tabular}{c}Model\\Values\\\end{tabular}}#1}}
+
+%% These next lines tell latex that it is ok to have a single graphic
+%% taking up most of a page, and they also decrease the space arou
+%% figures and tables.
+\renewcommand\floatpagefraction{.9}
+\renewcommand\topfraction{.9}
+\renewcommand\bottomfraction{.9}
+\renewcommand\textfraction{.1}   
+\setcounter{totalnumber}{50}
+\setcounter{topnumber}{50}
+\setcounter{bottomnumber}{50}
+\setlength{\intextsep}{2ex}
+\setlength{\floatsep}{2ex}
+\setlength{\textfloatsep}{2ex}
+
+% \DefineShortVerb{\+} 
+% \usepackage{comment}
+% \specialcomment{com}{\begingroup\sffamily\small}{\endgroup}
+% \excludecomment{com}
+
+\usepackage{versions}
+\makeatletter
+\renewcommand*\versionmessage[2]{\typeout{*** `#1' #2. ***}} 
+%\renewcommand*\beginmarkversion{\@Vs@sffbox{\@currenvir$>$}\sffamily}
+%\renewcommand*\endmarkversion{\@Vs@sffbox{$<$\@currenvir}}
+\renewcommand*\beginmarkversion{\sffamily}
+  \renewcommand*\endmarkversion{}
+\makeatother
+
+\usepackage[colorlinks=TRUE,citecolor=blue]{hyperref}
+\usepackage{natbib}
+

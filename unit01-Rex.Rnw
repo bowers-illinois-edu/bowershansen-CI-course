@@ -1,0 +1,194 @@
+\documentclass{article}
+%\usepackage{natbib}
+
+\title{P-values under a strong null hypothesis}
+\author{ICPSR Causal Inference}
+\usepackage{icpsr-classwork}
+
+\begin{document}
+\maketitle
+
+\section{Two ways to read in data}
+Two running examples: The results of our coffee experiment, and data from \cite{arceneaux:2005}.
+
+The coffee experiment result.
+<<>>=
+coffee = data.frame(z=rep(1:0, each=4), y=rep(1:0, each=4))
+table(coffee)
+@
+
+For the record, here's how I would have done this interactively.  (The \texttt{scan}
+trick doesn't work in scripts.)
+\begin{verbatim}
+z = scan(nlines=1)
+1 1 1 1 0 0 0 0
+y = scan(nlines=1)
+1 1 1 1 0 0 0 0
+coffee = data.frame(z, y)
+\end{verbatim}
+
+Here is the Acorn GOTV experiment data described in Arceneaux (2005),
+after aggregation to the precinct level.
+<<>>=
+load("arceneaux2005AAAPSS.RData")
+@
+
+\section{Test statistics for the coffee experiment}
+
+Fisher's test statistic, the number of focal-group cups that were
+correctly identified as belong to the focal group, is $Z'y = \sum_{i}
+Z_{i} y_{i}$.  Under the null hypothesis, $y$ is a vector of
+constants.  Due to the random assigment, $Z$ is a random vector,
+equally likely come out as any length-8 binary sequence containing 4 ones.   The
+realization of $Z$ that was obtained in the experiment is denoted $z$,
+and the sampled test statistic is $z'y$.  It is computed as
+<<>>=
+with(coffee, sum(z*y))
+@
+or, to use an R function mirroring our notation,
+<<>>=
+with(coffee, crossprod(z, y))
+with(coffee, drop(crossprod(z, y))) #usually more convenient
+@
+
+Other test statistics are also possible.  For example, the proportion
+of the focal-group cups that were correctly identified is
+$Z'y/n_1$, where $n_{1}$ is the design constant $\sum_{i} Z_{i}$, here
+4.  In our experiment it took
+the value
+<<>>=
+with(coffee, sum(z*y)/sum(z))
+@
+
+Yet another possibility would be the difference in proportions of
+focal and non-focal group cups that were identified as being in the
+focal group, $Z'y/n_{1} - Z'y/n_{0}$, where $n_{0}= \sum_{i} 1- Z_{i} =4$:
+<<>>=
+with(coffee, sum(z*y)/sum(z) - sum((1-z)*y)/sum(1-z))
+@
+which can be calculated more simply via
+<<>>=
+lm(y ~ z, data=coffee)
+coef(lm(y ~ z, data=coffee))["z"]
+@
+
+Assuming that the test statistic $T$ has been defined in such a way that
+larger values are more favorable to the proposition we're out to get
+evidence for, the $p$ value is $\mathrm{P}(T \geq t)$, where $t$ is
+the value of $T$ that was actually obtained.  (This is a one-sided
+p-value, the kind Fisher liked.  If you prefer the other kind, it's recommended that you get the
+hang of his way of doing things before going back to translate.)
+
+\subsection{Approximate p-values by simulation}
+
+To simulate from the null distribution of a test statistic, use
+\texttt{sample} to randomly permute $z$.
+
+<<>>=
+with(coffee, sum(z*y))
+with(coffee, sum(sample(z)*y))
+with(coffee, sum(sample(z)*y))
+with(coffee, replicate(3, sum(sample(z)*y)))
+simT = with(coffee, replicate(1000, sum(sample(z)*y)))
+
+@
+
+This says that the null distribution of $T = Z'y$ can be approximated as
+<<>>=
+round(table(simT)/1000, 2)
+@
+
+With $N$ simulations, the error of approximation for a quantities of the form $P(T \geq a)$
+can itself be approximated as $1/\sqrt{N}$: in this case,
+\Sexpr{round(1/sqrt(1000), 2)}.  So the simulation approximation to
+our $p$-value is \Sexpr{sum(simT==4)/1000} $\pm$ \Sexpr{round(1/sqrt(1000), 2)}.
+
+\textbf{Exercise:} Replicate this analysis for yourself, but using a different choice of $N$ (and if you like, a different test statistic). 
+
+\subsection{Exact p-values}
+
+The handout from unit 1 presents a table that visually presents all of the ${8 \choose 4} = 70
+$ ways to order the binary sequence \Sexpr{rep(1:0, each=4)}.  You can do
+this computation in R, but it's dangerous\footnote{Because ${2m \choose m}$ grows exponentially in $m$. With large $m$, attempting to list all of the permutations will choke up your
+computer.  For small $m$, no problem; but drawing the line between large and small is tricky and non-intuitive.}, so I'm not going to say how here.
+
+In the \textit{special case} of \textit{binary} outcomes, many software routines will have dedicated routines, under labels ``Fisher's exact test'' and/or ``hypergeometric distribution''.  
+
+\texttt{Exercise.}\\  \newcounter{saveenumi}
+\begin{enumerate}
+\item Confirm to your own satisfaction that for analysis of the coffee experiment, the simulation method can approximate the exact, permutation-based calculation to as much accuracy as is practically meaningful.
+\item How about the chi-square test, are you approximating that also?
+\item For this data set, are the chi-square test and the fisher test both admissible? (Hint: read R's warnings, and try to remember the conditions for the chi-square test for two-way tables.) \setcounter{saveenumi}{\value{enumi}}
+\end{enumerate}
+
+Code hints:
+\begin{verbatim}
+with(coffee, fisher.test(z, y))
+with(coffee, chisq.test(z, y))
+\end{verbatim}
+
+
+\section{A GOTV experiment}
+
+Arceneaux (2005) presents a get-out-the-vote experiment that was
+randomized at the precinct level.  As in the coffee experiment, it's a
+completely randomized design: a predetermined number (14) of precincts
+were randomized to treatment, with the remaining precincts (also 14)
+randomized to control.  Provided that we can summarize the voting
+outcome for each precinct in a single number, we can follow Fisher's
+template exactly to attach a $p$-value to the proposition that the
+GOTV campaign was inefficacious.
+
+Here, precinct level outcomes are
+summarized by the proportion of registered voters in the precinct who
+actually voted.  This doesn't account for differences in precinct size
+-- we'll see how to lift that limitation in due course.
+
+<<>>=
+summary(subset(acorn, select=c(unit,size,treatmen, vote03)))
+@
+
+One test statistic would be the average of turnout proportions among
+precincts assigned to treatment.
+<<>>=
+with(acorn, sum(treatmen * vote03)/sum(treatmen))
+@
+
+Another test statistic is the difference in mean turnout proportions
+between treatment and control precincts.
+
+<<>>=
+coef(lm(vote03~treatmen, data=acorn))["treatmen"]
+@
+
+Either choice gives a test statistic $T$ that tends to take larger values if GOTV positively effects voter turnout. So in both cases the appropriate one-sided p-value is $\mathrm{P}_0(T \geq t)$, where $t$ is the observed value of $T$ and $ \mathrm{P}_0(\cdot)$ indicates probability under the hypothesis of no effect.
+
+\textbf{Exercises.}
+\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
+\item Pick one of these test statistics (or some other one), and analyze to obtain a one-sided p-value.
+\item If there were concern that the treatment may have negatively affected the outcome, then a two-sided p-value might be more appropriate. (Another reason to prefer a two-sided p-value would be if one were preparing a research paper for an audience accustomed to two-sided p-values.)  Write a mathematical expression of the form $\mathrm{P}_0$([statement involving $T$]) that uniquely specifies the two-sided p-value. (Note: for some test statistics there may be more than one valid way of construing the two-sided p-value, not necessarily giving precisely the same answers.)
+\item Report your two-sided p-value.
+\end{enumerate}
+
+
+
+
+
+
+
+
+\bibliographystyle{plain}
+%% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+\begin{thebibliography}{1}
+
+\bibitem{arceneaux:2005}
+Kevin Arceneaux.
+\newblock Using cluster randomized field experiments to study voting behavior.
+\newblock {\em Annals of the Americal Academy of Political and Social Science},
+  601:169--179, September 2005.
+
+\end{thebibliography}
+% "master" is Ryan Moore's file (as of summer 2012).
+%"causalinference" is Ben's, and lives (as of summer 2013) in
+% http://dept.stat.lsa.umich.edu/~bbh/texmf/bibtex/bib/
+\end{document}
