@@ -16,11 +16,23 @@ Near the top of the .tex file, comment out all but one of these lines, depending
 
 ## Compiling *.Rnw files
 
+From within RStudio:   
+
+- open file in RStudio
+- If you have multiple files open, make sure this one's at front
+- Press `Compile PDF` button above file edit window
+- (You may get warnings and or failure messages in the output window even though a PDF was produced.)
+- (If the file contains cross-references, you may have to hit `Compile PDF` twice.)
+
+
 From the command line:
 ```
 $ R CMD foo.Rnw
 $ pdflatex foo.tex
+$ pdflatex foo.tex
 ```
+
+(Yep, `pdflatex` is run twice on the same file.)
 
 From within R:
 ```
