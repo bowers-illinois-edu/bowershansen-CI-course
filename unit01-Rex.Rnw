@@ -6,31 +6,35 @@
 \usepackage{icpsr-classwork}
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 \maketitle
 
 \section{Two ways to read in data}
 Two running examples: The results of our coffee experiment, and data from \cite{arceneaux:2005}.
 
-The coffee experiment result.
-<<>>=
+To read in data%
+\footnote{This is a recommended way to type in small data sets in interactive sessions, but it (specifically, \texttt{scan()}) doesn't work in scripts.  To see how this script actually assembled the data, check out the source code, at \url{https://github.com/bowers-illinois-edu/bowershansen-CI-course}.}
+from the coffee experiment:
+\begin{verbatim}
+> z = scan(nlines=1)
+1 1 1 1 0 0 0 0
+> y = scan(nlines=1)
+1 1 1 1 0 0 0 0
+> coffee = data.frame(z, y)
+\end{verbatim}
+
+<<echo=FALSE>>=
 coffee = data.frame(z=rep(1:0, each=4), y=rep(1:0, each=4))
+@ 
+<<>>=
 table(coffee)
 @
 
-For the record, here's how I would have done this interactively.  (The \texttt{scan}
-trick doesn't work in scripts.)
-\begin{verbatim}
-z = scan(nlines=1)
-1 1 1 1 0 0 0 0
-y = scan(nlines=1)
-1 1 1 1 0 0 0 0
-coffee = data.frame(z, y)
-\end{verbatim}
 
 Here is the Acorn GOTV experiment data described in Arceneaux (2005),
 after aggregation to the precinct level.
 <<>>=
-load("arceneaux2005AAAPSS.RData")
+acorn = read.csv("data/acorn03.csv")
 @
 
 \section{Test statistics for the coffee experiment}
@@ -47,8 +51,8 @@ with(coffee, sum(z*y))
 @
 or, to use an R function mirroring our notation,
 <<>>=
-with(coffee, crossprod(z, y))
-with(coffee, drop(crossprod(z, y))) #usually more convenient
+with(coffee, crossprod(z, y)) # beware: `crossprod` return a **matrix** (of dim (1,1))
+with(coffee, crossprod(z, y)[1,1]) #to return a length-1 vector instead
 @
 
 Other test statistics are also possible.  For example, the proportion
@@ -145,20 +149,20 @@ actually voted.  This doesn't account for differences in precinct size
 -- we'll see how to lift that limitation in due course.
 
 <<>>=
-summary(subset(acorn, select=c(unit,size,treatmen, vote03)))
+summary(subset(acorn, select=c(unit,size,z, vote03)))
 @
 
 One test statistic would be the average of turnout proportions among
 precincts assigned to treatment.
 <<>>=
-with(acorn, sum(treatmen * vote03)/sum(treatmen))
+with(acorn, sum(z * vote03)/sum(z))
 @
 
 Another test statistic is the difference in mean turnout proportions
 between treatment and control precincts.
 
 <<>>=
-coef(lm(vote03~treatmen, data=acorn))["treatmen"]
+coef(lm(vote03~z, data=acorn))["z"]
 @
 
 Either choice gives a test statistic $T$ that tends to take larger values if GOTV positively effects voter turnout. So in both cases the appropriate one-sided p-value is $\mathrm{P}_0(T \geq t)$, where $t$ is the observed value of $T$ and $ \mathrm{P}_0(\cdot)$ indicates probability under the hypothesis of no effect.
