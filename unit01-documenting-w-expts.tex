@@ -1,11 +1,11 @@
 %  For slides only
-%\input{slidesonly}
+\input{slidesonly}
 
 % % For handout
 %\input{handout}
 
 %For handout + mynotes
-\input{handout+mynotes}
+%\input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -289,6 +289,91 @@ nonrandomized studies with goals:
 \igrphx[height=.8\textheight]{arceneauxetal2010table2}
 
 \end{frame}
+
+\section{Experiment design \& design-based tests}
+
+
+\begin{frame}{Common design aspects of randomized studies}
+  \begin{itemize}
+  \item<1-> Common properties of small, simple experiments:
+    \begin{itemize}
+    \item balanced 
+    \item complete
+    \item simple (same $\mathrm{Pr}(Z=z)$'s)
+    \end{itemize}
+  \item<2-> Common complications:
+    \begin{itemize}
+    \item<2-> pairs
+    \item<2-> blocks
+    \item<2-> cluster-level assignment
+    \end{itemize}
+  \item<3-> We'll handle complications by simplification, reorganizing so that we're looking at 1 or more simpler studies.
+  \item<4-> (Same considerations will apply to non-randomized studies.)
+  \end{itemize}
+
+\end{frame}
+\note{Examples:
+  \begin{itemize}
+  \item Fisher/coffee tasting
+  \item variations of the tasting experiment envisioned by us, by Neyman
+  \item Gosnell, \ldots, Arcenaux GOTV
+  \end{itemize}
+}
+
+
+\begin{frame}{The hypothesis of absolutely no effect}
+  
+\begin{columns}
+\begin{column}{.3\linewidth}
+      \begin{itemize}
+      \item Theory: interaction w/ animals \& mild depression
+      \item Example: An experiment w/ dolphins\footnotemark
+      \end{itemize}
+\end{column}
+\begin{column}{.7\linewidth}
+       \begin{center}
+  \begin{tabular}{l|rr|r} \hline
+        & \multicolumn{2}{c|}{Cured?} & \\
+Condition &  Yes & No & Total \\ \hline
+1: Swimming w/ dolphins & 10 & 5 & 15\\
+2: Snorkel; no dolphins & 3 & 12 & 15\\ \hline
+Total & 13 & 17 & 30 \\ \hline
+\end{tabular}
+      \end{center}
+\end{column}
+\end{columns}
+\pause
+
+The \textit{hypothesis of (absolutely) no effect} says\ldots
+
+\footnotetext[1]{Antonioli, C. and
+ Reveley, M.A. (2005)  ``Randomised controlled trial of animal facilitated therapy with dolphins in the treatment of depression.''  \textit{British Medical Journal} \textbf{331} (7527) 1231--4.}
+\end{frame}
+\note{
+Then break to discuss testing of hypotheses of no effect, i.e. start worksheet.
+}
+
+\begin{frame}{Exclusion restriction}
+
+  \begin{itemize}
+  \item Intuitively, \textit{exclusion restriction} is assumption that $Z$ didn't affect anything other than the treatment that might in turn have affected outcomes.
+  \item More formal definition to come, and in Gerber\& Green ch 2.
+  \item Blinding and exclusion restriction
+  \item an issue in both RCTs and obs studies
+  \item<2-> Does not threaten validity of tests of Fisher's null
+  \item<2-> (but may well affect interpretation) 
+  \end{itemize}
+  
+\end{frame}
+
+\begin{frame}{Interference}
+  \begin{itemize}
+    \item Intuitively, my treatment may affect your response
+  \item If there is interference, describing the true state of affairs calls for more elaborate notation that $(y_{T1}, Y_{C1}), (y_{T2}, Y_{C2}), \ldots, (y_{Tn}, Y_{Cn}).$
+  \item Nonetheless, possibility of interference does not threaten validity of tests of Fisher's null.
+  \end{itemize}
+\end{frame}
+
 \section*{recap}
 
 \againframe{CIFr}
