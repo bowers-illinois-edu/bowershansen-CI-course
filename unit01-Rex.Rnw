@@ -12,21 +12,10 @@
 \section{Two ways to read in data}
 Two running examples: The results of our coffee experiment, and data from \cite{arceneaux:2005}.
 
-To read in data%
-\footnote{This is a recommended way to type in small data sets in interactive sessions, but it (specifically, \texttt{scan()}) doesn't work in scripts.  To see how this script actually assembled the data, check out the source code, at \url{https://github.com/bowers-illinois-edu/bowershansen-CI-course}.}
-from the coffee experiment:
-\begin{verbatim}
-> z = scan(nlines=1)
-1 1 1 1 0 0 0 0
-> y = scan(nlines=1)
-1 1 1 1 0 0 0 0
-> coffee = data.frame(z, y)
-\end{verbatim}
+To read in data from the coffee experiment:
 
-<<echo=FALSE>>=
-coffee = data.frame(z=rep(1:0, each=4), y=rep(1:0, each=4))
-@ 
-<<>>=
+<<echo=TRUE>>=
+coffee = data.frame(z=c(1,1,1,1,0,0,0,0), y=c(1,1,1,1,0,0,0,0))
 table(coffee)
 @
 
