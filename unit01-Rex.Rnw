@@ -25,6 +25,10 @@ from the coffee experiment:
 
 <<echo=FALSE>>=
 coffee = data.frame(z=rep(1:0, each=4), y=rep(1:0, each=4))
+## same result as
+## coffee = data.frame(z=c(1,1,1,1,0,0,0,0),
+##                     y=c(1,1,1,1,0,0,0,0) )
+## but with a little less risk of data entry error
 @ 
 <<>>=
 table(coffee)
