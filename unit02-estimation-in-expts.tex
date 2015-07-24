@@ -30,6 +30,8 @@
 \begin{frame}<\nottheirhandout>{Exercise: random assignment methods}
 {\footnotesize (G\&G ch1 ex 5)}
 
+\begin{enumerate} \addtocounter{enumi}{-1}
+\item
 A researcher plans to ask six subjects to donate time to an adult
 literacy program. Each subject will be asked to donate either 30 or 60
 minutes. The researcher is considering three methods for randomizing
@@ -44,6 +46,8 @@ the six cards.\ldots
 \item[b] How would your answers to (a) change if $n: 6 \mapsto 600$?
 \item[c] Calculate $\mathbf{E}(Z_{1})$ under each of the two methods.
 \end{itemize}
+\end{enumerate}
+
 \end{frame}
 
 
@@ -86,6 +90,8 @@ the six cards.\ldots
 \begin{frame}<\nottheirhandout>{Exercise: random assignment methods}
 {\footnotesize (G\&G ch1 ex 5)}
 
+\begin{enumerate}\addtocounter{enumi}{-1}
+\item 
 A researcher plans to ask six subjects to donate time to an adult
 literacy program. Each subject will be asked to donate either 30 or 60
 minutes. The researcher is considering three methods for randomizing
@@ -99,6 +105,8 @@ the six cards.\ldots
 \item[d] Calculate $\mathbf{E}(\mathbf{Z}'\mathbf{Z})$ under each of the two methods.
 \item[e] For which of the two methods does $\mathrm{Var}((\mathbf{Z}'\mathbf{Z})) = 0$?
 \end{itemize}
+\end{enumerate}
+
 \end{frame}
 
 
@@ -286,7 +294,7 @@ $z_8$ & $z_8$  \\ \hline
 
 \begin{frame}{Potential outcomes}
   
-A much more common way of specifying potential outcome schedules is to specify \textit{potential outcomes}.  For binary $D$, potential outcomes would be specified as
+A much more common way of specifying potential outcome schedules is to specify \textit{potential outcomes}.  For binary $Z$, potential outcomes would be specified as
 
 \begin{columns}
 \begin{Column}
@@ -329,7 +337,7 @@ Notes:\\
     \item Given an example of real or hypothetical study in which $\mathbf{E}(Y(1) | Z=1) \neq \mathbf{E}(Y(1))$.
     \item Do randomized studies always satisfy $\mathbf{E}(Y(1) | Z=1) = \mathbf{E}(Y(1))$?  Why or why not?
     \end{enumerate}
-\item (G.\&G. ex.4, ch 1) Suppose $z_{i} \in \{0,1\}$, all $i$; assume non-interference. Define the ATT as $\mathbf{z}'(\mathbf{y}_{T}-\mathbf{y}_{C})/\mathbf{z}'\mathbf{z}$.  Prove that if treatments are allocated using complete random assignmetn, then the ATT is equal in expectation to the average treatment effect.
+\item (G.\&G. ex.4, ch 1) Suppose $z_{i} \in \{0,1\}$, all $i$; assume non-interference. Define the ATT as $\mathbf{z}'(\mathbf{y}_{T}-\mathbf{y}_{C})/\mathbf{z}'\mathbf{z}$.  Prove that if treatments are allocated using complete random assignment, then the ATT is equal in expectation to the average treatment effect.
   \end{enumerate}
 
 \end{frame}
@@ -370,26 +378,42 @@ $$\mathrm{E}\left(\frac{1}{n} \sum_{i=1}^n V_i\right) = \frac{1}{n} \sum_{i=1}^n
 \item G\&G on why unbiasedness is good: p. 34.
 \item A nice thing about this is that the difference of means is unbiased for the ACE whatever the potential outcome schedule.
 }
-\begin{frame}{SATEs and PATEs; unbiased(?) estimation}
-  
-\end{frame}
 
-\end{document}
-\section{Conditional expectation and FACEs}
+\section{Common estimation targets in comparative studies}
 
-\begin{frame}{Conditional expectation}
-  
+
+\begin{frame}{ATEs and ACEs; SATEs and PATEs}
+
   \begin{itemize}
-  \item $\mathrm{P}(A|B) =  $ conditional probability of A given that B
-  \item $\mathrm{E}(V|B) = \sum_v v\mathrm{P} ((V=v|B)$
-  \item if RVs $W$ and $V$ are independent, then $\mathrm{E}(V|W=w) = \mathrm{E}(V)$.
-  \item Random assignment ensures that $Z$ is independent of $Y_0$, $Y_1$.
-  \item So under random assignment, $\mathrm{E}(Y_0|Z=0) = \mathrm{E}(Y_0)$;  $\mathrm{E}(Y_1|Z=1) = \mathrm{E}(Y_1)$.
-  \item Note that $Z$ is not generally independent of $Y=DY_1 + (1-D)Y_0$!
+  \item ATE = Average treatment effect; ACE = Average causal effect
+
+  \item SATE = \textit{sample} average treatment effect
+  \item Ordinarily, refer to the same thing: the effect of \textit{assignment} to treatment in the study population.
+  \item PATE = \textit{population} average treatment effect
+  \item Limitations of the PATE:
+    \begin{itemize}
+    \item estimability
+    \item ambiguity
+    \end{itemize}
+
   \end{itemize}
+
 \end{frame}
-\note{
-``ETT''=$\EE\{\mathrm{ACE}(\mathbf{X})| Z=1\} $}
+
+
+% \begin{frame}{Conditional expectation}
+  
+%   \begin{itemize}
+%   \item $\mathrm{P}(A|B) =  $ conditional probability of A given that B
+%   \item $\mathrm{E}(V|B) = \sum_v v\mathrm{P} ((V=v|B)$
+%   \item if RVs $W$ and $V$ are independent, then $\mathrm{E}(V|W=w) = \mathrm{E}(V)$.
+%   \item Random assignment ensures that $Z$ is independent of $Y_0$, $Y_1$.
+%   \item So under random assignment, $\mathrm{E}(Y_0|Z=0) = \mathrm{E}(Y_0)$;  $\mathrm{E}(Y_1|Z=1) = \mathrm{E}(Y_1)$.
+%   \item Note that $Z$ is not generally independent of $Y=DY_1 + (1-D)Y_0$!
+%   \end{itemize}
+% \end{frame}
+% \note{
+% ``ETT''=$\EE\{\mathrm{ACE}(\mathbf{X})| Z=1\} $}
 
 \begin{frame}{FACEs and ACEs (Holland, 1988, \textit{Soc Meth}) }
   \begin{enumerate}[<+->]
@@ -398,9 +422,9 @@ $$\mathrm{E}\left(\frac{1}{n} \sum_{i=1}^n V_i\right) = \frac{1}{n} \sum_{i=1}^n
 \item Likewise  $\EE(Y | Z=0, \mathbf{x})$ vs $\EE(Y_{c}| \mathbf{x})$.
 \item ``ACE'' = $\EE(Y_t - Y_c| \mathbf{x}) = \EE(Y_{t}| \mathbf{x}) - \EE(Y_{c}| \mathbf{x})$
 \item ``FACE'' = $\EE(Y | Z=1, \mathbf{x}) - \EE(Y | Z=0, \mathbf{x})$
-\item The two coincide if
+\item In the absence of selection bias, the two coincide:
 $$ (Y_{t}, Y_{c}) \perp Z | \mathbf{X}$$
-and not ordinarily otherwise.
+Not ordinarily otherwise.
   \end{enumerate}
 
 Jargon:
@@ -422,19 +446,43 @@ When there is \textit{non-compliance}, $Z$ and $D$ may differ.  \pause
     \begin{Column}
   {\usebeamercolor[fg]{titlelike} The per-protocol estimator} \\      
 $\frac{1}{\# \{i: D_i = 1\}} \sum_{i:D_i=1} Y_i - \frac{1}{\# \{j: D_j = 0\}} \sum_{j:D_j=0} Y_j$
-\vspace{.6\textheight} 
+\bigskip
+
+\uncover<3->{Estimates a FACE-like quantity}
+\vspace{.5\textheight} 
 \mbox{ }
+
     \end{Column}
     \begin{Column}
   {\usebeamercolor[fg]{titlelike} The intention-to-treat estimator} \\      
 $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \sum_{j:Z_j=0} Y_j$
-\vspace{.6\textheight} 
-\mbox{ }
+\bigskip
 
+\uncover<2->{Estimates the intention to treat effect (the ATE)}
+
+\vspace{.5\textheight} 
+\mbox{ }
     \end{Column}
 
   \end{columns}
 \end{frame}
+
+\begin{frame}{Attributable effects}
+  
+When $y$ is binary (and sometimes otherwise), $\mathbf{z}'\mathbf{y} - \mathbf{z}'\mathbf{y}_{c}$ is known as the \textit{attributable effect} (Rosenbaum, 2001, \textit{Biometrika}).
+\begin{itemize}
+\item An estimation target\ldots
+\item despite being the value of a random variable
+\item Rosenbaum (2001, 2002; \textit{DOS}) offers methods for testing hypotheses about the value of $\mathbf{z}'\mathbf{y} - \mathbf{z}'\mathbf{y}_{c}$.
+\item<2-> For estimation, suffices to estimate $\mathbf{z}'\mathbf{y}_{c}$. (Why?)
+\item<2-> If everyone w/ $z=0$ received control, then you can estimate  $\mathbf{z}'\mathbf{y}_{c}$ by estimating  $\mathbf{1}'\mathbf{y}_{c}$, the total of $y_{c}$s.
+\item<2-> To do that, can employ estimation techniques from survey sampling (Hansen \& Bowers, 2009, \textit{J Amer Statist Assoc}; Aronow \& Middleton, 2013, \textit{J. Causal Inference}).
+\end{itemize}
+
+
+\end{frame}
+\end{document}
+
 
 \section{Differences-in-differences}
 
@@ -446,4 +494,3 @@ The \texttt{acorn} data set has
 
 \end{frame}
 
-\end{document}
