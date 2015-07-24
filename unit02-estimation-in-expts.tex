@@ -1,0 +1,449 @@
+%  For slides only
+%\input{slidesonly}
+
+% % For handout
+%\input{handout}
+
+%For handout + mynotes
+\input{handout+mynotes}
+
+\input{beamer-preamble-bbh-all}
+\input{defs-all}
+
+\title{Unit 2: Estimation in experiments}
+% \author moved to beamer-preamble-*-all.tex
+\date{July 2015}
+
+\begin{document}
+
+
+  \begin{frame}
+    \frametitle{Outline \& Readings}
+
+\tableofcontents[subsectionstyle=show/hide/hide]
+
+\input{announcement-of-the-day}  % announcement-of-the-day.tex not
+                                % part of repo
+\end{frame}
+
+
+\begin{frame}<\nottheirhandout>{Exercise: random assignment methods}
+{\footnotesize (G\&G ch1 ex 5)}
+
+A researcher plans to ask six subjects to donate time to an adult
+literacy program. Each subject will be asked to donate either 30 or 60
+minutes. The researcher is considering three methods for randomizing
+the treatment. One method is to flip a coin before talking to each
+person and to ask for a 30-minute donation if the coin comes up heads
+or a 60-minute donation if it comes up tails. The second method is to
+write ``30'' and ``60'' on three playing cards each, and then shuffle
+the six cards.\ldots
+  
+\begin{itemize}
+\item[a] Discuss strengths \& weaknesses of each approach.
+\item[b] How would your answers to (a) change if $n: 6 \mapsto 600$?
+\item[c] Calculate $\mathbf{E}(Z_{1})$ under each of the two methods.
+\end{itemize}
+\end{frame}
+
+
+\section{Overview}
+
+
+
+\begin{frame}{Unit 2, estimating causal parameters}
+  \begin{itemize}
+  \item In examples, easier to think about whether causation occurred than how one might measure it.
+  \item Now, examples that lend themselves to talk of ``average causal effects,'' etc.
+  \item ``effect'' will have a different and more specific meaning than elsewhere in statistics; we'll begin by talking about it.
+  \item We'll continue to prefer methods that don't care whether outcomes are binary, continuous, etc, and don't make distributional assumptions on the outcomes.
+  \item In contrast to unit 1, focus on estimation rather than testing.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Running examples: dolphins; GOTV campaign}
+  
+\end{frame}
+
+\section{Potential outcome schedules}
+
+\begin{frame}{Random variable notation; vector notation}
+  
+  \begin{itemize}
+  \item By convention, $X, Y, Z$ denote random variables (RVs); $x, y, z$, realizations of the RVs.
+    \begin{itemize}
+    \item Rosenbaum (a statistician) observes this convention\ldots
+    \item as I will.
+    \item G\& G (political scientists) appear not to.
+    \end{itemize}
+  \item $Z_i$= RV for subject $i$; $\mathbf{Z}=(Z_1, Z_2, \ldots, Z_n)'$ (a column vector).  Likewise for $X$, $Y$.
+  \item Also $\mathbf{z}=(z_1, z_2, \ldots, z_n)$, and similarly for $\mathbf{x}$, $\mathbf{y}$
+  \end{itemize}
+
+
+\end{frame}
+
+\begin{frame}<\nottheirhandout>{Exercise: random assignment methods}
+{\footnotesize (G\&G ch1 ex 5)}
+
+A researcher plans to ask six subjects to donate time to an adult
+literacy program. Each subject will be asked to donate either 30 or 60
+minutes. The researcher is considering three methods for randomizing
+the treatment. One method is to flip a coin before talking to each
+person and to ask for a 30-minute donation if the coin comes up heads
+or a 60-minute donation if it comes up tails. The second method is to
+write ``30'' and ``60'' on three playing cards each, and then shuffle
+the six cards.\ldots
+
+\begin{itemize}
+\item[d] Calculate $\mathbf{E}(\mathbf{Z}'\mathbf{Z})$ under each of the two methods.
+\item[e] For which of the two methods does $\mathrm{Var}((\mathbf{Z}'\mathbf{Z})) = 0$?
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{$Z$s/$z$s vs $D$s/$d$s}
+  
+Additional conventions, this time shared by DOS, G\& G and this course:
+
+\begin{tabular}{cc}
+  $Y$ & outcome \\
+  $X$ & covariate/baseline variable\\
+  $Z$ & treatment assignment\\
+  $D$ & treatment received \\
+\end{tabular}
+\pause
+
+(Each may appear in caps or lowercase, indicating an RV or a realization; each may be bolded to indicate a vector.) \pause
+
+In the coffee experiment, $\mathbf{D} \equiv \mathbf{Z}$; also in experiments discussed in G\& G ch.2.  In general they may diverge (non-compliance). 
+
+\end{frame}
+
+\begin{frame}{Potential outcome schedules}%{Two potential outcome schedule for the coffee experiment}
+
+  A \textit{potential outcome schedule}%
+\footnote{Concept is due to Freedman (\textit{Statistical Models: Theory \& Practices}, C.U.P., 2009).}
+is a mapping of assignment vectors $\mathbf{z} = (z_1, \ldots, z_n)'$, all or mostly counter-to-fact, to outcomes.  \pause (A mapping of $\mathbf{z}$'s to $\mathbf{z}$s.) \pause Two examples:\\
+\begin{columns}
+  \begin{Column}
+%\hspace{1em} 
+    \begin{center}
+         {\usebeamercolor[fg]{titlelike} Fisher's null} 
+    \end{center}
+\begin{tabular}{cccc}
+    \begin{tabular}{cc} \hline
+ $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
+1 &   0 \\
+1 &   0 \\
+1 &   0 \\
+1 &   0 \\
+0 &   1 \\
+0 &   1 \\
+0 &   1 \\
+0 &   1 \\ \hline
+    \end{tabular}
+&
+    \begin{tabular}{cc} \hline
+ $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
+1 &    0 \\
+1 &    0 \\
+1 &    0 \\
+0 &    0 \\
+1 &    1 \\
+0 &    1 \\
+0 &    1 \\
+0 &    1 \\ \hline
+    \end{tabular}
+&
+$\vdots$
+&
+    \begin{tabular}{cc} \hline
+ $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
+0 &    0 \\
+0 &    0 \\
+0 &    0 \\
+0 &    0 \\
+1 &    1 \\
+1 &    1 \\
+1 &    1 \\
+1 &    1 \\ \hline
+    \end{tabular}
+\end{tabular}
+\end{Column}
+  \begin{Column}
+%\hspace{1em}  
+    \begin{center}
+       {\usebeamercolor[fg]{titlelike} Perfect discrimination} 
+    \end{center}
+\begin{tabular}{cccc}
+    \begin{tabular}{cc} \hline
+ $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
+1 & 1  \\
+1 & 1  \\
+1 & 1  \\
+1 & 1  \\
+0 & 0  \\
+0 & 0  \\
+0 & 0  \\
+0 & 0  \\ \hline
+    \end{tabular}
+&
+    \begin{tabular}{cc} \hline
+ $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
+ 1& 1  \\
+ 1& 1  \\
+ 1& 1  \\
+ 0& 0  \\
+ 1& 1  \\
+ 0& 0  \\
+ 0& 0  \\
+ 0& 0  \\ \hline
+    \end{tabular}
+&
+$\vdots$
+& 
+    \begin{tabular}{cc} \hline
+ $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
+0 & 0  \\
+0 & 0  \\
+0 & 0  \\
+0 & 0  \\
+1 & 1  \\
+1 & 1  \\
+1 & 1  \\
+1 & 1  \\ \hline
+    \end{tabular}
+  \end{tabular}
+\end{Column}
+\end{columns}
+\pause \medskip
+
+Strict null hypotheses are potential outcome schedules, but not conversely. 
+
+\end{frame}
+\itnote{
+\item Walk them through -- meanings not self-evident!
+}
+
+\begin{frame}{Test statistics \& response schedules}
+  
+\begin{itemize}
+\item One \texttt{test statistic} we discussed for the coffee experiment is the number of ``fancy-coffee'' cups among the cups identified as containing fancy coffee $y=1$. This translates to $Z'Y$. \pause
+
+
+\item The worksheet (\texttt{unit01-Rex}) has $Z'y$.  This leans on the fact that it assumes Fisher's null, under which $y$ is the same, whatever $Z$ may be. \pause
+
+\item When we're entertaining the possibility of perfect discrimination, we'd have to write $Z'Y$ .
+\item We also entertained the treatment-group mean of $y$s as a test statistic. To emphasize dependence on $Z$, write this as $Z'y/n_{t}$ ($Z'Y/n_{t}$). Or, if size of treatment group might be a random variable, $Z'y/Z'Z$ ($Z'Y/Z'Z$).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Potential outcome schedules}
+  
+  A \texttt{potential outcome schedule} (G\& G 2012) is a listing of how each study participant \textit{would or would have} responded to any combination of assignments $\mathbf{z} = (z_1, \ldots, z_n)'$ that the experiment could have produced.   (A mapping of $\mathbf{z}$'s to $\mathbf{z}$s.)   
+
+
+Here are two possible potential outcome schedules for our coffee experiment, w/ evocative labels.
+\begin{columns}
+  \begin{Column}
+\hspace{1em}    {\usebeamercolor[fg]{titlelike} Fisher's null} \\
+    \begin{tabular}{cc} \hline
+ $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
+$z_1$ &  0   \\
+$z_2$ &  0   \\
+$z_3$ &  0   \\
+$z_4$ &  0   \\
+$z_5$ &  1   \\
+$z_6$ &  1   \\
+$z_7$ &  1   \\
+$z_8$ &  1   \\ \hline
+    \end{tabular}
+
+  \end{Column}
+  \begin{Column}
+\hspace{1em}   {\usebeamercolor[fg]{titlelike} Perfect discrimination} \\
+    \begin{tabular}{cc} \hline
+ $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
+$z_1$ & $z_1$  \\
+$z_2$ & $z_2$  \\
+$z_3$ & $z_3$  \\
+$z_4$ & $z_4$  \\
+$z_5$ & $z_5$  \\
+$z_6$ & $z_6$  \\
+$z_7$ & $z_7$  \\
+$z_8$ & $z_8$  \\ \hline
+    \end{tabular}
+
+  \end{Column}
+
+\end{columns}
+
+\end{frame}
+\itnote{
+\item Sketch sampling distributions of $T = Z'y = D'y$
+}
+
+\begin{frame}{Potential outcomes}
+  
+A much more common way of specifying potential outcome schedules is to specify \textit{potential outcomes}.  For binary $D$, potential outcomes would be specified as
+
+\begin{columns}
+\begin{Column}
+    \begin{tabular}{cc} \hline
+ $\mathbf{y}_0$ & $\mathbf{y}_1$ \\ \hline
+$y_{01}$ & $y_{11}$  \\
+$y_{02}$ & $y_{12}$  \\
+$y_{03}$ & $y_{13}$  \\
+$\vdots$ & $\vdots$  \\
+$y_{0n}$ & $y_{1n}$  \\ \hline
+    \end{tabular}
+\pause
+\end{Column}
+
+\begin{Column}
+Notes:\\
+
+\begin{itemize}[<+->]
+\item (Post-It analogy)
+\item Assumes each subject's response depends only on his $d$
+\item probably not appropriate for coffee experiment
+\item not necessarily appropriate for Salk trial
+\item \textit{non-interference} has been assumed
+\item \ldots often unwittingly!
+\end{itemize}
+  
+\end{Column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}<\nottheirhandout>{Exercises}
+  \begin{enumerate}
+  \item Re potential outcomes notation {}(G.\&G. ex.1, ch 1):
+    \begin{enumerate}
+    \item Explain the notation $Y_{i}(0)$ (as appears in G\&G 2012).
+    \item Contrast the meaning of ``$Y(0) | Z=1$'' w/ that of ``$Y(0) | Z=0$''.
+    \item How does $\mathbf{E}(Y(1) | Z=1)$ differ in meaning from $\mathbf{E}(Y(1))$?
+    \item Give an example of type of study in which $\mathbf{E}(Y(1) | Z=1) = \mathbf{E}(Y(1))$, explaining why they're the same.
+    \item Given an example of real or hypothetical study in which $\mathbf{E}(Y(1) | Z=1) \neq \mathbf{E}(Y(1))$.
+    \item Do randomized studies always satisfy $\mathbf{E}(Y(1) | Z=1) = \mathbf{E}(Y(1))$?  Why or why not?
+    \end{enumerate}
+\item (G.\&G. ex.4, ch 1) Suppose $z_{i} \in \{0,1\}$, all $i$; assume non-interference. Define the ATT as $\mathbf{z}'(\mathbf{y}_{T}-\mathbf{y}_{C})/\mathbf{z}'\mathbf{z}$.  Prove that if treatments are allocated using complete random assignmetn, then the ATT is equal in expectation to the average treatment effect.
+  \end{enumerate}
+
+\end{frame}
+
+\section{Expectations and ACEs}
+
+\begin{frame}{Probability review\footnote{See also G\& G, ch 2}}
+
+  \begin{itemize}
+  \item Fix a probability distribution for each RV.
+  \item (For simplicity, assume discrete.  As $\mathbf{Z}$ is discrete, in a randomized experiment)
+  \item  $\mathrm{E}(V) = \sum_v v\mathrm{P}(V=v) $, where $v$ ranges over possible values of $V$.
+  \item $\mathrm{E}(V + W) = \mathrm{E}(V) + \mathrm{E}(W)$.
+  \item For constant $c$, $\mathrm{E}(cV) = c\mathrm{E}(V)$.
+  \item In particular, 
+$$\mathrm{E}\left(\frac{1}{n} \sum_{i=1}^n V_i\right) = \frac{1}{n} \sum_{i=1}^n \mathrm{E} V_i.$$
+  \end{itemize}
+
+
+\end{frame}
+
+\begin{frame}{Test statistics and estimators}
+  
+\end{frame}
+\itnote{
+\item estimator/estimand; (statistic/parameter)
+\item $\mathrm{E}(Y(1))$ as a parameter
+\item $\frac{1}{N}\sum y_{Ti} $ as a parameter
+\item $\mathbf{Z}'\mathbf{y}/(\mathbf{Z}'\mathbf{Z})$ as a test statistic, and an estimator
+
+}
+
+
+\begin{frame}{The ACE ; unbiased estimation}
+  
+\end{frame}
+\itnote{
+\item G\&G on why unbiasedness is good: p. 34.
+\item A nice thing about this is that the difference of means is unbiased for the ACE whatever the potential outcome schedule.
+}
+\begin{frame}{SATEs and PATEs; unbiased(?) estimation}
+  
+\end{frame}
+
+\end{document}
+\section{Conditional expectation and FACEs}
+
+\begin{frame}{Conditional expectation}
+  
+  \begin{itemize}
+  \item $\mathrm{P}(A|B) =  $ conditional probability of A given that B
+  \item $\mathrm{E}(V|B) = \sum_v v\mathrm{P} ((V=v|B)$
+  \item if RVs $W$ and $V$ are independent, then $\mathrm{E}(V|W=w) = \mathrm{E}(V)$.
+  \item Random assignment ensures that $Z$ is independent of $Y_0$, $Y_1$.
+  \item So under random assignment, $\mathrm{E}(Y_0|Z=0) = \mathrm{E}(Y_0)$;  $\mathrm{E}(Y_1|Z=1) = \mathrm{E}(Y_1)$.
+  \item Note that $Z$ is not generally independent of $Y=DY_1 + (1-D)Y_0$!
+  \end{itemize}
+\end{frame}
+\note{
+``ETT''=$\EE\{\mathrm{ACE}(\mathbf{X})| Z=1\} $}
+
+\begin{frame}{FACEs and ACEs (Holland, 1988, \textit{Soc Meth}) }
+  \begin{enumerate}[<+->]
+  \item   Compare $\EE(Y | Z=1, \mathbf{x})$ to $\EE(Y_{t}| \mathbf{x})$.  In
+  an experiment, the same thing -- but how about in an obs study?
+\item Likewise  $\EE(Y | Z=0, \mathbf{x})$ vs $\EE(Y_{c}| \mathbf{x})$.
+\item ``ACE'' = $\EE(Y_t - Y_c| \mathbf{x}) = \EE(Y_{t}| \mathbf{x}) - \EE(Y_{c}| \mathbf{x})$
+\item ``FACE'' = $\EE(Y | Z=1, \mathbf{x}) - \EE(Y | Z=0, \mathbf{x})$
+\item The two coincide if
+$$ (Y_{t}, Y_{c}) \perp Z | \mathbf{X}$$
+and not ordinarily otherwise.
+  \end{enumerate}
+
+Jargon:
+``ACE'' above sometimes called ``$\mathrm{ACE}(\mathbf{x})$'',
+  in which case $\mathrm{ACE} = \EE\mathtt{ACE}(\mathtt{X}) = \EE\{ \EE(Y_{t}|\mathbf{X}) -
+  \EE(Y_{c}|\mathbf{X}) \}$.
+
+
+\end{frame}
+
+\itnote{
+\item Refer to sec 2.6 of G\&G 
+}
+\begin{frame}{Per-protocol and intention to treat}
+
+When there is \textit{non-compliance}, $Z$ and $D$ may differ.  \pause  
+
+  \begin{columns}
+    \begin{Column}
+  {\usebeamercolor[fg]{titlelike} The per-protocol estimator} \\      
+$\frac{1}{\# \{i: D_i = 1\}} \sum_{i:D_i=1} Y_i - \frac{1}{\# \{j: D_j = 0\}} \sum_{j:D_j=0} Y_j$
+\vspace{.6\textheight} 
+\mbox{ }
+    \end{Column}
+    \begin{Column}
+  {\usebeamercolor[fg]{titlelike} The intention-to-treat estimator} \\      
+$\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \sum_{j:Z_j=0} Y_j$
+\vspace{.6\textheight} 
+\mbox{ }
+
+    \end{Column}
+
+  \end{columns}
+\end{frame}
+
+\section{Differences-in-differences}
+
+\begin{frame}{D-in-D for studies with a lagged measure of the outcome}
+
+The \texttt{acorn} data set has
+
+  
+
+\end{frame}
+
+\end{document}
