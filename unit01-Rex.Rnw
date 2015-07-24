@@ -147,44 +147,81 @@ outcome for each precinct in a single number, we can follow Fisher's
 template exactly to attach a $p$-value to the proposition that the
 GOTV campaign was inefficacious.
 
-Here, precinct level outcomes are
-summarized by the proportion of registered voters in the precinct who
-actually voted.  This doesn't account for differences in precinct size
--- we'll see how to lift that limitation in due course.
-
+\subsection{Adapting the Fisher test to a continuous outcome}
+First, we'll take as our one-number summary of precinct level turnout 
+the proportion of registered voters in the precinct who
+actually voted.  
 <<>>=
-summary(subset(acorn, select=c(unit,size,z, vote03)))
+head(subset(acorn, select=c(unit,size,z, vote03)),3)
 @
 
-One test statistic would be the average of turnout proportions among
+Our test statistic could be the sum of these $y$s in the treatment group. Or, equivalently for the purposes of the test, the average of turnout proportions among
 precincts assigned to treatment.
 <<>>=
 with(acorn, sum(z * vote03)/sum(z))
 @
 
-Another test statistic is the difference in mean turnout proportions
-between treatment and control precincts.
+An ostensibly different test statistic is the difference in mean turnout proportions
+between treatment and control precincts.  
 
 <<>>=
 coef(lm(vote03~z, data=acorn))["z"]
 @
 
+
 Either choice gives a test statistic $T$ that tends to take larger values if GOTV positively effects voter turnout. So in both cases the appropriate one-sided p-value is $\mathrm{P}_0(T \geq t)$, where $t$ is the observed value of $T$ and $ \mathrm{P}_0(\cdot)$ indicates probability under the hypothesis of no effect.
 
 \textbf{Exercises.}
 \begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
-\item Pick one of these test statistics (or some other one), and analyze to obtain a one-sided p-value.
+\item Pick one of these test statistics, and analyze to obtain a one-sided p-value.  Argue either from first principles or by simulation that using the other one for your test gives the same p-value. 
 \item If there were concern that the treatment may have negatively affected the outcome, then a two-sided p-value might be more appropriate. (Another reason to prefer a two-sided p-value would be if one were preparing a research paper for an audience accustomed to two-sided p-values.)  Write a mathematical expression of the form $\mathrm{P}_0$([statement involving $T$]) that uniquely specifies the two-sided p-value. (Note: for some test statistics there may be more than one valid way of construing the two-sided p-value, not necessarily giving precisely the same answers.)
-\item Report your two-sided p-value.
+\item Report your two-sided p-value.  \setcounter{saveenumi}{\value{enumi}}
 \end{enumerate}
 
 
 
+\subsection{Some basic refinements of the test statistic}
 
+Our test statistic doesn't take into account the different sizes of the precincts.  Giving more weight to the large precincts might engender a more powerful test. 
 
+<<>>=
+coef(lm(vote03~z, weights=size, data=acorn))["z"]
+@
 
+The coefficient reported is equivalent to the difference between overall voting rates in treatment and control precincts.  (How is this different from what we got without weighting?)  So maybe it's preferable to the unweighted version in terms of interpretability.  For now, however, we're considering this as a test statistic only, so the reason to prefer it is if we think it'll give us more power to reject a null that happens to be false..
 
+Outliers can cut into the power%
+\footnote{They don't undercut its assumptions, as they would the assumption of Normally distributed errors; only power is affected. See \textit{Design of Observational Studies}, \S 2.3.} 
+of a randomization test.  
+The \texttt{vote03} proportions do appear to contain an outlier:
+<<>>=
+with(acorn, stem(vote03))
+@ 
 
+One way to address this is to use a test statistic based on ranks of the outcome observations:
+<<>>=
+with(acorn, sum(z * rank(vote03))/sum(z))
+@ 
+
+This is a ``rank sum test.'' Rosenbaum likes tests based on ranks. \textit{Design of Observational Studies} features the ``Wilcoxon signed rank test,'' a first cousin of the rank sum test that's adapted to paired data. 
+
+Another approach to the same problem is to use a robust regression routine. 
+<<>>=
+library(MASS)
+coef(rlm(vote03~z, data=acorn))["z"]
+@
+
+Robust regression (as opposed to the ranking approach) makes it easier to see how to  accommodate weights:
+<<>>=
+
+coef(rlm(vote03~z, weights=size, data=acorn))["z"]
+@
+
+\textbf{Exercises.}
+\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
+\item Select (or design) a test statistic addressing both the different sizes of the precinct and the possibility that there may be outlier.  Explain your choice.
+\item Use this new and improved test statistic to test the hypothesis of no effect. Comment briefly on the differences, if any, between this p-value and the one you obtained earlier.
+\end{enumerate}
 \bibliographystyle{plain}
 %% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
 \begin{thebibliography}{1}
