@@ -13,24 +13,43 @@
 Here is the Acorn GOTV experiment data described in Arceneaux (2005),
 after aggregation to the precinct level.
 <<>>=
-load("arceneaux2005AAAPSS.RData")
+acorn <- read.csv("data/acorn03.csv")
 @
 
-And here we load a library containing some functions we'll be using later on:
+And here we load libraries containing some functions we'll be using later on:
 <<>>=
+library(MASS)
+library(mosaic)
+library(optmatch)
 library(RItools)
 @ 
 
-NOTE: If running the above command gives you the following error, you'll need to install\footnote{%
+NOTE: If running any of the above commands gives you an error like
+the below, you'll need to install\footnote{%
 To install, first make sure you have an active internet connection.  Next, if you're using RStudio, you might use the interactive dialog that pops up when you select ``Install Packages\ldots'' from the Tools menu.  (Leave the ``Install dependencies'' option checked.)  Otherwise, enter
 \texttt{
 install.packages(\"RItools\", dep=T)
 }
-into R.  You'll be prompted to select a CRAN mirror; choose one that's nearby.  You'll also be asked about the directory to install the package to. The default selection should be fine. The installation process may take a few seconds to a few minutes, depending on your internet connection and on how many dependencies need installation.  Once it's finished, you should be able to load the package.  
+into R.  You'll be prompted to select a CRAN mirror; choose one that's
+nearby.  You'll also be asked about the directory to install the
+package to. The default selection should be fine. The installation
+process may take a few seconds to a few minutes, depending on your
+internet connection and on how many dependencies need installation.
+(The mosaic package has a bunch of dependencies and may take some
+time.)  Once it's finished, you should be able to load the package.  
+
+Jake \& Ben contribute to \texttt{RItools}, and may distribute a
+pre-release update to it, in the form of a file named something like ``\texttt{RItools\_0.1-13.tar.gz}.''  If so, you can load this in RStudio by
+opening the Install Packages tool and under ``Install from:'' select
+Package Archive File. It's a good idea to install the earlier version
+of the package first, in order to get the package dependencies.
 } the package before loading it:\\
 \begin{verbatim}
 Error in library(RItools) : there is no package called 'RItools'
 \end{verbatim}
+Both can be installed via the ``Install Packages'' Tool in the RStudio
+menu.  Make sure to install package dependencies. 
+
 
 Sigfigs in display:
 <<>>=
@@ -40,71 +59,248 @@ options(digits=3)
 
 The slides introduced response schedules characterized by the assumption that (a) each of the control precincts would, if randomized to treatment, have had a GOTV contact rate equal to \Sexpr{round(with(acorn, median(contact[z==1])) , 3)} (the median of contract rates observed in the treatment group actually obtained); and (b) one of the following.
 \begin{itemize}
-\item[No effect] says there was no effect (\texttt{RS0})
-\item[one per 10] says the GOTV campaign generated 1 vote for every 10 contacts (\texttt{RS1})
-\item[one per 5]says the GOTV campaign generated 1 vote for every 5 contacts (\texttt{RS2})
+\item[No effect] says there was no effect (\texttt{moe0})
+\item[one per 10] says the GOTV campaign generated 1 vote for every 10 contacts (\texttt{moe1})
+\item[one per 5]says the GOTV campaign generated 1 vote for every 5 contacts (\texttt{moe2})
 \end{itemize}
 
-As before, we define a function \texttt{make\_acorn\_RS} converting a hypothesized rate into a response schedule.  (Code suppressed from PDF; get it from the code script or the Unit 2 yhandout.)
-<<echo=false>>=
-make_acorn_RS <- function(rate) {
-  contact.imputeval = with(acorn, median(contact[z==1]))
-  contact.i = with(acorn, ifelse(z, contact, contact.imputeval))
 
-with(acorn, data.frame(yt=vote03+(1-z)*contact.i*rate, 
-                  yc=vote03-z*contact.i*rate
-                  )
-     )
-     }
-@ 
+Use \texttt{transform()}%
+\footnote{The \texttt{transform()} command serves two purposes,
+generating the copy and setting up an evaluation environment within
+which you can directly reference \texttt{acorn} variables --- i.e.,
+what we've otherwise used the \texttt{with()} command to do.}
+to create a copy of \texttt{acorn} containing additional columns to
+represent $\mathbf{y}_{c}$ as it would be under each of our models
+of effect.  I call it \texttt{acorn.e}, short for ``acorn extended.''
 <<>>=
-RS0 = make_acorn_RS(0)
-RS1 = make_acorn_RS(.1)
-RS2 = make_acorn_RS(.2)
+acorn.e <- transform(acorn, 
+                     yc.moe0 =  vote03,
+                     yc.moe1 = vote03 - contact/10,
+                     yc.moe2 = vote03 -contact/5
+                     )
 @ 
 
-\section{Testing causal hypotheses corresponding to the 3 schedules}
+\texttt{Exercise.}\\  \newcounter{saveenumi}
+\begin{enumerate}
+\item Specify a fourth model-of-effect for the acorn data, something
+  non-identical to the three above, and use it to construct a
+  \texttt{yc.moe3}, to live alongside \texttt{yc.moe0}, \ldots,
+  \texttt{yc.moe2} inside of \texttt{acorn.e}.  It might or might not specify
+  that unit-level treatment effects depend on compliance; up to you.
+  \setcounter{saveenumi}{\value{enumi}}
+\end{enumerate}
 
-Each response schedule reflects a hypothesis that can be tested.  To do so, use $z$, the response schedule's version of $y_c$, and (optionally) covariate information $x$ to compute a test statistic $t= T(z, y_c, \mathbf{x})$; then compare this value to the distribution of $t(Z, y_c, \mathbf{x})$ under hypothetical re-randomizations of $Z$.  For example, taking $t(z, y, x) = z'y$, the hypothesis of no affect is tested by taking $y_c$ from \texttt{RS0}, as follows.
+\section{Testing models of effects via simulation}
 
+To test a MOE, use the correspondingly  reconstructed $y_{c}$, $z$,
+and (optionally) covariate information $x$ to compute a test statistic
+$t= T(\mathbf{z}, \mathbf{y}_c, \mathbf{x})$; then compare this value
+to the distribution of $t(\mathbf{Z}, \mathbf{y}_c, \mathbf{x})$ under
+hypothetical re-randomizations of $\mathbf{Z}$.  
+
+\subsection{Tests based on OLS/differences of means}
+
+For example, using
+the difference-of-means test statistic,
+$t(\mathbf{z}, \mathbf{y}, \mathbf{x}) =
+\mathbf{z}'\mathbf{y}/\mathbf{z}'\mathbf{z} - (\mathbf{1} -\mathbf{z})'\mathbf{y}/(\mathbf{1} -\mathbf{z})'(\mathbf{1} -\mathbf{z})$, the hypothesis of no effect is tested as follows.
+
+First, cross-check the new column against old  and extract just the difference of means from a linear regression object:
 <<>>=
-actualD = coef(lm(vote03~z, data=acorn))["z"]
-
-newdata = data.frame(RS0, z=acorn$z)
-actualD == coef(lm(yc~z, data=newdata))["z"]
+lm(vote03~z, data=acorn.e)
+lm(yc.moe0~z, data=acorn.e) # same answer as w/ last calc?
+coef(lm(yc.moe0~z, data=acorn.e))[2] # are we extracting the right coeff?
+@ 
+Store $t(\mathbf{z}, \mathbf{y}, \mathbf{x})$:
+<<>>=
+actualD = coef(lm(yc.moe0~z, data=acorn.e))[2]
 @ 
 This verifies that the response schedule is consistent w/ what was observed after the experiment.  Going on to simulate repeated trials of the experiment:
 <<>>=
-simD = replicate(1000, {
-  newdata = data.frame(RS0, z=sample(acorn$z))
-  coef(lm(yc~z, data=newdata))["z"]
-})
+simD = replicate(1000, coef(lm(yc.moe0~shuffle(z), data=acorn.e))[2])
+
 @ 
 
-And for a two-sided p-value:
+(Note: the \texttt{mosaic} package provides a nifty alternative to \texttt{replicate()}:
+<<eval=false>>=
+simD = do(1000) * coef(lm(yc~shuffle(z), data=acorn.e))[2]
+@ 
+For the demo we'll stick with \texttt{replicate()}, however, since
+some of won't otherwise have use for \texttt{mosaic} in your regular workflows.)
+
+One and two-sided p-value can be calculated as follows:
 <<>>=
-mean(abs(simD)>=abs(actualD))
+mean(simD>=actualD)
+2*pmin(mean(simD>=actualD), mean(simD<=actualD))
+@ 
+(``Two sided p-value'' can be interpreted in different ways; this
+follows the interpretation $2\min\big( \mathrm{Pr}(T\leq t),
+\mathrm{Pr}(T\geq t) \big)$, which is relatively general.)  
+
+\textbf{Exercise.}
+\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
+\item Figure one- and two-sided p-values corresponding to the
+  remaining 3 hypotheses, using the difference-of-means test statistic.
+  \setcounter{saveenumi}{\value{enumi}}
+\end{enumerate}
+
+This uses as a test statistic the simple difference of means between
+the groups.  As discussed in this unit, this choice often fails to maximize power. To focus ideas, however, we'll continue with it, for the moment.
+
+\subsection{Modifying the test statistic for robustness}
+
+It's very simple to adapt this procedure by applying the rank
+transformations to the outcomes prior to making comparisons between
+the two groups. For example, 
+<<eval=false>>=
+actualD = coef(lm(rank(yc.moe0)~z, data=acorn.e))[2]
+simD = replicate(1000, coef(lm(rank(yc.moe0)~shuffle(z), data=acorn.e))[2])
+@ 
+Under complete random assignment, this give a test equivalent to the  \textit{Wilcoxon rank-sum test}. 
+
+Robustification via robust regression is also pretty easy, at least
+with small data sets for which things run quickly.
+<<eval=false>>=
+actualD = coef(rlm(yc.moe0~z, data=acorn.e))[2]
+simD = replicate(1000, coef(rlm(yc.moe0~shuffle(z), data=acorn.e))[2])
 @ 
 
-This uses as a test statistic the simple difference of means between the groups.  As will be discussed separately, this choice fails to maximize power. To focus ideas, however, we'll continue with it, for the moment.
+\textbf{Exercise.}
+\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
+\item Figure one- and two-sided p-values for your four 
+  models of effect, using one of the test statistics just mentioned. 
+  \setcounter{saveenumi}{\value{enumi}}
+\end{enumerate}
 
+
+The version using \textit{rlm} is a little bit slower because robust regression is marginally
+slower than ordinary least squares regression, since it has to
+determine a data-dependent threshold using iterative least squares.
+(It's the threshold $t$ at which the residuals/deviations are to be top- and
+bottom-coded, ie $e \mapsto \max(-t, \min(t,e))$.)
+
+For a zippier variation, determine a threshold before starting the
+simulations, and apply the same one in each simulation.  
+<<>>=
+(rlm0 <- rlm(yc.moe0~1, data=acorn.e))
+@
+The ``\texttt{1}''  on the right hand side stands for ``Intercept''. Note that this time we've omitted the ``z'';
+see exercises below.
+
+With basic Huber M-estimation (\texttt{rlm()} with default settings),
+the threshold is 1.345 times the scale estimate:
+<<>>=
+rlm0$s
+thresh.moe0 <- 1.345 * rlm0$s
+acorn.e <- transform(acorn.e, yc.t.moe0 = sign(yc.moe0)*min(thresh.moe0, abs(yc.moe0)))
+actualD <- coef(lm(yc.t.moe0 ~z, data=acorn.e))[2]
+simD <-  replicate(1000, coef(lm(yc.t.moe0~shuffle(z), data=acorn.e))[2])
+@ 
+
+\textbf{Exercise.}
+\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
+\item If a test involving thresholding of $y$s is to be accurately
+  described as a permutation test, then the threshold shouldn't depend
+  on the realized value of $\mathbf{Z}$ --- any other $\mathbf{z}$
+  should give the same threshold.  How come?
+ \item More specifically, \textit{if} the specific model-of-effects under test
+   is correct, \textit{then} any other value of $ \mathbf{Z}$ that's
+   consistent with the design should give rise to the same
+   threshold. Why is it OK for this not to be true of the
+   model-of-effect is untrue? 
+  \setcounter{saveenumi}{\value{enumi}}
+\end{enumerate}
+
+\section{Testing without simulations}
 The function \texttt{xBalance}, pre-defined in the \texttt{RItools} library, can be used to calculate this test statistic and immediately obtain a large-sample approximation to its p-value. 
 
 <<>>=
-xBalance(z ~ vote03, data=acorn, report="all")
+xBalance(z ~ yc.moe0, data=acorn.e, report="all")
 @ 
 (Observe that the formula I use at the beginning, \texttt{z \textasciitilde\  vote03}, is the mirror image of the formula I would have given to \texttt{lm}, \texttt{vote03 \textasciitilde\ z}.  The reasons for this will come into focus when we use \texttt{xBalance} with observational studies, later.)
+This test is based on the difference of means.  You can fix in much
+the same way we touched up our simulations, above:
+<<>>=
+
+@ 
+Starting with RItools version 0.1-13%
+\footnote{%
+  The version just before, 0.1-13, accepts the
+  \texttt{post.alignment.transform} argument, but it's a little buggy.
+}, you can ask the funtion to
+report the ordinary difference of means while using a transformed
+version of the variable to calculate corresponding z-statistics and p values:
+<<>>=
+xBalance(z ~ yc.moe0, data=acorn.e, 
+         report=c("adj.means", "std.diffs", "z.scores"), 
+         post.alignment.transform=rank)
+
+@ 
 
  \texttt{xBalance} is using a Normal approximation, so the p-values are determined by the z-statistic.  We'd have rejection at level $\alpha$ if the absolute value of that statistic exeeded the $1-\alpha/2$ quantile of the Normal distribution.    If we have preselected an $\alpha$, \texttt{xBalance} permits us to test a bunch of these hypotheses at once. 
 
 <<>>=
-xBalance(z ~ yc0 + yc1 + yc2, 
-         data=data.frame(acorn, yc0=RS0$yc, yc1=RS1$yc, yc2=RS2$yc),
-         report="z.scores")
+xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2, 
+         data=acorn.e,
+         report=c("adj.means", "std.diffs", "z.scores"))
 @ 
 
-So the hypothesis associated with \texttt{RS2} is rejected at level .05, although the other two are not. At the 2/3 level ($z_{5/6}=$\Sexpr{round(qnorm(5/6) ,2)}) the hypothesis of no effect would be rejected also, although the one-in-ten hypothesis would be sustained.
+So the hypothesis associated with \texttt{moe2} is rejected at level .05, although the other two are not. At the 2/3 level ($z_{5/6}=$\Sexpr{round(qnorm(5/6) ,2)}) the hypothesis of no effect would be rejected also, although the one-in-ten hypothesis would be sustained.
 
+For the same descriptive measures coupled With wilcoxon rank-sum
+tests, as oppposed to tests based on the difference of means
+statistic, use
 
+<<>>=
+xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2, 
+         report=c("adj.means", "std.diffs", "z.scores"), 
+         data=acorn.e, post.alignment.transform=rank)
+@ 
+Some p-values go up, others down. Again, this assumes version 0.1-13 or later of RItools.
 
+\section{Block random assignment and post-stratified designs}
+
+To emulate a block-randomized study, let's post-stratify the Acorn
+experiment into pairs, on the basis of turnout rates in the last few
+prior elections.
+
+<<>>=
+acorn.e <- transform(acorn.e, pairs=pairmatch(z~size+v_p2003+v_m2003, data=acorn))
+@ 
+
+The test statistic itself doesn't necessarily have to be modified to
+reflect stratification.
+<<>>=
+actualD = coef(lm(rank(yc.moe0)~z, data=acorn.e))[2]
+@ 
+Its reference distribution does, however.  
+<<>>=
+simD = replicate(1000, coef(lm(rank(yc.moe0)~shuffle(z, groups=pairs), data=acorn.e))[2])
+@ 
+Note the \texttt{groups}
+argument given to \texttt{shuffle()}: to see what this is doing, try
+it yourself at the command line:
+<<eval=false>>=
+with(acorn.e, cbind(pairs, z, shuffle(vote03, groups=pairs)))
+@ 
+
+To achieve the same effect without simulating, 
+<<>>=
+xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2, 
+         strata=acorn.e$pairs,
+         report=c("adj.means", "std.diffs", "z.scores"), 
+         data=acorn.e, post.alignment.transform=rank)
+
+@ 
+
+In the development version of RItools you can get the same effect via
+<<eval=false>>=
+xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2 + strata(pairs) -1, 
+         report=c("adj.means", "std.diffs", "z.scores"), 
+         data=acorn.e, post.alignment.transform=rank)
+@ 
+The \texttt{strata(pairs)} tells it to include stratification on
+\texttt{pairs}, and the \texttt{-1} signals that we don't also need
+the unstratified comparison.
 \end{document}
