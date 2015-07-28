@@ -55,7 +55,7 @@ with(coffee, sum(z*y))
 @
 or, to use an R function mirroring our notation,
 <<>>=
-with(coffee, crossprod(z, y)) # beware: `crossprod` return a **matrix** (of dim (1,1))
+with(coffee, crossprod(z, y)) # beware: crossprod() return a **matrix** (of dim (1,1))
 with(coffee, crossprod(z, y)[1,1]) #to return a length-1 vector instead
 @
 
@@ -107,15 +107,21 @@ This says that the null distribution of $T = Z'y$ can be approximated as
 round(table(simT)/1000, 2)
 @
 
-To calculate the corresponding approximate p-value, $\mathrm{Pr}(T\geq a)$, at the command line, do
+To calculate the corresponding approximate, one-sided p-value, $\mathrm{Pr}(T\geq a)$, at the command line, do
 <<>>=
 actualT = with(coffee, sum(z*y))
 mean( simT >= actualT )
 @
+%The analogous two-sided p-value, following the general definition of
+%the two-sided p-value as $2\min\big( \mathrm{Pr}(T\leq a),
+%\mathrm{Pr}(T\geq a) \big)$, is 
+<<eval=false, echo=false>>=
+2*min( mean( simT <= actualT ), mean( simT >= actualT ) )
+@ 
 With $N$ simulations, the error of approximation for a quantities of the form $P(T \geq a)$
 can itself be approximated as $1/\sqrt{N}$: in this case,
 \Sexpr{round(1/sqrt(1000), 2)}.  So the simulation approximation to
-our $p$-value is \Sexpr{sum(simT==4)/1000} $\pm$ \Sexpr{round(1/sqrt(1000), 2)}.
+our one-sided $p$-value is \Sexpr{sum(simT==4)/1000} $\pm$ \Sexpr{round(1/sqrt(1000), 2)}.
 
 \textbf{Exercise:} Replicate this analysis for yourself, but using a different choice of $N$ (and if you like, a different test statistic). 
 
