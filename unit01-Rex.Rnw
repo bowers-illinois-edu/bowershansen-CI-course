@@ -77,8 +77,9 @@ with(coffee, sum(z*y)/sum(z) - sum((1-z)*y)/sum(1-z))
 which can be calculated more simply via
 <<>>=
 lm(y ~ z, data=coffee)
-coef(lm(y ~ z, data=coffee))["z"]
+coef(lm(y ~ z, data=coffee))[2]
 @
+(The "[2]" picks out the second of the two coefficients reported.)
 
 Assuming that the test statistic $T$ has been defined in such a way that
 larger values are more favorable to the proposition we're out to get
@@ -106,6 +107,11 @@ This says that the null distribution of $T = Z'y$ can be approximated as
 round(table(simT)/1000, 2)
 @
 
+To calculate the corresponding approximate p-value, $\mathrm{Pr}(T\geq a)$, at the command line, do
+<<>>=
+actualT = with(coffee, sum(z*y))
+mean( simT >= actualT )
+@
 With $N$ simulations, the error of approximation for a quantities of the form $P(T \geq a)$
 can itself be approximated as $1/\sqrt{N}$: in this case,
 \Sexpr{round(1/sqrt(1000), 2)}.  So the simulation approximation to
@@ -158,14 +164,15 @@ head(subset(acorn, select=c(unit,size,z, vote03)),3)
 Our test statistic could be the sum of these $y$s in the treatment group. Or, equivalently for the purposes of the test, the average of turnout proportions among
 precincts assigned to treatment.
 <<>>=
-with(acorn, sum(z * vote03)/sum(z))
+with(acorn, sum(z * vote03)/14)
 @
+(as there were 14 treatment precincts).
 
 An ostensibly different test statistic is the difference in mean turnout proportions
 between treatment and control precincts.  
 
 <<>>=
-coef(lm(vote03~z, data=acorn))["z"]
+coef(lm(vote03~z, data=acorn))[2]
 @
 
 
@@ -185,7 +192,7 @@ Either choice gives a test statistic $T$ that tends to take larger values if GOT
 Our test statistic doesn't take into account the different sizes of the precincts.  Giving more weight to the large precincts might engender a more powerful test. 
 
 <<>>=
-coef(lm(vote03~z, weights=size, data=acorn))["z"]
+coef(lm(vote03~z, weights=size, data=acorn))[2]
 @
 
 The coefficient reported is equivalent to the difference between overall voting rates in treatment and control precincts.  (How is this different from what we got without weighting?)  So maybe it's preferable to the unweighted version in terms of interpretability.  For now, however, we're considering this as a test statistic only, so the reason to prefer it is if we think it'll give us more power to reject a null that happens to be false..
@@ -200,7 +207,7 @@ with(acorn, stem(vote03))
 
 One way to address this is to use a test statistic based on ranks of the outcome observations:
 <<>>=
-with(acorn, sum(z * rank(vote03))/sum(z))
+with(acorn, sum(z * rank(vote03))/14)
 @ 
 
 This is a ``rank sum test.'' Rosenbaum likes tests based on ranks. \textit{Design of Observational Studies} features the ``Wilcoxon signed rank test,'' a first cousin of the rank sum test that's adapted to paired data. 
@@ -208,13 +215,13 @@ This is a ``rank sum test.'' Rosenbaum likes tests based on ranks. \textit{Desig
 Another approach to the same problem is to use a robust regression routine. 
 <<>>=
 library(MASS)
-coef(rlm(vote03~z, data=acorn))["z"]
+coef(rlm(vote03~z, data=acorn))[2]
 @
 
 Robust regression (as opposed to the ranking approach) makes it easier to see how to  accommodate weights:
 <<>>=
 
-coef(rlm(vote03~z, weights=size, data=acorn))["z"]
+coef(rlm(vote03~z, weights=size, data=acorn))[2]
 @
 
 \textbf{Exercises.}
