@@ -2,10 +2,10 @@
 %\input{slidesonly}
 
 % % For handout
-%\input{handout}
+\input{handout}
 
 %For handout + mynotes
-\input{handout+mynotes}
+%\input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -228,9 +228,34 @@ Note that these models don't specify $y_{t}$ for precincts we only got to observ
 
 
 
-\begin{frame}{A model of effects for Medellin homicide rate}
+\begin{frame}[fragile]{A model of effects-type analysis for Medellin homicide rate}
+
+To summarize neighborhood-level homicide rates' departures from 
+ trend, over a 4 year period, for each model of effects I fit a random
+ effects model of this form:
+
+\begin{verbatim}
+ lmer(Count~ yearsPreFrom02 + yearspost+ + moe.offset
+             + (yearsPreFrom02 + yearspost+1|nh),
+     family=poisson, data=homd)
+\end{verbatim}
+
+The \texttt{moe.offset} term was created from a treatment effect on
+the log rate scale, \texttt{t.e.}, as follows:
+\begin{verbatim}
+data <- transform(data, oset=(t.e./4)*(Group=="T")*yearspost)
+\end{verbatim}
   
 \end{frame}
+
+\begin{frame}<\nottheirhandout>{Outcome analysis for the Medellin study}
+  
+  \begin{center}
+    \igrphx[width=\linewidth]{RIoutcomeAnalysisBarchart}
+  \end{center}
+
+\end{frame}
+
 
 \section{Inference w/ general models of effects}
 \begin{frame}{Incomplete response schedules and statistical testing}
