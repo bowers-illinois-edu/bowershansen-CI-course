@@ -1,0 +1,257 @@
+%  For slides only
+%\input{slidesonly}
+
+% % For handout
+%\input{handout}
+
+%For handout + mynotes
+\input{handout+mynotes}
+
+\input{beamer-preamble-bbh-all}
+\input{defs-all}
+
+\title{Unit 3: Fisherian randomization inference and models of effects}
+% \author, date moved to beamer-preamble-*-all.tex
+
+\begin{document}
+
+
+  \begin{frame}
+    \frametitle{Outline \& Readings}
+
+\tableofcontents[subsectionstyle=show/hide/hide]
+
+  \alert{Readings for this Unit:}\\
+  \begin{itemize}
+  \item Bowers, Fredrickson and Panagopoulos (2013), \S1-4. 
+  \item Rosenbaum's (1996) comment on Angrist, Imbens and Rubin's (1996) ``Identification of causal effects using instrumental variables.'' (\texttt{Resources/Papers/rosenbaum1997\{AIRcomment\}.pdf})
+  \end{itemize}
+
+\input{announcement-of-the-day}  % announcement-of-the-day.tex not
+                                % part of repo
+
+\end{frame}
+
+\section{Tests for normal, not Normal, data distributions}
+
+\begin{frame}[<+->]{Review: permutation tests vs parametric tests}
+
+When comparing 2 or more groups, one can often choose between permutation tests and parametric tests.
+\begin{itemize}
+\item both begin by computing a test statistic
+\item they differ in terms of what they compare the statistic to in order to get a p-value
+\item parametric tests lean on stronger assumptions
+\item permutation tests can use a model to ``motivate'' a test statistic, then compare that test statistic to a permutation-based reference distribution in order committing to the model's assumptions.
+\item likewise, the permutational approach circumvents sample-size requirements for p-values' validity.
+\end{itemize}
+
+Software notes:
+\begin{itemize}
+\item In unit 2, $z$'s were permuted using \texttt{sample(z)}.
+\item \texttt{sample()} is part of base R, but ``\textrm{shuffle}'' would be more intuitive.
+\item The ``mosaic'' add-on package provides a \texttt{shuffle()} command. 
+\end{itemize}
+
+\end{frame}
+
+\subsection{Unstratified case}
+\begin{frame}{Test statistics for comparing means with Normal \& non-Normal data}
+
+Stepping back momentarily from issues specific to causal inference, consider the one-way model
+$$
+Y = \mu + Z\tau + \epsilon,\, \mathbf{E}(\epsilon) = 0.
+$$
+
+Suppose the goal is to test the hypothesis that $\tau = 0$. 
+  
+\begin{itemize}[<+->]
+\item If $\epsilon \sim \mathcal{N}(0, \sigma^{2})$, some $\sigma >0$, regardless of whether $Z=1$ or 0, the difference of means is optimal, in various senses, as an estimator of $\tau$. By extension, using it as a test statistic gives favorable power.
+\item True both for parametric tests (t-test) and permutation tests. 
+\item If $\epsilon$ follows some other distribution, or isn't the same for the two groups, the situation changes.
+\item Parametric $t$-tests may have sizes less than their levels. Permutation $t$-tests will maintain size.
+\item On the other hand, \textit{power} suffers.
+\item A simple explanation: the difference of means reacts so strongly to outliers as to tend to obscure differences due to a treatment effect.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{M-estimation using Huber's loss/psi function} \framesubtitle{as a remedy for the difference in means' hypersensitivity}
+  \begin{columns}
+    \begin{Column}
+          \begin{center}
+         {\usebeamercolor[fg]{titlelike} Huber vs squared-error loss} 
+    \end{center}
+      \igrphx{huber-loss-fct}
+    \end{Column}
+    \begin{Column}
+          \begin{center}a
+         {\usebeamercolor[fg]{titlelike} Huber's psi function} 
+    \end{center}
+
+\igrphx{Hubers-Psi-Graph}
+    \end{Column}
+  \end{columns}
+\pause
+In practice, Huber's M-estimation top- and bottom-codes the residuals at a data-dependent threshold, then minimizes sums of squares.
+\end{frame}
+\begin{frame}{Rank-based tests } \framesubtitle{as a remedy for the difference in means' hypersensitivity}
+  
+\end{frame}
+\subsection{Adaptations for stratified data}
+
+\begin{frame}{For permutation tests of block-randomized experiments}
+  
+  \begin{enumerate}
+  \item If you're using a regression model to generate test statistics, consider adding fixed effects for blocks. (Not necessary, but consider it.)
+  \item  You \textit{have to} permute $Z$ separately within strata -- i.e.,\\ 
+\texttt{> shuffle(z, groups=myblocks)}\\
+in order to have a  valid permutation test. True whether or not $\mathrm{Pr}(Z=1|S=s)$ depends on $s$, although more variation in that probability makes things worse.
+  \end{enumerate}
+
+
+
+
+\end{frame}
+
+\begin{frame}{Test statistics for comparing means with Normal \& non-Normal data}
+
+If treatment was assigned separately within strata, a two-way anova model is often used:
+$$
+Y = \sum_{s}\{S=s\}\alpha_{s} + Z\tau + \epsilon,\, \mathbf{E}(\epsilon) = 0.
+$$  
+I.e., the model adds per-stratum ``fixed effects''.  Similar considerations as above apply. OLS estimates of $\tau$:
+\begin{itemize}[<+->]
+  \item Are optimal, both as estimates and as statistics for testing hypotheses about $\tau$, if $\epsilon \sim \mathcal{N}(0, \sigma^{2})$;
+  \item Need not have the right size, and typically will have suboptimal power, otherwise.
+  \item Permutation-based versions of these tests have correct size\ldots
+  \item But still suffer in terms of power.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Adapting Huber's M-estimation to tests w/ stratified data}
+
+
+      Two approaches:
+      \begin{enumerate}
+      \item using Huber's loss, fit a two-way model  --- 
+$$
+Y = \sum_{s}\{S=s\}\alpha_{s} + Z\tau + \epsilon,\, \mathbf{E}(\epsilon) = 0.
+$$  
+The test statistic is the $\hat{\tau}$ that results.
+\item using Huber's loss, fit a one-way model \textit{with no $Z$-contribution},
+$$
+Y = \sum_{s}\{S=s\}\alpha_{s} + \epsilon,\, \mathbf{E}(\epsilon) = 0.
+$$  
+Write residuals from this model as $e$, $\tilde{e} = \psi(e)$.  The test statistic is the difference-of-means in $\psi(e)$ (or, equivalently, $Z'\tilde{e}$).
+      \end{enumerate}
+
+
+
+  
+\end{frame}
+\begin{frame}{Example: violence and public infrastructure in Medellin, Colombia}
+  
+\frametitle{Example: Violence and public infrastructure in Medell{\'i}n, Colombi
+a}
+\begin{columns}
+  \begin{column}{.5\linewidth}
+    \begin{itemize}
+    \item 2 million residents; 16 districts
+    \item Pre-intervention: 60\% poverty rate, 20\% unemployment, homicide 185 p
+er 100K
+    \item High residential segregation
+    \item<2-> 2004-2006: infrastructure intervention for certain poor neighborho
+ods.
+    \end{itemize}
+  \end{column}
+  \begin{column}{.5\linewidth}
+    \only<1>{\igrphx{medellin-conc-pov}}
+\only<2-\mynoteonly>{\igrphx{medellin-gondola}}
+  \end{column}
+\end{columns}
+
+\end{frame}
+\Note{(strata will enter the story because the end analysis involved matching)}
+
+
+
+\section{Models of effects}
+\begin{frame}{A simple model of effects for the Acorn GOTV experiment}
+  
+One simple model is that the GOTV campaign increases voter turnout by $p$ percentage points per precinct.
+
+\begin{center}
+  \begin{tabular}{r|rr|rr}
+  \hline
+ & GOTV? & vote03(\%)& $y_c$ & $y_t$ \\ 
+  \hline
+1 & 0 & 38 & 38 & $38+p$\\
+$\vdots$& & & & \\
+13 & 0 & 19 & 19& $19+p$\\ 
+14 & 0 & 34 & 34& $34+p$\\ 
+15 & 1 & 49 & $49-p$& 49\\ 
+16 & 1 & 38 & $38-p$& 38\\ 
+$\vdots$& & & & \\
+28 & 1 & 29 & $29-p$& 29\\
+   \hline
+\end{tabular}
+
+\end{center}
+
+This family of hypotheses, as $p$ varies between $-100$ and $100$, can be called a \textit{model of effects}.
+\end{frame}
+
+\begin{frame}{A more nuanced model for the Acorn GOTV experiment}
+
+Recall that a \textit{response schedule} is a complete specification of unit-level responses to the experiment under every possible random assigment. 
+
+It's often more natural to hypothesize only about how treated units would have responded to control, not also how controls would have responded to treatment. For example, here are 3 competing models of the effects of the Acorn GOTV campaign: 
+\begin{itemize}
+\item[No effect] says there was no effect (\texttt{RS0})
+\item[one per 10] says the GOTV campaign generated 1 vote for every 10 contacts (\texttt{RS1})
+\item[one per 5]says the GOTV campaign generated 1 vote for every 5 contacts (\texttt{RS2})
+\end{itemize}
+
+\pause
+Note that these models don't specify $y_{t}$ for precincts we only got to observe under control, $z=0$ --- they leave ``blanks'' in the potential schedule.  That's OK.
+
+\end{frame}
+
+
+
+\begin{frame}{A model of effects for Medellin homicide rate}
+  
+\end{frame}
+
+\section{Inference w/ general models of effects}
+\begin{frame}{Incomplete response schedules and statistical testing}
+   An incomplete response schedule can still give us enough to do statistical testing. For example, if the schedule specifies $y_c$ for all subjects, then we can compare the difference in means in $y_c$ under the realized assigment and all possible other assigments.  
+
+Using this test statistic for a two-sided test gives approximately
+
+\begin{center}
+\begin{tabular}{l|rrr} \hline
+& \multicolumn{3}{c}{votes/ 10 contacts}\\ 
+  Hypothesis & 0 & 1 & 2 \\ \hline
+$p$ (2-sided) & .15 & .38 & .003 \\ \hline 
+\end{tabular}
+\end{center}
+
+(see \texttt{unit3-MOEs.pdf}).
+\end{frame}
+
+\begin{frame}{Confidence intervals and models of effects}
+
+  \begin{itemize}[<+->]
+  \item The 3 models just considered fall under the broader model that the GOTV  
+generated $v$ votes per contact, some $v \in [-1, 1]$.
+\item Assuming that model, the 95\% CI for $v$ is the collection of $v$s corresponding to incomplete response schedules that would not be rejected at level .05 - a confidence interval by inversion of a family of hypothesis tests.
+\item If you want an estimate to go with such a confidence interval, the convention is to report a \textit{Hodges-Lehmann} estimate --- essentially, limit of 100*$(1-\alpha)$\% CIs, as $\alpha \downarrow 0$.
+\item There's no precise analogue of the ``standard error.''
+\item However, for some of the spirit of a ``standard error'', report a sometimes 2/3 CI alongside a 95\% CI, as suggested by Mosteller \& Tukey (1977, \textit{Data analysis and regression}).
+\item We just backed out estimates of the ``Complier average treatment effect,'' and associated confidence intervals, w/o violating the intention-to-treat principle! (Rosenbaum, 1997).
+  \end{itemize}
+
+
+\end{frame}
+\end{document}

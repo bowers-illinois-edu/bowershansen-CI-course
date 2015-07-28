@@ -1,0 +1,110 @@
+\documentclass{article}
+%\usepackage{natbib}
+
+\title{Lab on Fisherian randomization inference and models of effects }
+\author{ICPSR Causal Inference '14}
+\usepackage{icpsr-classwork}
+
+\begin{document}
+\maketitle
+
+\section{Preliminaries}
+\subsection{Setup}
+Here is the Acorn GOTV experiment data described in Arceneaux (2005),
+after aggregation to the precinct level.
+<<>>=
+load("arceneaux2005AAAPSS.RData")
+@
+
+And here we load a library containing some functions we'll be using later on:
+<<>>=
+library(RItools)
+@ 
+
+NOTE: If running the above command gives you the following error, you'll need to install\footnote{%
+To install, first make sure you have an active internet connection.  Next, if you're using RStudio, you might use the interactive dialog that pops up when you select ``Install Packages\ldots'' from the Tools menu.  (Leave the ``Install dependencies'' option checked.)  Otherwise, enter
+\texttt{
+install.packages(\"RItools\", dep=T)
+}
+into R.  You'll be prompted to select a CRAN mirror; choose one that's nearby.  You'll also be asked about the directory to install the package to. The default selection should be fine. The installation process may take a few seconds to a few minutes, depending on your internet connection and on how many dependencies need installation.  Once it's finished, you should be able to load the package.  
+} the package before loading it:\\
+\begin{verbatim}
+Error in library(RItools) : there is no package called 'RItools'
+\end{verbatim}
+
+Sigfigs in display:
+<<>>=
+options(digits=3)
+@ 
+\subsection{The response schedules introduced in the slides}
+
+The slides introduced response schedules characterized by the assumption that (a) each of the control precincts would, if randomized to treatment, have had a GOTV contact rate equal to \Sexpr{round(with(acorn, median(contact[z==1])) , 3)} (the median of contract rates observed in the treatment group actually obtained); and (b) one of the following.
+\begin{itemize}
+\item[No effect] says there was no effect (\texttt{RS0})
+\item[one per 10] says the GOTV campaign generated 1 vote for every 10 contacts (\texttt{RS1})
+\item[one per 5]says the GOTV campaign generated 1 vote for every 5 contacts (\texttt{RS2})
+\end{itemize}
+
+As before, we define a function \texttt{make\_acorn\_RS} converting a hypothesized rate into a response schedule.  (Code suppressed from PDF; get it from the code script or the Unit 2 yhandout.)
+<<echo=false>>=
+make_acorn_RS <- function(rate) {
+  contact.imputeval = with(acorn, median(contact[z==1]))
+  contact.i = with(acorn, ifelse(z, contact, contact.imputeval))
+
+with(acorn, data.frame(yt=vote03+(1-z)*contact.i*rate, 
+                  yc=vote03-z*contact.i*rate
+                  )
+     )
+     }
+@ 
+<<>>=
+RS0 = make_acorn_RS(0)
+RS1 = make_acorn_RS(.1)
+RS2 = make_acorn_RS(.2)
+@ 
+
+\section{Testing causal hypotheses corresponding to the 3 schedules}
+
+Each response schedule reflects a hypothesis that can be tested.  To do so, use $z$, the response schedule's version of $y_c$, and (optionally) covariate information $x$ to compute a test statistic $t= T(z, y_c, \mathbf{x})$; then compare this value to the distribution of $t(Z, y_c, \mathbf{x})$ under hypothetical re-randomizations of $Z$.  For example, taking $t(z, y, x) = z'y$, the hypothesis of no affect is tested by taking $y_c$ from \texttt{RS0}, as follows.
+
+<<>>=
+actualD = coef(lm(vote03~z, data=acorn))["z"]
+
+newdata = data.frame(RS0, z=acorn$z)
+actualD == coef(lm(yc~z, data=newdata))["z"]
+@ 
+This verifies that the response schedule is consistent w/ what was observed after the experiment.  Going on to simulate repeated trials of the experiment:
+<<>>=
+simD = replicate(1000, {
+  newdata = data.frame(RS0, z=sample(acorn$z))
+  coef(lm(yc~z, data=newdata))["z"]
+})
+@ 
+
+And for a two-sided p-value:
+<<>>=
+mean(abs(simD)>=abs(actualD))
+@ 
+
+This uses as a test statistic the simple difference of means between the groups.  As will be discussed separately, this choice fails to maximize power. To focus ideas, however, we'll continue with it, for the moment.
+
+The function \texttt{xBalance}, pre-defined in the \texttt{RItools} library, can be used to calculate this test statistic and immediately obtain a large-sample approximation to its p-value. 
+
+<<>>=
+xBalance(z ~ vote03, data=acorn, report="all")
+@ 
+(Observe that the formula I use at the beginning, \texttt{z \textasciitilde\  vote03}, is the mirror image of the formula I would have given to \texttt{lm}, \texttt{vote03 \textasciitilde\ z}.  The reasons for this will come into focus when we use \texttt{xBalance} with observational studies, later.)
+
+ \texttt{xBalance} is using a Normal approximation, so the p-values are determined by the z-statistic.  We'd have rejection at level $\alpha$ if the absolute value of that statistic exeeded the $1-\alpha/2$ quantile of the Normal distribution.    If we have preselected an $\alpha$, \texttt{xBalance} permits us to test a bunch of these hypotheses at once. 
+
+<<>>=
+xBalance(z ~ yc0 + yc1 + yc2, 
+         data=data.frame(acorn, yc0=RS0$yc, yc1=RS1$yc, yc2=RS2$yc),
+         report="z.scores")
+@ 
+
+So the hypothesis associated with \texttt{RS2} is rejected at level .05, although the other two are not. At the 2/3 level ($z_{5/6}=$\Sexpr{round(qnorm(5/6) ,2)}) the hypothesis of no effect would be rejected also, although the one-in-ten hypothesis would be sustained.
+
+
+
+\end{document}
