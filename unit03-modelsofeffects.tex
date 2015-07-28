@@ -91,8 +91,17 @@ Suppose the goal is to test the hypothesis that $\tau = 0$.
     \end{Column}
   \end{columns}
 \pause
-In practice, Huber's M-estimation top- and bottom-codes the residuals at a data-dependent threshold, then minimizes sums of squares.
+In practice, Huber's M-estimation solves a regression problem in which
+the residuals have been top- and bottom-coded, $e \mapsto \max(-t,
+\min(t,e))$ at a data-dependent threshold $t>0$.
 \end{frame}
+\Note{
+
+Tech note: specificially, just as OLS produces residuals that sum to 0
+and are uncorrelated with each column of $\mathbf{x}$, the Huber
+M-estimate gives residuals which sum to 0 and are uncorrelated with
+the xes, \textit{after} the top and bottom coding.
+}
 \begin{frame}{Rank-based tests } \framesubtitle{as a remedy for the difference in means' hypersensitivity}
   
 \end{frame}
