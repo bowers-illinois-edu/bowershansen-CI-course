@@ -1,6 +1,8 @@
 %\usepackage{tgtermes}
 \usepackage{amsmath,parskip,url,fancyvrb,graphicx,float,ulem}
 \usepackage[letterpaper,bottom=.75in,top=.75in,right=.75in,left=.5in,includemp=FALSE]{geometry}
+\usepackage{textcomp} % helps pdflatex recognize/format backticks and
+                      % single quotes, at least after using Sweave to generate .tex file 
 \usepackage{sometexdefs}
 
 \setcounter{secnumdepth}{0}
@@ -23,7 +25,7 @@
   \begin{center}\leavevmode
     \normalfont
     {\large \bfseries\@title\par}%
-    { \@author\par}%
+    { \@author\par}%Sc
     { \@date\par}%
   \end{center}%
   \null
