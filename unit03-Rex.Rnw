@@ -2,7 +2,7 @@
 %\usepackage{natbib}
 
 \title{Lab on Fisherian randomization inference and models of effects }
-\author{ICPSR Causal Inference '14}
+\author{ICPSR Causal Inference '15}
 \usepackage{icpsr-classwork}
 
 \begin{document}
@@ -123,7 +123,7 @@ simD = replicate(1000, coef(lm(yc.moe0~shuffle(z), data=acorn.e))[2])
 @ 
 
 (Note: the \texttt{mosaic} package provides a nifty alternative to \texttt{replicate()}:
-<<eval=false>>=
+<<eval=FALSE>>=
 simD = do(1000) * coef(lm(yc~shuffle(z), data=acorn.e))[2]
 @ 
 For the demo we'll stick with \texttt{replicate()}, however, since
@@ -153,7 +153,7 @@ the groups.  As discussed in this unit, this choice often fails to maximize powe
 It's very simple to adapt this procedure by applying the rank
 transformations to the outcomes prior to making comparisons between
 the two groups. For example, 
-<<eval=false>>=
+<<eval=FALSE>>=
 actualD = coef(lm(rank(yc.moe0)~z, data=acorn.e))[2]
 simD = replicate(1000, coef(lm(rank(yc.moe0)~shuffle(z), data=acorn.e))[2])
 @ 
@@ -161,7 +161,7 @@ Under complete random assignment, this give a test equivalent to the  \textit{Wi
 
 Robustification via robust regression is also pretty easy, at least
 with small data sets for which things run quickly.
-<<eval=false>>=
+<<eval=FALSE>>=
 actualD = coef(rlm(yc.moe0~z, data=acorn.e))[2]
 simD = replicate(1000, coef(rlm(yc.moe0~shuffle(z), data=acorn.e))[2])
 @ 
@@ -281,7 +281,7 @@ simD = replicate(1000, coef(lm(rank(yc.moe0)~shuffle(z, groups=pairs), data=acor
 Note the \texttt{groups}
 argument given to \texttt{shuffle()}: to see what this is doing, try
 it yourself at the command line:
-<<eval=false>>=
+<<eval=FALSE>>=
 with(acorn.e, cbind(pairs, z, shuffle(vote03, groups=pairs)))
 @ 
 
@@ -295,7 +295,7 @@ xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2,
 @ 
 
 In the development version of RItools you can get the same effect via
-<<eval=false>>=
+<<eval=FALSE>>=
 xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2 + strata(pairs) -1, 
          report=c("adj.means", "std.diffs", "z.scores"), 
          data=acorn.e, post.alignment.transform=rank)

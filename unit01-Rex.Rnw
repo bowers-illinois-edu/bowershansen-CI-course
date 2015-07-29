@@ -6,7 +6,14 @@
 \usepackage{icpsr-classwork}
 
 \begin{document}
-\SweaveOpts{concordance=TRUE}
+
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+concordance=TRUE
+)
+@
+
 \maketitle
 
 \section{Two ways to read in data}
@@ -115,7 +122,7 @@ mean( simT >= actualT )
 %The analogous two-sided p-value, following the general definition of
 %the two-sided p-value as $2\min\big( \mathrm{Pr}(T\leq a),
 %\mathrm{Pr}(T\geq a) \big)$, is 
-<<eval=false, echo=false>>=
+<<eval=FALSE, echo=FALSE>>=
 2*min( mean( simT <= actualT ), mean( simT >= actualT ) )
 @ 
 With $N$ simulations, the error of approximation for a quantities of the form $P(T \geq a)$

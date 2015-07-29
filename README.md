@@ -13,21 +13,20 @@ From within RStudio:
 - (If the file contains cross-references, you may have to hit `Compile PDF` twice.)
 
 
-From the command line:
+From within R:    
 ```
-$ R CMD foo.Rnw
+library(knitr)
+knit("foo.Rnw")
+```
+
+Separately (outside of R), use pdflatex to compile `foo.tex`.  E.g., from the command line:    
+```
 $ pdflatex foo.tex
 $ pdflatex foo.tex
 ```
 
 (Yep, `pdflatex` is run twice on the same file.)
 
-From within R:
-```
-library(Sweave)
-Sweave("foo.Rnw")
-```
-Separately (outside of R), use pdflatex to compile `foo.tex`.
 
 ## Compiling `unitXX-YYY.tex` files
 
