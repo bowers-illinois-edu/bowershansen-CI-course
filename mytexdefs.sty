@@ -1,0 +1,45 @@
+%%% BEAMER STUFF
+\defbeamertemplate{note page}{bensnotepage}
+{%
+  {%
+    \tiny
+    \let\\=\relax%
+    \insertvrule{0.51\paperheight}{white!80!black}%
+    \vskip-0.51\paperheight
+    \nointerlineskip
+    \vbox{\hfill\insertslideintonotes{0.51}\hskip-\Gm@rmargin\hskip0pt%
+      \vskip-0.51\paperheight\nointerlineskip}%
+    \nointerlineskip
+    \vbox to 0.51\paperheight{
+      \setbox\beamer@tempbox=\hbox{\hbox{*\insertsection}}%
+      \ht\beamer@tempbox=1em
+      \box\beamer@tempbox
+      \nointerlineskip
+      \setbox\beamer@tempbox=\hbox{\hbox{**\insertsubsection}}%
+      \ht\beamer@tempbox=1em
+      \box\beamer@tempbox
+      \nointerlineskip
+      \setbox\beamer@tempbox=\hbox{\hbox{\quad\insertshortframetitle}}%
+      \ht\beamer@tempbox=1em
+      \box\beamer@tempbox
+      \vfil
+    }\vskip0.5em
+  }
+  \nointerlineskip
+  \insertnote
+}
+
+\setbeamertemplate{note page}[bensnotepage]
+
+
+\renewcommand{\insertslideintonotes}[1]{{%
+  \begin{pgfpicture}{0cm}{0cm}{#1\paperwidth}{#1\paperheight}
+    \begin{pgflowlevelscope}{\pgftransformscale{#1}}%
+      \color[gray]{0.95}
+      \pgfpathrectangle{\pgfpointorigin}{\pgfpoint{\paperwidth}{\paperheight}}
+      \pgfusepath{fill}
+      \color{black}
+      {\pgftransformshift{\pgfpoint{\beamer@origlmargin}{\footheight}}\pgftext[left,bottom]{\copy\beamer@frameboxcopy}}
+    \end{pgflowlevelscope}
+  \end{pgfpicture}%
+  }}

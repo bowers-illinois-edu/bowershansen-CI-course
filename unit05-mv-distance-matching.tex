@@ -1,0 +1,1287 @@
+%  For slides only
+%\input{slidesonly}
+
+% % For handout
+%\input{handout}
+
+%For handout + mynotes
+\input{handout+mynotes}
+
+\input{beamer-preamble-bbh-all}
+\input{defs-all}
+
+\usepackage{tikz} 
+\usetikzlibrary{arrows} % also see \tikzstyle spec below after \begin{doc}
+
+\usepackage{xspace}
+\usepackage[round]{natbib}
+
+\usepackage{versions}
+\includeversion{pedantic} % \excludeversion
+
+\usepackage{./mytexdefs2}
+\usepackage{./mytexdefs}
+\newcounter{saveenum}
+
+\title{Unit 5: Multivariate distance matching}
+% \author, date moved to beamer-preamble-*-all.tex
+
+\begin{document}
+
+\newcounter{saveenumi}
+\tikzstyle{every picture}+=[remember picture]
+
+  \begin{frame}
+    \frametitle{Outline \& Readings}
+
+\tableofcontents[subsectionstyle=show/hide/hide]
+
+ \alert{Readings for this Unit:} \textit{DOS}, ch.8.
+\end{frame}
+
+\section[Pair and multiple controls matching]{Pair matching and matching with multiple controls}
+
+\newlength{\boywidth} 
+\newlength{\girlwidth} 
+
+\newcommand{\igrphxG}[1]{\includegraphics[width=\girlwidth]{./2014/lectures/images/#1}}
+\newcommand{\igrphxB}[1]{\includegraphics[width=\boywidth]{./2014/lectures/images/#1}}
+
+
+\begin{frame}
+  \frametitle{Optimal (communitarian) vs greedy (individualistic) matching}
+
+\settowidth{\boywidth}{Bachelors\ }
+\setlength{\girlwidth}{.5\boywidth}
+
+
+\begin{center}
+    \begin{tabular}{l|cccc}
+      & \multicolumn{4}{c}{Bachelorettes} \\
+Bachelors & \igrphxG{amandamarsh}       & \igrphxG{TristaRehn}
+& \igrphxG{emilymaynard2}       & \igrphxG{chantal2} \\ \hline
+\igrphxB{alexmichel2} & 0 & 1 & 1 & 10 \\
+\igrphxB{bradWomack} &10& 0 & 10 & 10 \\
+\igrphxB{ChrisHarrison} &  1 & 1 & $\infty$ & $\infty$ \\ \hline
+    \end{tabular}
+  \end{center}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Costs of nuclear plants}
+\framesubtitle<2->{When expanding, cheaper to build on the site of an existing plant?}
+\begin{columns}
+\column{.5\textwidth}
+\begin{center}
+  \igrphx[width=.5\textwidth]{coxSnell}
+\end{center}
+
+\column{.5\textwidth}
+  \only<2-| handout:0>{\igrphx[width=\textwidth]{Nuclear_plant_at_Grafenrheinfeld}}
+\end{columns}
+
+\note{This is a \textit{prospective} design.  Explain.
+
+(Presentation version has Nuclear plant image on 2nd overlay)
+}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{New and refurbished nuclear plants}
+\note{
+  \begin{itemize}
+  \item This is what many understand by matching.  [Greedy pair match follows.]
+  \item Sometimes matching means  ``with-replacement'' matching. We'll permit that too, but in a structured way, and keeping track of how many replacements. 
+  \item Why keep track of the replacements?  --B/c they affect standard errors of the matched comparison.  (``Effective sample size'' to be introduced a few slides later.)
+  \end{itemize}
+}
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:53 2013
+\begin{tabular}{lr}
+  \hline
+ & capacity \\ 
+  \hline
+A & {660} {\mlpnode{NA}} \\ 
+  B & {660} {\mlpnode{NB}} \\ 
+  C & {420} {\mlpnode{NC}} \\ 
+  D & {130} {\mlpnode{ND}} \\ 
+  E & {650} {\mlpnode{NE}} \\ 
+  F & {430} {\mlpnode{NF}} \\ 
+  G & {420} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+{\footnotesize  ``capacity'' is net capacity of the power plant, in MWe above
+400.
+
+\only<9->{\alert<@+| handout:0>{This is matching ``without replacement.''}}
+\only<10->{\alert<@+| handout:0>{Contrast with matching ``with replacement.''}}
+}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:53 2013
+\begin{tabular}{lr}
+  \hline
+ & capacity \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & 290 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & 660 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & 660 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & 110 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & 420 \\ 
+  {\mlpnode{NM}\mbox{}} {M} &  60 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & 390 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & 160 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & 390 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & 130 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 650 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 450 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & 380 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 440 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 690 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & 510 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 390 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 140 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 730 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+
+
+% \only<2->{ \ncline{NA}{NI} }
+% \only<3->{ \ncline{NB}{NJ} }
+% \only<4->{ \ncline{NC}{NL} }
+% \only<5->{ \ncline{ND}{NQ} }
+% \only<6->{ \ncline{NE}{NR} }
+% \only<7->{ \ncline{NF}{NU} }
+% \only<8->{ \ncline{NG}{NN} }
+\begin{tikzpicture}[overlay]
+  \path[draw,gray]<2-> (NA) edge (NI);
+ \path[draw,gray]<3-> (NB) edge (NJ);
+ \path[draw,gray]<4-> (NC) edge (NL);
+ \path[draw,gray]<5-> (ND) edge (NQ);
+ \path[draw,gray]<6-> (NE) edge (NR);
+ \path[draw,gray]<7-> (NF) edge (NU);
+ \path[draw,gray]<8-> (NG) edge (NN);
+ \end{tikzpicture}\only<10-| handout:0>{
+\begin{tikzpicture}[overlay]
+  \path[draw,red] (NA) edge [out=0, in=-180] (NI);
+ \path[draw,red] (NB) edge [out=0, in=-180] (NJ);
+ \path[draw,red] (NC) edge [out=0, in=-180] (NL);
+ \path[draw,red] (NF) edge [out=0, in=-180] (NL);
+ \path[draw,red] (NG) edge [out=0, in=-180] (NL);
+ \path[draw,red] (ND) edge [out=0, in=-180] (NQ);
+ \path[draw,red] (NE) edge [out=0, in=-180] (NR);
+ \end{tikzpicture}}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+  \frametitle{A simple model for matched
+    analysis\footnote{\textit{cf.} Abadie \& Imbens (2012, JASA).}}
+\note{
+This model is both an OLS regression w/ matched pair and treatment dummies; a two-way ANOVA; and a model of the matched pair differences as i.i.d.
+
+Note carefully that matching and outcome analysis are \textit{separate} steps, even in this simple example.  In practice there'll be even more preliminaries to the analysis.
+
+The model asks you to believe that matching on capacity is a
+sufficient adjustment.  We'll be able to do better than that, but what
+we do with those better matches will be much the same.
+
+After showing them this, STOP and have them do \S~1--3 of worksheet;
+do exercises 1 and 2 at the end of section~3.  
+(At \url{http://www.stat.lsa.umich.edu/~bbh/cscarworksheet.pdf}.)
+
+% \begin{pedantic}
+This will be first explicit use of object orientation, assignments.  Explain.
+%\end{pedantic}
+}
+\begin{Schunk}
+\begin{Sinput}
+> pm <- pairmatch( pr~cap, data=nuke.nopt )
+> ( cost.adj <- lm(cost~pr+pm, data=nuke.nopt) )
+\end{Sinput}
+\end{Schunk}
+% Note hard-coding of following:
+\begin{Schunk}
+\begin{Soutput}
+Call:
+lm(formula = cost ~ pr + pm, data = nuke.nopt)
+
+Coefficients:
+(Intercept)           pr        pmm.2  
+     433.40        29.40       199.17  
+<...>
+\end{Soutput}
+\end{Schunk}
+\begin{Schunk}
+\begin{Sinput}
+> summary(cost.adj)
+\end{Sinput}
+\end{Schunk}
+$\vdots$
+\begin{Schunk}
+\begin{Soutput}
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)   554.20         81  6.8788  0.00047
+pr            -12.86         57 -0.2257  0.82894
+pm1.2          -0.16        107 -0.0015  0.99885
+\end{Soutput}
+\end{Schunk}
+$\vdots$
+\end{frame}
+
+\begin{frame}
+\frametitle{Matching on several variables at once}
+\note{ Note differences in scale of variables.  How to put differences in date and capacity onto a common scale? }
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & date & capacity \\ 
+  \hline
+A & 2.3 & {660} {\mlpnode{NA}} \\ 
+  B & 3.0 & {660} {\mlpnode{NB}} \\ 
+  C & 3.4 & {420} {\mlpnode{NC}} \\ 
+  D & 3.4 & {130} {\mlpnode{ND}} \\ 
+  E & 3.9 & {650} {\mlpnode{NE}} \\ 
+  F & 5.9 & {430} {\mlpnode{NF}} \\ 
+  G & 5.1 & {420} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+{\footnotesize ``date'' is date of construction, in years after
+1965; ``capacity'' is net capacity of the power plant, in MWe above
+400.}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & date & capacity \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & 3.6 & 290 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & 2.3 & 660 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & 3.0 & 660 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & 2.9 & 110 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & 3.2 & 420 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & 3.4 &  60 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & 3.3 & 390 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & 3.6 & 160 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & 3.8 & 390 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & 3.4 & 130 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 3.9 & 650 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 3.9 & 450 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & 3.4 & 380 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 4.5 & 440 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 4.2 & 690 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & 3.8 & 510 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 4.7 & 390 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 5.4 & 140 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 6.1 & 730 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+
+\end{frame}
+
+%\addtocounter{frame}{-1}
+%
+\begin{frame}
+\frametitle{Matching on several variables at once} \framesubtitle{Finding a common scale}
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\ 
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\ 
+  C & -0.4 & {0} {\mlpnode{NC}} \\ 
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\ 
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\ 
+  F & 2.2 & {0} {\mlpnode{NF}} \\ 
+  G & 1.3 & {0} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+\bigskip
+{\footnotesize Here, ``z.date'' is date of
+construction in s.d.'s from the sample-average date of construction; ``z.cap'' is the capacity of the power plant (in s.d.'s from mean capacity).}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+\end{frame}
+\note{
+
+\begin{itemize}
+\item \textsc{Don't linger.}
+  \item Conversion to standard units
+\item Mahalanobis distance combines squared differences on
+  standardized versions of the two variables, addressing correlations
+  between variables by appropriately reducing the contributions of
+  highly correlated variables.
+\item For more info, look up Mahalanobis distance on your own.
+\end{itemize}
+}
+
+
+\begin{frame}<1>[fragile,label=MahalDFr]
+\frametitle{Combining differences on \texttt{cap} and \texttt{date} using Mahalanobis distance}
+\addtolength{\tabcolsep}{-\tabcolsepadj} \vfill
+%\begin{center}
+{\footnotesize
+\begin{tabular}{|r|rrrrrrrrrrrrrrrrrrr|}
+\hline
+\multicolumn{2}{|l}{Exist-} & \multicolumn{18}{c|}{New sites} \\
+\multicolumn{1}{|l}{ing}& H & I & J & K & L & M & N & O & P & Q & R & S & T & U & V & W & X & Y & Z \\ 
+  \hline
+A & 2.2 & 0.0 & 0.7 & 2.7 & 1.4 & 3.1 & 1.7 & 2.7 & 2.0 & 2.8 & 1.6 & 1.9 & 1.8 & 2.4 & 1.9 & 1.6 & 2.7 & 4.0 & 3.8 \\ 
+  B & 1.9 & 0.7 & 0.0 & 2.6 & 1.2 & 2.9 & 1.3 & 2.5 & 1.5 & 2.6 & 0.9 & 1.4 & 1.4 & 1.9 & 1.2 & 1.1 & 2.2 & 3.5 & 3.1 \\ 
+  C & 0.7 & 1.6 & 1.2 & 1.6 & 0.3 & 1.7 & 0.2 & 1.3 & 0.4 & 1.4 & 1.2 & 0.5 & 0.2 & 1.1 & 1.5 & 0.5 & 1.3 & 2.4 & 3.1 \\ 
+  D & 0.8 & 2.8 & 2.6 & 0.5 & 1.4 & 0.3 & 1.3 & 0.2 & 1.3 & 0.0 & 2.5 & 1.6 & 1.2 & 1.9 & 2.8 & 1.9 & 1.8 & 2.0 & 3.9 \\ 
+  E & 1.8 & 1.6 & 0.9 & 2.7 & 1.3 & 2.9 & 1.4 & 2.4 & 1.3 & 2.5 & 0.0 & 1.0 & 1.4 & 1.1 & 0.3 & 0.7 & 1.5 & 2.9 & 2.2 \\ 
+  F & 2.5 & 3.8 & 3.2 & 3.4 & 2.8 & 3.1 & 2.6 & 2.7 & 2.2 & 2.9 & 2.3 & 2.0 & 2.6 & 1.4 & 2.2 & 2.2 & 1.3 & 1.5 & 1.4 \\ 
+  G & 1.7 & 3.0 & 2.4 & 2.6 & 1.9 & 2.4 & 1.8 & 2.0 & 1.4 & 2.2 & 1.6 & 1.2 & 1.7 & 0.6 & 1.6 & 1.4 & 0.4 & 1.4 & 1.8 \\ 
+   \hline
+\end{tabular}
+}
+\vfill \addtolength{\tabcolsep}{\tabcolsepadj}
+%\end{center}
+
+\only<1\mynoteonly>{
+  \begin{itemize}
+  \item Similar to sum of squared differences, along \texttt{z.cap}, \texttt{z.date}.
+\item However, Mahalanobis corrects for collinearity of \texttt{z.cap}, \texttt{z.date}.
+  \end{itemize}
+}
+\only<2>{
+R code:
+\begin{semiverbatim}
+> match\_on(pr\textasciitilde cap+date, data=nuke.nopt)
+\end{semiverbatim}
+}
+\only<3\mynoteonly>{
+  \begin{itemize}
+  \item Mahalanobis designed with Normal variables in mind.
+  \item If you use it on a categorical variable, and there is a rare category, Mahalanobis tries extra-hard to match on it.
+  \end{itemize}
+}
+\end{frame}
+
+\note{
+ \textsc{Don't linger.}
+ 
+\texttt{optmatch} computes squared Mahalanobis distances by default.
+  
+  Example: (note corr betw. cap and date is just .0025)
+{\footnotesize
+  \begin{semiverbatim}
+> nuke.nopt[1:3,c('cap', 'date')]
+
+   cap date
+
+H  687   69
+
+I 1065   67
+
+A 1065   67
+
+\end{semiverbatim}
+
+\begin{tabular}{l|rrrrrr}
+& \multicolumn{2}{c}{diff}    &\multicolumn{2}{c}{$z$} &\multicolumn{2}{c}{$z^2$} \\
+ &cap &date                 &cap &date               & cap & date               \\
+$H-A$ &$-378$  &1.2         &$-1.8$ & 1.3            & 3.3  & 1.6        \\
+$I-A$    &0  &0.0           &0.0 & 0.0               & 0.0  & 0.0               \\
+\end{tabular}
+}
+  }
+
+
+% \begin{frame}
+% \frametitle{A formal definition of the Mahalanobis distance}
+
+% The \emph{Mahalanobis distance} between units $a, b$ in terms of quantitative
+% variables $(X_1, \ldots, X_k) \equiv \mathbf{X}$ is given by
+% $$ d(a, b) \equiv (\mathbf{x}_a - \mathbf{x}_b)^t C^{-1} (\mathbf{x}_a - \mathbf{x}_b),$$
+% where $C$ is either (i) the sample covariance matrix of $x_1, \ldots, x_k$
+% in the control group or (ii) the covariance matrix of $x_1, \ldots,
+% x_k$ formed by pooling control and treatment groups.
+
+% \note{
+
+% Mahalanobis distance was designed for multivariate Normal covariates,
+% and it works best for combining variables whose distributions don't
+% deviate sharply from Normal.  In the UM space assignment study, logs
+% of grant funding were closer to Normal than were grant totals
+% themselves; the Mahalanobis distance used combined logs of PI and
+% co-PI grant funding totals.
+
+% If you have a rare category, Mahalanobis will strain extra-hard to
+% match on it, at the expense of matching more poorly on other
+% variables.  }
+
+% \end{frame}
+
+
+\begin{frame}
+\frametitle{Pair-matched new and refurbished plants}
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\ 
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\ 
+  C & -0.4 & {0} {\mlpnode{NC}} \\ 
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\ 
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\ 
+  F & 2.2 & {0} {\mlpnode{NF}} \\ 
+  G & 1.3 & {0} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+{R code:
+}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+\begin{tikzpicture}[overlay]
+  \path[draw,gray] (NA) edge (NI);
+ \path[draw,gray] (NB) edge (NJ);
+ \path[draw,gray] (NC) edge (NN);
+ \path[draw,gray] (ND) edge (NQ);
+ \path[draw,gray] (NE) edge (NR);
+ \path[draw,gray] (NF) edge (NX);
+ \path[draw,gray] (NG) edge (NU);
+ \end{tikzpicture}
+\begin{semiverbatim}
+pairmatch( match\_on(pr \textasciitilde\ date+cap, data=nuke.nopt) )
+
+\textrm{\textit{or}}\, \, pairmatch( pr \textasciitilde\ date+cap, data=nuke.nopt ) 
+\end{semiverbatim}
+
+\end{frame}
+\note[itemize]{
+\item This match contrasts in two ways with the match we generated a few slides ago: matching on 2 variables rather than one; this is an \textit{optimal} match.  
+ \item Optimal means that the matching algorithm minimizes the global sum of matched differences.  Greedy may not give a match that's best-possible in that sense.
+}
+
+\begin{frame}
+\frametitle{Matching with $k$ controls}
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\ 
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\ 
+  C & -0.4 & {0} {\mlpnode{NC}} \\ 
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\ 
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\ 
+  F & 2.2 & {0} {\mlpnode{NF}} \\ 
+  G & 1.3 & {0} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+{R code:
+}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+\begin{tikzpicture}[overlay]
+  \path[draw,gray] (NA) edge (NI);
+ \path[draw,gray] (NA) edge (NJ);
+ \path[draw,gray] (NB) edge (NL);
+ \path[draw,gray] (NB) edge (NW);
+ \path[draw,gray] (NC) edge (NN);
+ \path[draw,gray] (NC) edge (NT);
+ \path[draw,gray] (ND) edge (NO);
+ \path[draw,gray] (ND) edge (NQ);
+ \path[draw,gray] (NE) edge (NR);
+ \path[draw,gray] (NE) edge (NV);
+ \path[draw,gray] (NF) edge (NY);
+ \path[draw,gray] (NF) edge (NZ);
+ \path[draw,gray] (NG) edge (NU);
+ \path[draw,gray] (NG) edge (NX);
+ \end{tikzpicture}\begin{semiverbatim}
+pairmatch( pr \textasciitilde\ date+cap, controls=2, data=nuke.nopt )
+\end{semiverbatim}
+\end{frame}
+
+\section[Greedy vs Optimal Matching]{Greedy vs Optimal Matching}
+
+
+\begin{frame}[fragile]
+\frametitle{Role of the matching algorithm: greedy matching}
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:57 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\ 
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\ 
+  C & -0.4 & {0} {\mlpnode{NC}} \\ 
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\ 
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\ 
+  F & 2.2 & {0} {\mlpnode{NF}} \\ 
+  G & 1.3 & {0} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+\bigskip
+{\footnotesize Here, ``date'' is \emph{rank of} date of
+construction, in years after 1965, and  ``capacity'' is
+\emph{rank of} net capacity of the power plant, in MWe
+above 400.}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:57 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+
+\begin{tikzpicture}[overlay]
+  \path[draw,red]<2-> (NA) edge (NI);
+ \path[draw,red]<3-> (NA) edge (NJ);
+ \path[draw,red]<4-> (NB) edge (NR);
+ \path[draw,red]<5-> (NB) edge (NW);
+ \path[draw,red]<6-> (NC) edge (NN);
+ \path[draw,red]<7-> (NC) edge (NT);
+ \path[draw,red]<8-> (ND) edge (NO);
+ \path[draw,red]<9-> (ND) edge (NQ);
+ \path[draw,red]<10-> (NE) edge (NS);
+ \path[draw,red]<11-> (NE) edge (NV);
+ \path[draw,red]<12-> (NF) edge (NU);
+ \path[draw,red]<13-> (NF) edge (NX);
+ \path[draw,red]<14-> (NG) edge (NM);
+ \path[draw,red]<15-> (NG) edge (NZ);
+ \end{tikzpicture}
+\end{frame}
+
+\begin{frame}[fragile]
+
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:57 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\ 
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\ 
+  C & -0.4 & {0} {\mlpnode{NC}} \\ 
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\ 
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\ 
+  F & 2.2 & {0} {\mlpnode{NF}} \\ 
+  G & 1.3 & {0} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+
+\textcolor{blue}{Optimal vs. Greedy matching}
+\bigskip
+
+{\footnotesize By evaluating potential matches all together rather than
+  sequentially, optimal matching (\textcolor{blue}{blue lines}) reduces
+  the mean matched distance from 1.17 to
+ 0.56.}
+
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:57 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+
+% \ncline[linecolor=gray]{NA}{NI}
+% \ncline[linecolor=gray]{NA}{NJ}
+% \ncline[linecolor=gray]{NB}{NL}
+% \ncline[linecolor=gray]{NB}{NN}
+% \ncline[linecolor=gray]{NC}{NP}
+% \ncline[linecolor=gray]{NC}{NT}
+% \ncline[linecolor=gray]{ND}{NM}
+% \ncline[linecolor=gray]{ND}{NQ}
+% \ncline[linecolor=gray]{NE}{NR}
+% \ncline[linecolor=gray]{NE}{NS}
+% \ncline[linecolor=gray]{NF}{NU}
+% \ncline[linecolor=gray]{NF}{NX}
+% \ncline[linecolor=gray]{NG}{NW}
+% \ncline[linecolor=gray]{NG}{NY}
+
+\begin{tikzpicture}[overlay]
+  \path[draw,red] (NA) edge (NI);
+ \path[draw,red] (NA) edge (NJ);
+ \path[draw,red] (NB) edge (NR);
+ \path[draw,red] (NB) edge (NW);
+ \path[draw,red] (NC) edge (NN);
+ \path[draw,red] (NC) edge (NT);
+ \path[draw,red] (ND) edge (NO);
+ \path[draw,red] (ND) edge (NQ);
+ \path[draw,red] (NE) edge (NS);
+ \path[draw,red] (NE) edge (NV);
+ \path[draw,red] (NF) edge (NU);
+ \path[draw,red] (NF) edge (NX);
+ \path[draw,red] (NG) edge (NM);
+ \path[draw,red] (NG) edge (NZ);
+ \end{tikzpicture}\begin{tikzpicture}[overlay]
+  \path[draw,blue] (NA) edge [out=0, in=-180] (NI);
+ \path[draw,blue] (NA) edge [out=0, in=-180] (NJ);
+ \path[draw,blue] (NB) edge [out=0, in=-180] (NL);
+ \path[draw,blue] (NB) edge [out=0, in=-180] (NW);
+ \path[draw,blue] (NC) edge [out=0, in=-180] (NN);
+ \path[draw,blue] (NC) edge [out=0, in=-180] (NT);
+ \path[draw,blue] (ND) edge [out=0, in=-180] (NO);
+ \path[draw,blue] (ND) edge [out=0, in=-180] (NQ);
+ \path[draw,blue] (NE) edge [out=0, in=-180] (NR);
+ \path[draw,blue] (NE) edge [out=0, in=-180] (NV);
+ \path[draw,blue] (NF) edge [out=0, in=-180] (NY);
+ \path[draw,blue] (NF) edge [out=0, in=-180] (NZ);
+ \path[draw,blue] (NG) edge [out=0, in=-180] (NU);
+ \path[draw,blue] (NG) edge [out=0, in=-180] (NX);
+ \end{tikzpicture}
+% \ncarc[linecolor=blue]{NA}{NI}
+% \ncarc[linecolor=blue]{NA}{NW}
+% \ncarc[linecolor=blue]{NB}{NJ}
+% \ncarc[linecolor=blue]{NB}{NL}
+% \ncarc[linecolor=blue]{NC}{NN}
+% \ncarc[linecolor=blue]{NC}{NT}
+% \ncarc[linecolor=blue]{ND}{NM}
+% \ncarc[linecolor=blue]{ND}{NQ}
+% \ncarc[linecolor=blue]{NE}{NR}
+% \ncarc[linecolor=blue]{NE}{NS}
+% \ncarc[linecolor=blue]{NF}{NU}
+% \ncarc[linecolor=blue]{NF}{NZ}
+% \ncarc[linecolor=blue]{NG}{NX}
+% \ncarc[linecolor=blue]{NG}{NY}
+
+\end{frame}
+
+
+
+
+\section{Matching structure and effective sample size}
+\begin{frame}[fragile]
+\frametitle{Evaluating matches with different structures}
+
+Here are two optimal matches from the same sample.  How do they compare?
+
+  \begin{columns}
+    \column{.5\linewidth}%
+{
+  \begin{center}
+{\usebeamercolor[fg]{titlelike}    Pair matching: }
+  \end{center}
+{\footnotesize
+    \begin{semiverbatim}
+> pm = pairmatch(my.ppty)
+> summary(pm)
+Structure of matched sets:
+ 1:1  0:1
+ 322 4103
+Effective Sample Size:  322
+(equivalent number of matched pairs).
+
+sum(matched.distances)=16.9
+(within 0.0464 of optimum).
+Percentiles of matched distances:
+    0%    50%    95%   100%
+0.0000 0.0024 0.2710 0.6400
+    \end{semiverbatim}
+}
+}
+  \column{.5\linewidth}%
+{
+  \begin{center}
+    {\usebeamercolor[fg]{titlelike} Matched triples:}
+  \end{center}
+{\footnotesize
+\begin{semiverbatim}
+> tm = pairmatch(my.ppty, 2)
+> summary(tm)
+Structure of matched sets:
+ 1:2  0:1
+ 322 3781
+Effective Sample Size:  429
+(equivalent number of matched pairs).
+
+sum(matched.distances)=85.1
+(within {0.458} of optimum).
+Percentiles of matched distances:
+   0%   50%   95%  100%
+0.000 0.020 0.609 1.020
+\end{semiverbatim}
+}
+}
+\end{columns}
+
+\note{
+  \begin{itemize}%[<+-| alert@+>]
+  \item With \atob{1}{2} matching rather than \atob{1}{1} matching, harder to get good matches.
+  \item On the other hand, using more data may help with variance.
+  \item Summary info helps to manage the bias-variance tradeoff.
+  \item \textsc{Don't linger} on effective s.s. issue --- instead
+    point to my PWH festschrift paper.  (If there's time/interest, there's more detail on it on the next slide.)
+  \item covariate balance, not indicated here (yet), also speaks to bias --- more on this presently.
+   \end{itemize}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Tracking effective sample size}
+
+In 2-sample comparisons, total sample size can be a misleading as a measure of information content.  Example:
+\begin{itemize}
+\item say $Y$ has same variance, $\sigma^{2}$,in the Tx and the Ctl population.
+\item Ben H. samples 10 Tx and 40 Ctls, and
+\item Justin M. samples 25 Tx and 25 Ctls
+\end{itemize}
+--- so that total sample sizes are the same.  However,
+
+\begin{eqnarray*}
+  V_{BH}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{10} + \frac{\sigma^{2}}{40}=.125\sigma^{2}\mbox{;}\\
+  V_{JM}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{25} + \frac{\sigma^{2}}{25}=.08\sigma^{2}.\\
+\end{eqnarray*}
+
+Similarly, a matched triple is roughly $[(\sigma^{2}/1 + \sigma^{2}/2)/(\sigma^{2}/1 + \sigma^{2}/1)]^{-1}= 1.33$ times as informative as a matched pair.
+
+\note{Use pooled 2-sample t statistic SE formula to compare 1-1 vs 1-2 matched sets' contribution to variance:
+$$
+\begin{array}{c|c}
+  \atob{1}{1} & \atob{1}{2} \\
+M^{-2}\sum_{m=1}^{M} (\sigma^{2}/1 + \sigma^{2}/1) & M^{-2}\sum_{m=1}^{M} (\sigma^{2}/1 + \sigma^{2}/2) \\
+\frac{2\sigma^{2}}{M} & \frac{1.5\sigma^{2}}{M} \\
+\end{array}
+$$
+So 20 matched pairs is comparable to 15 matched triples.
+
+(Correspondingly, h-mean of $n_{t},n_{c}$ for a pair is 1, while for a triple it's $[(1/1 + 1/2)/2]^{-1}=4/3$.)
+}
+
+\end{frame}
+
+\note{
+  {} [\textsc{Skip unless specifically requested}, instead referring
+  interested readers to Hansen, 2011]\\
+The variance of the \texttt{pr}-coeff in \texttt{v \textasciitilde pr + match} is
+$$
+ \frac{2 \sigma^{2}}{\sum_{s} h_{s}}, \hspace{3em} h_{s} = \left( \frac{n_{ts}^{-1} + n_{cs}^{-1} }{2}  \right)^{-1} ,
+$$
+assuming the OLS model and homoskedastic errors.  (This is b/c the anova formulation is equivalent to harmonic-mean weighting, under which $V(\sum_{s}w_{s}(\bar{v}_{ts} - \bar v_{cs})) = \sum_{s} w_{s}^{2}(n_{ts}^{-1} + n_{cs}^{-1}) \sigma^{2} = \sigma^{2} \sum_{s} w_{s}^{2} 2 h_{s}^{-1} = 2\sigma^{2} \sum_{s}w_{s}/\sum_{s}h_{s} = 2\sigma^{2}/\sum_{s} h_{s}$.)
+
+For matched pairs, of course, $h_{s}=1$.  Harmonic mean of 1, 2 is $4/3$. Etc.   }
+
+
+\begin{frame}
+  \frametitle{Weighting matched sets by contributions to effective s.s.}
+
+
+ \nocite{hansen:bowers:2008}
+\enlargethispage*{1000pt}
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & date & capacity \\ 
+  \hline
+A & 2.3 & {660} {\mlpnode{NA}} \\ 
+  B & 3.0 & {660} {\mlpnode{NB}} \\ 
+  C & 3.4 & {420} {\mlpnode{NC}} \\ 
+  D & 3.4 & {130} {\mlpnode{ND}} \\ 
+  E & 3.9 & {650} {\mlpnode{NE}} \\ 
+  F & 5.9 & {430} {\mlpnode{NF}} \\ 
+  G & 5.1 & {420} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+{\footnotesize
+Differences in mean capacity\\
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & diff. & pair.equiv \\ 
+  \hline
+AI & 0 & 1.0 \\ 
+  BJ & 0 & 1.0 \\ 
+  CL & 0 & 1.0 \\ 
+  DMQT & -58 & 1.5 \\ 
+  ERSW & 110 & 1.5 \\ 
+  FU & -17 & 1.0 \\ 
+  GX & 35 & 1.0 \\ 
+   \hline
+\end{tabular}}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & date & capacity \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & 3.6 & 290 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & 2.3 & 660 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & 3.0 & 660 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & 2.9 & 110 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & 3.2 & 420 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & 3.4 &  60 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & 3.3 & 390 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & 3.6 & 160 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & 3.8 & 390 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & 3.4 & 130 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 3.9 & 650 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 3.9 & 450 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & 3.4 & 380 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 4.5 & 440 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 4.2 & 690 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & 3.8 & 510 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 4.7 & 390 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 5.4 & 140 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 6.1 & 730 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+%\hyperlink{computeNotesFr}{\beamergotobutton{Jump to ``Worksheet updates''}}
+\end{minipage}
+\begin{tikzpicture}[overlay]
+  \path[draw,gray] (NA) edge (NI);
+ \path[draw,gray] (NB) edge (NJ);
+ \path[draw,gray] (NC) edge (NL);
+ \path[draw,gray] (ND) edge (NM);
+ \path[draw,gray] (ND) edge (NQ);
+ \path[draw,gray] (ND) edge (NT);
+ \path[draw,gray] (NE) edge (NR);
+ \path[draw,gray] (NE) edge (NS);
+ \path[draw,gray] (NE) edge (NW);
+ \path[draw,gray] (NF) edge (NU);
+ \path[draw,gray] (NG) edge (NX);
+ \end{tikzpicture}
+\end{frame}
+
+\note[itemize]{
+  \item {} \textsc{Don't linger.}  (Rather than detailed explanation
+    below, default to a gesture back to previously presented material
+    about h-weighting.)
+  \item {}   The table at lower left indicates paired differences, or means of differences between a Tx and each control matched to it, along with weights attaching to matched sets.
+  \item {}  Matching ``reduces'' the difference of group means from 80 MWe
+($883-803$) to 14 MWe (sum of products of columns in prev table).
+\item This is the same harmonic weighting, ``precision weighting,'' we spoke of earlier.
+\item By contrast, using ETT weighting, it comes out to 10 MWe.
+}
+
+\section{Incorporating restrictions on who can be matched to whom}
+
+
+\begin{frame}[label=incorpRestrictFr]
+\frametitle{Incorporating restrictions on who can be matched to whom}
+
+
+Placing restrictions on who can be matched to whom narrows the
+range of possibilities and makes the algorithm run quicker\footnote{Computationally important in large problems,  $n_cn_t \geq 500,000$ or so.}.  Two
+ways to do this:
+\begin{itemize}[<+-| alert@+>]
+\item Use categorical variables to divide the matching problem into two or more.
+\item Use quantitative or ordinal variables to introduce calipers.
+\end{itemize}
+
+\end{frame}
+
+% \begin{frame}
+% \frametitle{Exact matching on categorical variables}
+
+% \alert{Categorical variables:}  Matching within categories, or \alert{exact matching} is possible, but should be done with care.  The more stringent your criterion for an acceptable match, the smaller
+% your effective sample size.  Consider {collapsing categories}, particularly rare ones.
+
+% An alternative to exact matching on a variable is to match on a
+% multivariate distance that includes it.
+% \note{
+
+% In contrast, by matching on a MV distance such as Mahalanobis, you permit some cross-category matches but ``incentivize'' matching within categories.
+
+% Because Mahalanobis devotes extra attention to rare categories, when
+% folding a categorical covariate into an MH distance one should still
+% collapsing categories.  On the other hand, one can include in the
+% propensity score, which doesn't generally suffer as acutely on this
+% point.  }
+% \end{frame}
+
+% \begin{frame}
+% \frametitle{Introducing restrictions on who can be matched to whom}
+% \framesubtitle{Dividing the matching problem into two or more}
+
+% In the UM space assignment study, once it was decided that matching
+% was to be done within department, each department
+% could be treated as a self-standing matching problem.
+% Thus each of the eight departments listed below gives rise to its own
+% matching problem.
+% \begin{center}
+%   \begin{tabular}{lrrrrrrrrr}
+% \hline
+%  & A & B & C & D & E & F & G & H & Overall \\
+% \hline
+% Women &   3 &   5 &   7 &   5 &   7 &   6 &   6 &   3 &  42 \\
+% Men &  13 &  36 &  21 &  27 &  55 &  22 &  65 &  11 & 250 \\
+% \hline
+% \end{tabular}
+% \end{center}
+
+% \end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Matching within subclasses in R}
+
+In \texttt{optmatch}, the decision to match within subclasses is made
+prior to matching, so that distances need only be calculated within subclasses.
+
+\begin{Schunk}
+\begin{Sinput}
+> em1 <- exactMatch(pr ~ pt, data=nuclearplants)
+> pairmatch(pr ~ cap + date, data=nuclearplants, within=em1) 
+> pairmatch(my.ppty, 
++          within=exactMatch(pr ~ pt, data=nuclearplants))
+\end{Sinput}
+\end{Schunk}
+% \begin{semiverbatim}
+% match\_on(pr \textasciitilde\ cap + date, data=nuclearplants, \\
+% structure.fmla= \textasciitilde\ pt)
+
+% match\_on(my.ppty.mod, data=nuclearplants, \\
+% structure.fmla= \textasciitilde\ pt)
+% \end{semiverbatim}
+
+(These generate Mahalanobis and propensity distances for all of the nuclear plants, not just the \texttt{pt==0} plants, after subclassifying the plants according to the value of \texttt{pt}.)
+\end{frame}
+\note{
+% NB: for the second \texttt{mdist()} call, ``pt'' has to be in the
+% propensity score model.  (But that's a good idea anyway.)
+}
+%\mbox{}
+\begin{frame}
+\frametitle{Introducing restrictions on who can be matched to whom:
+  calipers}
+In the nuclear plants example, suppose we choose to insist upon a
+  \alert{caliper} of 3 years in the date of construction.  This would
+  forbid four potential matches, indicated below in \textcolor{red}{red}.
+
+
+
+\addtolength{\tabcolsep}{-\tabcolsepadj} \vfill
+\begin{center}
+{\footnotesize
+\begin{tabular}{|r|rrrrrrrrrrrrrrrrrrr|}
+\hline
+\multicolumn{2}{|l}{Exist-} & \multicolumn{18}{c|}{New sites} \\
+\multicolumn{1}{|l|}{ing}& H & I & J & K & L & M & N & O & P & Q & R & S & T & U & V & W & X & Y & Z \\ \hline
+A & 1.3 & 0.0 & 0.7 & 0.6 & 0.9 & 1.1 & 1.0 & 1.3 & 1.4 & 1.1 & 1.6 & 1.6 & 1.1 & 2.2 & 1.9 & 1.4 & 2.4 & \textcolor{red}{3.1} & \textcolor{red}{3.8} \\
+  B & 0.6 & 0.7 & 0.0 & 0.1 & 0.2 & 0.4 & 0.3 & 0.6 & 0.8 & 0.4 & 0.9 & 0.9 & 0.4 & 1.5 & 1.2 & 0.8 & 1.7 & 2.5 & \textcolor{red}{3.1} \\
+  C & 0.2 & 1.1 & 0.4 & 0.5 & 0.3 & 0.0 & 0.1 & 0.2 & 0.3 & 0.0 & 0.5 & 0.5 & 0.0 & 1.1 & 0.8 & 0.3 & 1.3 & 2.0 & 2.7 \\
+  D & 0.2 & 1.1 & 0.4 & 0.5 & 0.3 & 0.0 & 0.1 & 0.2 & 0.3 & 0.0 & 0.5 & 0.5 & 0.0 & 1.1 & 0.8 & 0.3 & 1.3 & 2.0 & 2.7 \\
+  E & 0.3 & 1.6 & 0.9 & 1.0 & 0.8 & 0.5 & 0.6 & 0.3 & 0.2 & 0.5 & 0.0 & 0.0 & 0.5 & 0.6 & 0.3 & 0.2 & 0.8 & 1.5 & 2.2 \\
+  F & 2.4 & \textcolor{red}{3.7} & 3.0 & 3.0 & 2.8 & 2.5 & 2.6 & 2.4 & 2.2 & 2.5 & 2.0 & 2.0 & 2.5 & 1.4 & 1.8 & 2.2 & 1.3 & 0.5 & 0.2 \\
+  G & 1.5 & 2.8 & 2.1 & 2.2 & 1.9 & 1.7 & 1.8 & 1.5 & 1.4 & 1.7 & 1.2 & 1.2 & 1.7 & 0.6 & 0.9 & 1.4 & 0.4 & 0.3 & 1.0 \\
+\hline
+\end{tabular}
+}
+\vfill \addtolength{\tabcolsep}{\tabcolsepadj}
+\end{center}
+\end{frame}
+
+
+% \begin{frame}
+% \frametitle{How closely should you match on the variables selected
+% for adjustment?}
+
+% \alert{Quantitative or ordinal variables and calipers.}  In the UM
+% space assignment study, exploratory analysis suggested applying the
+% log transformation ($x \mapsto \log (1 + x)$) to grant totals and
+% imposing a \alert{caliper} of $1.0$ on the log of grant funding as PI.
+
+% Quantitative variables can also be incorporated into a
+% multivariate distance.
+
+% \note{
+
+% The space assignment study caliper requirement says \ldots.
+
+%   Equivalently, no woman may be matched to a man whose PI grant
+%   funding differs from hers either by being less than a tenth of it or
+%   more than ten times it.
+
+
+% Imposing a caliper differs from dividing the variable into categories
+% and imposing exact matching on that category.
+% }
+
+% \end{frame}
+
+
+
+%\mbox{}
+\begin{frame}[fragile]
+\frametitle{Coding a caliper when using \texttt{optmatch} and \texttt{R}}
+
+To incorporate such a caliper, first create a distance measuring difference on year of construction\mbox{;} then use it to add a caliper:
+
+\begin{Schunk}
+\begin{Sinput}
+> datecal <- match_on(pr~date, method="euclidean", 
++                     data=nuke.nopt)
+> datecal <- caliper(datecal, width=3)
+\end{Sinput}
+\end{Schunk}
+\enlargethispage*{550pt}
+% {\small 
+% (With optmatch version 0.7-3 or earlier, this requires the $1\times 1$ matrix
+% \texttt{diag(1)} to have been assigned a ``dimnames'' attribute.) }
+Taken together with \texttt{datecal}, the distance \texttt{match\_on(pr \textasciitilde
+  cap + date, data=nuke.nopt)} becomes:
+
+\addtolength{\tabcolsep}{-\tabcolsepadj} \vfill
+\begin{center}
+{\footnotesize
+\begin{tabular}{|r|rrrrrrrrrrrrrrrrrrr|}
+\hline
+\multicolumn{2}{|l}{Exist-} & \multicolumn{18}{c|}{New sites} \\
+\multicolumn{1}{|l}{ing}& H & I & J & K & L & M & N & O & P & Q & R & S & T & U & V & W & X & Y & Z \\ 
+  \hline
+A & 2.2 & 0.0 & 0.7 & 2.7 & 1.4 & 3.1 & 1.7 & 2.7 & 2.0 & 2.8 & 1.6 & 1.9 & 1.8 & 2.4 & 1.9 & 1.6 & 2.7 & \texttt{Inf} & \texttt{Inf} \\ 
+  B & 1.9 & 0.7 & 0.0 & 2.6 & 1.2 & 2.9 & 1.3 & 2.5 & 1.5 & 2.6 & 0.9 & 1.4 & 1.4 & 1.9 & 1.2 & 1.1 & 2.2 & 3.5 & \texttt{Inf} \\ 
+  C & 0.7 & 1.6 & 1.2 & 1.6 & 0.3 & 1.7 & 0.2 & 1.3 & 0.4 & 1.4 & 1.2 & 0.5 & 0.2 & 1.1 & 1.5 & 0.5 & 1.3 & 2.4 & 3.1 \\ 
+  D & 0.8 & 2.8 & 2.6 & 0.5 & 1.4 & 0.3 & 1.3 & 0.2 & 1.3 & 0.0 & 2.5 & 1.6 & 1.2 & 1.9 & 2.8 & 1.9 & 1.8 & 2.0 & 3.9 \\ 
+  E & 1.8 & 1.6 & 0.9 & 2.7 & 1.3 & 2.9 & 1.4 & 2.4 & 1.3 & 2.5 & 0.0 & 1.0 & 1.4 & 1.1 & 0.3 & 0.7 & 1.5 & 2.9 & 2.2 \\ 
+  F & 2.5 & \texttt{Inf} & 3.2 & 3.4 & 2.8 & 3.1 & 2.6 & 2.7 & 2.2 & 2.9 & 2.3 & 2.0 & 2.6 & 1.4 & 2.2 & 2.2 & 1.3 & 1.5 & 1.4 \\ 
+  G & 1.7 & 3.0 & 2.4 & 2.6 & 1.9 & 2.4 & 1.8 & 2.0 & 1.4 & 2.2 & 1.6 & 1.2 & 1.7 & 0.6 & 1.6 & 1.4 & 0.4 & 1.4 & 1.8 \\ 
+   \hline
+\end{tabular}
+}
+\vfill \addtolength{\tabcolsep}{\tabcolsepadj}
+\end{center}
+
+R code:
+\texttt{pairmatch(pr \textasciitilde cap + date, within=datecal,  data=nuke.nopt)}
+
+\end{frame}
+\Note{
+}
+
+
+\end{document}
