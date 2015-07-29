@@ -17,7 +17,7 @@ acorn <- read.csv("data/acorn03.csv")
 @
 
 And here we load libraries containing some functions we'll be using later on:
-<<>>=
+<<results='hide'>>=
 library(MASS)
 library(mosaic)
 library(optmatch)
@@ -47,7 +47,7 @@ of the package first, in order to get the package dependencies.
 \begin{verbatim}
 Error in library(RItools) : there is no package called 'RItools'
 \end{verbatim}
-Both can be installed via the ``Install Packages'' Tool in the RStudio
+Each package can be installed via the ``Install Packages'' Tool in the RStudio
 menu.  Make sure to install package dependencies. 
 
 
@@ -55,9 +55,9 @@ Sigfigs in display:
 <<>>=
 options(digits=3)
 @ 
-\subsection{The response schedules introduced in the slides}
+\subsection{The models of effect (MOE) introduced in the slides}
 
-The slides introduced response schedules characterized by the assumption that (a) each of the control precincts would, if randomized to treatment, have had a GOTV contact rate equal to \Sexpr{round(with(acorn, median(contact[z==1])) , 3)} (the median of contract rates observed in the treatment group actually obtained); and (b) one of the following.
+
 \begin{itemize}
 \item[No effect] says there was no effect (\texttt{moe0})
 \item[one per 10] says the GOTV campaign generated 1 vote for every 10 contacts (\texttt{moe1})
@@ -65,7 +65,7 @@ The slides introduced response schedules characterized by the assumption that (a
 \end{itemize}
 
 
-Use \texttt{transform()}%
+To translate these into $\mathbf{y}_{c}$s, use \texttt{transform()}%
 \footnote{The \texttt{transform()} command serves two purposes,
 generating the copy and setting up an evaluation environment within
 which you can directly reference \texttt{acorn} variables --- i.e.,
