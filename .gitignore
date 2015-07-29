@@ -16,6 +16,7 @@
 *.pid
 *.fls
 *.bak
+*-wmn.pdf
 ./announcement-of-the-day.tex
 ./2014
 ./2015
