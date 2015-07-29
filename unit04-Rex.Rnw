@@ -1,0 +1,137 @@
+\documentclass{article}
+%\usepackage{natbib}
+
+\title{Adjustment for covariates}
+\author{ICPSR Causal Inference '15}
+\usepackage{icpsr-classwork}
+\usepackage{natbib}
+
+\begin{document}
+\maketitle
+
+Here is a brief demo of how to go about 
+ incorporating covariate adjustments into tests of a strong null hypothesis;
+
+The Arceneaux 2005 experiment is used as data.
+
+
+<<results='hide'>>=
+library(MASS)
+library(RItools)
+acorn <- read.csv("data/acorn03.csv")
+@ 
+
+
+\section{Testing the hypothesis of no effect after adjustment for covariates}
+
+When there is  a lagged measure of the outcome, one can compare pre-post differences on that measure between treatment and control.  
+
+<<>>=
+acorn.e <- transform(acorn, pre.post.diff = vote03 - v_g2002)
+@ 
+
+Analyzing these differences, as opposed to the outcome itself, is sometimes called \textit{gain score analysis}.
+
+Unbiased estimation of the average treatment effect is the same as if you were comparing the outcome itself, rather than pre-post differences:
+
+<<>>=
+coef(lm(pre.post.diff ~ z, data=acorn.e))[2]
+@ 
+
+Likewise for setting up models of effects, and for permutation testing of them.
+<<>>=
+acorn.e <- transform(acorn.e, 
+                     dc.moe0 =  pre.post.diff,
+                     dc.moe1 = pre.post.diff - contact/10,
+                     dc.moe2 = pre.post.diff -contact/5
+                     )
+
+xBalance(z ~ dc.moe0 + dc.moe1 + dc.moe2, 
+         report=c("adj.means", "std.diffs", "z.scores"), 
+         data=acorn.e, post.alignment.transform=rank)
+
+@ 
+
+Interesting: with this adjustment, we're able to reject a hypothesis that we weren't able to reject previously.
+
+\textbf{Exercise.}  \newcounter{saveenumi}
+\begin{enumerate}
+\item Using gain scores to adjust for the result of the last general election, test another model of effects (of your own chosing).
+    \setcounter{saveenumi}{\value{enumi}}
+\end{enumerate}
+Gain score analysis is easier to understand that comparisons involving regression (covariance) adjustment, and in some cases there's not much benefit to more complex regression-based methods.  
+
+I don't know that this is one of those cases, however.  It seems desirable also to include covariate adjustments for the results of the last election prior to the intervention.
+
+
+\subsection{Difference of means test with robust covariate adjustment}
+
+Now we'll covariate-adjust for the 2 most recent election results,  to beef up a test of the hypothesis of no effect. A reference for what we're doing here is \cite[\S2.3]{rosenbaum:2002a}.  Since \texttt{v\_g2002} is one of these, we'll use the original outcome rather than the gain scores; the results will be identical (if we use OLS for the covariate adjustments) or similar (if we use robust regression).
+<<>>=
+acorn.e <- transform(acorn.e, 
+                     yc.moe0 =  vote03,
+                     yc.moe1 = vote03 - contact/10,
+                     yc.moe2 = vote03 -contact/5
+                     )
+@ 
+
+The first step is to residualize.  One can do this using OLS, via R's \texttt{lm} function, but often robust regression is better for these purposes.  I use \texttt{rlm} from the \texttt{MASS} package, with default options.
+<<eval=FALSE>>=
+library(MASS) #Just a reminder; the script actually loaded MASS already
+@ 
+<<>>=
+rlm0 = rlm(yc.moe0 ~ v_g2002 + v_p2003, data=acorn.e)
+@ 
+Internally, \texttt{rlm()} has top- and bottom-coded the residuals in order to fit its regression coefficients.  But I couldn't find a convenience function for extracting these Winsorized (top- and bottom-coded) residuals, so I wrote one myself.
+<<>>=
+trimmed_resid <- function(arlm)
+  {
+   stopifnot(inherits(arlm, "rlm")) # only works for rlms
+   with(arlm, residuals * psi(residuals/s))
+  }
+r0 = trimmed_resid(rlm0)
+@ 
+
+To see the difference between trimming or no, 
+ run \texttt{stem(resid(rlm0))} vs \texttt{trimmed\_resid(rlm0))} and compare the results.
+
+Now we can take the difference in means in \texttt{r0} as our test statistic, whithout fear of an outlier or two's sapping away our power.
+
+<<>>=
+lm(r0~z, data=acorn.e)
+actualD = coef(lm(r0~z, data=acorn.e))["z"]
+coef(lm(r0~sample(z), data=acorn.e))["sample(z)"]
+simD = replicate(1000, coef(lm(r0~sample(z), data=acorn.e))["sample(z)"])
+table(simD>= actualD)/length(simD)
+@ 
+
+Since residualization was done without attention to the distinction between treatment and control, the statistical significance of the difference between treatment and control group residual means speaks to the presence of a treatment effect.
+
+That gives a one-sided p-value.  For two-sided, 
+<<>>=
+table(abs(simD)>= abs(actualD))/length(simD)
+@ 
+or, to cut to the chase:
+<<>>=
+mean(simD >= actualD) # one-sided
+mean(abs(simD)>= abs(actualD)) # two-sided
+@ 
+
+\texttt{Exercise.}\\
+\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
+\item   \texttt{xBalance} to test 4 models of effect, the 3 mentioned above and another of your devising.  Incorporate covariate adjustment, as above.
+\end{enumerate}
+
+\bibliographystyle{plain}
+% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+\begin{thebibliography}{1}
+
+\bibitem{rosenbaum:2002a}
+Paul~R. Rosenbaum.
+\newblock Covariance adjustment in randomized experiments and observational
+  studies.
+\newblock {\em Statistical Science}, 17(3):286--327, 2002.
+
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,114 @@
+%  For slides only
+\input{slidesonly}
+
+% % For handout
+%\input{handout}
+
+%For handout + mynotes
+%\input{handout+mynotes}
+
+\input{beamer-preamble-bbh-all}
+\input{defs-all}
+
+\title{Unit 4: Covariance adjustment for experiments and observational studies}
+% \author, date moved to beamer-preamble-*-all.tex
+
+\begin{document}
+
+
+  \begin{frame}
+    \frametitle{Outline \& Readings}
+
+\tableofcontents[subsectionstyle=show/hide/hide]
+
+  \alert{Readings for this Unit:}\\
+  \begin{itemize}
+  \item Rosenbaum (2002), ``Covariance adjustment in randomized experiments and observational  studies, '' \S 2.3 ({\em Statistical Science}, 17/3:286--327).
+  \end{itemize}
+
+\input{announcement-of-the-day}  % announcement-of-the-day.tex not
+                                % part of repo
+
+\end{frame}
+
+\begin{frame}{Workflow for analyzing experiments/obs studies}
+  \framesubtitle{To summarize from earlier units:}
+
+  \begin{columns}
+    \begin{column}{.25\linewidth}
+      
+    \end{column}
+    \begin{column}{.75\linewidth}
+        \begin{itemize}
+  \item[Matching/other] (if it's an obs study.  tbd)
+  \item[Estimation] Optionally, compute unbiased estimate of ATE
+  \item[MOEs] Specify models of effect; separately for each, figure $\mathbf{y}_{\mathbf{z}\equiv 0} $ or a summary of it.
+  \item[Tests \& CIs] Select test statistic, perform h-tests (separately for each MOE). Summarize the results with a 95\% CI, maybe also 2/3 CI. 
+  \item[HL estimates] Optionally, Hodges-Lehmann estimate
+  \end{itemize}
+
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\section{Covariance adjustment}
+\begin{frame}<\nottheirhandout>{What's missing from this picture?}
+
+
+  \begin{columns}
+    \begin{column}{.25\linewidth}
+      
+    \end{column}
+    \begin{column}{.75\linewidth}
+        \begin{itemize}
+  \item[Matching/other] 
+  \item[Estimation] 
+  \item[MOEs] 
+  \item[Tests \& CIs] 
+  \item[HL estimates] 
+  \end{itemize}
+
+    \end{column}
+  \end{columns}
+\pause
+
+\vfill
+Covariance adjustments to enhance precision, of course.
+  
+\end{frame}
+
+\begin{frame}{Basic varieties of covariance adjustment}
+  
+  \begin{itemize}
+   \item{} {Differences-in-differences}
+  
+\item {} {Model-assisted covariance adjustment}
+
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}{Workflow for analyzing experiments/obs studies}
+  \framesubtitle{To summarize from earlier units:}
+
+  \begin{columns}
+    \begin{column}{.25\linewidth}
+      
+    \end{column}
+    \begin{column}{.75\linewidth}
+        \begin{itemize}
+  \item[Matching/other] (if it's an obs study.  tbd)
+  \item[Gain scores] Optionally, adjust for lagged measure of the outcome by subtracting it off from the actual outcome.
+  \item[Estimation] Optionally, compute unbiased estimate of ATE
+  \item[MOEs] Specify models of effect; separately for each, figure $\mathbf{y}_{\mathbf{z}\equiv 0} $ or a summary of it.
+  \item[Cov Adj] Optionally, effect model-assisted covariance adjustments
+  \item[Tests \& CIs] Select test statistic, perform h-tests (separately for each MOE). Summarize the results with a 95\% CI, maybe also 2/3 CI. 
+  \item[HL estimates] Optionally, Hodges-Lehmann estimate
+  \end{itemize}
+
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+\end{document}
