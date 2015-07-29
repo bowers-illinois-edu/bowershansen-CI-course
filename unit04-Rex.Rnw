@@ -59,7 +59,7 @@ Interesting: with this adjustment, we're able to reject a hypothesis that we wer
 \item Using gain scores to adjust for the result of the last general election, test another model of effects (of your own chosing).
     \setcounter{saveenumi}{\value{enumi}}
 \end{enumerate}
-Gain score analysis is easier to understand that comparisons involving regression (covariance) adjustment, and in some cases there's not much benefit to more complex regression-based methods.  
+Gain score analysis is easier to understand than comparisons involving regression (covariance) adjustment, and in some cases there's not much benefit to more complex regression-based methods.  
 
 I don't know that this is one of those cases, however.  It seems desirable also to include covariate adjustments for the results of the last election prior to the intervention.
 
