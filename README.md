@@ -40,6 +40,9 @@ Near the top of the .tex file, comment out all but one of these lines, depending
 
 ```
 
+Latex should be run twice.  Or, for a file with `\usepackage{tikz}` in
+the preamble, three times.
+
 # About this work
 
 ## Improving these hints
