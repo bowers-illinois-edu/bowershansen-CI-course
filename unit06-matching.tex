@@ -1,0 +1,856 @@
+%  For slides only
+%\input{slidesonly}
+
+% % For handout
+\input{handout}
+
+%For handout + mynotes
+%\input{handout+mynotes}
+
+\input{beamer-preamble-bbh-all}
+\input{defs-all}
+
+\usepackage{tikz} 
+\usetikzlibrary{arrows} % also see \tikzstyle spec below after \begin{doc}
+
+\usepackage{xspace}
+\usepackage[round]{natbib}
+
+\usepackage{versions}
+\includeversion{pedantic} % \excludeversion
+
+\usepackage{./mytexdefs2}
+\usepackage{./mytexdefs}
+\newcounter{saveenum}
+
+\title{Unit 6: Propensity score matching}
+% \author, date moved to beamer-preamble-*-all.tex
+
+\begin{document}
+
+\newcounter{saveenumi}
+\tikzstyle{every picture}+=[remember picture]
+
+  \begin{frame}
+    \frametitle{Outline \& Readings}
+
+\tableofcontents[subsectionstyle=show/hide/hide]
+
+ \alert{Readings for this Unit:} \citet{rubinWaterman06}; \citet{hansen2009b};  \citet[\textit{[DOS]} chs. 8,9]{rosenbaum10book}.
+\end{frame}
+
+
+
+\section[Extrapolation \& overlap]{Pitfalls of multiple covariates:
+  Extrapolation \& overlap}
+
+
+\begin{frame} \frametitle{Contrasting two groups after adjustment for a covariate}
+\framesubtitle{The case of a single continuous
+  covariate\footnote{Trochim, ``Nonequivalent groups design,''
+    \url{socialresearchmethods.net}; Fig.~1 of Rubin (1977, \textit{J. Educ. Statist.} \textbf{2}/1 1--26.).}}
+
+\begin{center}
+  \only<1\mynoteonly>{\igrphx[height=.6\textheight]{pretest-comp-group-design}}
+  \only<2>{\igrphx[height=.8\textheight]{rubin1977fig1}}
+\end{center}
+
+\end{frame}
+\note[itemize]{
+\item {}\textit{[Explain picture]}
+\item Even if we knew these curves, we'd have to average both curves
+  over a common standard distribution in order to estimate a causal effect.
+  \item Even if we knew these curves, there'd be ETT, ETC, \ldots
+    \item Problem: we don't know the 2 curves.  Further, if we try to
+      estimate from data, might have to extrapolate.  In that case
+      have to be very careful!
+}
+
+\begin{frame}[label=contrast2grFr]
+  \frametitle{Contrasting two groups after adjustment for a covariate}
+\framesubtitle{Preventing extrapolation with two covariates}
+
+\begin{center}
+  \igrphx[angle=270,width=\linewidth]{mvextrapsketch}
+\end{center}
+
+\end{frame}
+
+\note[itemize]{
+  \item W/ multiple variables, extrapolation can't necessarily be identified by looking for extrapolation on the variables individually.  
+  \item The problem gets worse as the number of variables increases.
+  }
+
+\begin{frame}
+  \frametitle{Contrasting two groups after adjustment for a covariate}
+\framesubtitle{Preventing extrapolation with \textit{many}
+  covariates\citep[\textit{cf.} ][\textit{Ann. Intern. Med.}]{rubin:1997}}
+
+  \begin{center}
+    \igrphx[height=.9\textheight]{psboxplot}
+  \end{center}
+
+\end{frame}
+
+\note[itemize]{
+\item The are ``propensity scores'' -- to be defined.
+\item Propensity scores are immediate children of ``discriminant scores.'' As name suggests, their purpose is to discriminate between the groups.
+\item The scores fold together a potentially large number of variables.  So plots like this inform us about extent of extrapolation problem.
+\item Jargon: ``overlap''; ``common support''.
+\item Role of assumptions in comparisons outside region of overlap.  Minimizing assumptions often requires restricting the comparison, ie. ``throwing away data.''
+}
+
+\section{Pair matching with propensity scores}
+
+
+\begin{frame}<1>[fragile]
+  \frametitle{Basic propensity score fitting}
+
+The usual way to fit a propensity score is with ordinary logistic regression.
+\begin{Schunk}
+\begin{Sinput}
+> my.ppty.mod <- 
++   glm(pr ~ date + t1 + t2 + cap + ne + ct + 
++       bw + cum.n + pt, binomial, data=nuke.nopt)
+\end{Sinput}
+\end{Schunk}
+\pause%
+---A ``kitchen sink'' regression \citet{rubin:thom:1996}, deliberately so.\pause
+
+The fitted probabilities are available by
+\begin{Schunk}
+\begin{Sinput}
+> my.ppty.mod$fitted.values
+\end{Sinput}
+\end{Schunk}
+
+For use in propensity matching, I recommend using the $X\hat{\beta}$'s instead, available as a vector using
+\begin{Schunk}
+\begin{Sinput}
+> scores(my.ppty.mod)
+\end{Sinput}
+\end{Schunk}
+or pre-assembled into a distance using 
+
+\begin{Schunk}
+\begin{Sinput}
+> match_on(my.ppty.mod, <...>)
+\end{Sinput}
+\end{Schunk}
+
+\end{frame}
+\note[itemize]{
+\item Kitchen sink OK, but make sure you don't put post-treatment variables in there.
+}
+\begin{frame}[fragile]
+  \frametitle{Matching on the propensity score only}
+
+
+\begin{Schunk}
+\begin{Sinput}
+> my.ppty.pairs <- pairmatch(my.ppty.mod, data=nuke.nopt)
+> print(my.ppty.pairs, grouped=T)
+\end{Sinput}
+\begin{Soutput}
+ Group Members
+   1.1    A, M
+   1.2    B, Z
+   1.3    C, Q
+   1.4    D, U
+   1.5    E, V
+   1.6    F, I
+   1.7    G, R
+\end{Soutput}
+\end{Schunk}
+
+This matches units using the linear predictor, i.e. the logits of the fitted probabilities.  \citet*{rosenbaum:rubi:1985a} discuss this issue.
+\end{frame}
+
+
+\begin{frame} \enlargethispage*{400pt}
+\frametitle{The propensity score as an instrument of balance}
+\begin{center}
+\igrphx[height=7.8cm]{plot_xbal_pscorefullmatch}
+\end{center}
+\end{frame}
+\note[itemize]{
+\item Behind each ``row'' of the table, a comparison of two histograms.
+  \item This is actually a summary of a full match on the propensity score, to be discussed below; but you get the idea.
+  % \item Sometimes $.2s_{p}$ or $.1s_{p}$ are used as dividing lines between negligible and non-negligible imbalances.
+  %   \item By those standards this isn't a very good match.
+}
+
+
+\begin{frame}[fragile]
+  \frametitle{Propensity scores in the Mahalanobis distance}
+
+  \begin{enumerate}
+ \item Select those of the covariates on which close matching is most
+    important --- say \texttt{cap} and \texttt{date}.  
+%     (A personal
+%     view is that predictions from a prognostic model fitted to the
+%     control group belon among these covariates, e.g.
+% \begin{verbatim}
+% > my.pg.mod <- lm(cost~ date+<...>+cum.n,
+% +  data=nuke.nopt, subset=!pr)
+% > my.pg <- predict(my.pg.mod, newdata=nuke.nopt)
+% \end{verbatim}
+% This is controversial. )
+  \item Match on a Mahalanobis distance combining these with the
+    propensity score \citep{rosenbaum:rubi:1985a,rubin:thom:2000}: % my.mhd <- match_on(pr~cap+date+scores(my.ppty.mod),data=nuke.nopt)
+\begin{Schunk}
+\begin{Sinput}
+> pairmatch(pr~cap+date+scores(my.ppty.mod),data=nuke.nopt)
+\end{Sinput}
+\end{Schunk}
+\item 
+  (Binary and categorical variables in the Mahalanobis are OK, but tend to dominate it.  Use sparingly, or use ``rank-based Mahalanobis'' \citep{rosenbaum2010design}.)
+  \end{enumerate}
+
+\end{frame}
+\itnote{
+\item Whereas we typically put lots of variables into the PS, ordinarily just a few here.
+\item OK for a variable both to appear in Mahal dist and in PS.
+}
+%\mbox{}
+\begin{frame}[fragile]
+  \frametitle{Propensity score calipers and pair matching}
+\citet{rosenbaum:rubi:1985a}, and \citet{rubin:thom:2000}, advise Mahalanobis distance (including the propensity score) + propensity score calipers.
+\begin{Schunk}
+\begin{Sinput}
+> pcal <-  caliper(match_on(my.ppty.mod), width=.25)
+\end{Sinput}
+\end{Schunk}
+\pause %my.mhd.pptycal
+
+This prevents matches more separated on \texttt{my.ppty} than $1/4$ of
+a pooled sd.  \pause 
+
+In this case it's not possible to create nonoverlapping
+pairs while respecting this constraint: {%\footnotesize
+\begin{Schunk}
+\begin{Sinput}
+> try( pair(pr~cap+date+scores(my.ppty.mod), within=pcal, data=nuke.nopt) )
+\end{Sinput}
+\end{Schunk}
+\begin{Schunk}
+\begin{Soutput}
+Error in pairmatch.InfinitySparseMatrix(m, controls = controls, data = mfd,  : 
+  not enough controls in some subclasses
+\end{Soutput}
+\end{Schunk}
+}
+\pause
+But if you give up on the subset of
+treatments that are not within caliper width of any controls, the problem becomes feasible. (In this case.) {%\footnotesize
+\begin{Schunk}
+\begin{Sinput}
+> head( pair(pr~cap+date+scores(my.ppty.mod), data=nuke.nopt,
++                within=pcal, remove.unmatchables=T) )
+\end{Sinput}
+\begin{Soutput}
+   A    B    C    D    E    F 
+<NA>  1.1  1.2 <NA>  1.3  1.4 
+\end{Soutput}
+\end{Schunk}
+\pause 
+(This doesn't always work.  More general solutions include widening the caliper and matching more flexibly.) } %\hyperlink{computeNotesFr}{\beamergotobutton{Jump to ``Worksheet updates''}}
+\end{frame}
+
+
+%\mbox{}
+\begin{frame}[label=selectCalFr]
+  \frametitle{Selecting a caliper width (1)}
+
+\citet{coch:rubi:1973} found the following
+relations beween caliper width (as a multiple of
+pooled SD) and percent bias reduction:
+{\footnotesize
+\begin{center}
+\begin{tabular}{r|rrr} \hline
+      &  \multicolumn{3}{l}{percent bias reduction if \ldots}\\
+width & $2\sigma_t = \sigma_c$ &  $\sigma_t=\sigma_c$
+      &  $\sigma_t= 2\sigma_c$ \\ \hline
+0.2 & 99 & 99 & 98 \\
+0.4 & 96 & 95 & 93 \\
+0.6 & 91 & 89 & 86 \\
+0.8 & 86 & 82 & 77 \\
+1.0 & 79 & 74 & 69 \\ \hline
+\end{tabular}
+\end{center}
+}
+
+These figures emerge from a study of non-optimal pair matching, so are
+not fully applicable with flexible optimal matching.  They do give
+useful starting points.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Selecting a caliper width (2)}
+
+  \begin{columns}
+    \column{.5\linewidth}%
+{
+  \begin{center}
+{\usebeamercolor[fg]{titlelike}    No caliper: }
+  \end{center}
+{\footnotesize
+    \begin{semiverbatim}
+> pm.ppty = pairmatch(ppty)
+> summary(pm.ppty,ppty)
+Structure of matched sets:
+ 1:1  0:1
+ 322 4103
+
+sum(matched.distances)=16.9
+(within 0.0464 of optimum).
+Percentiles of matched distances:
+    0%    50%    95%   100%
+0.0000 0.0024 0.2710 0.6400
+
+    \end{semiverbatim}
+}
+}
+    \column{.5\linewidth}%
+{
+  \begin{center}
+    {\usebeamercolor[fg]{titlelike} Caliper=$\frac{1}{4} s_{p}$: }
+  \end{center}
+{\footnotesize
+  \begin{semiverbatim}
+> pm.ppty.c25 = pairmatch(ppty, 
++  w=caliper(match_on(ppty), .25) )
+> summary(pm.ppty.c25,ppty)
+Structure of matched sets:
+ 1:1  0:1
+ 322 4103
+
+sum(matched.distances)=16.9
+(within 0.0458 of optimum).
+Percentiles of matched distances:
+   0%   50%   95%  100%
+0.000 0.002 0.238 0.250
+  \end{semiverbatim}
+}
+}
+  \end{columns}
+\bigskip
+
+%\citet{hansen2009} says: choose caliper to avoid outlying discrepancies on the PS.  (\texttt{matched.distances()} is also helpful for extracting propensity score distances.)
+\end{frame}
+
+
+\section[full matching]{Matching with a varying number of controls and full matching}
+\Note{
+Point: if you insist on one fixed matching ratio, you'll probably have to leave meaningful chunks of the sample on the table. 
+}
+\begin{frame}
+  \frametitle{Matching with a varying number of controls}
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\ 
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\ 
+  C & -0.4 & {0} {\mlpnode{NC}} \\ 
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\ 
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\ 
+  F & 2.2 & {0} {\mlpnode{NF}} \\ 
+  G & 1.3 & {0} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+{R code:
+}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+\begin{tikzpicture}[overlay]
+  \path[draw,gray] (NA) edge (NI);
+ \path[draw,gray] (NB) edge (NJ);
+ \path[draw,gray] (NC) edge (NH);
+ \path[draw,gray] (NC) edge (NL);
+ \path[draw,gray] (NC) edge (NN);
+ \path[draw,gray] (NC) edge (NP);
+ \path[draw,gray] (NC) edge (NS);
+ \path[draw,gray] (NC) edge (NT);
+ \path[draw,gray] (NC) edge (NW);
+ \path[draw,gray] (ND) edge (NK);
+ \path[draw,gray] (ND) edge (NM);
+ \path[draw,gray] (ND) edge (NO);
+ \path[draw,gray] (ND) edge (NQ);
+ \path[draw,gray] (NE) edge (NR);
+ \path[draw,gray] (NE) edge (NV);
+ \path[draw,gray] (NF) edge (NZ);
+ \path[draw,gray] (NG) edge (NU);
+ \path[draw,gray] (NG) edge (NX);
+ \path[draw,gray] (NG) edge (NY);
+ \end{tikzpicture}
+\texttt{fullmatch(pr \textasciitilde\ date+cap, data=nuke.nopt, min.c=1)}\\
+\textit{or,} \texttt{full(pr \textasciitilde\ date+cap, data=nuke.nopt, min=1)}\\
+
+
+\note{
+  Observe that now no control plants are left out.  (This is something you can change if you want.)
+
+Discuss effective sample size.
+
+After this slide, resume worksheet and finish \S~3.
+}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Matching so as to maximize effective sample size}
+\note{
+\begin{semiverbatim}
+stratumStructure( fullmatch(..., min=2, max=3) )
+
+stratum treatment:control ratios
+
+1:2 1:3
+
+2   5
+\end{semiverbatim}
+
+So effective s.s. for this match = $2 * 4/3 + 5* 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples. Mean of matched distances is 0.785. -- compare to 0.29 for pairs, 0.57 for triples.
+
+Note variance/bias tradeoff.  }
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\ 
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\ 
+  C & -0.4 & {0} {\mlpnode{NC}} \\ 
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\ 
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\ 
+  F & 2.2 & {0} {\mlpnode{NF}} \\ 
+  G & 1.3 & {0} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+{R code:
+}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+\begin{tikzpicture}[overlay]
+  \path[draw,gray] (NA) edge (NI);
+ \path[draw,gray] (NA) edge (NJ);
+ \path[draw,gray] (NB) edge (NL);
+ \path[draw,gray] (NB) edge (NN);
+ \path[draw,gray] (NB) edge (NW);
+ \path[draw,gray] (NC) edge (NH);
+ \path[draw,gray] (NC) edge (NO);
+ \path[draw,gray] (NC) edge (NT);
+ \path[draw,gray] (ND) edge (NK);
+ \path[draw,gray] (ND) edge (NM);
+ \path[draw,gray] (ND) edge (NQ);
+ \path[draw,gray] (NE) edge (NR);
+ \path[draw,gray] (NE) edge (NS);
+ \path[draw,gray] (NE) edge (NV);
+ \path[draw,gray] (NF) edge (NY);
+ \path[draw,gray] (NF) edge (NZ);
+ \path[draw,gray] (NG) edge (NP);
+ \path[draw,gray] (NG) edge (NU);
+ \path[draw,gray] (NG) edge (NX);
+ \end{tikzpicture}\begin{semiverbatim}
+fullmatch(pr \textasciitilde\ date+cap, min=2, max=3, data=nuke.nopt)
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}
+\frametitle{Example: matching in a gender-equity
+  study\footnote{Discussed in \citet{hansen:klopfer:2005}, \citet{hansen:2004}}}
+
+ Women and men scientists are to be matched on grant funding, to set up a comparision of lab space allocations.
+\begin{center}
+%\psset{linecolor=gray}
+\begin{tabular}{clcl} \hline
+\multicolumn{2}{c}{Women} & \multicolumn{2}{c}{Men} \\
+Subject & \multicolumn{1}{c}{$\log_{10}(\mbox{Grant})$}  & Subject &
+\multicolumn{1}{c}{$\log_{10}(\mbox{Grant})$} \\ \hline
+A & 5.7  {\mlpnode{Na}} &{\mlpnode{Nv}\mbox{}} V & 5.5 \\
+B & 4.0  {\mlpnode{Nb}} &{\mlpnode{Nw}\mbox{}} W & 5.3 \\
+C & 3.4  {\mlpnode{Nc}} &{\mlpnode{Nx}\mbox{}} X & 4.9 \\
+D & 3.1  {\mlpnode{Nd}} &{\mlpnode{Ny}\mbox{}} Y & 4.9 \\
+  &                     &{\mlpnode{Nz}\mbox{}} Z & 3.9 \\ \hline
+\end{tabular}
+\end{center}
+\only<2-4>{
+\begin{tikzpicture}[overlay]
+\path[draw,red,dashed] (Na) edge (Nv);
+%\path[draw,gray,dashed] (Na) edge (Nw);
+\path[draw,red,dashed] (Nb) edge (Nx);
+\path[draw,red,dashed] (Nc) edge (Ny);
+\path[draw,red,dashed] (Nd) edge (Nz);
+\end{tikzpicture}
+}
+\only<3-4>{
+\begin{tikzpicture}[overlay]
+\path[draw,gray] (Na) edge (Nv);
+\path[draw,gray] (Na) edge (Nw);
+\path[draw,gray] (Na) edge (Nx);
+\path[draw,gray] (Na) edge (Ny);
+\path[draw,gray] (Nb) edge (Nz);
+\path[draw,gray] (Nc) edge (Nz);
+\path[draw,gray] (Nd) edge (Nz);
+\end{tikzpicture}
+}
+\only<5>{
+\begin{tikzpicture}[overlay]
+\path[draw,red] (Na) edge (Nv);
+\path[draw,red] (Na) edge (Nw);
+\path[draw,red] (Na) edge (Nx);
+\path[draw,red] (Nb) edge (Ny);
+\path[draw,red] (Nc) edge (Nz);
+\path[draw,red] (Nd) edge (Nz);
+\end{tikzpicture}
+}
+\begin{itemize}
+\item<2-> Pair matching can only match so well.
+\item<3-> \textit{Full matches}  are closer
+\item<4-> Although effective sample size is less (3.1 vs 4).
+\item<5-> To say no more than 2 treatments can share a control, use \texttt{fullmatch()} w/ option \texttt{min=1/2}.
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}<1>[label=matchworkflowFr]
+  \frametitle{Matching workflow}
+Steps:
+    \begin{enumerate}
+    \item Create match distance
+    \item Choose structural requirements for match
+    \item Create the match (checking that it worked)
+    \item Evaluate quality, structure of matches
+    \item Try a few variations, iterating until satisfied with result.
+    \item<2-> If match quality is borderline, ask computer to try a little harder\ldots
+    \end{enumerate}
+
+\end{frame}
+\note{
+Break for worksheet work.
+}
+
+
+
+\section{Propensity score matching in general}
+
+
+\begin{frame}[fragile]
+  \frametitle{Full matching on the propensity score}
+
+\begin{Schunk}
+\begin{Sinput}
+> my.ppty.match <- fullmatch(my.ppty.mod, data=nuke.nopt)
+> summary(my.ppty.match)
+\end{Sinput}
+\begin{Soutput}
+Structure of matched sets:
+ 3:1  2:1  1:1 1:5+ 
+   1    1    1    1 
+Effective Sample Size:  5.7 
+(equivalent number of matched pairs).
+
+sum(matched.distances)=17
+(within 0.013 of optimum).
+Percentiles of matched distances:
+    0%    50%    95%   100% 
+0.0095 0.5050 1.8800 2.3200 
+\end{Soutput}
+\end{Schunk}
+
+
+\end{frame}
+\Note{Full matching on the PS ordinarily gives excellent balance.  May not always be the best use of your data, however.
+ }
+
+\begin{frame}[fragile]
+  \frametitle{How does my balance compare to what block randomization
+    would have produced?}
+\begin{Schunk}
+\begin{Sinput}
+> summary(my.ppty.match, my.ppty.mod)
+\end{Sinput}
+\begin{Soutput}
+Structure of matched sets:
+ 3:1  2:1  1:1 1:5+ 
+   1    1    1    1 
+Effective Sample Size:  5.7 
+(equivalent number of matched pairs).
+
+sum(matched.distances)=17
+(within 0.013 of optimum).
+Percentiles of matched distances:
+    0%    50%    95%   100% 
+0.0095 0.5050 1.8800 2.3200 
+Balance test overall result:
+  chisquare df p.value
+       3.87  8   0.868
+\end{Soutput}
+\end{Schunk}
+\end{frame}
+
+\note[itemize]{
+  \item By this measure, looks pretty good!
+    \item This contrasts with verdict of the $.1s_{p}$ approach.
+  \item Full matching on the propensity score often comes out well this way.
+    \item Had the comparison been less good, next step
+  to improvement is to root out poor matches on the propensity score -- i.e., add a caliper.
+  \item If after adding a suitable caliper things still don't work, try re-fitting the PS after getting rid of outliers on the PS or on variables contributing to it.
+}
+
+\begin{frame}
+  \frametitle{Propensity scores and treatment:control matching ratios}
+  
+  For every 10 treatment group members with $\PP(Z|\mathbf{X})$ at each of the below values, about how many control group members do you expect to find with similar values of $\PP(Z|\mathbf{X})$?
+  
+  \begin{enumerate}
+  \item $.5 $
+  \item $.2 $
+  \item $.67 $
+  \end{enumerate}
+\end{frame}
+
+
+\begin{frame}<mynoteonly>[label=conditioningExerciseFr]
+  \frametitle{Math exercise related to propensity score matching} 
+  \framesubtitle{(if you don't care for history)}
+
+  Motivation for exercise: after pairing two people with similar \textit{a priori} probabilities of receiving the treatment, we'll be conditioning on event that one or the other of  them, but not both, receive the treatment.
+  
+  \begin{enumerate}
+  \item Unconditionally, Annie's probability of assignment to treatment is .5, while Bobby's is .4.  Conditionally given that one of Annie and Bobby, but not both, is assigned to treatment, what is the probability of Annie being so assigned?
+  \item Unconditionally, Chuck's probability of assignment to treatment is .2, while Dawn's is .1.  Conditionally given that one of Chuck and Dawn, but not both, is assigned to treatment, what is the probability of Chuck being so assigned?
+      \item Unconditionally, Elaine's probability of assignment to treatment is $\exp\{\theta_{E} \}/(1+\exp\{\theta_{E} \}) $, while Frank's is $\exp\{\theta_{F} \}/(1+\exp\{\theta_{F} \}) $.  Conditionally given that one of Elaine and Frank, but not both, is assigned to treatment, what is the probability of Elaine being so assigned?
+  \end{enumerate}
+\end{frame}
+\ennote{
+\item $\PP(A| \mathcal{E}) = \frac{(.5)(.6)}{(.5)(.4) + (.5)(.6)} = \frac{30}{20 + 30} = .6$.
+\item $\PP(C| \mathcal{E}) = \frac{(.2)(.9)}{(.2)(.9) + (.8)(.1)} = 18/26 = 9/13 = .692$
+  \item $\frac{\exp\{\theta_{E}\}}{\exp\{\theta_{E}\} + \exp\{\theta_{F}\}} = 
+    \frac{\exp\{\theta_{E}-\theta_{F}\}}{\exp\{\theta_{E}-\theta_{F}\} + 1}$
+  \item Invite people to work through these, or not, during brief history lesson.
+
+  \item Moral is that selection and pairing can create a setup in which conditionally, everyone's got similar chances of receiving the treatment, even when unconditional chances are quite varied.  But it's good to be attentive to (a) what you're matching on and (b) how closely you match.
+}
+
+
+\begin{frame}[fragile]
+  \frametitle{Basic propensity score fitting}
+
+The simplest way to fit a propensity score is using ordinary logistic regression.
+\begin{Schunk}
+\begin{Sinput}
+> my.ppty.mod <- glm(pr ~ date + t1 + t2 + cap + ne + ct + 
++                    bw + cum.n + pt, data=nuke.nopt, family=binomial)
+\end{Sinput}
+\end{Schunk}
+
+
+The fitted probabilities, and their logits, are available by
+\begin{Schunk}
+\begin{Sinput}
+> my.ppty.mod$fitted.values
+> scores(my.ppty.mod)
+\end{Sinput}
+\end{Schunk}
+
+
+%\visible<2>{
+  Penalized or bayesian logistic regression also works well, and is advantageous with small samples.
+\begin{Schunk}
+\begin{Sinput}
+> library(brglm)
+> my.ppty.mod <- brglm(pr ~ date + t1 + t2 + cap + ne + ct + 
++                      bw + cum.n + pt, data=nuke.nopt)
+> class(my.ppty.mod) <-  # optmatch buglet workaround;
++   class(my.ppty.mod)[2:3] # not needed after v.0.9-0.
+\end{Sinput}
+\end{Schunk}
+
+% \begin{semiverbatim}
+% > library(brglm)
+% > my.ppty.mod <- brglm(pr \textasciitilde\ date + t1 + t2 + cap + ne + ct + 
+% +       bw + cum.n + pt, binomial, data=nuke.nopt)    
+% > class(my.ppty.mod) <-  \# optmatch buglet workaround;
+% + class(my.ppty.mod)[2:3] \# not needed after v.0.9-0.
+% \end{semiverbatim}
+
+% }
+\end{frame}
+
+
+\begin{frame}{Missing $x$es and the propensity score}
+  
+  \begin{itemize}
+  \item Most statistical software simply drops observations if they
+    have missing information.  This can cause substantial bias.
+  \item The more $x$es you put in your PS, the greater the potential
+    for one or more to be missing.
+  \item Rosenbaum \& Rubin's \citeyearpar{rosenbaum:rubi:1984a} simple solution.
+  \item As of optmatch version 0.9, applying \texttt{pairmatch()}, \texttt{match\_on()},
+    \texttt{fullmatch()} or \texttt{scores()} to a propensity model
+    automatically invokes R\&R's method.  (See help page for \texttt{fill.NAs()}.)
+  \end{itemize}
+  
+\end{frame}
+
+\againframe<1-2>{matchworkflowFr}
+
+\begin{frame}[fragile] \frametitle{Optimal matching and covariate balance}
+
+\framesubtitle{Example with 1:2 matched triples}
+
+\begin{columns}
+  \column{.5\linewidth}%
+{
+  \begin{center}
+    {\usebeamercolor[fg]{titlelike} \texttt{tol=.001} (default)}
+  \end{center}
+{\footnotesize
+\begin{semiverbatim}
+> summary(pairmatch(ppty.mod,2),
+ppty.mod)
+Structure of matched sets:
+ 1:2  0:1
+ 322 3781
+
+sum(matched.distances)=85.1
+(within 4.6 of optimum).
+Percentiles of matched distances:
+     0%     50%     95%    100%
+6.7e-06 2.6e-02 6.4e-01 1.1e+00
+Balance test overall result:
+  chisquare  df p.value
+        161 131  0.0367
+\end{semiverbatim}
+}
+}
+  \column{.5\linewidth}%
+{
+  \begin{center}
+    {\usebeamercolor[fg]{titlelike} \texttt{tol=.0001}}
+  \end{center}
+{\footnotesize
+\begin{semiverbatim}
+> summary(pairmatch(ppty.mod,2,
++ tol=.0001), ppty.mod)
+Structure of matched sets:
+ 1:2  0:1
+ 322 3781
+
+sum(matched.distances)=85.1
+(within 0.458 of optimum).
+Percentiles of matched distances:
+   0%   50%   95%  100%
+0.000 0.020 0.609 1.020
+Balance test overall result:
+  chisquare  df p.value
+        159 132  0.0527
+\end{semiverbatim}
+}
+}
+\end{columns}
+
+
+\end{frame}
+
+
+
+
+\begin{frame}
+
+\bibliographystyle{asa}
+
+{\scriptsize
+\bibliography{BIB/master,BIB/abbrev_long,BIB/causalinference,BIB/computing,BIB/biomedicalapplications,BIB/misc}
+}
+\end{frame}
+
+\end{document}

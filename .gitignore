@@ -20,6 +20,7 @@
 ./announcement-of-the-day.tex
 ./2014
 ./2015
+./BIB
 
 # biblatex stuff
 *.bbl
