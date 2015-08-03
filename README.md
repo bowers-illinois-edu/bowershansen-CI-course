@@ -4,7 +4,7 @@ Source files for Jake and Ben's causal inference course materials
 
 ## Compiling `.Rnw` files
 
-From within RStudio:   
+### From within RStudio:
 
 - open file in RStudio
 - If you have multiple files open, make sure this one's at front
@@ -13,13 +13,14 @@ From within RStudio:
 - (If the file contains cross-references, you may have to hit `Compile PDF` twice.)
 
 
-From within R:    
+## From within R and at the Command Line
+
 ```
 library(knitr)
 knit("foo.Rnw")
 ```
 
-Separately (outside of R), use pdflatex to compile `foo.tex`.  E.g., from the command line:    
+Separately (outside of R), use pdflatex to compile `foo.tex`.  E.g., from the command line:
 ```
 $ pdflatex foo.tex
 $ pdflatex foo.tex
@@ -27,10 +28,17 @@ $ pdflatex foo.tex
 
 (Yep, `pdflatex` is run twice on the same file.)
 
+Alternatively you can use the ```knitandtex.sh``` shell command file which
+uses ```latexmk``` to automagically run latex and bibtex as many times as
+necessary. For example,
+
+```
+$ ./knitandtex.sh unit07-Rex
+```
 
 ## Compiling `unitXX-YYY.tex` files
 
-You'll need a LaTeX installation equipped with the beamer package and its dependencies. 
+You'll need a LaTeX installation equipped with the beamer package and its dependencies.
 
 Near the top of the .tex file, comment out all but one of these lines, depending on what format you want to produce:
 ```
