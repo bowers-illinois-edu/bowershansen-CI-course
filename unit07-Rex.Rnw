@@ -1,0 +1,104 @@
+\documentclass{article}
+%\usepackage{natbib}
+
+\title{Making and justifying a matched design.}
+\author{ICPSR Causal Inference '15}
+\usepackage{icpsr-classwork}
+
+\begin{document}
+\maketitle
+
+\begin{enumerate}
+    \setcounter{enumi}{-1}
+
+
+  \item Today we'll work with a dataset that documents a public policy
+    intervention. In 2004 the municipality of Medell\'{i}n, Columbia built
+    built the first line of the Metrocable --- a set of cable cars that
+    connected poor neighborhoods on the edges of the city to the center of the
+    city \citep{cerda2012reducing}. Professor Magdalena Cerd\'{a} and her
+    collaborators asked whether this kind of integration could improve life
+     in these poor (and heretofore violent) neighborhoods. We have
+    some of the data from this project to use here.\footnote{The articles can
+      be both found in this web directory
+      \url{http://jakebowers.org/Matching/}.} You can load the data here:
+
+<<results='hide'>>=
+library(MASS)
+library(RItools)
+library(optmatch)
+meddat <- read.csv("data/meddat.csv",row.names=1)
+@
+
+    The data Cerd\'{a} collected tell us about the roughly
+    \Sexpr{nrow(meddat)} neighborhoods in the study,
+    \Sexpr{signif(sum(meddat$nhTrt),2)}  of which had access to the Metrocable
+    line and \Sexpr{signif(sum(1-meddat$nhTrt),2)} did not.
+
+
+I don't have a formal codebook but here are my guesses about the meanings of
+some of the variables. There are more variables in the data file than those
+listed here.
+
+\begin{Verbatim}
+## The Intervention
+nhTrt        Intervention neighborhood (0=no Metrocable station, 1=Metrocable station)
+
+## Some Covariates (there are others, see the paper itself)
+nh03         Neighborhood id
+nhGroup      Treatment (T) or Control (C)
+nhTrt        Treatment (1) or Control (0)
+nhHom        Mean homicide rate per 100,000 population in 2003
+nhDistCenter Distance to city center (km)
+nhLogHom     Log Homicide (i.e. log(nhHom))
+
+## Outcomes (BE03,CE03,PV03,QP03,TP03 are baseline versions)
+BE      Neighborhood amenities Score 2008
+CE      Collective Efficacy Score 2008
+PV      Perceived Violence Score 2008
+QP      Trust in local agencies Score 2008
+TP      Reliance on police Score 2008
+hom     Homicide rate per 100,000 population Score 2008-2003 (in log odds)
+
+HomCount2003 Number of homicides in 2003
+Pop2003      Population in 2003
+HomCount2008 Number of homicides in 2008
+Pop2008      Population in 2008
+\end{Verbatim}
+
+Here are a couple of recodes to turn raw homicide counts into homicide rates
+per 1000 people.
+
+<<>>=
+## These next are equivalent
+## meddat$HomRate03<-with(meddat, (HomCount2003/Pop2003)*1000)
+## meddat$HomRate08<-with(meddat, (HomCount2008/Pop2008)*1000)
+meddat<-transform(meddat, HomRate03=(HomCount2003/Pop2003)*1000)
+meddat<-transform(meddat, HomRate08=(HomCount2008/Pop2008)*1000)
+@
+
+So, we have three kinds of variables: an intervention, covariates, and
+outcomes.
+
+\item How much evidence do we have to argue against the idea that the Metrocable
+intervention had no effect in Medellin?  Make your best matched design to
+counter arguments that the intervention-versus-non-intervention comparison is
+confounded. Choose an outcome and assess the hypothesis of no effects and
+perhaps hypotheses arising from some model of effects.
+
+If you use propensity scores, you may find \texttt{brglm} to work better than
+\texttt{glm}.
+
+\item If we have extra time, you might try to do this same task --- the task of
+adjusting comparisons to remove confounding from the comparison of
+intervention to non-intervention neighborhoods --- using a linear model (i.e.
+"controlling for"). Can you assess the extent to which your results depend on
+extrapolation and functional form?
+
+\end{enumerate}
+
+\bibliographystyle{apalike}
+\bibliography{refs}
+% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+
+\end{document}
