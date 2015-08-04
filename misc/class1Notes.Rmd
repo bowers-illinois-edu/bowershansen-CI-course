@@ -1,0 +1,55 @@
+---
+title: 'ICPSR 2015 Causal Inference Day 9:  \n
+Practice with Creating and Defending Matched Designs'
+author: "Jake Bowers  \n
+Departments of Political Science and Statistics,  \n
+University of Illinois @ Urbana-Champaign \n
+<http://jakebowers.org>"
+date: "August 3, 2015"
+output: slidy_presentation
+---
+<!-- Compile to html in R with library(rmarkdown); render("class1Notes.Rmd") -->
+
+# Introduction
+- Who am I?
+- My ideas about teaching statistics as a creative endeavor and language of power:
+   - **Practice theory**: Minimize lectures, maximize practice with concepts and techniques, computer and software as an instrument of exploration, reading to raise questions and introduce concepts to aid in-class conversation.
+   - Student centered: Happy to spend time talking about your questions and ideas rather than working on exercises.
+- Who are y'all?
+
+
+# Proposed Plan for Week 1
+
+## Day 1
+
+Make a matched design.
+
+## Day 2
+When to stop matching? Hansen and Sales 2015 and grid search.
+
+## Day 3
+Estimation of the ATE. Unbiasedness in the simple and weighted cases.  Bias in Logit coefficients for the difference in log-odds.  Standard errors. Coverage. Type I error rate.
+
+## Day 4
+Diff in Diffs, Covariance adjustment for matched designs.  Maybe power and power analysis.  Instrumental variables including CACE
+
+## Day 5
+Longitudinal designs
+
+# Proposed Plan for Week 2
+
+## Day 6
+Non-Bipartite matching for treatment/interventions that are continous.
+
+## Day 7
+Sensitivity analysis: Rosenbaum style
+
+## Day 8
+Sensitivity analysis: Hosman, Hansen, Holland style
+
+## Day 9
+
+Approaches to interference.
+
+
+# Today: Make a Matched Design
