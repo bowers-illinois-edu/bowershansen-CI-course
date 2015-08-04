@@ -49,7 +49,7 @@ Sensitivity analysis: Hosman, Hansen, Holland style
 
 ## Day 9
 
-Approaches to interference.
+Approaches to interference or Regression Discontinuity Designs.
 
 
 # Today: Make a Matched Design
