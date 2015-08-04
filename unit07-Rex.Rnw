@@ -28,12 +28,14 @@ library(MASS)
 library(RItools)
 library(optmatch)
 meddat <- read.csv("data/meddat.csv",row.names=1)
+## Alternatively
+load(url("http://jakebowers.org/Matching/meddat.rda"))
 @
 
-    The data Cerd\'{a} collected tell us about the roughly
-    \Sexpr{nrow(meddat)} neighborhoods in the study,
-    \Sexpr{signif(sum(meddat$nhTrt),2)}  of which had access to the Metrocable
-    line and \Sexpr{signif(sum(1-meddat$nhTrt),2)} did not.
+The data Cerd\'{a} collected tell us about the roughly
+\Sexpr{nrow(meddat)} neighborhoods in the study,
+\Sexpr{signif(sum(meddat$nhTrt),2)}  of which had access to the Metrocable
+line and \Sexpr{signif(sum(1-meddat$nhTrt),2)} did not.
 
 
 I don't have a formal codebook but here are my guesses about the meanings of
@@ -88,6 +90,55 @@ perhaps hypotheses arising from some model of effects.
 
 If you use propensity scores, you may find \texttt{brglm} to work better than
 \texttt{glm}.
+
+Here is one approach
+
+<<>>=
+
+## Scalar distance on baseline outcome
+tmp <- meddat$HomRate03
+names(tmp) <- rownames(meddat)
+absdist <- match_on(tmp, z = meddat$nhTrt)
+
+## Propensity score using "bias-reduced" logistic regression (i.e. another
+## form of penalized logistic regression.
+## install.packages("brglm",dependencies=TRUE)
+library(brglm)
+balfmla<-reformulate(c(names(meddat)[c(5:7,9:24)],"HomRate03"),response="nhTrt")
+brglm1<-brglm(balfmla,data=meddat,family=binomial)
+pScore2<-predict(brglm1)
+meddat$pScore2<-pScore2
+psDist2<-match_on(nhTrt~pScore2,data=meddat)
+
+## Overlapping propensity score plot
+## par(mfrow=c(1,2))
+## with(meddat,boxplot(split(pScore2,nhTrt)))
+## with(meddat,boxplot(split(pScore,nhTrt)))
+
+## Mahalanobis distance
+mahalDist<-match_on(balfmla,data=meddat,method="rank_mahalanobis")
+
+fm3<-fullmatch(psDist2+caliper(psDist2,4)
+               +caliper(absdist,2)
+               +caliper(mahalDist,40),data=meddat,tol=.00001,min.controls=1)
+
+##fm3<-fullmatch(psDist2,data=meddat,tol=.00001,min.controls=1)
+
+meddat$fm3<-NULL
+meddat[names(fm3),"fm3"]<-fm3
+
+xb2<-xBalance(update(balfmla,.~.+pScore2),
+	      strata=list(raw=NULL,fm3=~fm3),
+	      data=meddat,
+	      report=c("std.diffs","z.scores","adj.means",
+		       "adj.mean.diffs", "chisquare.test","p.values"))
+xb2$overall
+xb2$results["HomRate03",,]
+xb2$results["pScore2",,]
+
+summary(fm3)
+
+@
 
 \item If we have extra time, you might try to do this same task --- the task of
 adjusting comparisons to remove confounding from the comparison of

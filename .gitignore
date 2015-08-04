@@ -26,3 +26,4 @@
 *.bbl
 *.blg
 
+.Rproj.user
