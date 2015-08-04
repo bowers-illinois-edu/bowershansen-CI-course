@@ -1,0 +1,364 @@
+\documentclass{article}
+%\usepackage{natbib}
+
+\title{Developing judgement about matched designs}
+\author{ICPSR Causal Inference '15}
+\usepackage{icpsr-classwork}
+
+<<include=FALSE,cache=FALSE>>=
+opts_chunk$set(tidy=TRUE,echo=TRUE,results='markup',strip.white=TRUE,fig.path='figs/fig',cache=FALSE,highlight=TRUE,width.cutoff=132,size='footnotesize',out.width='1.2\\textwidth',message=FALSE,comment=NA)
+
+options(width=110,digits=3)
+@
+
+
+\begin{document}
+\maketitle
+
+\begin{enumerate}
+    \setcounter{enumi}{-1}
+
+  \item We'll continue to work with the Cerd\'{a} et al data.
+
+<<results='hide',messages=FALSE>>=
+library(MASS)
+library(RItools)
+library(optmatch)
+## Alternatively you can load it directly from the web
+load(url("http://jakebowers.org/Matching/meddat.rda"))
+@
+
+Here are a couple of recodes to turn raw homicide counts into homicide rates
+per 1000 people.
+
+<<>>=
+## These next are equivalent
+meddat<-transform(meddat, HomRate03=(HomCount2003/Pop2003)*1000)
+meddat<-transform(meddat, HomRate08=(HomCount2008/Pop2008)*1000)
+@
+
+\item Here are some ingredients for a matched design for this study. Can you
+  use these, and/or other, distance matrices and choices to come up with a
+  defensible matched design?
+
+<<results='hide'>>=
+# Ingredients: Distance Matrices
+
+## Scalar distance on baseline outcome
+tmp <- meddat$HomRate03
+names(tmp) <- rownames(meddat)
+absDist <- match_on(tmp, z = meddat$nhTrt)
+
+## Propensity score using "bias-reduced" logistic regression (i.e. another
+## form of penalized logistic regression.
+## install.packages("brglm",dependencies=TRUE)
+balfmla<-reformulate(c(names(meddat)[c(6:7,9:24)],"HomRate03"),response="nhTrt")
+
+library(brglm)
+brglm1<-brglm(balfmla,data=meddat,family=binomial)
+pScore2<-predict(brglm1)
+meddat$pScore2<-pScore2
+psDist2<-match_on(nhTrt~pScore2,data=meddat)
+
+## Overlapping propensity score plot
+## with(meddat,boxplot(split(pScore2,nhTrt)))
+
+## Mahalanobis distance
+mahalDist<-match_on(balfmla,data=meddat,method="rank_mahalanobis")
+
+@
+
+
+In this example I matched on the propensity score, within calipers defined by
+baseline outcomes, mahalanobis distance, and propensity distance. I also
+require no more than 1 treated per control unit.
+
+<<results='hide'>>=
+
+fm3<-fullmatch(psDist2+caliper(psDist2,4)
+               +caliper(absDist,2)
+               +caliper(mahalDist,40),data=meddat,tol=.00001,min.controls=1)
+
+summary(fm3)
+
+meddat$fm3<-NULL ## this line exists to prevent confusion with new fm3 objects
+meddat[names(fm3),"fm3"]<-fm3
+
+xb2<-xBalance(update(balfmla,.~.+pScore2),
+	      strata=list(raw=NULL,fm3=~fm3),
+	      data=meddat,
+	      report=c("std.diffs","z.scores","adj.means",
+		       "adj.mean.diffs", "chisquare.test","p.values"))
+xb2$overall
+zapsmall(xb2$results["HomRate03",,])
+zapsmall(xb2$results["pScore2",,])
+
+@
+
+\item Hansen and Sales (2015) suggest one way to stop iterating between
+  \texttt{fullmatch} and \texttt{xBalance} when you have one caliper. The idea
+  is that if you would reject the null of balance with one caliper, you would
+  also certainly reject it with a wider caliper. That is, the idea is that
+  hypothesis tests about balance using calipers can be understood as nested,
+  or ordered. Rosenbaum (2008) talks about this in his paper ``Testing
+  Hypotheses in Order'' and Hansen and Sales (2008) how these ideas can
+  help us choose a matched design:
+
+  ``The SIUP[sequential intersection union principle] states that if a researcher pre-specifies a sequence of
+  hypotheses and corresponding level-$\alpha$ tests, tests those hypotheses in
+  order, and stops testing after the first non-rejected hypothesis, then the
+  probability of incorrectly rejecting at least one correct hypothesis is at
+  most $\alpha$.'' (page 2)
+
+  Let us try this out and also try to assess it. Say, we start by saying that
+  we will reject the null of balance at $\alpha=.50$.
+
+<<results='hide',cache=TRUE>>=
+
+matchAndBalance<-function(x,distmat){
+  #x is a caliper width
+  ## message(paste(x,collapse=" "))
+  thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
+
+  thexb<-xBalance(balfmla,
+		      strata=data.frame(thefm=thefm[matched(thefm)]),
+		      data=droplevels(meddat[matched(thefm),]),
+		      report=c("chisquare.test"))
+
+  return(c(x=x,d2p=thexb$overall[,"p.value"]))
+}
+
+## Start with the maximum caliper for psDist2 (i.e. the largest distance
+## between a treated and control unit).
+
+maxPsDist2<-max(as.vector(psDist2))
+minPsDist2<-min(as.vector(psDist2))
+
+maxMhDist<-max(as.vector(mahalDist))
+minMhDist<-min(as.vector(mahalDist))
+
+maxAbsDist<-max(as.vector(absDist))
+minAbsDist<-min(as.vector(absDist))
+
+results1<-sapply(seq(maxPsDist2,minPsDist2,length=100),function(thecal){matchAndBalance(thecal,distmat=psDist2)})
+
+apply(results1,1,summary)
+
+results1[,results1["d2p",]>.4 & results1["d2p",]<.6]
+
+results1MH<-sapply(seq(maxMhDist,minMhDist,length=100),function(thecal){matchAndBalance(thecal,distmat=mahalDist)})
+results1HR<-sapply(seq(maxAbsDist,minAbsDist,length=100),function(thecal){matchAndBalance(thecal,distmat=absDist)})
+
+apply(results1MH,1,summary)
+apply(results1HR,1,summary)
+
+@
+
+Which caliper would we choose? How would we diagnose whether the background
+assumptions of this procedure are met in this case?
+
+<<eval=FALSE>>=
+## Here is one hint
+plot(t(results1))
+@
+
+\item Say we used a different kind of caliper (rank based mahalanobis, baseline
+outcome, something else) and felt better about the ordering of the hypothesis
+tests. How might we improve the procedure that I just used? Here is one idea
+(not the only one of course).
+
+<<eval=FALSE>>=
+
+matchAndBalance2<-function(x,distmat,alpha){
+  #x is a caliper width
+  ## message(paste(x,collapse=" "))
+  thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
+
+  thexb<-xBalance(balfmla,
+		      strata=data.frame(thefm=thefm),
+		      data=meddat,
+		      report=c("chisquare.test"))
+
+  ## Get as close to alpha as possible: for optim()
+  ## return(abs(thexb$overall[,"p.value"]-alpha))
+
+  ## Uniroot knows that we are trying to get close to zero.
+  return(thexb$overall[,"p.value"]-alpha)
+}
+
+
+results2<-uniroot(matchAndBalance2,alpha=.5,distmat=psDist2,lower=minPsDist2,upper=maxPsDist2)
+matchAndBalance2(results2$root,distmat=psDist2,alpha=.5)
+matchAndBalance(results2$root,distmat=psDist2)
+
+@
+
+Alternatively, if we don't actually have values on either side of the alpha
+cutpoint and/or \texttt{uniroot} was too annoying:
+
+<<eval=FALSE>>=
+
+matchAndBalance3<-function(x,distmat,alpha){
+  #x is a caliper width
+  ## message(paste(x,collapse=" "))
+
+  if(x>max(as.vector(distmat)) | x<min(as.vector(distmat))){ return(99999) }
+
+  thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
+
+  thexb<-xBalance(balfmla,
+		      strata=data.frame(thefm=thefm),
+		      data=meddat,
+		      report=c("chisquare.test"))
+
+  ## Get as close to alpha as possible: for optim()
+  return(abs(thexb$overall[,"p.value"]-alpha))
+}
+
+
+results3<-optim(par=c(x=minPsDist2), ## starting values
+		fn=matchAndBalance3,
+		alpha=.25,distmat=psDist2,
+		#lower=minPsDist2,upper=maxPsDist2,
+		method="BFGS",
+		control=list(trace=10,maxit=1000))
+		##method="L-BFGS-B")
+
+
+matchAndBalance2(results3$par,distmat=psDist2,alpha=.25)
+matchAndBalance(results3$par,distmat=psDist2)
+
+@
+
+
+\item Sometimes we want our matched designs to relate well not only to an
+  equivalent block-randomized experiment, but also to specific substantive and
+  statistical concerns. That is, among matched designs that we might call
+  "balanced", we might one which drops the fewest observations, and perhaps
+  one that has specially good balance on certain special covariates (like
+  baseline outcomes). So, here is one example, of doing such a search.
+
+  In this case, we are not doing strictly nested hypothesis testing, but are
+  using the $p$ values to tell us about information against the null of
+  balance rather than using them strictly speaking to reject this null, or
+  not-reject it.
+
+<<gridsearch, cache=TRUE>>=
+
+findbalance<-function(x){
+  # x contains three calipers, ps, absDist, mahaldist
+  message(paste(x,collapse=" "))
+  thefm<-try(fullmatch(psDist2+caliper(psDist2,x[1])+
+		   caliper(absDist,x[2])+caliper(mahalDist,x[3]),data=meddat,tol=.00001))
+
+  if(inherits(thefm,"try-error")){
+    return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
+  }
+
+  thexb<-try(xBalance(update(balfmla,.~.+pScore2),
+		  strata=data.frame(thefm=thefm),
+		  data=meddat,
+		  report=c("chisquare.test")))
+
+  if(inherits(thexb,"try-error")){
+    return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
+  }
+
+  HomRate03diff<-sapply(split(meddat[!is.na(thefm),c("HomRate03","nhTrt")],thefm[!is.na(thefm)]),
+			function(dat){ with(dat,abs(
+						    mean(HomRate03[nhTrt==1])-mean(HomRate03[nhTrt==0])))})
+  maxHomRate03diff<-max(HomRate03diff)
+
+  return(c(x=x,d2p=thexb$overall[,"p.value"],maxHR03diff=maxHomRate03diff,n=sum(!is.na(thefm))))
+}
+
+
+## Test the function
+## findbalance(c(3,3,64))
+
+set.seed(123455)
+system.time({
+results<-replicate(1000,findbalance(c(runif(1,.1,6),
+                                      runif(1,.1,10),
+                                      runif(1,30,70))))
+}
+)
+
+@
+
+<<eval=FALSE>>=
+## If you have a mac or linux machine you can speed this up:
+library(parallel)
+system.time({
+resultsList<-mclapply(1:1000,function(i){
+			findbalance(c(runif(1,.1,6),
+                                      runif(1,.1,10),
+				      runif(1,30,70)))},
+		      mc.cores=detectCores())
+resultsArr<-simplify2array(resultsList)
+}
+)
+
+@
+
+Now, how might we interpret the results of this search for matched designs?
+Here are a few ideas.
+
+<<eval=FALSE>>=
+
+resNoNA<-results[,!apply(results,2,function(x){ any(is.na(x))})]
+
+apply(resNoNA,1,summary)
+
+highbalres<-resNoNA[,resNoNA["d2p",]>.5]
+
+apply(highbalres,1,summary)
+
+# color points more dark for smaller differences
+plot(resNoNA["d2p",],resNoNA["n",],
+     col=gray(1- ( resNoNA["maxHR03diff",]/max(resNoNA["maxHR03diff",]))),
+     pch=19)
+
+identify(resNoNA["d2p",],resNoNA["n",],labels=round(resNoNA["maxHR03diff",],3),cex=.7)
+
+@
+
+Which matched design might we prefer? Here is one idea
+
+<<eval=FALSE>>=
+
+candDesigns<-resNoNA[,resNoNA["d2p",]>.95 & resNoNA["n",]>41 &
+		     resNoNA["maxHR03diff",]<1]
+
+str(candDesigns)
+
+apply(candDesigns,1,summary)
+
+## plot(candDesigns["d2p",],candDesigns["n",],
+##      col=gray(1- ( candDesigns["maxHR03diff",]/max(candDesigns["maxHR03diff",]))),
+##      pch=19)
+##
+## ##identify(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7)
+## text(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7,
+##      pos=1)
+##
+##
+## mymatchSol<-candDesigns[,candDesigns["maxHR03diff",]<1 & candDesigns["n",]==43]
+## mymatchSol[,order(mymatchSol["d2p",])]
+##
+@
+
+How would we use this information in \texttt{fullmatch}?
+
+\item Now, let's getting back to the sequential intersection union principle.
+  How would we assess the claim that it controls the family-wise error rate
+  for balance tests?
+
+
+\end{enumerate}
+
+\bibliographystyle{apalike}
+\bibliography{refs}
+% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+
+\end{document}
