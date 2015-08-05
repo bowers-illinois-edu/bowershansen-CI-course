@@ -145,7 +145,7 @@ the truth?
 
 <<simpleunbiased, cache=TRUE>>=
 
-y0<-news.df$r # we could have also use y0<-rnorm(48) or something else
+y0<-news.df$rpre # we could have also use y0<-rnorm(48) or something else
 truetau<- 1.5 # we could have chosen anything here
 y1<-y0 + truetau # our derivation above does not require constant additive effects, we could change this here, too.
 
