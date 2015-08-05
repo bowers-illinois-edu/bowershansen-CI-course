@@ -196,7 +196,7 @@ matchAndBalance(results2$root,distmat=psDist2)
 Alternatively, if we don't actually have values on either side of the alpha
 cutpoint and/or \texttt{uniroot} was too annoying:
 
-<<eval=FALSE>>=
+<<eval=FALSE,tidy=FALSE>>=
 
 matchAndBalance3<-function(x,distmat,alpha){
   #x is a caliper width
@@ -327,8 +327,8 @@ Which matched design might we prefer? Here is one idea
 
 <<eval=FALSE>>=
 
-candDesigns<-resNoNA[,resNoNA["d2p",]>.95 & resNoNA["n",]>41 &
-		     resNoNA["maxHR03diff",]<1]
+candDesigns<-resNoNA[,resNoNA["d2p",]>.95 & resNoNA["n",]>42 &
+		     resNoNA["maxHR03diff",]<.9]
 
 str(candDesigns)
 
@@ -349,6 +349,29 @@ apply(candDesigns,1,summary)
 @
 
 How would we use this information in \texttt{fullmatch}?
+
+<<>>=
+
+fm4<-fullmatch(psDist2+caliper(psDist2,candDesigns["x1",1])
+               +caliper(absDist,candDesigns["x2",1])
+               +caliper(mahalDist,candDesigns["x3",1]),data=meddat,tol=.00001)
+
+summary(fm4)
+
+meddat$fm4<-NULL ## this line exists to prevent confusion with new fm4 objects
+meddat[names(fm4),"fm4"]<-fm4
+
+xb3<-xBalance(update(balfmla,.~.+pScore2),
+	      strata=list(raw=NULL,fm4=~fm4),
+	      data=meddat,
+	      report=c("std.diffs","z.scores","adj.means",
+		       "adj.mean.diffs", "chisquare.test","p.values"))
+xb3$overall
+zapsmall(xb3$results["HomRate03",,])
+zapsmall(xb3$results["pScore2",,])
+
+save(fm4,file="fm4.rda")
+@
 
 \item Now, let's getting back to the sequential intersection union principle.
   How would we assess the claim that it controls the family-wise error rate
