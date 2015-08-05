@@ -1,0 +1,446 @@
+\documentclass{article}
+%\usepackage{natbib}
+
+\title{The estimation approach to the fundamental problem of causal inference}
+\author{ICPSR Causal Inference '15}
+\usepackage{icpsr-classwork}
+
+<<include=FALSE,cache=FALSE>>=
+opts_chunk$set(tidy=TRUE,echo=TRUE,results='markup',strip.white=TRUE,fig.path='figs/fig',cache=FALSE,highlight=TRUE,width.cutoff=132,size='footnotesize',out.width='1.2\\textwidth',message=FALSE,comment=NA)
+
+options(width=110,digits=3)
+@
+
+
+\begin{document}
+\maketitle
+
+\begin{enumerate}
+    \setcounter{enumi}{-1}
+
+  \item Today we will work on getting clear about how one may use estimation
+    to address the fundamental problem of causal inference. To start, we will
+    work with a randomized experiment before talking about applying these
+    ideas to observational studies. 
+
+    We are lucky that Professor Costas Panagopoulos is letting us use his
+    data. The \Verb+news.df+ data are from a field experiment run just prior
+    to the Mayoral elections of 2005. From the experimental pool of 8 cities,
+    4 cities were randomly assigned to receive newspaper advertisements urging
+    citizens to vote and 4 received no intervention.\footnote{More details on
+      the actual pair-randomized design later. This description is close
+      enough for now.} In what follows \texttt{r} is the ``response'' or
+    ``outcome'' --- percent of the eligible population who voted in the
+    election --- and \texttt{z} is treatment assignment and
+    \texttt{medhhi1000} is median household income in \$1000s, \Verb+rpre+ is
+    percent turnout in the previous election.\footnote{A variable coded 0 and
+      1 is often called a ``dummy'' or ``indicator'' variable. So, what we are
+      learning here about treatment effects translates directly to any
+      regression on binary explanatories.}
+
+
+<<loadata>>=
+news.df<-read.csv("http://jakebowers.org/PS531Data/news.df.csv")
+@
+
+  
+  \begin{table}[H]
+    \begin{center}
+      \begin{tabular}{lcccc}
+        $i$ &  $Z_i$ & $Y_i$  & $y_{1i}$ & $y_{0i}$ \\  
+        \hline
+        Saginaw       &   0 &  16 &  ?  &  16 \\
+        Sioux City    &   1 &  22 &  22 &  ?  \\
+        Battle Creek  &   0 &  14 &  ?  &  14 \\
+        Midland       &   1 &   7 &   7 &   ? \\
+        Oxford        &   0 &  23 &  ?  &  23 \\
+        Lowell        &   1 &  27 &  27 &  ?  \\
+        Yakima        &   0 &  58 &  ?  &  58 \\
+        Richland      &   1 &  61 &  61 &  ? \\
+        \hline
+      \end{tabular}
+      \caption{Treatment assignment ($Z$), observed turnout ($Y$), and
+        unobserved potential outcomes ($y_{1},y_{0}$) for Cities ($i$) in the Newspapers Experiment.}
+      \label{tab:newspotout}
+    \end{center}
+  \end{table}
+  
+  This table not only has columns for treated ($Z$) and observed
+  turnout ($y$), but it has, two other columns, $y_1$ and $y_0$ (or
+  $y|Z=1$ and $y|Z=0$ or $y_{Z=1}$ and $y_{Z=0}$). The difference
+  between uppercase and lowercase matters here: now $Z$ refers to a
+  ``random variable'' --- a variable that could have been other than
+  we observed while $z$ is value of $Z$ that we actually observed. The
+  lower case $y$'s represent what would happen under treatment versus
+  control: they are lowercase because we presume that they are fixed
+  for each city --- each city has a predetermined way of reacting to
+  the treatment versus control, we only observe one of
+  them.\footnote{The idea of calling these unobserved but fixed
+    variables potential outcomes comes from Donald Rubin although the
+    idea comes from Jerzy Neyman if not also from Sir David Cox.} The
+  partially observed outcomes here are often called ``potential
+  outcomes'' or ``counter-factual outcomes''. Similarly, we observe
+  $y$ (turnout) and since it is a function of the random variable $Z$
+  we make it uppercase (only $Z$ makes it random):
+  
+  \begin{equation}
+    Y_i=Z_i y_{1i} + (1-Z_i) y_{0i} \label{eq:obsandpot}
+  \end{equation}
+  
+   % \item
+  The ``?'' in Table~\ref{tab:newspotout} refers to stuff we don't
+  know: we don't observe turnout in Oxford, OH after newspaper ads
+  (treatment), only after no additional newspaper ads (control). 
+
+\item Some people would say that 1.5 is a good estimate of the average
+  treatment effect in this experiment. How did they get 1.5? What do they mean
+  by "good"? What do they mean by "average treatment effect"? How does an
+  "average treatment effect" address the fundamental problem of causal
+  inference? How does this approach differ, conceptually, from the models of
+  effects (including no effects) approach? 
+
+ \item  In 1923, \citet{neyman:1923} proposed (1) that we decide to stop focusing on
+   the individual level causal effects and instead be interested in
+   $\bar{\tau}= (1/n) (\sum_{i=1}^n y_{1i}) - (1/n) (\sum_{i=1}^n y_{0i}) =
+   \bar{y}_{1} - \bar{y}_{0}$ (i.e. he suggested we choose to care about mean
+   differences of the counterfactuals rather than any individual
+   counterfactuals themselves) and (2) he claimed that
+   $\hat{\bar{\tau}}=(1/m)\sum_{i=1}^n Z_i Y_i - (1/(n-m))\sum_{i=1}^n (1-Z_i)
+   Y_i$ was a good \textbf{estimator} of $\bar{\tau}$ (where $Y_i$ is observed
+   outcomes and relates to potential outcomes via $Y_i=Z_i y_{1i}+(1-Z_i)
+   y_{0i}$, $m$ is number of treated observations and $n$ is total number of
+   observations). We are going to convince ourselves that this is the case,
+   for a specific understanding of ``good'' as ``unbiased''. 
+
+   First, can you explain what an unbiased estimator is to someone who doesn't
+   know what an expectation is? 
+
+ \item Second, I include an analytical version of this derivation. I don't
+   have a question for you to answer here. Some of you might note, however,
+   that taking expectations over repetitions of the randomized design is a bit
+   different from the more common understanding of expectations in many stats
+   and econ textbooks.
+
+   We want to show that $E_{R}[\hat{\bar{\tau}}]=\bar{\tau}$. Here only $Z_i$
+   is random. And, I can tell you that $E_{R}[Z_i]=m/n$ (what does this
+   mean?).  I use $E_R$ at first just to be clear that we are taking
+   expectations over the possible randomizations. Mostly you'll just see
+   people use $E$ without a discussion of the space over which the
+   expectations are to be taken.
+
+   \begin{align}
+     E_{R}\left[ \hat{\tau} \right]&=E_{R}\left[ \sum_{i=1}^n Z_i \frac{Y_{i}}{m}-\sum_{i=1}^n (1-Z_i) \frac{Y_{i}}{n-m} \right] \\
+     \intertext{recall that $Y_{i}=Z_i y_{1i} + (1-Z_i) y_{0i}$ or $Y_i=y_{0i}$ when $Z_i=0$, etc.}
+     &=E \left[ \sum_{i=1}^n Z_i \frac{y_{1i}}{m} \right]-E \left[ \sum_{i=1}^n (1-Z_i) \frac{y_{0i}}{n-m} \right] \\
+     \intertext{recall that only $Z$ is random and that $E_R[Z_i]=m/n$ in this simple design}
+     &=\sum_{i=1}^n \frac{m}{n} \frac{y_{1i}}{m}-\sum_{i=1}^n  \left( 1-\frac{m}{n} \right) \frac{y_{0i}}{n-m} \\
+     \intertext{since $(1-(m/n)=(n-m)/n$ }
+     &=\sum_{i=1}^n \frac{y_{1i}}{n}-\sum_{i=1}^n \frac{y_{0i}}{n} \\
+     &=\bar{y}_{1i}-\bar{y}_{0i}=\bar{\tau}
+   \end{align}
+
+ \item Third, here is the same demonstration by simulation. Can you explain what is going
+on? Why isn't the mean of the distribution of the means exactly the same as
+the truth?
+
+<<simpleunbiased, cache=TRUE>>=
+
+y0<-news.df$r # we could have also use y0<-rnorm(48) or something else
+truetau<- 1.5 # we could have chosen anything here
+y1<-y0 + truetau # our derivation above does not require constant additive effects, we could change this here, too.
+
+
+newexperiment<-function(origZ,y1,y0){
+  Znew<-sample(origZ)
+  Y<-Znew*y1+(1-Znew)*y0
+  epthat<-coef(lm(Y~Znew))[["Znew"]]
+  ## Same numbers
+  ## epthat<-mean(Y[Znew==1] - mean(Y[Znew==0]))
+  return(epthat)
+}
+
+
+## set.seed(123456) ## if we uncomment set.seed, everyone should have the
+## exact same answer
+randdist<-replicate(1000,newexperiment(origZ=news.df$z,y1=y1,y0=y0))
+
+summary(randdist)
+
+@
+
+What is this a plot of?
+
+<<out.width='.5\\textwidth'>>=
+plot(density(randdist))
+rug(randdist)
+rug(truetau,ticksize=.3,lwd=2,col="blue")
+rug(mean(randdist),ticksize=.3,lwd=2,col="red")
+
+@
+
+\item If this simulation is working, how can we make the mean of
+  \texttt{randdist} get closer to the truth? Can you show this is the case?
+
+
+\item What is going on in this next set of code? (\emph{Hint:} It assesses
+  the standard error of simulation) How should we interpret the output?
+
+
+<<simerror, cache=TRUE>>=
+
+newExpectedATE<-function(){
+  randdist<-replicate(1000,newexperiment(origZ=news.df$z,y1=y1,y0=y0))
+  mean(randdist)
+}
+
+## set.seed(123456) ## if we uncomment set.seed, everyone should have the
+## exact same answer
+distOfExpectedATE<-replicate(1000,newExpectedATE())
+sd(distOfExpectedATE)
+## compare to analytic standard error of the mean sqrt(var(randdist)/1000)
+@
+
+
+\item Now, imagine that we had a binary outcome. What would the coefficient of
+  a logit model mean in terms of potential outcomes? Let's assess whether this
+  coefficient is in fact an unbiased estimator of the difference in potential
+  log odds and compare this with using differences of proportions/means.
+  \citet{freedman2008randomization} suggests that using the logit coefficient
+  would be a problem because it is biased. Here is one approach to assessing
+  this claim.
+
+<<>>=
+
+## The idea of an average treatment effect maps only indirectly to binary
+## outcomes as we see here.  It would have been easier to just specify a
+## different in proportions.
+latenty0<-y0
+y01.0<-as.numeric(y0 > quantile(latenty0,.75))
+latenty1<-latenty0+sd(latenty0)
+y01.1<-as.numeric(latenty1 > quantile(latenty1,.5))
+obsy<-z*y01.1+(1-z)*y01.0 ## what we observe
+Z<-news.df$z
+
+## calculate the true ATE and the $\hat{\bar{\tau}}$
+trueATEfake<-mean(y01.1)-mean(y01.0)
+trueTotal<-sum(y01.1)
+trueDelta<- log( mean(y01.1)/(1-mean(y01.1))) - log( mean(y01.0)/(1-mean(y01.0)))
+## true Logit?
+## estimate the true ATE using the data that we would observe in this fake experiment
+estATEfake<-coef(lm(obsy~Z))["Z"] ## same as a mean difference on obsy
+estTotal<-mean(obsy[z==1])*length(obsy)
+estDelta1<-coef(glm(obsy~Z,family=binomial(link="logit")))[["Z"]]
+estDelta2<- log( mean(obsy[Z==1])/(1-mean(obsy[Z==1]))) -
+  log( mean(obsy[Z==0])/(1-mean(obsy[Z==0])))
+
+## Notice that estDelta1 and estDelta2 are the same.
+
+# define a function which reveals a difference in observed outcome and calculates
+## estimates of the ATE given a different treatment vector
+makeNewObsyAndEst<-function(thez){
+  newobsy<-thez*y01.1+(1-thez)*y01.0
+  lmATE<-coef(lm(newobsy~thez))[["thez"]]
+  totalEffect<-mean(newobsy[thez==1])*length(newobsy)
+  logitglm<-glm(newobsy~thez,family=binomial(link="logit"))
+  haty0<-predict(logitglm,newdata=data.frame(thez=0),type="response")
+  haty1<-predict(logitglm,newdata=data.frame(thez=1),type="response")
+  logitDelta<-log( mean(haty1)/(1-mean(haty1))) - log( mean(haty0)/(1-mean(haty0)))
+  logitglmATE<-haty1-haty0
+  logitcoef<-coef(logitglm)[["thez"]]
+  return(c(lmATE=lmATE,totalTE=totalEffect,logitcoef=logitcoef,logitglmATE=logitglmATE,logitDelta=logitDelta))
+}
+
+## Does this function do what we want it to do?
+makeNewObsyAndEst(sample(Z))
+
+nsims<-10000
+## For many of the possible ways to run the experiment, calculate this mean difference
+### The slow way:
+## dist.sample.est<-replicate(nsims,makeNewObsyAndEst(sample(news.df$z)))
+
+### The fast way uses all of the cores on your unix-based machine (mac or linux):
+set.seed(12345)
+require(parallel)
+ncores<-detectCores()
+system.time(
+dist.sample.est<-simplify2array(
+                                mclapply(1:nsims,function(i){
+                                         makeNewObsyAndEst(sample(Z))
+                                 },mc.cores=ncores)
+                                )
+)
+
+str(dist.sample.est)
+zapsmall(apply(dist.sample.est,1,summary))
+
+## Compare to
+trueATEfake
+trueTotal
+trueDelta
+
+## And recall that we have simulation error on the order of 1/sqrt(nsims)
+SEsims<-apply(dist.sample.est,1,function(x){ sqrt(var(x)/length(x)) })
+
+@
+
+
+Freedman says that the $\~ \Delta$ estimator is *consistent* but not unbiased.
+What would we need to do to show that it is consistent but that the logit
+coefficient is not consistent? Also, recall that Freedman's version included a
+covariate. Would this matter here? How would we check?
+
+\item Finally, how can we apply these ideas to a matched design? If the design
+  has unequal sized sets then we have to \emph{define} the ATE in some
+  weighted manner. Let's start with one matched design:
+
+<<>>=
+## First clean up the workspace. Don't run this unless you want to erase all
+## of the objects in your workspace (I'm happy to do this because I never
+## store stuff in my R workspace in between sessions.)
+rm(list=ls())
+@
+
+<<>>=
+library(optmatch)
+library(RItools)
+load("fm4.rda") ## I made and saved this last time. 
+summary(fm4,min.controls=0,max.controls=Inf)
+@
+
+If our matched sets, overall, cannot be distinguished from an equivalent block
+randomized experiment, then perhaps we can proceed here as-if we had an
+experiment, from the perspective of defining and estimating an average
+treatment effect (and thereby addressing the fundamental problem of causal
+inference).
+
+We can start with the idea that the difference of means within matched set
+might be a good estimator of the within matched set average treatment effect.
+I also am going to use the idea that a good estimator is an unbiased estimator
+here (rather than a consistent estimator, for example).
+
+Here, I am using Homicide Rate in 2008 per 1000 people as the outcome.
+
+<<>>=
+ates<-sapply(split(meddat,fm4),function(dat){
+       with(dat,mean(HomRate08[nhTrt==1])-mean(HomRate08[nhTrt==0]))
+	      })
+ates
+@
+
+But, we have a bunch of different numbers here. How should we combine them?
+One proposal is to produce an average that is weighted by (1) size of the set
+(bigger sets get more weight) and (2) the ratio of treated to control
+observations within set (sets with equal numbers of treated and controls get
+most weight, sets with unequal numbers of treated and control units get less
+weight).
+
+<<>>=
+
+nTs<-with(meddat,tapply(nhTrt,fm4,sum))
+nCs<-with(meddat,tapply(1-nhTrt,fm4,sum))
+hs<-1/((1/nTs + 1/nCs)/2)
+ate1<-sum(ates*hs/(sum(hs)))
+ate1
+@
+
+Notice that this number is the same as the number that arises when we use a
+linear model with fixed effects for matched set:
+
+<<>>=
+coef(lm(HomRate08~nhTrt+fm4,data=meddat))["nhTrt"]
+@
+
+It is also the same as the version from xBalance
+
+<<>>=
+
+xbAte4<-xBalance(nhTrt~HomRate08,
+		 strata=list(fm4=~fm4),
+		 data=meddat,
+		 report=c("std.diffs","z.scores","adj.means",
+			  "adj.mean.diffs", "chisquare.test","p.values"))
+
+Ate4<-xbAte4$results[,"adj.diff",]
+Ate4
+@
+
+
+\item Now, even though I think that a harmonic weighted average is a good
+  idea, I would like a way to assess "goodness". Here, I propose a simulation
+  based approach to assess unbiasedness. Can you explain what is going on
+  here? How does it assess a claim that these estimators are unbiased?
+
+
+
+Now, let's assess whether the harmonic weighted estimator is unbiased for the
+harmonic weighted average treatment effect.
+
+
+<<cache=TRUE>>=
+## First create a true potential outcome to control.
+## Here, I use the outcome and add 1 to avoid zeros for later.
+y0<-meddat$HomRate08+1
+truetau<- -.3
+
+## Here, I make the true potential outcome to treatment a more complex
+## function of the potential outcome to control --- just to show that
+## unbiasedness does not depend on a specific model of effects.
+## Potential outcome to treatment varies by stratum depending on the level of
+## the potential outcome to control (bigger controls receive smaller effects)
+y1<- unsplit(lapply(split(y0,fm4),function(x){ x + -.6/x }),fm4)
+
+y0<-y0[matched(fm4)]
+y1<-y1[matched(fm4)]
+Z<-meddat$nhTrt[matched(fm4)]
+strata<-fm4[matched(fm4)]
+
+y1y0<-y1-y0
+truetaubi<-sapply(split(y1y0,strata),mean)
+## same as sapply(split(data.frame(y1,y0),strata),function(dat){ mean(dat$y1)-mean(dat$y0) })
+nbi<-table(strata)
+meanzbi<-sapply(split(Z,strata),mean)
+nTbi<-sapply(split(Z,strata),sum)
+nCbi<-sapply(split(1-Z,strata),sum)
+hbi<-1/((1/nTbi + 1/nCbi)/2)
+## This is the true harmonic stratum mean weighted average treatment effect:
+truetauH<-sum(truetaubi*hbi/sum(hbi))
+truetauH
+
+## Another weighting scheme yields another true average treatment effect:
+##n<-length(y1[!is.na(y1)])
+##sum(nbi/n * truetaubi)
+
+## Here I compare two ways to calculate the harmonic weighted estimate to the
+## unweighted version.
+newexperiment<-function(origZ,y1,y0,thefm){
+  Znew<-unsplit(lapply(split(origZ,thefm), sample),thefm)
+  Y<-Znew*y1+(1-Znew)*y0
+  atelm1<-coef(lm(Y~Znew))[["Znew"]]
+  atelm2<-coef(lm(Y~Znew+thefm))[["Znew"]]
+  thexb<-xBalance(Znew~Y,strata=list(thefm=~thefm),
+		  data=na.omit(data.frame(Znew,Y,thefm)),
+		  report="adj.mean.diffs")
+  atexb<-thexb$results[,"adj.diff",]
+  return(c(atelm1=atelm1,atelm2=atelm2,atexb=atexb))
+}
+
+
+## set.seed(123456) ## if we uncomment set.seed, everyone should have the
+## exact same answer
+randdist<-replicate(10000,
+		    newexperiment(origZ=Z,y1=y1,y0=y0,thefm=strata))
+
+apply(randdist,1,summary)
+
+@
+
+
+
+
+\end{enumerate}
+
+\bibliographystyle{apalike}
+\bibliography{refs}
+% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+
+\end{document}
