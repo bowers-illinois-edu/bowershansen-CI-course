@@ -305,6 +305,9 @@ rm(list=ls())
 <<>>=
 library(optmatch)
 library(RItools)
+load(url("http://jakebowers.org/Matching/meddat.rda"))
+meddat<-transform(meddat, HomRate03=(HomCount2003/Pop2003)*1000)
+meddat<-transform(meddat, HomRate08=(HomCount2008/Pop2008)*1000)
 load("fm4.rda") ## I made and saved this last time.
 summary(fm4,min.controls=0,max.controls=Inf)
 @
@@ -378,7 +381,7 @@ Now, let's assess whether the harmonic weighted estimator is unbiased for the
 harmonic weighted average treatment effect.
 
 
-<<cache=TRUE>>=
+<<biasharm, cache=TRUE>>=
 ## First create a true potential outcome to control.
 ## Here, I use the outcome and add 1 to avoid zeros for later.
 y0<-meddat$HomRate08+1
