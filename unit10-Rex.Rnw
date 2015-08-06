@@ -1,0 +1,518 @@
+\documentclass{article}
+%\usepackage{natbib}
+
+\title{How should we describe the precision of our estimates of treatment
+  effects? How can we enhance precision of estimation?}
+\author{ICPSR Causal Inference '15}
+\usepackage{icpsr-classwork}
+
+<<include=FALSE,cache=FALSE>>=
+opts_chunk$set(tidy=TRUE,echo=TRUE,results='markup',strip.white=TRUE,fig.path='figs/fig',cache=FALSE,highlight=TRUE,width.cutoff=132,size='footnotesize',out.width='1.2\\textwidth',message=FALSE,comment=NA)
+
+options(width=110,digits=3)
+@
+
+
+\begin{document}
+\maketitle
+
+\begin{enumerate}
+    \setcounter{enumi}{-1}
+
+\item We will continue to work with the Medellin data.  Let's start with one matched design:
+
+<<results='hide'>>=
+library(optmatch)
+library(RItools)
+load(url("http://jakebowers.org/Matching/meddat.rda"))
+meddat<-transform(meddat, HomRate03=(HomCount2003/Pop2003)*1000)
+meddat<-transform(meddat, HomRate08=(HomCount2008/Pop2008)*1000)
+load("fm4.rda") ## I made and saved this last time.
+summary(fm4,min.controls=0,max.controls=Inf)
+meddat[names(fm4),"fm4"]<-as.factor(fm4)
+summary.factor(meddat$fm4)
+@
+
+
+\item Here are some treatment effects estimated using the harmonic mean
+  weighting that I like (plus the unadjusted effect). Feel free to substitute
+  your own matched design.
+
+<<results='hide'>>=
+
+lmRaw<-lm(HomRate08~nhTrt,data=meddat) ## Unadjusted
+lmFm4<-lm(HomRate08~nhTrt+fm4,data=meddat) 
+
+ateRaw<-coef(lmRaw)[["nhTrt"]]
+ateFm4<-coef(lmFm4)[["nhTrt"]]
+
+c(ateRaw,ateFm4)
+
+@
+What do these effect estimates mean substantively?
+
+
+\item  So, now we have some sense about why people like the ATE (1) it
+  represents something about unobserved comparisons in a fixed or finite
+  population of scientific interest (i.e. the sample on hand or the
+  experimental pool) and (2) the sample difference of means is an unbiased
+  estimator of the ATE when you have a randomized experiment. When you do not
+  have a randomized experiment, but have created a matched design that is hard
+  to distinguish from a randomized experiment, the ATE is also a popular
+  concept and we use sensitivity analyses to address concerns about the lack
+  of randomization. So, the adjusted differences of means that we reported
+  earlier can be understood as estimates of the ATE.
+
+  But, we'd like more than an unbiased estimator. We'd like to talk about how
+  much information we have about this mean. After all, a mean taken on an
+  experiment of size 2 ought to tell us less about the unobserved potential
+  outcomes than a mean from an experiment of size 1000. We know that the mean
+  difference estimator is unbiased (and other results hold for the stratified
+  case). In a large sample, we presume that the distribution of means across
+  repeated experiments will closely approximate a Normal distribution by the
+  Central Limit Theorem (so we can use a Normal distribution for confidence
+  intervals or hypothesis tests). But which Normal distribution? What is the
+  variance of this distribution  (Recall that
+  $\text{SE}(\hat{\tau})=\sqrt(\text{Var}(\hat{\tau}))$ ) ?
+  \citet{lin2013agnostic}   suggests that the ``iid" (independent and identically
+  distributed observations)-based OLS standard error is incorrect and shows
+  that the HC2 (heteroskedasticity consistent) standard error can be derived
+  from the same kind of reasoning that we used for unbiasedness above (i.e.
+  not considering sampling from some population, but considering re-running
+  the experiment on the same pool of subjects).
+
+  So, here is one approach to implementing these ideas. Explain what is going on.
+
+<<results="hide">>=
+## You may need to install these packages
+library(sandwich)
+library(lmtest)
+
+## Here is the estimated variance of the estimated ATE using the standard iid
+## assumptions
+vcov(lmFm4)
+
+## And here is the version recommended by Neyman and Lin
+vcovHC(lmFm4,type="HC2")
+
+cbind(iidSE=sqrt(diag(vcov(lmFm4))),
+      NeymanSE=sqrt(diag(vcovHC(lmFm4,type="HC2")))
+      )[2,]
+@
+
+Interpret those standard errors in substantive terms.
+
+Recall what a standard error is in the context of randomization inference:
+the standard error tells us about variation across repeated randomizations in
+the same experimental pool.
+
+\item Now, we would prefer a smaller SE to a larger one, right? (Why?) One way
+  to avoid paying a large penalty in degrees of freedom from estimating the
+  mean outcome for each matched set is to set all of those means to zero. Here
+  is how it works. Make sure that you get the same estimate of the average
+  treatment effect.
+
+<<results='hide',cache=TRUE>>=
+
+align.by.block<-function (x, set, fn = mean) {
+  unsplit(lapply(split(x, set), function(x) { x - fn(x) }), set)
+}
+
+meddat$HomRate08md<-with(meddat,align.by.block(HomRate08,fm4))
+meddat$nhTrtmd<-with(meddat,align.by.block(nhTrt,fm4))
+
+lm2<-lm(HomRate08md~nhTrtmd,data=meddat)
+coef(lmFm4)[2]
+coef(lm2)[2]
+
+@
+
+And here are the new standard errors calculated using the analytic results
+from Lin.
+
+<<results='hide'>>=
+
+## The design justified SEs
+c(unAligned=sqrt(diag(vcovHC(lmFm4,type="HC2")))[2],
+  Aligned=sqrt(diag(vcovHC(lm2,type="HC2")))[2])
+
+@
+
+
+\item Now, let's use this standard error to get a confidence interval.
+  Interpret these confidence intervals in substantive terms.
+
+  No need to comment every line in this next function, although I bet you'd
+  understand it all. I just needed to allow the confint function to take a
+  custom variance-covariance matrix of the coefficients argument ("thevcov"). I
+  encourage you to cut and paste this from the .Rnw file rather than from the
+  .pdf file to make your lives easier:
+
+<<newconfintfn>>=
+source(url("http://jakebowers.org/ICPSR/confintHC.R"))
+@
+
+
+Or load the following (they should be the same function)
+<<eval=FALSE>>=
+confint.HC<-function (object, parm, level = 0.95, thevcov, ...) {
+  ## a copy of the confint.lm function adding "thevcov" argument
+  cf <- coef(object)
+  pnames <- names(cf)
+  if (missing(parm))
+    parm <- pnames
+  else if (is.numeric(parm))
+    parm <- pnames[parm]
+  a <- (1 - level)/2
+  a <- c(a, 1 - a)
+  fac <- qt(a, object$df.residual)
+  pct <- stats:::format.perc(a, 3)
+  ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm,
+							     pct))
+  ## The original version extracts  the var-cov matrix itself
+  ## ses <- sqrt(diag(vcov(object)))[parm]
+  ses <- sqrt(diag(thevcov))[parm]
+  ci[] <- cf[parm] + ses %o% fac
+  ci
+}
+@
+
+And here are the respective confidence intervals:
+
+<<thecis,results='hide'>>=
+therand1ci<-confint.HC(lmFm4,level=.95,parm="nhTrt",thevcov=vcovHC(lmFm4,type="HC2"))
+therand2ci<-confint.HC(lm2,level=.95,parm="nhTrtmd",thevcov=vcovHC(lm2,type="HC2"))
+theiidci<-confint(lmFm4,level=.95,parm="nhTrt")
+rbind(therand1ci,therand2ci,theiidci)
+@
+
+\item We can further increase precision if we adjust for background outcomes
+  (i.e. doing a difference-in-differences approach).
+
+<<results='hide'>>=
+
+lm3<-lm(HomRate08~nhTrt+fm4+HomRate03,data=meddat)
+
+meddat$HomRate03md<-align.by.block(meddat$HomRate03,meddat$fm4)
+
+lm3md<-lm(HomRate08md~nhTrtmd+HomRate03md,data=meddat)
+
+coef(lm3)[2]
+coef(lm3md)[2]
+
+## The design justified SEs
+c(unAligned=sqrt(diag(vcovHC(lm3,type="HC2")))[2],
+  Aligned=sqrt(diag(vcovHC(lm3md,type="HC2")))[2])
+
+
+therand3ci<-confint.HC(lm3,level=.95,parm="nhTrt",thevcov=vcovHC(lm3,type="HC2"))
+therand4ci<-confint.HC(lm3md,level=.95,parm="nhTrtmd",thevcov=vcovHC(lm3md,type="HC2"))
+
+therand3ci;diff(therand3ci[1,])
+therand4ci;diff(therand4ci[1,])
+
+@
+
+\item Alternatively, we can assess difference-in-differences via the change
+  score approach:
+
+<<results='hide'>>=
+
+meddat$HomRate0803<-with(meddat,HomRate08-HomRate03)
+
+lm4<-lm(HomRate0803~nhTrt+fm4,data=meddat)
+
+meddat$HomRate0803md<-align.by.block(meddat$HomRate0803,meddat$fm4)
+
+lm4md<-lm(HomRate0803md~nhTrtmd,data=meddat)
+
+coef(lm4)[2]
+coef(lm4md)[2]
+
+## The design justified SEs
+c(unAligned=sqrt(diag(vcovHC(lm4,type="HC2")))[2],
+  Aligned=sqrt(diag(vcovHC(lm4md,type="HC2")))[2])
+
+
+therand5ci<-confint.HC(lm4,level=.95,parm="nhTrt",thevcov=vcovHC(lm4,type="HC2"))
+therand6ci<-confint.HC(lm4md,level=.95,parm="nhTrtmd",thevcov=vcovHC(lm4md,type="HC2"))
+
+therand5ci;diff(therand5ci[1,])
+therand6ci;diff(therand6ci[1,])
+
+@
+
+\item What about testing the hypothesis that the change in homicide rate differed from
+  zero for all units. (This is a difference-in-differences hypothesis: we have
+  a pre-vs-post intervention difference and we are comparing this difference
+  between neighborhoods that did and did not receive the intervention.) You
+  could also have used the confidence interval approach from yesterday
+  (remember: \texttt{lm} using the aligned or centered variables and then the
+  HC2 standard error and the large-sample/Normality assumption)
+
+  Since Rosenbaum's approach involves testing and $p$-values, I thought we'd
+  start there today.
+
+<<results="hide">>=
+
+xbtest3<-xBalance(nhTrt~HomRate0803,
+		  strata=list(fm4=~fm4),
+		  data=meddat[matched(meddat$fm4),],
+		  report="all")
+xbtest3$overall
+xbtest3$results
+
+@
+
+
+
+\item But, do we trust these standard errors from the analytic results of the
+  linear model to really capture how our $\hat{\bar{\tau}}$ would vary across
+  repetitions of the experiment with these same units (holding potential
+  outcomes fixed)? For example, \citet{dunning2012natural}'s variance
+  derivation involved finite population corrections for the idea that we are
+  not sampling from an infinite population but have a fixed experimental pool
+  from which we are ``sampling'' the control group (or treatment group). And
+  what about the assumption that the experiment-to-experiment distribution of
+  the $\hat{\bar{\tau}}$ ought to be closely approximated by a Normal/t
+  distribution?
+
+  Let's check it out. Use the info below to calculate the standard error of
+  the $\hat{\bar{\tau}}$. You can just calculate the SEs and compare them to
+  the SEs arising above.
+
+<<results='hide'>>=
+## First using the Dunning derivation also discussed in the Gerber and Green textbook
+
+y0<-meddat$HomRate08
+y1<-y0-.3
+Z<-meddat$nhTrt
+Y<-Z*y1+(1-Z)*y0
+V<-var(cbind(y0,y1))
+varc<-V[1,1]
+vart<-V[2,2]
+covtc<-V[1,2]
+N<-length(y0)
+n<-sum(Z)
+m<-N-n
+
+varestATE<-((N-n)/(N-1))*(vart/n) + ((N-m)/(N-1))* (varc/m) + (2/(N-1)) * covtc
+
+## And the *feasible* version (where we do not observe the potential outcomes)
+## and so we do not have the covariance
+varYc<-var(Y[Z==0])
+varYt<-var(Y[Z==1])
+fvarestATE<-(N/(N-1)) * ( (varYt/n) + (varYc/m) )
+
+## Other SEs
+lm1<-lm(Y~Z)
+iidSElm1<- sqrt(diag(vcov(lm1)))[["Z"]]
+NeymanSElm1<-sqrt(diag(vcovHC(lm1,type="HC2")))[["Z"]]
+
+c(trueSE=sqrt(varestATE),feasible=sqrt(fvarestATE),iid=iidSElm1,hc2=NeymanSElm1)
+
+## And a new 95% CI
+aCI<-ateFm4 + c(-1,1) * qt((1-.05/2),6) * sqrt(fvarestATE)
+
+rbind(aCI,
+      therandci=confint.HC(lm1,level=.95,parm="Z",thevcov=vcovHC(lm1,type="HC2")),
+      iidci=confint(lm1,level=.95,parm="Z")
+      )
+
+@
+
+%%\begin{comment}
+
+Notice that different versions of the SE differ --- they differ because some
+ignore the finite "population" or the idea that we are re-assigning treatment
+without replacement. Others do not use the variance of each group separately,
+or they do not include the covariance.
+
+%%\end{comment}
+
+\item Now, we already calculated the $\hat{\bar{\tau}}$ across many
+repetitions before to assess bias.  Report an approximation to the standard
+error using one of the simulations that we already did. \emph{Hint:} The
+standard error is supposed to be the typical amount by which our
+$\hat{\bar{\tau}}$ would vary from assignment to assignment.
+
+
+
+<<results="hide">>=
+
+simATE<-function(){
+  Znew<-sample(Z)
+  Y<-Znew*y1+(1-Znew)*y0
+  coef(lm(Y~Znew))[["Znew"]]
+}
+
+set.seed(12345)
+estAteDist<-replicate(10000,simATE())
+
+sd(estAteDist) ## Approximated SE from simulation, compare to truth above
+
+## assess the normality assumption of the randomization distribution in the
+## simple case
+## qqnorm(estAteDist)
+## qqline(estAteDist)
+@
+
+
+\item  Notice that the statistical inference that we are doing here depends on
+  an assumption that we have enough observations such that the Central Limit
+  Theorem kicks in for us here. I want to know whether such confidence
+  intervals have \emph{correct coverage} or that that they are \emph{valid}
+  (i.e. that the tests that the intervals summarize are valid).  Here are
+  two confidence intervals:
+
+<<results="hide">>=
+
+## library(sandwich)
+## library(lmtest)
+## source(url("http://jakebowers.org/ICPSR/confintHC.R"))
+
+lm2<-lm(HomRate08~nhTrt+fm4,data=meddat)
+
+thehc2ci<-confint.HC(lm2,level=.95,parm="nhTrt",thevcov=vcovHC(lm2,type="HC2"))[1,]
+theiidci<-confint(lm2,level=.95,parm="nhTrt")[1,]
+
+rbind( HC2=thehc2ci,
+      IID=theiidci)
+
+@
+
+Which one should we use \emph{in this case}? We know which one is best in a
+case with (nearly) infinite independent observations from Lin, but we are not
+sure that we have so much information in this case.
+
+Here is one way to assess the HC2 and what I might call
+the "iid" confidence intervals: we can check the \emph{coverage rate}.
+Explain the following.
+
+<<results="hide",cache=TRUE>>=
+
+newci<-function(Y,origZ,thefm){
+  Znew<-unsplit(lapply(split(origZ,thefm), sample),thefm)
+  lm2<-lm(Y~Znew+thefm)
+  thehc2ci<-confint.HC(lm2,level=.95,parm="Znew",thevcov=vcovHC(lm2,type="HC2"))[1,]
+  theiidci<-confint(lm2,level=.95,parm="Znew")[1,]
+  zeroiniid<- 0 >= theiidci[1] & 0 <= theiidci[2]
+  zeroinhc2<- 0 >= thehc2ci[1] & 0 <= thehc2ci[2]
+  return(c(iid=zeroiniid[[1]], hc2=zeroinhc2[[1]]))
+}
+
+## test the function. What does the result mean?
+with(meddat[matched(fm4),],newci(Y=HomRate08,origZ=nhTrt,thefm=fm4))
+
+cicov<-replicate(1000,with(meddat[matched(fm4),],newci(Y=HomRate08,origZ=nhTrt,thefm=fm4)))
+
+apply(cicov,1,mean)
+
+@
+
+
+\item Now, what about the testing approach to statistical inference about
+  causal effects? Recall that one can engage with the fundamental problem of
+  causal inference by making hypotheses about the missing individual level
+  potential outcomes and then evaluating how much information we have against
+  that hypothesis. The summary measure of information is the $p$-value.  A
+  $p$-value is a probability and thus requires a probability distribution ---
+  and specifically requires a probability distribution to characterize the
+  situation posited by the null hypothesis. Here, the null hypothesis is $H_0:
+  y_{i,1}=y_{i,0}$ for all $i$, although other null hypotheses will be useful
+  in other circumstances.  In frequentist statistics a probability
+  distribution requires that some physical act has been repeated: for example,
+  the probability that a flipped coin is heads can be defined as the long-run
+  proportion of heads across repeated flips. So, what repetition does the $p$
+  refer to in an experiment?
+
+\item  We want to generate a distribution that tells us all of the ways the
+  experiment could have turned out under the null hypothesis. We have a sense
+  that we are talking about repeating the experiment.   \citet[Chap
+  2]{rosenbaum2010design} explains that we can generate this distribution
+  because we know that $Y_i$ is a function of what we do not observe:
+
+  \begin{equation}
+    Y_i=Z_i y_{i,1} + (1-Z_i) y_{i,0} \label{eq:obsandpot}
+  \end{equation}
+
+  So, if $y_{i,1}=y_{i,0}$ (as the hypothesis specifies) then $Y_i=y_{i,0}=y_{i,1}$.
+
+  Now, what does it mean to repeat the experiment? What is happening below?
+
+<<cache=TRUE,results="hide">>=
+
+newExperimentNewStat<-function(Y,Z,thefm){
+  ## Znew<-sample(Z)
+   Znew<-unsplit(lapply(split(Z,thefm), sample),thefm)
+   Zmd<-align.by.block(Znew,thefm)
+   thelm<-lm(Y~Zmd)
+   return(coef(thelm)["Zmd"])
+  ##mean(Y[Zmd==1])-mean(Y[Zmd==0])
+}
+
+set.seed(20150801)
+nullDist<-replicate(10000,with(meddat[matched(meddat$fm4),],newExperimentNewStat(Y=HomRate08md,
+                                              Z=nhTrt,
+                                              thefm=fm4)))
+
+obsTestStat<-coef(lm2)[2]
+##obsTestStat<-with(meddat,mean(HomRate08[nhTrt==1])-mean(HomRate08[nhTrt==0]))
+
+oneSidedP<-mean(nullDist<=obsTestStat)
+
+oneSidedP
+
+## Here we are considering a different test statistic to avoid having outliers
+## overly increase the variance of the randomization distribution of the mean difference too much.
+
+newExperimentNewStatRank<-function(Y,Z,thefm){
+  Znew<-unsplit(lapply(split(Z,thefm), sample),thefm)
+  rankY<-rank(Y)
+  mean(rankY[Znew==1])-mean(rankY[Znew==0])
+}
+
+nullDistRank<-replicate(10000,with(meddat[matched(meddat$fm4),],newExperimentNewStatRank(Y=HomRate08,
+											 Z=nhTrt,
+											 thefm=fm4)))
+
+obsTestStatRank<-with(meddat,{
+			rankHomRate08<-rank(HomRate08)
+			mean(rankHomRate08[nhTrt==1])-mean(rankHomRate08[nhTrt==0])})
+
+oneSidedPRank<-mean(nullDistRank<=obsTestStatRank)
+
+oneSidedPRank
+
+@
+
+We can report a two-sided $p$-value like so:
+
+<<results='hide'>>=
+
+twoSidedPRank<-2*min(c(mean(nullDistRank<=obsTestStatRank),
+		       mean(nullDistRank>obsTestStatRank)))
+
+twoSidedPMeanDiff<-2*min(c(mean(nullDist<=obsTestStat),
+			   mean(nullDist>obsTestStat)
+			   ))
+
+twoSidedPRank
+twoSidedPMeanDiff
+
+@
+
+Recall that even though these hypothesis tests argue against the null of no
+effects, that we are calculating them without adjustment and know that the
+data are fairly unbalanced with regard to background covariates. How would you
+do this null hypothesis testing approach with the matched data?
+
+
+
+\end{enumerate}
+
+\bibliographystyle{apalike}
+\bibliography{refs}
+% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+
+\end{document}
