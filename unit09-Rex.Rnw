@@ -21,7 +21,7 @@ options(width=110,digits=3)
   \item Today we will work on getting clear about how one may use estimation
     to address the fundamental problem of causal inference. To start, we will
     work with a randomized experiment before talking about applying these
-    ideas to observational studies. 
+    ideas to observational studies.
 
     We are lucky that Professor Costas Panagopoulos is letting us use his
     data. The \Verb+news.df+ data are from a field experiment run just prior
@@ -43,11 +43,11 @@ options(width=110,digits=3)
 news.df<-read.csv("http://jakebowers.org/PS531Data/news.df.csv")
 @
 
-  
+
   \begin{table}[H]
     \begin{center}
       \begin{tabular}{lcccc}
-        $i$ &  $Z_i$ & $Y_i$  & $y_{1i}$ & $y_{0i}$ \\  
+        $i$ &  $Z_i$ & $Y_i$  & $y_{1i}$ & $y_{0i}$ \\
         \hline
         Saginaw       &   0 &  16 &  ?  &  16 \\
         Sioux City    &   1 &  22 &  22 &  ?  \\
@@ -64,7 +64,7 @@ news.df<-read.csv("http://jakebowers.org/PS531Data/news.df.csv")
       \label{tab:newspotout}
     \end{center}
   \end{table}
-  
+
   This table not only has columns for treated ($Z$) and observed
   turnout ($y$), but it has, two other columns, $y_1$ and $y_0$ (or
   $y|Z=1$ and $y|Z=0$ or $y_{Z=1}$ and $y_{Z=0}$). The difference
@@ -82,22 +82,22 @@ news.df<-read.csv("http://jakebowers.org/PS531Data/news.df.csv")
   outcomes'' or ``counter-factual outcomes''. Similarly, we observe
   $y$ (turnout) and since it is a function of the random variable $Z$
   we make it uppercase (only $Z$ makes it random):
-  
+
   \begin{equation}
     Y_i=Z_i y_{1i} + (1-Z_i) y_{0i} \label{eq:obsandpot}
   \end{equation}
-  
+
    % \item
   The ``?'' in Table~\ref{tab:newspotout} refers to stuff we don't
   know: we don't observe turnout in Oxford, OH after newspaper ads
-  (treatment), only after no additional newspaper ads (control). 
+  (treatment), only after no additional newspaper ads (control).
 
 \item Some people would say that 1.5 is a good estimate of the average
   treatment effect in this experiment. How did they get 1.5? What do they mean
   by "good"? What do they mean by "average treatment effect"? How does an
   "average treatment effect" address the fundamental problem of causal
   inference? How does this approach differ, conceptually, from the models of
-  effects (including no effects) approach? 
+  effects (including no effects) approach?
 
  \item  In 1923, \citet{neyman:1923} proposed (1) that we decide to stop focusing on
    the individual level causal effects and instead be interested in
@@ -105,15 +105,13 @@ news.df<-read.csv("http://jakebowers.org/PS531Data/news.df.csv")
    \bar{y}_{1} - \bar{y}_{0}$ (i.e. he suggested we choose to care about mean
    differences of the counterfactuals rather than any individual
    counterfactuals themselves) and (2) he claimed that
-   $\hat{\bar{\tau}}=(1/m)\sum_{i=1}^n Z_i Y_i - (1/(n-m))\sum_{i=1}^n (1-Z_i)
-   Y_i$ was a good \textbf{estimator} of $\bar{\tau}$ (where $Y_i$ is observed
-   outcomes and relates to potential outcomes via $Y_i=Z_i y_{1i}+(1-Z_i)
-   y_{0i}$, $m$ is number of treated observations and $n$ is total number of
+   $\hat{\bar{\tau}}=(1/m)\sum_{i=1}^n Z_i Y_i - (1/(n-m))\sum_{i=1}^n
+   (1-Z_i)$ outcomes and relates to potential outcomes via $Y_i=Z_i y_{1i}+(1-Z_i) y_{0i}$, $m$ is number of treated observations and $n$ is total number of
    observations). We are going to convince ourselves that this is the case,
-   for a specific understanding of ``good'' as ``unbiased''. 
+   for a specific understanding of ``good'' as ``unbiased''.
 
    First, can you explain what an unbiased estimator is to someone who doesn't
-   know what an expectation is? 
+   know what an expectation is?
 
  \item Second, I include an analytical version of this derivation. I don't
    have a question for you to answer here. Some of you might note, however,
@@ -150,8 +148,11 @@ truetau<- 1.5 # we could have chosen anything here
 y1<-y0 + truetau # our derivation above does not require constant additive effects, we could change this here, too.
 
 
-newexperiment<-function(origZ,y1,y0){
-  Znew<-sample(origZ)
+
+
+newexperiment<-function(origZ,y1,y0,s){
+  ##Znew<-sample(origZ)
+  Znew<-unsplit(lapply(split(origZ,s),sample),s)
   Y<-Znew*y1+(1-Znew)*y0
   epthat<-coef(lm(Y~Znew))[["Znew"]]
   ## Same numbers
@@ -162,7 +163,7 @@ newexperiment<-function(origZ,y1,y0){
 
 ## set.seed(123456) ## if we uncomment set.seed, everyone should have the
 ## exact same answer
-randdist<-replicate(1000,newexperiment(origZ=news.df$z,y1=y1,y0=y0))
+randdist<-replicate(10000,newexperiment(origZ=news.df$z,y1=y1,y0=y0,s=news.df$s))
 
 summary(randdist)
 
@@ -218,8 +219,9 @@ latenty0<-y0
 y01.0<-as.numeric(y0 > quantile(latenty0,.75))
 latenty1<-latenty0+sd(latenty0)
 y01.1<-as.numeric(latenty1 > quantile(latenty1,.5))
-obsy<-z*y01.1+(1-z)*y01.0 ## what we observe
 Z<-news.df$z
+
+obsy<-Z*y01.1+(1-Z)*y01.0 ## what we observe
 
 ## calculate the true ATE and the $\hat{\bar{\tau}}$
 trueATEfake<-mean(y01.1)-mean(y01.0)
@@ -228,7 +230,7 @@ trueDelta<- log( mean(y01.1)/(1-mean(y01.1))) - log( mean(y01.0)/(1-mean(y01.0))
 ## true Logit?
 ## estimate the true ATE using the data that we would observe in this fake experiment
 estATEfake<-coef(lm(obsy~Z))["Z"] ## same as a mean difference on obsy
-estTotal<-mean(obsy[z==1])*length(obsy)
+estTotal<-mean(obsy[Z==1])*length(obsy)
 estDelta1<-coef(glm(obsy~Z,family=binomial(link="logit")))[["Z"]]
 estDelta2<- log( mean(obsy[Z==1])/(1-mean(obsy[Z==1]))) -
   log( mean(obsy[Z==0])/(1-mean(obsy[Z==0])))
@@ -284,7 +286,7 @@ SEsims<-apply(dist.sample.est,1,function(x){ sqrt(var(x)/length(x)) })
 @
 
 
-Freedman says that the $\~ \Delta$ estimator is *consistent* but not unbiased.
+Freedman says that the $\Delta$ estimator is *consistent* but not unbiased.
 What would we need to do to show that it is consistent but that the logit
 coefficient is not consistent? Also, recall that Freedman's version included a
 covariate. Would this matter here? How would we check?
@@ -303,7 +305,7 @@ rm(list=ls())
 <<>>=
 library(optmatch)
 library(RItools)
-load("fm4.rda") ## I made and saved this last time. 
+load("fm4.rda") ## I made and saved this last time.
 summary(fm4,min.controls=0,max.controls=Inf)
 @
 
