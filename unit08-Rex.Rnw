@@ -247,9 +247,9 @@ matchAndBalance(results3$par,distmat=psDist2)
 
 findbalance<-function(x){
   # x contains three calipers, ps, absDist, mahaldist
-  message(paste(x,collapse=" "))
+  ##message(paste(x,collapse=" "))
   thefm<-try(fullmatch(psDist2+caliper(psDist2,x[1])+
-		   caliper(absDist,x[2])+caliper(mahalDist,x[3]),data=meddat,tol=.00001))
+		   caliper(absDist,x[2])+caliper(mahalDist,x[3]),data=meddat,tol=.00001,min.controls=1))
 
   if(inherits(thefm,"try-error")){
     return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
@@ -258,7 +258,7 @@ findbalance<-function(x){
   thexb<-try(xBalance(update(balfmla,.~.+pScore2),
 		  strata=data.frame(thefm=thefm),
 		  data=meddat,
-		  report=c("chisquare.test")))
+		  report=c("chisquare.test","p.values")))
 
   if(inherits(thexb,"try-error")){
     return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
@@ -269,7 +269,9 @@ findbalance<-function(x){
 						    mean(HomRate03[nhTrt==1])-mean(HomRate03[nhTrt==0])))})
   maxHomRate03diff<-max(HomRate03diff)
 
-  return(c(x=x,d2p=thexb$overall[,"p.value"],maxHR03diff=maxHomRate03diff,n=sum(!is.na(thefm))))
+  return(c(x=x,d2p=thexb$overall[,"p.value"],maxHR03diff=maxHomRate03diff,n=sum(!is.na(thefm)),
+	   effn=summary(thefm)$effective.sample.size,
+	   psp=thexb$results["pScore2","p",]))
 }
 
 
@@ -278,9 +280,9 @@ findbalance<-function(x){
 
 set.seed(123455)
 system.time({
-results<-replicate(1000,findbalance(c(runif(1,.1,6),
-                                      runif(1,.1,10),
-                                      runif(1,30,70))))
+results<-replicate(5000,findbalance(c(runif(1,minPsDist2,maxPsDist2),
+				      runif(1,minAbsDist,maxAbsDist),
+				      runif(1,minMhDist,maxMhDist)))),
 }
 )
 
@@ -290,15 +292,17 @@ results<-replicate(1000,findbalance(c(runif(1,.1,6),
 ## If you have a mac or linux machine you can speed this up:
 library(parallel)
 system.time({
-resultsList<-mclapply(1:1000,function(i){
-			findbalance(c(runif(1,.1,6),
-                                      runif(1,.1,10),
-				      runif(1,30,70)))},
+resultsList<-mclapply(1:5000,function(i){
+			findbalance(c(runif(1,minPsDist2,maxPsDist2),
+				      runif(1,minAbsDist,maxAbsDist),
+				      runif(1,minMhDist,maxMhDist)))},
 		      mc.cores=detectCores())
-resultsArr<-simplify2array(resultsList)
+resultsListNA<-sapply(resultsList,function(x){ any(is.na(x)) })
+resultsArr<-simplify2array(resultsList[!resultsListNA])
 }
 )
 
+results<-resultsArr
 @
 
 Now, how might we interpret the results of this search for matched designs?
@@ -319,7 +323,7 @@ plot(resNoNA["d2p",],resNoNA["n",],
      col=gray(1- ( resNoNA["maxHR03diff",]/max(resNoNA["maxHR03diff",]))),
      pch=19)
 
-identify(resNoNA["d2p",],resNoNA["n",],labels=round(resNoNA["maxHR03diff",],3),cex=.7)
+## identify(resNoNA["d2p",],resNoNA["n",],labels=round(resNoNA["maxHR03diff",],3),cex=.7)
 
 @
 
@@ -327,13 +331,14 @@ Which matched design might we prefer? Here is one idea
 
 <<eval=FALSE>>=
 
-candDesigns<-resNoNA[,resNoNA["d2p",]>.95 & resNoNA["n",]>42 &
-		     resNoNA["maxHR03diff",]<.9]
+candDesigns<-resNoNA[,resNoNA["d2p",]>.6 & resNoNA["n",]>=40 &
+		     resNoNA["maxHR03diff",]<=1 & resNoNA["effn",] > 10]
 
 str(candDesigns)
 
 apply(candDesigns,1,summary)
 
+candDesigns<-candDesigns[,order(candDesigns["d2p",],decreasing=TRUE)]
 ## plot(candDesigns["d2p",],candDesigns["n",],
 ##      col=gray(1- ( candDesigns["maxHR03diff",]/max(candDesigns["maxHR03diff",]))),
 ##      pch=19)
@@ -352,11 +357,11 @@ How would we use this information in \texttt{fullmatch}?
 
 <<>>=
 
-fm4<-fullmatch(psDist2+caliper(psDist2,candDesigns["x1",1])
-               +caliper(absDist,candDesigns["x2",1])
-               +caliper(mahalDist,candDesigns["x3",1]),data=meddat,tol=.00001)
+fm4<-fullmatch(psDist2+caliper(psDist2,candDesigns["x1",2])
+               +caliper(absDist,candDesigns["x2",2])
+               +caliper(mahalDist,candDesigns["x3",2]),data=meddat,tol=.00001,min.controls=1)
 
-summary(fm4)
+summary(fm4,min.controls=0,max.controls=Inf)
 
 meddat$fm4<-NULL ## this line exists to prevent confusion with new fm4 objects
 meddat[names(fm4),"fm4"]<-fm4
