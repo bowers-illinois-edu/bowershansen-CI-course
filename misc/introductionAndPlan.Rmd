@@ -28,12 +28,17 @@ Make a matched design.
 When to stop matching? Hansen and Sales 2015 and grid search.
 
 ## Day 3
-Estimation of the ATE. Unbiasedness in the simple and weighted cases.  Bias in Logit coefficients for the difference in log-odds.  Standard errors. Coverage. Type I error rate.
+Estimation of the ATE. Unbiasedness in the simple and weighted cases.  Bias in Logit coefficients for the difference in log-odds. 
 
 ## Day 4
-Diff in Diffs, Covariance adjustment for matched designs.  Maybe power and power analysis.  Instrumental variables including CACE
+Standard errors. Coverage. Type I error rate.
+
+Diff in Diffs, Covariance adjustment for matched designs.  Maybe power and power analysis.
 
 ## Day 5
+
+Instrumental variables including CACE
+
 Longitudinal designs
 
 # Proposed Plan for Week 2
