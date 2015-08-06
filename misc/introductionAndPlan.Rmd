@@ -33,7 +33,9 @@ Estimation of the ATE. Unbiasedness in the simple and weighted cases.  Bias in L
 ## Day 4
 Standard errors. Coverage. Type I error rate.
 
-Diff in Diffs, Covariance adjustment for matched designs.  Maybe power and power analysis.
+Diff in Diffs.
+
+Extra: Covariance adjustment for matched designs.  Maybe power and power analysis.
 
 ## Day 5
 
