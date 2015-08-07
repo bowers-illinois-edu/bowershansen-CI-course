@@ -44,8 +44,6 @@
 \usepackage{amssymb}
 \usepackage{hanging}
 
-
-
 % FONTS
 \usepackage[T1]{fontenc}					% always use this no matter what
 
