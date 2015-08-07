@@ -187,7 +187,6 @@ xb2$overall
 
 @
 
-
 What about the other requirements of an instrumental variable? How credible
 are they in this case? (Why should these assumptions be required anyway?
 Perhaps we'll learn more about that once we start to think about estimation.)
@@ -243,10 +242,10 @@ cace_1 <- ivreg(baddays_phys_12m ~ ohp_all_ever_admin | treatment,
 		data = OHIE_filtered,subset=numhh_list=='signed self up')$coefficients[2]
 
 # ITT (Reduced Form)
-itt <- lm(baddays_phys_12m ~ treatment, data = OHIE_filtered,subset=numhh_list=='signed self up')
+itt <- lm(baddays_phys_12m ~ treatment, data = OHIE_filtered, subset=numhh_list=='signed self up')
 
 # ITTd (First stage)
-ittd <- lm(ohp_all_ever_admin ~ treatment, data = OHIE_filtered,subset=numhh_list=='signed self up')
+ittd <- lm(ohp_all_ever_admin ~ treatment, data = OHIE_filtered, subset=numhh_list=='signed self up')
 
 #ITT/ITTd
 cace_2 <- coef(itt)[2]/coef(ittd)[2]
@@ -258,6 +257,17 @@ cace_3 <- coef(lm(baddays_phys_12m ~ predictions_ittd, data =
 cace_4 <- with(OHIE_filtered[OHIE_filtered$numhh_list=='signed self up',],
 	       cov(baddays_phys_12m, treatment) /
                  cov(ohp_all_ever_admin, treatment))
+
+COV <- function(x, y) {
+  if(length(x)!=length(y)) {stop('x must have the same length as y ')}
+  x.bar <- mean(x)
+  y.bar <- mean(y)
+  N <- length(x)
+  Cov <- (sum((x - x.bar) * (y - y.bar))) / (N - 1)
+  return(Cov)
+}
+
+with(OHIE_filtered[OHIE_filtered$numhh_list=='signed self up',], COV(baddays_phys_12m, treatment) / COV(ohp_all_ever_admin, treatment))
 
 all.equal(cace_1[[1]], cace_2[[1]], cace_3[[1]], cace_4[[1]])
 
@@ -277,7 +287,7 @@ stratified_IV_fit <- lapply(level_num, function(x){
 					  subset = numhh_list == levels(numhh_list)[x]),
 				      vcov = sandwich, diagnostics = TRUE)})
 
-thecaces<-sapply(stratified_IV_fit,function(obj){ coef(obj)[2,1] })
+the_caces <- sapply(stratified_IV_fit, function(obj){ coef(obj)[2,1] })
 
 prop_treat <- with(OHIE_filtered, sapply(split(treatment, numhh_list), sum)/sum(treatment))
 
@@ -289,14 +299,13 @@ iv_fit <- ivreg(baddays_phys_12m ~ ohp_all_ever_admin * numhh_list | treatment *
 
 coef(iv_fit)
 
-caceHH1<-coef(iv_fit)[2]
-caceHH2<-coef(iv_fit)[2]+coef(iv_fit)[5]
-caceHH3<-coef(iv_fit)[2]+coef(iv_fit)[6]
+caceHH1 <- coef(iv_fit)[2]
+caceHH2 <- coef(iv_fit)[2] + coef(iv_fit)[5]
+caceHH3 <- coef(iv_fit)[2] + coef(iv_fit)[6]
 
-all.equal(thecaces,c(caceHH1[[1]],caceHH2[[1]],caceHH3[[1]]))
+all.equal(the_caces, c(caceHH1[[1]],caceHH2[[1]],caceHH3[[1]]))
 
 @
-
 
 \section{Exclusion restriction}
 
@@ -312,11 +321,13 @@ descendent of Y.) Let's try that. How would we interpret these results?
 
 <<>>=
 
-lmD1<-lm(baddays_phys_12m ~ treatment, data = OHIE_filtered, subset = ohp_all_ever_admin == 1 & numhh_list=="signed self up")
-lmD0<-lm(baddays_phys_12m ~ treatment, data = OHIE_filtered, subset = ohp_all_ever_admin == 0 & numhh_list=="signed self up")
+lm_D1 <- lm(baddays_phys_12m ~ treatment, data = OHIE_filtered, subset = ohp_all_ever_admin == 1 & numhh_list=="signed self up")
 
-summary(lmD1)$coef
-summary(lmD0)$coef
+lm_D0 <- lm(baddays_phys_12m ~ treatment, data = OHIE_filtered, subset = ohp_all_ever_admin == 0 & numhh_list=="signed self up")
+
+summary(lm_D1)$coef
+
+summary(lm_D0)$coef
 
 @
 
@@ -329,14 +340,21 @@ these results?
 
 iv_fit <- ivreg(baddays_phys_12m ~ ohp_all_ever_admin | treatment, data =
 		OHIE_filtered,subset=numhh_list=="signed self up")
+
 summary(iv_fit)
+
 N <- nrow(OHIE_filtered[OHIE_filtered$numhh_list=="signed self up",])
+
 X_mat <- cbind(rep(1, N), OHIE_filtered[OHIE_filtered$numhh_list=="signed self up","ohp_all_ever_admin"])
+
 Z_mat <- cbind(rep(1, N), OHIE_filtered[OHIE_filtered$numhh_list=="signed self up","treatment"])
+
 residuals <- OHIE_filtered[OHIE_filtered$numhh_list=="signed self up","baddays_phys_12m"] - X_mat %*% coef(iv_fit)
+
 s_y <- as.numeric(t(residuals) %*% residuals) / (N - 1 - 1)
 
 sqrt(diag(s_y * solve(t(X_mat) %*% Z_mat %*% solve(t(Z_mat) %*% Z_mat) %*% t(Z_mat) %*% X_mat)))
+
 summary(iv_fit)
 
 summary(iv_fit, diagnostics = TRUE)
@@ -415,8 +433,11 @@ the treatment group: since $Z {\perp\!\!\!\perp} D$, such a calculation is an un
 
 <<>>=
 lmZD<-lm(ohp_all_ever_admin~treatment, data = OHIE_filtered, subset = numhh_list == "signed self up")
+
 unique(predict(lmZD))
+
 table(predict(lmZD))
+
 ## or more simply
 with(OHIE_filtered[OHIE_filtered$numhh_list=="signed self up",],
      mean(ohp_all_ever_admin[treatment==1]))
