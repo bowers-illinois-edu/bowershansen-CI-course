@@ -70,13 +70,15 @@ options(width=110,digits=3,scipen=10)
 
 
 \title{Instrumental Variables}
-\author{Jake Bowers, Ben Hansen, and Tom Leavitt}
+\author{Tom Leavitt, Jake Bowers, and Ben Hansen}
 \date{Summer 2015}
 \maketitle
 
 \doublespacing
 
-These data are taken from Finkelstein et al, 2012, ``The Oregon Health Insurance Experiment: Evidence from the First Year,'' Quarterly Journal of Economics, 127 (3): 1057 - 1106. Oregon conducted a lottery to offer individuals the opportunity to sign up for Medicaid. Winning the lottery, however, only granted individuals the opportunity to apply for Medicaid, and the applications were accepted only if the applicants met the eligibility requirements.
+These data are taken from Finkelstein et al, 2012, ``The Oregon Health
+Insurance Experiment: Evidence from the First Year,'' \emph{Quarterly Journal
+  of Economics}, 127 (3): 1057 - 1106. Oregon conducted a lottery to offer individuals the opportunity to sign up for Medicaid. Winning the lottery, however, only granted individuals the opportunity to apply for Medicaid, and the applications were accepted only if the applicants met the eligibility requirements.
 
 Let's start by first loading the R packages we'll be using, the Oregon Health Insurance dataset, and cleaning up the dataset a bit.
 
@@ -129,6 +131,8 @@ Let's consider the first assumption. Is the instrument really randomly assigned?
 with(OHIE, table(self_list))
 
 @
+
+\section{Random assignment of the Instrument}
 
 The table above shows that 66,210 individuals signed themselves up for the lottery, but 8,712 individuals were signed up by members of their respective families. The lottery itself is conducted at the individual level, but one applies for Medicaid at the household level, meaning that if any one individual in a household wins the lottery, then every other member of that individual's immediate family is included in the Medicaid application.
 
@@ -184,14 +188,14 @@ xb2 <- xBalance(balance_formula, strata = list(raw = NULL, strata = ~numhh_list)
 
 xb2$overall
 
-xb2$results
-
 @
 
 
 What about the other requirements of an instrumental variable? How credible
 are they in this case? (Why should these assumptions be required anyway?
 Perhaps we'll learn more about that once we start to think about estimation.)
+
+\section{Estimation}
 
 Now let's move on to estimation.
 
@@ -251,7 +255,8 @@ ittd <- lm(ohp_all_ever_admin ~ treatment, data = OHIE_filtered,subset=numhh_lis
 cace_2 <- coef(itt)[2]/coef(ittd)[2]
 
 predictions_ittd <- predict(ittd)
-cace_3 <- coef(lm(baddays_phys_12m ~ predictions_ittd, data = OHIE_filtered,subset=numhh_list=='signed self up'))[2]
+cace_3 <- coef(lm(baddays_phys_12m ~ predictions_ittd, data =
+		  OHIE_filtered[OHIE_filtered$numhh_list=='signed self up',]))[2]
 
 cace_4 <- with(OHIE_filtered[OHIE_filtered$numhh_list=='signed self up',],
 	       cov(baddays_phys_12m, treatment) /
@@ -296,34 +301,42 @@ all.equal(thecaces,c(caceHH1[[1]],caceHH2[[1]],caceHH3[[1]]))
 @
 
 
+\section{Exclusion restriction}
+
 Let's consider the exclusion restriction:
 
 One potential way to present evidence about whether the exclusion restriction
 is violated is to condition on $D$ and regress Y on Z. If Z has a strong
 effect on Y, then it is likely that Z affects Y through some other channel
 besides D. (Also, note that conditioning on D cannot induce a spurious
-correlation between Z and Y because D, which comes before Y, cannot be a descendent of Y.) Let's try that:
+correlation between Z and Y because D, which comes before Y, cannot be a
+descendent of Y.) Let's try that. How would we interpret these results?
+(Focusing just on the first block for now.)
 
 <<>>=
 
-treat_rec_subset <- c(0, 1)
+lmD1<-lm(baddays_phys_12m ~ treatment, data = OHIE_filtered, subset = ohp_all_ever_admin == 1 & numhh_list=="signed self up")
+lmD0<-lm(baddays_phys_12m ~ treatment, data = OHIE_filtered, subset = ohp_all_ever_admin == 0 & numhh_list=="signed self up")
 
-lapply(treat_rec_subset, function(x) summary(lm(baddays_phys_12m ~ treatment, data = OHIE_filtered, subset = ohp_all_ever_admin == x)))
+summary(lmD1)$coef
+summary(lmD0)$coef
 
 @
 
-Here is how the standard errors are being calculated:
+Here is how the standard errors are being calculated. How should we interpret
+these results?
 
 <<>>=
 
 # This is for the LATE/CACE
 
-iv_fit <- ivreg(baddays_phys_12m ~ ohp_all_ever_admin | treatment, data = OHIE_filtered)
+iv_fit <- ivreg(baddays_phys_12m ~ ohp_all_ever_admin | treatment, data =
+		OHIE_filtered,subset=numhh_list=="signed self up")
 summary(iv_fit)
-N <- nrow(OHIE_filtered)
-X_mat <- cbind(rep(1, N), OHIE_filtered$ohp_all_ever_admin)
-Z_mat <- cbind(rep(1, N), OHIE_filtered$treatment)
-residuals <- OHIE_filtered$baddays_phys_12m - X_mat %*% coef(iv_fit)
+N <- nrow(OHIE_filtered[OHIE_filtered$numhh_list=="signed self up",])
+X_mat <- cbind(rep(1, N), OHIE_filtered[OHIE_filtered$numhh_list=="signed self up","ohp_all_ever_admin"])
+Z_mat <- cbind(rep(1, N), OHIE_filtered[OHIE_filtered$numhh_list=="signed self up","treatment"])
+residuals <- OHIE_filtered[OHIE_filtered$numhh_list=="signed self up","baddays_phys_12m"] - X_mat %*% coef(iv_fit)
 s_y <- as.numeric(t(residuals) %*% residuals) / (N - 1 - 1)
 
 sqrt(diag(s_y * solve(t(X_mat) %*% Z_mat %*% solve(t(Z_mat) %*% Z_mat) %*% t(Z_mat) %*% X_mat)))
@@ -332,6 +345,8 @@ summary(iv_fit)
 summary(iv_fit, diagnostics = TRUE)
 
 @
+
+\section{No Defiers/Restricting the Types of Compliance/Monotonicity}
 
 Now let's consider the monotonicity assumption.
 
@@ -390,13 +405,30 @@ z & d & y \\ [0.5ex] % inserts table heading
 \end{tabular}
 \end{table}
 
-The denominator of the CACE estimator will simply be the proportion of $d = 1$s among the $z = 1$s minus the proportion of $d = 1$s among the $z = 0$s. That is, $\frac{(1 + 1 + 1 + 1)}{4} - \frac{(0 + 1 + 1 + 0)}{4} = \frac{1}{2}$. In the treatment group, $z = 1$, there is no non-compliance; thus, subjects can be only compliers or always-takers. There is non-compliance in the control group, $z = 0$, and those non-compliers could be either always-takers or defiers.
+The denominator of the CACE estimator will simply be the proportion of $d =
+1$s among the $z = 1$s minus the proportion of $d = 1$s among the $z = 0$s.
+That is, $\frac{(1 + 1 + 1 + 1)}{4} - \frac{(0 + 1 + 1 + 0)}{4} =
+\frac{1}{2}$. By assumption, in the treatment group, $z = 1$, there is no non-compliance; thus, subjects can be only compliers or always-takers. There is non-compliance in the control group, $z = 0$, and those non-compliers could be either always-takers or defiers.
 
 But, due to $Z {\perp\!\!\!\perp} D$, treatment and control groups will have the same proportion of compliers, always-takers, never-takers, and defiers in \textit{expectation}. Therefore, since it's impossible for the treatment group to have any defiers, we can infer that there are no defiers in the control group as well.
 
-And if the 1s in the control group are always-takers, then the regression of $\mathbf{d}$ on $\mathbf{z}$ gives us the proportion of compliers among the treated group which, due to $Z {\perp\!\!\!\perp} D$ is an unbiased estimate of the proportion of compliers in the entire pool of subjects.
+And if the 1s in the control group are always-takers, then we can calculate
+the proportion of compliers overall by using the proportion of compliers in
+the treatment group: since $Z {\perp\!\!\!\perp} D$, such a calculation is an unbiased estimate of the proportion of compliers in the entire pool of subjects.
 
-Essentially what we are doing is using the proportion of always takers in the control group to estimate the proportion of always takers in the treatment group, which then makes the regression of $\mathbf{d}$ on $\mathbf{z}$ an estimate of the proportion of compliers in the treatment group, which is an estimate of the proportion of compliers in the pool of experimental subjects.
+<<>>=
+lmZD<-lm(ohp_all_ever_admin~treatment, data = OHIE_filtered, subset = numhh_list == "signed self up")
+unique(predict(lmZD))
+table(predict(lmZD))
+## or more simply
+with(OHIE_filtered[OHIE_filtered$numhh_list=="signed self up",],
+     mean(ohp_all_ever_admin[treatment==1]))
+
+@
+
+Essentially what we are doing is using the proportion of always takers in the
+control group to estimate the proportion of always takers in the treatment
+group.
 
 If the 1s in the control group were not always-takers, then the process described above would give a biased estimate of the proportion of compliers in the treatment group since we would not expect the proportion of defiers in the control group to equal the proportion of always-takers in the treatment group.
 
