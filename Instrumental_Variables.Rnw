@@ -89,15 +89,15 @@ stopifnot(suppressMessages(require(mosaic)),
           suppressMessages(require(RItools)),
           suppressMessages(require(AER)))
 
-OHIE <- read.dta("OHIE.dta")
+load(url("http://jakebowers.org/Matching/OHIE.rda"))
 
-OHIE$female_list[27801] <- "1: Female"
-OHIE$zip_msa[c(4716, 10878)] <- "Zip code of residence in a MSA"
-OHIE$baddays_phys_12m <- 30 - OHIE$baddays_phys_12m
+#OHIE$female_list[27801] <- "1: Female"
+#OHIE$zip_msa[c(4716, 10878)] <- "Zip code of residence in a MSA"
+#OHIE$baddays_phys_12m <- 30 - OHIE$baddays_phys_12m
 
-col_nums <- c(1:2, 5:12)
+#col_nums <- c(1:2, 5:12)
 
-OHIE[col_nums] <- sapply(OHIE[col_nums], as.integer) - 1
+#OHIE[col_nums] <- sapply(OHIE[col_nums], as.integer)
 
 @
 
