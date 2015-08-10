@@ -292,7 +292,7 @@ the_caces <- sapply(stratified_IV_fit, function(obj){ coef(obj)[2,1] })
 prop_treat <- with(OHIE_filtered, sapply(split(treatment, numhh_list), sum)/sum(treatment))
 
 #Different Weighting---proportion of treated units in each block
-overall_cace <- (2.372 * 0.65655) + (-0.658 * 0.33886) + (20.86 * 0.00459)
+overall_cace <- (2.372 * 0.65655) + (-0.658 * 0.33886) + (-20.86 * 0.00459)
 
 iv_fit <- ivreg(baddays_phys_12m ~ ohp_all_ever_admin * numhh_list | treatment * numhh_list,
              data = OHIE_filtered) #$coefficients
