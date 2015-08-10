@@ -1,0 +1,351 @@
+\documentclass{article}
+%\usepackage{natbib}
+
+\title{Non-bipartite matching}
+\author{ICPSR Causal Inference '15}
+\usepackage{icpsr-classwork}
+
+<<include=FALSE,cache=FALSE>>=
+opts_chunk$set(tidy=TRUE,echo=TRUE,results='markup',strip.white=TRUE,fig.path='figs/fig',cache=FALSE,highlight=TRUE,width.cutoff=132,size='footnotesize',out.width='1.2\\textwidth',message=FALSE,comment=NA)
+
+options(width=110,digits=3)
+@
+
+
+\begin{document}
+\maketitle
+
+\begin{enumerate}
+    \setcounter{enumi}{-1}
+
+
+  \item How does a neighborhood have an effect on behavior and attitudes? One
+    simply answer to this question is to say that people perceive their
+    surroundings and react to their perceptions \citep{wong2012jop}. Cara Wong,
+    Daniel Rubenson, and I set out to measure perceptions of environments
+    using an internet survey of Canadians during 2012 which each respondent drew a free
+    hand map of their ``local community'' and then reported their
+    understanding of the demographic breakdown of this place. Today we'll work
+    with the question about the effect of perceptions of ``visible
+    minorities'' (Canadian Census category for non-white Canadians) (the topic
+    of Wong et al's APSA 2014 paper). You can load a subset of this data
+    limited to White Canadians here.
+
+
+<<results='hide'>>=
+load(url("http://jakebowers.org/ICPSR/canadamapdat.rda"))
+summary(canadamapdat)
+@
+
+The variables are: age in years, income as a scale, sex in categories, a
+social.capital scale coded to run 0 to 1, country of ancestry in categories,
+csd.pop is population of the Census Subdivision (like a municipality), vm.csd
+is 2006 proportion visible minority in the CSD, vm.da is proportion visible
+minority in the Census Dissemination Area (a small area containing 400--700
+persons), and vm.community.norm2 is the proportion of visible minorities
+reported by respondents in their map of their local community,
+communityi\_area\_km is the area within their drawing in square km.
+
+So we have a continuous variable (vm.community.norm2) along which we want to
+compare respondents in terms of their expressed sense of belonging in their
+local area. And the main alternative explanations for the effect of local
+environments/neighborhoods on behavior and attitudes have to do with factors
+that are generated from the objective context. So, we want to compare people
+who are similar in what the Census says about their neighborhoods but people
+who differ in their perceptions.
+
+Here is our approach. You may find  \cite[Chap 11]{rosenbaum2010design} and \cite{lu2011optimal} and the
+help pages useful as you work to explain and understand what is going on here.
+
+<<>>=
+## Exclude people who did not offer a perception or an outcome
+wrkdat<-canadamapdat[!is.na(canadamapdat$vm.community.norm2) &
+		     !is.na(canadamapdat$social.capital01),]
+
+scalar.dist<-function(var,scalefactor=1){
+  ## Utility function to make n x n abs dist matrices
+  ## Scalefactor helps us turn fractions into integers since nbpMatching needs
+  ## integers
+  outer(var,var,FUN=function(x,y){
+    as.integer(abs(x-y)*scalefactor)
+  })
+}
+
+library(nbpMatching)
+
+vmdaDist<-scalar.dist(wrkdat$vm.da,scalefactor = 100000) ## the matching software wants integers
+dimnames(vmdaDist)<-list(row.names(wrkdat), row.names(wrkdat))
+
+## The nbpmatching way:
+## obj.com.dist.mat2<-distancematrix(gendistance(wrkdat[,"vm.da",drop=FALSE]))
+
+@
+
+
+<<cache=TRUE>>=
+
+nbp1match<-nonbimatch(distancematrix(vmdaDist))
+nbp1<-get.sets(nbp1match$matches,remove.unpaired=TRUE)
+wrkdat[names(nbp1),"nbp1"]<-nbp1
+
+@
+
+\item  What is the structure of the matched sets produced by nonbimatch? What
+  do you think the warning about a "ghost" message meant? How close are the
+  matches on the Census variable? How different are the respondents in the
+  worst matched set? How different are the respondents in the best matched
+  set? Here are some commands that might be useful:
+
+<<results="hide">>=
+table(wrkdat$nbp1)
+
+nbp1vmdiffs<-tapply(wrkdat$vm.da,wrkdat$nbp1,function(x){ abs(diff(x)) })
+@
+
+
+\item Now we also want to ensure that respondents within set differ in their
+  perceptions. Summarize the within-set differences in vm.community.norm2.
+  Interpret your results and the following plot:
+
+<<results='hide',eval=FALSE>>=
+source(url("http://jakebowers.org/Matching/nonbimatchingfunctions.R"))
+
+nbmplot(wrkdat,yvar="vm.da",xvar="vm.community.norm2",strata="nbp1",points=FALSE)
+
+@
+
+\item Now let us assess balance. Here is one approach. How would you explain
+  what xBalance is doing?
+
+<<results="hide">>=
+thecovs<-c("age","income.coded","education","x.years","sex",
+           "csd.pop","vm.csd","community_area_km")
+
+library(RItools)
+
+balfmla<-reformulate(thecovs,response="vm.da")
+
+xb1<-xBalance(balfmla,strata=list(unstrat=NULL,nbp1=~nbp1),
+	      report=c("adj.mean.diffs","chisquare.test","z.scores","p.values"),data=wrkdat)
+xb1$overall
+xb1$results[,,"nbp1"]
+
+@
+
+\item Imagine that we needed to improve balance, here are a couple of
+  approaches: (1) penalties (which are like calipers but less strict) and (2)
+  allowing some observations to be deleted.
+
+  For example, we might want to require matches within Province, to give
+  special attention to csd.pop (so that we are not comparing people in small
+  towns to people in large towns), and community\_area\_km (so that we are not
+  comparing people who drew big maps to people who drew small maps). And we
+  might also want to drop the 8 least well matched observations. (Choosing 8
+  here arbitrarily.)
+
+  Here is what I did. If you would prefer to make a scalar distance matrix with a
+  propensity-type score (i.e. predicted vm.da from some linear model) or use
+  the \texttt{mahalanobis} function within R to produce a scalar mahalanobis
+  score, feel free.
+
+<<results="hide">>=
+
+rescale01<-function(x){
+  (x-min(x,na.rm=TRUE))/(max(x,na.rm=TRUE)-min(x,na.rm=TRUE))
+}
+
+csdpopDist<-scalar.dist(wrkdat$csd.pop)
+dimnames(csdpopDist)<-list(row.names(wrkdat),row.names(wrkdat))
+
+## Since we have some missing values on community area, and we would like to
+## match people who are both missing, we will give it a very large value.
+
+wrkdat$commarea<-ifelse(is.na(wrkdat$community_area_km),
+			max(wrkdat$community_area_km,na.rm=TRUE)*10,
+			wrkdat$community_area_km)
+
+areaDist<-scalar.dist(log(wrkdat$commarea)) ## getting weird results with raw integers
+dimnames(areaDist)<-list(row.names(wrkdat),row.names(wrkdat))
+
+csdpopDist01<-rescale01(csdpopDist)
+areaDist01<-rescale01(areaDist)
+
+summary(as.vector(csdpopDist01))
+summary(as.vector(areaDist01))
+summary(as.vector(vmdaDist))
+
+maxvmdaDist<-max(as.vector(vmdaDist))
+
+vmdaPen1<-vmdaDist+(maxvmdaDist*csdpopDist01)+(maxvmdaDist*areaDist01)
+
+## Here you can see how the penalties change the distance matrix
+vmdaDist[1:5,1:5]
+csdpopDist01[1:5,1:5]
+areaDist01[1:5,1:5]
+
+vmdaPen1[1:5,1:5]
+
+vmdaPhPen<-make.phantoms(vmdaPen1,8,maxval = max(as.vector(vmdaPen1))*10)
+
+
+@
+
+<<cache=TRUE>>=
+
+nbp2match<-nonbimatch(distancematrix(vmdaPhPen))
+
+nbp2<-get.sets(nbp2match$matches,remove.unpaired=TRUE)
+wrkdat[names(nbp2),"nbp2"]<-nbp2
+
+
+@
+
+Please evaluate this (or your own) new matched design. Is this match better or
+worse?
+
+<<echo=FALSE,results="hide">>=
+## also consider more direct descriptions of the matched sets in addition to
+## balance tests
+
+xb2<-xBalance(balfmla,strata=list(unstrat=NULL,nbp1=~nbp1,nbp2=~nbp2),
+	      report=c("adj.mean.diffs","chisquare.test","z.scores","p.values"),data=wrkdat)
+xb2$overall[2:3,]
+xb2$results[,"p",c("nbp1","nbp2")]
+
+@
+
+<<eval=FALSE>>=
+nbmplot(wrkdat,yvar="vm.da",xvar="vm.community.norm2",strata="nbp2",points=FALSE)
+@
+
+\item Now, test the hypothesis of no relationship between perceptions
+  (vm.community.norm2) and social capital.
+
+<<eval=FALSE,echo=FALSE,results="hide">>=
+##library(coin)
+test1<-independence_test(social.capital01~vm.community.norm2|factor(nbp1),data=wrkdat[!is.na(wrkdat$nbp1),])
+
+test2<-xBalance(vm.community.norm2~social.capital01,
+		strata=list(nbp1=~nbp1),
+		data=wrkdat,
+		report=c("adj.mean.diffs","chisquare.test","z.scores","p.values"))
+
+@
+
+
+\item Now let's talk about describing the differences within pairs. One idea
+  is to ask whether the person who is higher in perceptions tends to be higher
+  (or lower) in social.capital. What do you think the following analysis
+  shows?
+
+<<>>=
+rank.pairs<-function (x, block) { ## Identify the low and high subj in each pair
+  unsplit(lapply(split(x, block), function(x) {
+    rank(x)
+  }), block)
+}
+
+
+wrkdat$scRank<-with(wrkdat,rank.pairs(social.capital01,nbp1))
+wrkdat$vmCRank<-with(wrkdat,rank.pairs(vm.community.norm2,nbp1))
+
+with(wrkdat,tapply(scRank,vmCRank,mean))
+with(wrkdat,tapply(scRank,vmCRank,length))
+
+
+@
+
+\item We have more information available than merely ranking pair
+members. If perceptions matters for social capital then we
+would expect pairs differing greatly in subjective context to
+display greater differences in social capital than pairs that
+differ a little. A linear model is a nice tool to use in summarizing
+this kind of relationship.
+
+Please interpret the following results:
+
+<<results="hide">>=
+
+align.by.block<-function (x, block, fn = mean, thenames=NULL) { ## By default, this rescales each observation to be the distance from the group mean.
+  newx<-unsplit(lapply(split(x, block), function(x) {
+    x - fn(x)
+  }), block)
+  if(!is.null(names)){ names(newx)<-thenames }
+  return(newx)
+}
+
+wrkdat$scMD<-with(wrkdat,align.by.block(social.capital01,nbp1))
+wrkdat$vmcn2MD<-with(wrkdat,align.by.block(vm.community.norm2,nbp1))
+
+wrkdat[order(wrkdat$nbp1),c("social.capital01","scMD","vm.community.norm2","vmcn2MD","nbp1")][1:10,]
+
+## notice that aligning or pair-mean-centering the data preserves the within
+## set relationships
+summary(tapply(wrkdat$scMD,wrkdat$nbp1,function(x){ abs(diff(x)) }))
+summary(tapply(wrkdat$social.capital01,wrkdat$nbp1,function(x){ abs(diff(x)) }))
+
+lm1<-lm(scMD~vmcn2MD,data=wrkdat[!is.na(wrkdat$nbp1),])
+
+library(sandwich)
+library(lmtest)
+
+source(url("http://jakebowers.org/ICPSR/confintHC.R"))
+
+theHC2ci<-confint.HC(lm1,level=.95,parm="vmcn2MD",thevcov=vcovHC(lm1,type="HC2"))
+
+c(ATE=coef(lm1)[[2]],ci=theHC2ci)
+
+@
+
+<<eval=FALSE>>=
+with(wrkdat,scatter.smooth(vmcn2MD,scMD,span=.3,cex=.7,col="gray",pch=19,lpars=list(lwd=2)))
+abline(h=0,lwd=.5)
+@
+
+
+Within matched pair, the person who perceives more visible minorities within set tends to report
+lower social capital than the person who perceives fewer visible minorities
+within set.
+
+The largest difference is about .4 (or 40 percentage points!), the model
+predicts that social capital would differ by about \Sexpr{coef(lm1)[[2]]*.4}
+for such a difference. This is about
+\Sexpr{coef(lm1)[[2]]*.4/sd(wrkdat$scMD,na.rm=TRUE)} of a standard deviation
+of the social capital scale. Or about
+\Sexpr{coef(lm1)[[2]]*.4/abs(diff(range(wrkdat$scMD,na.rm=TRUE)))} of the range.
+
+
+\item Here is another approach for taking matching into account that
+  \cite{smith:1997} advocates. It involves another model of weighting across
+  sets (although for pairs, it matters little). What is the model? What
+  additional assumptions are involved here?
+
+<<cache=TRUE,results="hide", warning=FALSE>>=
+library(lme4)
+
+wrkdat$vmCbi<-ave(wrkdat$vm.community.norm2,wrkdat$nbp1)
+lmer1<-lmer(social.capital01~vm.community.norm2+vmCbi+(1|nbp1),data=wrkdat)
+
+confint(lmer1)
+
+## Notice
+table(table(wrkdat$dauid))
+
+## So maybe:
+
+lmer2<-lmer(social.capital01~vm.community.norm2+vmCbi+(1|nbp1)+(1|dauid),data=wrkdat)
+
+confint(lmer2)
+@
+
+
+
+\end{enumerate}
+
+
+
+\bibliographystyle{apalike}
+\bibliography{refs}
+% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+
+\end{document}
