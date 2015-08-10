@@ -342,7 +342,7 @@ $\hat{\bar{\tau}}$ would vary from assignment to assignment.
 
 simATE<-function(){
   Znew<-sample(Z)
-  Y<-Znew*y1+(1-Znew)*y0
+  Y<-Znew*y1+(1-Znew)*y0 ## notice that this part means that the dist is not centered at 0
   coef(lm(Y~Znew))[["Znew"]]
 }
 

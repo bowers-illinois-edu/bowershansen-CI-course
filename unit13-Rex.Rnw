@@ -1,0 +1,243 @@
+\documentclass{article}
+%\usepackage{natbib}
+
+\title{Sensitivity Analysis I: Rosenbaum Style}
+\author{ICPSR Causal Inference '15}
+\usepackage{icpsr-classwork}
+
+<<include=FALSE,cache=FALSE>>=
+opts_chunk$set(tidy=TRUE,echo=TRUE,results='markup',strip.white=TRUE,fig.path='figs/fig',cache=FALSE,highlight=TRUE,width.cutoff=132,size='footnotesize',out.width='1.2\\textwidth',message=FALSE,comment=NA)
+
+options(width=110,digits=3)
+@
+
+
+\begin{document}
+\maketitle
+
+
+\section{Sensitivity Analysis}
+
+\begin{enumerate}
+    \setcounter{enumi}{-1}
+
+\item Paul Rosenbaum formalized and developed the idea of a sensitivity analysis.
+  He also has now provided an R Package (\texttt{sensitivitymv}). 
+
+<<>>=
+load(url("http://jakebowers.org/Matching/meddat.rda"))
+@
+
+Setup a few useful variables and formula objects
+<<>>=
+## Convert counts to rates per 1000 people (to adjust for population)
+meddat$HomRate03<-with(meddat, (HomCount2003/Pop2003)*1000)
+meddat$HomRate08<-with(meddat, (HomCount2008/Pop2008)*1000)
+balfmla<-reformulate(c(names(meddat)[c(6:7,9:24)],"HomRate03"),response="nhTrt")
+@
+
+You'll need a matched design to start. So why don't you take a few minutes to
+make one. In this handout, I'm using a version of the one that I made last
+time. You can substitute in your own match for mine.
+
+<<>>=
+library(optmatch)
+load("fm4.rda")
+meddat[names(fm4),"fm4"]<-fm4
+@
+
+
+\item What about testing the hypothesis that the change in homicide rate differed from
+  zero for all units. (This is a difference-in-differences hypothesis: we have
+  a pre-vs-post intervention difference and we are comparing this difference
+  between neighborhoods that did and did not receive the intervention.) You
+  could also have used the confidence interval approach from yesterday
+  (remember: \texttt{lm} using the aligned or centered variables and then the
+  HC2 standard error and the large-sample/Normality assumption)
+
+  Since Rosenbaum's approach involves testing and $p$-values, I thought we'd
+  start there today.
+
+<<results="hide">>=
+library(RItools)
+
+meddat$HomRate0803<-with(meddat,HomRate08-HomRate03)
+
+xbtest3<-xBalance(nhTrt~HomRate0803,
+		  strata=list(fm4=~fm4),
+		  data=meddat[matched(meddat$fm4),],
+		  report="all")
+xbtest3$overall
+xbtest3$results
+
+@
+
+\item Recall that when you interpreted the balance test, you mentioned,
+  "observed variables" or even made the caveat that we cannot distinguish our
+  given matching from a block-randomized experiment \emph{given the covariates
+    and functions thereof that we chose to use for the balance test and the
+    test statistics used in the balance test itself}. A reasonable critic
+  might wonder whether your results might change if her favorite
+  \emph{unobserved} variable were included. In the manual for his package,
+  \texttt{sensitivitymv}, Rosenbaum says, ``In an observational study, a
+  sensitivity analysis replaces qualitative claims about whether unmeasured
+  biases are present with an objective quantitative statement about the
+  magnitude of bias that would need to be present to change the conclusions.''
+
+  \smallskip
+
+  And he says, ``The sensitivity analysis asks about the magnitude, gamma, of bias in
+  treatment assignment in observational studies that would need to be present
+  to alter the conclusions of a randomization test that assumed matching for
+  observed covariates removes all bias.'' What does this mean?  In principle,
+  how does this kind of analysis respond to alternative explanations invoking
+  covariates that you have not observed?
+
+\item Please execute and interpret a sensitivity analysis using the
+  \texttt{sensitivitymv} package (\citet{rosenbaumtwo} explains the packages
+  nicely).
+  
+<<dosens, results="hide">>=
+install.packages("http://jakebowers.org/Matching/sensitivitymv_1.3.tar.gz", repos=NULL, method="libcurl")
+
+library(sensitivitymv)
+
+fullmatch2sensmat<-function(y,z,fm){
+  ## A function to reformat fullmatches for use with sensmv/mw
+  ## y is the outcome
+  ## z is binary treatment indicator (1=assigned treatment)
+  ## fm is a factor variable indicating matched set membership
+  ## We assume that y,z, and fm have no missing data.
+  dat<-data.frame(y=y,z=z,fm=fm)[order(fm,z,decreasing=TRUE),]
+  numcols<-max(table(fm))
+  resplist<-lapply(split(y,fm),
+		   function(x){
+		     return(c(x,rep(NA, max(numcols-length(x),0))))
+		   })
+
+  respmat<-t(simplify2array(resplist))
+  return(respmat)
+}
+
+respmat<-with(meddat[matched(fm4),],fullmatch2sensmat(HomRate0803,nhTrt,fm4))
+
+## This is a hack. It involves adding one control unit.
+## It appears that we have to have at least two sets of the
+## same size to make this code work.
+## Here I'm trying to set some bounds on the answers that we get with
+## different values for the difference between the treated unit and the new
+## fake control
+## respmat[4,4]<-max(respmat,na.rm=TRUE)
+## respmat[4,4]<-0
+## respmat[4,4]<-min(respmat,na.rm=TRUE)
+
+## Alternatively install a version of the package that I edited from the
+## website http://jakebowers.org/Matching
+
+## install.packages("http://jakebowers.org/Matching/sensitivitymv_1.3.tar.gz", repos=NULL, method="libcurl")
+
+senmv(-respmat,method="t",gamma=2)
+
+somegammas<-seq(1,5,.1)
+
+sensTresults<-sapply(somegammas,function(g){
+		     c(gamma=g,senmv(-respmat,method="t",gamma=g))
+		   })
+
+sensHresults<-sapply(somegammas,function(g){
+		     c(gamma=g,senmv(-respmat,gamma=g))
+		   })
+
+## plot(sensHresults["gamma",],sensHresults["pval",]);abline(h=.05)
+@
+
+What is happening here? (Hint: See help page for uniroot)
+<<>>=
+findSensG<-function(g,a){
+  senmv(-respmat,gamma=g)$pval-a
+}
+
+res1<-uniroot(f=findSensG,lower=1,upper=6,a=.05)
+res1$root
+
+@
+
+
+If we had fixed size sets (i.e. all 1:1 or all 1:2...), we can also look at an example involving
+point-estimates and confidence intervals assuming an additive effect of
+treatment. Notice that the two-sided intervals have lower bounds that are
+lower than the one-sided intervals. Notice also that that when $\Gamma$ is
+greater than 1, we have a range of point estimates consistent with that
+$\Gamma$.
+
+<<>>=
+## Here, remove the one set that is not a pair:
+meddat$pmFake<-meddat$fm4
+meddat$pmFake[meddat$fm4 %in% names(table(meddat$fm4)[table(meddat$fm4)!=2])]<-NA
+table(meddat$pmFake,exclude=c())
+@
+
+<<results='hide'>>=
+## Not run here because we don't have all sets the same size
+## install.packages("sensitivitymw")
+library(sensitivitymw)
+
+respmatPm<-with(droplevels(meddat[matched(meddat$pmFake),]),fullmatch2sensmat(HomRate0803,nhTrt,pmFake))
+
+sensCItwosidedG1<-senmwCI(-respmatPm,method="t",one.sided=FALSE)
+sensCIonesidedG1<-senmwCI(-respmatPm,method="t",one.sided=TRUE)
+
+sensCItwosidedG2<-senmwCI(-respmatPm,method="t",one.sided=FALSE,gamma=2)
+sensCIonesidedG2<-senmwCI(-respmatPm,method="t",one.sided=TRUE,gamma=2)
+
+@
+
+Or we could use the \texttt{rbounds} package:
+
+<<eval=FALSE>>=
+library(rbounds)
+
+hlsens(respmatPm[,2],respmatPm[,1])
+psens(respmatPm[,2],respmatPm[,1])
+
+@
+
+\item As an aid to interpreting sensitivity analyses,
+  \citet{rosenbaum2009amplification} propose a way decompose $\Gamma$ into two
+  pieces: one $\Delta$ gauges the relationship between an unobserved
+  confounder at the outcome (it records the maximum effect of the unobserved
+  confounder on the odds of a positive response (imagining a binary outcome))
+  and the other $\Lambda$ gauges the maximum relationship between the unobserved
+  confounder and treatment assignment.
+
+  How should we interpret the following (using the $\Gamma$ that we found
+  above)? What pairs of treatment assignment and outcome relationships are
+  equivalent to our $\Gamma$? What does this mean for our interpretation of
+  the sensitivity analysis?
+
+
+<<results='hide'>>=
+
+amplify(round(res1$root,1),lambda=seq(round(res1$root,1)+.1,10*res1$root,length=10))
+
+@
+
+\item What did you learn about your matched design? Would this analysis change
+  any policy recommendations you might have for another city? Or for Medellin
+  itself (if it considers building more Metrocable stations with associated
+  social services)?
+
+\item What questions are raised by this mode of sensitivity analysis?
+
+
+\end{enumerate}
+
+
+
+
+
+\bibliographystyle{apalike}
+\bibliography{refs}
+% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+
+\end{document}
