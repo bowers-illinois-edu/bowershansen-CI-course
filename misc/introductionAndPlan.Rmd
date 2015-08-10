@@ -41,8 +41,6 @@ Extra: Covariance adjustment for matched designs.  Maybe power and power analysi
 
 Instrumental variables including CACE
 
-Longitudinal designs
-
 # Proposed Plan for Week 2
 
 ## Day 6
@@ -55,6 +53,7 @@ Sensitivity analysis: Rosenbaum style
 Sensitivity analysis: Hosman, Hansen, Holland style
 
 ## Day 9
+Longitudinal designs
 
 Approaches to interference or Regression Discontinuity Designs.
 
