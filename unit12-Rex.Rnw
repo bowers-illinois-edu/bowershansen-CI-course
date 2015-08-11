@@ -185,8 +185,8 @@ areaDist01[1:5,1:5]
 
 vmdaPen1[1:5,1:5]
 
+## now decide how many to drop
 vmdaPhPen<-make.phantoms(vmdaPen1,8,maxval = max(as.vector(vmdaPen1))*10)
-
 
 @
 
@@ -222,7 +222,7 @@ nbmplot(wrkdat,yvar="vm.da",xvar="vm.community.norm2",strata="nbp2",points=FALSE
   (vm.community.norm2) and social capital.
 
 <<eval=FALSE,echo=FALSE,results="hide">>=
-##library(coin)
+library(coin)
 test1<-independence_test(social.capital01~vm.community.norm2|factor(nbp1),data=wrkdat[!is.na(wrkdat$nbp1),])
 
 test2<-xBalance(vm.community.norm2~social.capital01,
