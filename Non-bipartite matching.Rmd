@@ -1,0 +1,28 @@
+---
+output: pdf_document
+---
+---
+title: "Non-bipartite matching"
+author: "Chuyu Liu"
+date: \today
+output: pdf_document
+---
+Dear Dr.Bowers, 
+
+My name is Chuyu Liu, and I am a student in your CI course. 
+
+The class on "Non-bipartite matching" is amazing. I really like the class. 
+
+I was wondering whether we could spend a little bit more time talking about the basic principle of "Non-bipartite matching" and how to do it in R. 
+
+I guess most of students may not be that fimilar with the R package "nbpMatching". More importantly, it is indeed challenging for many of us to fully understand the relevant literature such as Lu et al. (2011). So, a brief lecture on the basic intuition underlying "Non-bipartite matching" would be very appreciated. 
+
+Many thanks!
+
+Bests,
+
+Chuyu Liu
+
+
+
+
