@@ -1,0 +1,409 @@
+\documentclass{article}
+%\usepackage{natbib}
+
+\title{Sensitivity Analysis II: Hosman, Hansen, and Holland Style}
+\author{ICPSR Causal Inference '15}
+\usepackage{icpsr-classwork}
+
+<<include=FALSE,cache=FALSE>>=
+opts_chunk$set(tidy=TRUE,echo=TRUE,results='markup',strip.white=TRUE,fig.path='figs/fig',cache=FALSE,highlight=TRUE,width.cutoff=132,size='footnotesize',out.width='1.2\\textwidth',message=FALSE,comment=NA)
+
+options(width=110,digits=3)
+@
+
+\newcommand{\teeW}{\ensuremath{t_{W}}}
+\newcommand{\pcor}{\ensuremath{\rho_{y \cdot w|z\mathbf{x}}}}
+
+\begin{document}
+\maketitle
+
+
+\begin{enumerate}
+    \setcounter{enumi}{-1}
+
+    
+  \item We have now worked to create matched designs for the Metrocable
+    intervention in Columbia. Last time we engaged with a variety of questions
+    that emerge from applied work: ill-behaved propensity scores, too many
+    matched set indicators for computationally-efficient estimation of
+    stratum weighted treatment effects, questions about the appropriateness of
+    different proposals for randomization-based/design-based standard errors,
+    and precision enhancement using background information after matching
+    (also known as ``covariance adjustment'').
+
+    Today we engage with the question that arises after matching and
+    assessment of claims about causal effects have been done: i.e. after
+    matching and testing hypotheses about treatment effects conditional on a
+    balanced matched design.
+
+
+<<>>=
+load(url("http://jakebowers.org/Matching/meddat.rda"))
+@
+
+Setup a few useful variables and formula objects
+<<>>=
+library(optmatch)
+library(RItools)
+
+## Convert counts to rates per 1000 people (to adjust for population)
+meddat$HomRate03<-with(meddat, (HomCount2003/Pop2003)*1000)
+meddat$HomRate08<-with(meddat, (HomCount2008/Pop2008)*1000)
+meddat$HomRate0803<-with(meddat,HomRate08-HomRate03)
+balfmla<-reformulate(c(names(meddat)[c(6:7,9:24)],"HomRate03"),response="nhTrt")
+@
+
+
+Here is a matched design that uses a variety of distance matrices. Notice that
+I am complicating this a bit so that we can assess balance on more parts of
+the distributions of continuous variables. You can use your own if you'd like.
+
+<<>>=
+
+whichcont<-sapply(meddat[,all.vars(balfmla)],function(x){ length(unique(x))})
+whichfactor<-sapply(meddat[,all.vars(balfmla)],function(x){ is.factor(x)})
+sort(whichcont)
+thecontvars<-names(whichcont)[whichcont>2 & !whichfactor]
+
+library(splines)
+## I am going to do something that is quick and dirty to split up these
+## continuous variables into 3 pieces each. The function is ns()
+tmp<-paste("ns(",thecontvars,",df=4)",sep="") ##,collapse="+")
+balfmlaBig<-reformulate(tmp,response="nhTrt")
+
+@
+
+<<results='hide'>>=
+# Ingredients: Distance Matrices
+
+## Scalar distance on baseline outcome
+tmp <- meddat$HomRate03
+names(tmp) <- rownames(meddat)
+hrd <- match_on(tmp, z = meddat$nhTrt)
+
+## Propensity score using "bias-reduced" logistic regression (i.e. another
+## form of penalized logistic regression.
+## install.packages("brglm",dependencies=TRUE)
+library(brglm)
+brglm1<-brglm(balfmlaBig,data=meddat,family=binomial,control.brglm=brglm.control(br.maxit=500))
+
+library(arm)
+bayesglm1<-bayesglm(balfmlaBig,data=meddat,family=binomial)
+
+cbind(coef(bayesglm1),coef(brglm1)) ## even brglm has trouble when p>>n
+
+pScore<-predict(bayesglm1)
+pooledSDPS<-sqrt( ( var(pScore[meddat$nhTrt==1])+var(pScore[meddat$nhTrt==0]))/2)
+
+psd<-match_on(pScore,z=meddat$nhTrt)/pooledSDPS
+
+## Mahalanobis distance
+mhd<-match_on(balfmlaBig,data=meddat,method="rank_mahalanobis")
+
+quantile(as.vector(mhd),seq(0,1,.1))
+quantile(as.vector(psd),seq(0,1,.1))
+quantile(as.vector(hrd),seq(0,1,.1))
+
+## blah<-match_on(nhTrt~pScore,data=meddat) ## basically psd
+## quantile(as.vector(blah),seq(0,1,.1))
+
+bestfm<-fullmatch(mhd+caliper(hrd,1),data=meddat)
+summary(bestfm,min.controls=0,max.controls=Inf)
+
+meddat$bestfm<-NULL
+meddat$bestfm<-bestfm
+
+xb<-xBalance(balfmlaBig,
+	     strata=list(bestfm=~bestfm),
+	     data=meddat,
+	     report="all")
+xb$overall
+
+## plot(xb)
+## xb$results
+@
+
+\item Last time we discovered that if we used the difference in homicide rates
+  between 2008 and 2003 as our outcome (and a matched design with exactly 1
+  treated neighborhood per set) our design was sensitive to $\Gamma>3$ using
+  Rosenbaum's sensitivity analysis. What does this mean?
+
+\item Now let's think about the method \citet{hosman2010} propose for
+  sensitivity analysis. Their approach uses two parameters: $\teeW$ and
+  $\pcor$: $\teeW$ is the relationship between treatment assignment and the
+  imagined covariate in question (it is like Rosenbaum's $\Gamma$ but on the
+  $t$-scale); $\pcor$ is  the extent to which this covariate is prognostic or
+  predictive of outcomes. It relates the unobserved covariate to outcomes.
+  Why have two sensitivity analysis parameters?
+
+\item Let's try the HHH method. We would like to calculate  $\teeW$ and $\pcor$ for
+  each variable used in the matching (and/or maybe some others). In the
+  article, they distinguish between numeric variables (where we can just
+  grab the $t$-statistic from a linear model) and multicategory/factor
+  variables (for which a simple $t$-statistic from a linear model is not
+  available and is approximated by an $F$-statistic).
+
+<<defspecpar,eval=TRUE,echo=TRUE>>=
+source(url("http://jakebowers.org/ICPSR/hhhsensfns.R"))
+@
+
+
+<<usespecpars,cache=TRUE>>=
+
+myfmmaker<-function(newdat,newcovs,keepcov,treatment){
+  ## newdat is a new data frame
+  ## newcovs is a vector of covariate names
+  ## treatment is the name of the treatment variable
+  ## keepcov is a vector that we never drop from the absolute scalar distance but can drop in other distance matrices
+
+  balfmla<-reformulate(newcovs,response=treatment)
+
+  ## Scalar distance on baseline outcome
+  tmp <- keepcov
+  names(tmp) <- rownames(newdat)
+  absdist <- match_on(tmp, z = newdat[,treatment])
+
+  ## Mh Distance
+  mhd<-match_on(balfmla,data=meddat)
+
+  ## PS Distance
+  ## bayesglm1<-bayesglm(balfmla,data=newdat,family=binomial)
+  ## ps<-predict(bayesglm1)
+  ## names(ps)<-row.names(newdat)
+  ## psd<-match_on(ps,z=newdat[,treatment])
+
+  thefm<-fullmatch(mhd+caliper(absdist,1),
+		 data=meddat)
+  return(thefm)
+}
+
+
+## first turn all logical variables into numeric variables
+## because of funny problems with the formula handling
+medadjdat<-meddat[,all.vars(balfmla)[-c(1,20)]]
+adjcovs<-c(names(medadjdat),"nhClass") ## adding Class to show how to deal with categorical variables
+
+
+## Try it for one continuous covariate
+specpars.ps(dat=meddat,covs=adjcovs,dropcov="nhPopD",
+	    type=1, outcome="HomRate0803", treatment="nhTrt",
+	    fmmaker=myfmmaker,keepcov=meddat$HomRate03)
+
+
+## Try it for a categorical covariate
+specpars.ps(dat=meddat,covs=adjcovs,dropcov="nhClass",
+	    type=2, outcome="HomRate0803", treatment="nhTrt",
+	    fmmaker=myfmmaker,keepcov=meddat$HomRate03)
+
+
+## Do it for all of the covariates that we worry about.
+specps.res<-sapply(adjcovs,function(thecov){
+		   message(thecov) ## just to see what it is doing
+		   specpars.ps(dat=meddat,covs=adjcovs,dropcov=thecov,
+			       type=is.factor(meddat[,thecov])+1,
+			       outcome="HomRate0803", treatment="nhTrt",
+			       fmmaker=myfmmaker,keepcov=meddat$HomRate03)
+	    })
+
+rownames(specps.res) = c("r.par", "t.w", "b", "se.b", "df", "add.b", "add.se.b")
+
+@
+
+<<echo=FALSE>>=
+tmp<-round(specps.res[,"nhPopD"],4)
+@
+
+
+
+  So, let us consider the results for population density. The elements of the
+  table are: $\pcor$, $\teeW$, the treatment effect (i.e. coef on nhTrt) when
+  this variable is \emph{not} included in the propensity model/matching; the
+  finite-sample (HC2approx) standard error on this coef; the df for that
+  regression (mainly relevant for factor variables); and the coef for nhTrt
+  when this term is included in the matching/fixed-effects and corresponding
+  standard error.
+
+  The most important pieces are the two sensitivity parameters. We can see that
+  we decrease "unexplained" variation in 2008 Homicide Rate by about
+  \Sexpr{tmp["r.par"]} when we include this term versus when we do not include
+  this term. And we see that this term is strongly  related to the
+  neighborhood received the Metrocable intervention ($t$-statistic of about
+  \Sexpr{tmp["t.w"]}).
+
+  So, does this suggest that this design is very sensitive to unobserved
+  variables like population density? Why or why not?
+
+
+\item We can see the range of both sensitivity parameters in this plot.
+
+<<eval=TRUE,tidy=FALSE,out.width=".5\\textwidth">>=
+plot(specps.res["r.par",],abs(specps.res["t.w",]))
+## this next command allows you to click on points to get a label
+## I think a double click or an escape stops the identification process
+identify(specps.res["r.par",],abs(specps.res["t.w",]),
+	 labels=colnames(specps.res),cex=.6)
+@
+
+What does this plot suggest about the potential influence of unobserved
+covariates which are like the ones that we have used in this dataset?
+
+\item Ok. Now, to continue with the \cite{hosman2010} development. They
+  propose to report sensitivity intervals. Interpret the output. Notice, that
+  this is slightly different from \citet{hosman2010}: I don't have covariates
+  which I excluded wholesale from the analysis to play the role of unobserved
+  confounders. Rather, I use the variables that we had included.  So, we might
+  read the that table as telling us about the sensitivity of our treatment effect
+  estimation to excluded variables with characteristics like those of the
+  included variables.
+
+  For comparison, here is the large sample CI for the ATE conditional on the
+  matching. I present two methods here (the in-progress \texttt{mlm} method
+  and the HC2 method):
+
+<<results="hide">>=
+source("mlm.R") ## matched set linear model code
+source(url("http://jakebowers.org/ICPSR/confintHC.R"))
+library(sandwich)
+library(lmtest)
+
+mlm1<-mlm(HomRate0803~nhTrt+bestfm,data=meddat,ms.weights=harmonic)
+lm1<-lm(HomRate0803~nhTrt+bestfm,data=meddat)
+
+theHC2ci<-confint.HC(lm1,level=.95,parm="nhTrt",thevcov=vcovHC(lm1,type="HC2"))
+theAIci<-confint.HC(mlm1,level=.95,parm="x1",thevcov=vcov(mlm1))
+@
+
+<<>>=
+adf<-mean(specps.res["df",])
+t95<-qt(.975,df=adf) ## Skipping their bootstrapping step.
+
+sensintervals<-sapply(colnames(specps.res),function(nm){
+		      c(abs(specps.res["t.w",nm]),specps.res["r.par",nm],
+			make.ci(meddat,specps.res,nm,t95,specps.res["r.par",nm]))
+	 })
+
+colnames(sensintervals)<-colnames(specps.res)
+rownames(sensintervals)<-c("t.w","r.par","l.bound","u.bound")
+
+## make the table long rather than wide
+theintervals<-t(round(sensintervals,4))
+
+theintervals[order(theintervals[,"t.w"],theintervals[,"r.par"],decreasing=TRUE),]##[1:10,]
+@
+
+
+  Here is code for a graphical version of that table:
+
+<<plotcis,fig.width=8,fig.height=8,out.width='.5\\textwidth',fig.keep='last',eval=FALSE>>=
+par(mfrow=c(1,1),mar=c(3,6,0,0),mgp=c(1.5,.5,0),oma=c(0,2,0,0))
+plot(range(theintervals[,3:4]),c(1,nrow(theintervals)),type="n",axes=FALSE,
+     ylab="",
+     xlab="estimated ATE 95% CI")
+segments(theintervals[order(theintervals[,"t.w"]),'l.bound'],1:nrow(theintervals),
+	 theintervals[order(theintervals[,"t.w"]),'u.bound'],1:nrow(theintervals))
+axis(1)
+segments(theHC2ci[1,1],nrow(theintervals)/3,
+	 theHC2ci[1,2],nrow(theintervals)/3,
+ lwd=3)
+text(theHC2ci[1,1]-.2,nrow(theintervals)/3,"Est CI")
+axis(2,at=1:nrow(theintervals),labels=row.names(theintervals),las=2)
+mtext(side=2, "Confound Type",outer=TRUE)
+abline(v=0)
+@
+
+
+\item Finally, here is a general but very slow version of Rosenbaum's
+  sensitivity analysis. Here, I am using the harmonic weighted mean difference
+  as a test statistic for tests of the sharp null of no effect.
+
+<<eval=TRUE,cache=TRUE>>=
+source(url("http://jakebowers.org/ICPSR/bruteSens.R"))
+
+tmpdat<-na.omit(meddat[,c("nhTrt","HomRate0803","bestfm")])
+
+origProb<-unsplit(tapply(tmpdat$nhTrt,tmpdat$bestfm,mean),tmpdat$bestfm)
+
+library(sampling)
+
+obscoef<-coef(lm(HomRate0803~nhTrt+bestfm,data=tmpdat))[["nhTrt"]]
+
+set.seed(12345)
+G1rands<-replicate(5000,biasedsampleStrat(tmpdat$bestfm,origProb))
+G1randdist<-apply(G1rands,2,function(newz){
+		  coef(lm(HomRate0803~newz+bestfm,data=tmpdat))[["newz"]]
+	    })
+mean(G1randdist<=obscoef)
+
+set.seed(12345)
+G2p<-probTC(p=origProb,z=tmpdat$nhTrt,G=2,s=tmpdat$bestfm)
+G2rands<-replicate(5000,biasedsampleStrat(tmpdat$bestfm,G2p))
+G2randdist<-apply(G2rands,2,function(newz){
+		  coef(lm(HomRate0803~newz+bestfm,data=tmpdat))[["newz"]]
+	    })
+mean(G2randdist<=obscoef)
+
+set.seed(12345)
+G3p<-probTC(p=origProb,z=tmpdat$nhTrt,G=3,s=tmpdat$bestfm)
+G3rands<-replicate(5000,biasedsampleStrat(tmpdat$bestfm,G3p))
+G3randdist<-apply(G3rands,2,function(newz){
+		  coef(lm(HomRate0803~newz+bestfm,data=tmpdat))[["newz"]]
+	    })
+mean(G3randdist<=obscoef)
+
+set.seed(12345)
+G5p<-probTC(p=origProb,z=tmpdat$nhTrt,G=5,s=tmpdat$bestfm)
+G5rands<-replicate(5000,biasedsampleStrat(tmpdat$bestfm,G5p))
+G5randdist<-apply(G5rands,2,function(newz){
+		  coef(lm(HomRate0803~newz+bestfm,data=tmpdat))[["newz"]]
+	    })
+mean(G5randdist<=obscoef)
+
+@
+
+Here is a figure showing how the randomization distributions change as the
+odds of treatment assignment for the treated change:
+
+<<out.width=".5\\textwidth">>=
+boxplot(list(G1randdist,G2randdist,G3randdist,G5randdist))
+abline(h=obscoef)
+@
+
+And here are the results for a range of $\Gamma$ --- using the parallel
+package to speed up computation.
+
+<<GammaRange, cache=TRUE>>=
+
+library(parallel)
+options(mc.cores=4)
+
+theGs<-c(1,2,3,4,5,10)
+
+sensresults<-mclapply(theGs,function(theG){
+##sensresults<-sapply(theGs,function(theG){
+		    message("odds are:",theG,appendLF=FALSE)
+		    set.seed(12345)
+		    Gtop<-probTC(p=origProb,z=tmpdat$nhTrt,G=theG,s=tmpdat$bestfm)
+		    Grands<-replicate(5000,biasedsampleStrat(tmpdat$bestfm,Gtop))
+		    Granddist<-apply(Grands,2,function(newz){
+				     coef(lm(HomRate0803~newz+bestfm,data=tmpdat))[["newz"]]
+			})
+		    cbind(theG,mean(Granddist<=obscoef))
+	    })
+
+sensresults
+
+@
+
+
+
+\end{enumerate}
+
+
+
+
+
+\bibliographystyle{apalike}
+\bibliography{refs}
+% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+
+\end{document}
