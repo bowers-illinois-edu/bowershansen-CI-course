@@ -33,7 +33,7 @@ Setup a few useful variables and formula objects
 ## Convert counts to rates per 1000 people (to adjust for population)
 meddat$HomRate03<-with(meddat, (HomCount2003/Pop2003)*1000)
 meddat$HomRate08<-with(meddat, (HomCount2008/Pop2008)*1000)
-balfmla<-reformulate(c(names(meddat)[c(6:7,9:24)],"HomRate03"),response="nhTrt")
+meddat$HomRate0803<-with(meddat,HomRate08-HomRate03)
 @
 
 You'll need a matched design to start. So why don't you take a few minutes to
