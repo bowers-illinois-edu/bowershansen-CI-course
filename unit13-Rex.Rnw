@@ -98,7 +98,8 @@ xbtest3$results
   nicely).
   
 <<dosens, results="hide">>=
-install.packages("http://jakebowers.org/Matching/sensitivitymv_1.3.tar.gz", repos=NULL, method="libcurl")
+install.packages("http://jakebowers.org/Matching/sensitivitymv_1.3.tar.gz",
+		 type="source",repos=NULL, method="libcurl") ## or method="curl" if needed
 
 library(sensitivitymv)
 
@@ -136,6 +137,7 @@ respmat<-with(meddat[matched(fm4),],fullmatch2sensmat(HomRate0803,nhTrt,fm4))
 
 ## install.packages("http://jakebowers.org/Matching/sensitivitymv_1.3.tar.gz", repos=NULL, method="libcurl")
 
+senmv(-respmat,method="t",gamma=1)
 senmv(-respmat,method="t",gamma=2)
 
 somegammas<-seq(1,5,.1)
