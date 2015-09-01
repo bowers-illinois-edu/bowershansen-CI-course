@@ -1,0 +1,825 @@
+% Rscript -e "library(knitr); knit('day1.Rnw')"; latexmk -pdf day1.tex
+% search and replace keep.comment=FALSE to TRUE for commented version
+
+\documentclass[10pt,letterpaper]{article}
+
+\title{Class 1---Matching With Longitudinal Data}
+\author{Jake Bowers}
+
+\usepackage{icpsrclasswork}
+%\pagestyle{myfancy}
+
+\includeversion{comment}
+\markversion{comment}
+%\excludeversion{comment}
+
+\begin{document}
+
+<<knitropts,include=FALSE,cache=FALSE>>=
+require(knitr)
+opts_chunk$set(tidy=TRUE,echo=TRUE,results='markup',strip.white=all,fig.path='figs/fig',cache=FALSE,highlight=TRUE,width.cutoff=110,size='footnotesize',out.width='1.2\\textwidth',message=FALSE,comment=NA)
+@
+
+\VerbatimFootnotes
+\maketitle
+
+<<initialize,echo=FALSE,results='hide'>>=
+##First, just setup the \R environment for today:
+options(SweaveHooks=list(
+			 fig=function(){
+			   par(mar=c(3.5, 3, 1.1, 0),
+			       pty="s",lwd=2,
+			       mgp=c(1.5,0.5,0),
+			       oma=c(0,0,0,0))},#,
+			 echo=function(){options(continue=" ") ##Don't show "+" prompts,
+			 options(prompt=" ")}
+			 ),
+	digits=3,
+	scipen=8,
+	width=132,
+	show.signif.stars=FALSE
+	)
+
+options(error=function(){options(prompt="> ",continue="+ ");NULL})
+@ 
+
+\begin{comment}
+  Today we engage quickly and dirtily with longitudinal data. The key
+  idea here is the same as it would be in the cross-sectional context:
+  find suitable comparisons. By suitable, we mean, units (or
+  unit-times) which are similar in terms of covariates (where, recall,
+  that a covariate is an attribute of a unit which is not changed by
+  treatment and which cannot be so changed).
+
+  With longitudinal data (often known as TSCS data when we have more
+  time-periods than cross-sectional units and ``panel data'' when we
+  have more cross-sectional units than time-periods) we may still want
+  to match cross-sectional units to each other --- but we might only
+  want to match ``pieces of units'' or the parts of units when those
+  units were comparable. We are also allowed to use units which are
+  ``treated'' at some point as ``controls'' in the past (where
+  ``treated'' and ``control'' are in quotes because these are
+  observational studies where we have no control over treatment
+  ourselves). The chapter in Rosenbaum sketches out a few different
+  approaches. I pursue the approach that I think is simplest here. You
+  should feel free to use other approaches --- the key is just to not
+  match on units/data-rows which are post-treatment.
+
+  If we had more time I would have wanted to play around with the
+  ideas of classifying cross-sectional units in terms of the shape of
+  their outcome trajectories (and or use mh distance on pre-treatment
+  covariates to do a version of this classification as described in
+  the Nielsen and Sheffield working paper)
+\end{comment}
+
+\begin{enumerate}
+    \setcounter{enumi}{-1} 
+
+  \item Get ready to work:
+
+    Today we'll be using data from the Youth-Parent Political Socialization
+    Study, which M. Kent Jennings and collaborators over the years (Richard
+    Niemi, Greg Markus, and Laura Stoker) started with a representative
+    national random sample of people in the high school class of 1965. Since
+    then, those people (about 1700 of them in 1965) were tracked down and
+    interviewed in 1973, 1982 and 1997. About 900 of them provided data during
+    all four waves of the survey. I used these data in my dissertation and
+    spend a lot of time figuring out when and what kind of political
+    activities people were involved in.
+
+    Our question today is about the effect of child-bearing on political
+    activity. And I took a random sample of 100 people for us to use today. 
+
+<<loadlibraries>>=
+library(optmatch) ## using 0.8-4
+tmp<-help(package="optmatch")
+tmp[["info"]][[1]][2]
+library(RItools)
+@ 
+
+\begin{comment}
+<<setupdata,eval=FALSE>>=
+## load(url("http://jakebowers.org/PS590/ylong.rda"))
+load("/Users/jwbowers/Documents/PROJECTS/ProfSite/ICPSR/ylong.rda")
+row.names(ylong)<-paste(ylong$id65,ylong$year,sep=".")
+
+## I am  a bit confused about person 1489:
+## ylong[ylong$id65==1489,c("k1born","kidbornN","kage1","kage2","kage3","kage4","kage5","kage6","kage7")]
+## Here is a fix
+ylong[ylong$id65==1489,"kage1"]<-ylong[ylong$id65==1489,"kage3"]
+ylong[ylong$id65==1489,"kage2"]<-ylong[ylong$id65==1489,"kage4"]
+ylong[ylong$id65==1489,"kage3"]<-ylong[ylong$id65==1489,"kage6"]
+
+
+ylong$kidborn<-apply(ylong[,paste("kage",1:7,sep="")],1,FUN=function(x){any(x==0)})
+ylong$kidborn[is.na(ylong$kidborn)]<-FALSE
+ylong$kidbornN<-as.numeric(ylong$kidborn)
+
+ylong$k1born<-ifelse(ylong$kage1==0,1,0)
+ylong$k1born[is.na(ylong$k1born)]<-0
+
+## An error here for just three observations where the first kid was recorded as born in both 1981 and 1982.
+## This is a very clunky way to handle the problem, but is fast and useful for this classwork
+numkid1s<-sapply(split(ylong$k1born,ylong$id65),sum)
+names(numkid1s[numkid1s==2])
+ylong[ylong$id65 %in% as.numeric(names(numkid1s[numkid1s==2])),c("k1born","kage1","kidbornN","kage2")]
+ylong$k1born[ylong$id65 %in% as.numeric(names(numkid1s[numkid1s==2]))   & ylong$year==81]<-0
+ylong$kage1[ylong$id65 %in% as.numeric(names(numkid1s[numkid1s==2]))    & ylong$year==81]<-NA
+ylong$kidbornN[ylong$id65 %in% as.numeric(names(numkid1s[numkid1s==2])) & ylong$year==81]<-0
+
+ylong$allacts<-rowSums(ylong[,c("rlx01","btx01","otx01","myx01","cmx01","cnx01","ltx01","dmx01")],na.rm=TRUE)
+
+##ylong[ylong$id65==3,c("id65","year",paste("kage",1:7,sep=""),"kidbornN","allacts")]
+
+ylong$female<-1-(ylong$sex-1) ##sex=2 if male and 1 if female
+
+ylong$cumallacts<-unsplit(sapply(split(ylong[,c("allacts"),drop=FALSE],ylong$id65),function(x){cumsum(x)}),ylong$id65)
+
+##Now we want just the acts done in the five years after a kid was born.
+
+##five year windows with taper (because we want to look at post-kid participation versus pre-kid participation).
+
+## We might want a more flexible approach to which outcomes in the future ought to count too: perhaps using "control" observations to find windows of outcomes which are balanced in some senses.
+
+fiveyrwindows<-mapply(function(start,end){ seq(start,end) }, 
+		      c(seq(1,33-5),29:33),c(seq(5,32),rep(33,5)))
+
+ylong$futureacts<-unsplit(lapply(split(ylong[,c("allacts"),drop=FALSE],ylong$id65),
+				 function(x){
+				   sapply(fiveyrwindows,function(win,x){
+					  sum(x[win,])
+			       },x=x)
+				 }),
+			  ylong$id65
+			  )
+
+## So we want to know the year in which the child was born (for those people who ever had children, havekids==1), and allow?missing? for people who never had children. (the variable is called kid1)
+
+## Now just take 100 of these people:
+set.seed(20130805)
+sampids<-sort(sample(unique(ylong$id65),100))
+samp<-ylong$id65 %in% sampids
+## some weird error with factors
+notfactors<-names(ylong)[sapply(ylong,function(x){ !is.factor(x) })]
+ps4wl<-droplevels(ylong[samp,notfactors])
+save(ps4wl, file="/Users/jwbowers/Documents/PROJECTS/ProfSite/ICPSR/ps4wl.rda")
+@   
+
+\end{comment}
+
+
+ Load the data
+
+
+<<getlocaldata,eval=TRUE,echo=FALSE,results='hide'>>=
+load("/Users/jwbowers/Documents/PROJECTS/ProfSite/ICPSR/ps4wl.rda")
+@
+
+<<getdata,eval=FALSE>>=
+load(url("http://jakebowers.org/ICPSR/ps4wl.rda"))
+@
+
+  An abbreviated codebook:
+  \begin{itemize}
+    \item id65 is person id
+
+    \item year is year
+
+    \item allacts is the count out of 8 possible types of non-voting acts that a person reported in a year [letter writing, demonstration attending, money giving, community work, sign/button showing, etc..]
+
+    \item female is female=1, male=0
+
+    \item maxdeg and maxdegP represent the maximum formal education they achieved by a certain year [0=HS; 1=AA; 2=BA; 3,4,5,6=post-BA]
+
+    \item pmdeg65 is the max formal education of their parents as of 1965
+
+%    \item lifemaxdegF is the maximum formal education they achieved between 1965 and 1997
+
+    \item kage1 and kage2: age of their first and second children at a given year
+
+    \item k1year and k2year: years before and after births of their first and second kids
+
+    \item kidbornN: indicates whether a kid was born in a given year
+  \end{itemize}
+
+<<inspectdata>>=
+length(unique(ps4wl$id65)) ##number of people
+length(unique(ps4wl$year)) ##number of years
+
+table(ps4wl$kidborn)
+
+## table(ps4wl$kidbornN,ps4wl$k1year==0|ps4wl$k2year==0)
+
+sum(ps4wl$k1born)
+@ 
+
+These tables show that (1) the 100 people had about 194 kids born
+during 1965 to 1997 and (2) that about 85 of those were first born children
+(i.e. children marking the moment of transition to parenthood)
+
+This is a longitudinal or long-form dataset in which the row is the
+person-year: (run the following to get a sense for what this means)
+
+<<seeoneperson>>=
+
+## Here is person 8: 
+
+subset(ps4wl,subset=id65==8, select=c("id65","year","female","allacts","cumallacts",
+	 "futureacts","kidbornN","kage1","kage2","maxdegP" ))
+
+@
+
+So, person 3 got involved in politics in 1972, 1973, 1975, 1977, 1980, 1982. He
+had two kids: one born in 1971 and the other in 1975. He had a high-school
+degree in 1965 and no  other education.\footnote{Degree is linearly
+interpolated between the survey panels of 1965, 1973, 1982, and 1997.}
+
+Now the question is about the effect of having a child on subsequant political
+participation. We should make this more precise for now: since it is possible
+(and probable) that decisions to have second and third children depend on the
+effects of the first child, we should focus on the effects of having the first
+child (at least for now, and for simplicity). 
+
+For now, also, suppose that we are interested in the short term
+effects of having a child. So, for example, we might focus on the
+political participation during the first 5 years after the first child
+is born.
+
+\item If you could randomly assign the treatment here (where ``treatment'' is
+  ``birth of a first child''), how would you go about doing it? 
+
+\begin{comment}
+
+This depends a bit on what the theoretical concern is that is
+motivating the study and substantive knowledge. 
+
+In this case, since we know that political participation varies
+with age, and with other aspects of people (like education), I
+suspect that one would want to randomize both to people and to
+ages. So, one might imagine a blocked randomized experiment in
+which people of different ages were grouped together and then
+assigned to have children.
+
+Or more reasonably, one might imagine encouraging people to delay
+having children and measuring the effects of this delay and using
+the randomized encouragement as an instrument.
+
+\end{comment}
+
+
+\item What is the ``control group'' or ``control observations'' in
+such a randomized design?
+
+\begin{comment}
+
+In the blocked study, it is people of the same ages who did not
+have children at that age.
+
+In our study, it will be people who did not yet have children at
+the time when the people with children had them. These people are
+eligible for the control group, but not all of them, nor all of
+their observations will be useful. We'll want only control
+person-years which satisfy certain characteristics: which are
+similar to treated person-years in baseline outcomes and
+covariates and not later than treated person-years.
+
+\end{comment}
+
+\item So, of course we cannot randomize this intervention. But, at least we
+  can try to compare like with like. A few different comparisons suggest
+  themselves: (1) a within-unit design in which we compare political
+  participation before versus after having a child within the life of a
+  person; (2) a between-unit or across-unit design in which we compare
+  political participation in the years after having a child for a person who
+  has a child with participation for a ``comparable'' person (a person
+  comparable in terms of their covariates up until the point where a child is
+  born); (3) a combination of these two comparisons.  Why would we want a
+  combination? Why not just the within-unit comparison? Wouldn't the potential
+  outcome to control and treatment for a given person be best represented by
+  the within-person comparison?
+
+\begin{comment}
+
+Within person is good because it holds constant those aspects of a
+person which might lead them to choose to have children which
+might also lead them to make certain choices about activity in
+politics.
+
+But within person is bad because people age --- before child
+versus after-child differences in political participation are
+confounded with the effects of age on political participation
+(which itself might involve the effects of kids).
+
+So, we might want to use both before-vs-after within person $i$ as
+compared to before-vs-after for a person who did not have a child
+but who is a good candidate for how the before-vs-after would have
+evolved for person $i$ in the absence of having a child. That is,
+a difference-in-differences approach combines the two comparisons
+fruitfully.
+
+\end{comment}  
+
+\item Because of the problems of the within-person design, and because we have
+  ample data, we want to match people to each other, and especially to match
+  people to others who are similar up until the point in their lives when the
+  first child is born.  Here, I propose to do this with bipartite matching
+  (since the treatment of having a first kid occurs only once and it is
+  binary). 
+
+
+So, as is always the case with longitudinal data, we have some data
+manipulation to do.
+
+
+Make a new dataset: only years in which first children are born and
+years before this child was born OR all years people who never had
+children. Once a person has had their first child, they are no
+longer eligible for use as a control.
+
+<<makewrkdf,tidy=FALSE>>=
+
+wrk.df<-subset(ps4wl, 
+	       subset= (ps4wl$k1born==1) | 
+	       ( ps4wl$k1born==0 & ( ps4wl$k1year<0 | is.na(ps4wl$k1year))),
+	       select=
+	       c("id65","year","maxdegP","pmdeg65","female","allacts","cumallacts",
+		 "futureacts","k1year","kage1",
+		 "statehs","havekids","hsact65","civics65","churP","pintP","ybyear","k1born","kid1"))
+
+@ 
+
+Inspect this dataset, does it look like we could match rows where no
+children are born (but only for years before first children are born
+or from people who never have children) to rows where children are
+born?
+
+\begin{comment}
+
+  This looks good.
+
+<<checkwrkdf>>=
+
+wrk.df[wrk.df$id65==3, c("id65","year","k1born","kage1","havekids")]
+
+table(wrk.df$kage1,wrk.df$k1born)
+
+table(wrk.df$havekids,wrk.df$k1born)
+@   
+
+
+\end{comment}  
+
+\item Now, there are a number of things we need to do to make the
+  matches meaningful (that is, we probably don't want to allow all
+  ``treated'' rows to match to all ``control'' rows). What kinds of
+  matches would you want to avoid but which distance matrices created
+  here would not necessarily or automatically penalize?
+
+  \begin{comment}
+
+    Probably avoid matching with self if we want to think of the
+    matching as finding a control before-vs-after comparison.
+
+    Probably avoid matching with folks too different in age (perhaps
+    folks older would be worse than younger?)
+
+    A good point from Wisconsin: Avoid matching treated folks to
+    controls who have a child within the part of the data which are
+    outcomes. This might either make us look only at the one year
+    post-child participation (since people who will have a child soon
+    but just haven't done so yet might be great controls) or exclude
+    from matching those post-child years from other people.
+
+  \end{comment}
+
+\item Also, there is a question about what the primary distance ought
+  to be here. What do you think? Propose a distance and explain why
+  you chose it.
+
+  \begin{comment}
+
+    I am using baseline outcome as my primary distance. This is nice
+    because (1) it is not model dependent and (2) it probably captures
+    influences from lots of unmeasured and unobserved covariates (but
+    only to the extent that they might be confounders).
+
+  \end{comment}
+
+
+\item So, lets make some distance matrices, some of these may take a
+  while to create, especially mhDist. I decided that my primary
+  matching distance would be baseline outcomes, but if you want to use
+  something else, feel free. It will be interesting to compare
+  results. You can see my code here. Notice that I am doing some exact
+  matching from the start. Why would I do this in this situation?
+
+
+  First, make scalar distance in terms of number of acts of participation before having the child
+<<recodebaselineacts>>=
+
+## But we want allacts and cumallacts for the year before the kid was born in the treatment group.
+wrk.df$baselineacts<-wrk.df$allacts
+wrk.df$baselineacts[wrk.df$k1born==1]<-wrk.df$allacts[which(wrk.df$k1born==1)-1]
+wrk.df$baselinecumacts<-wrk.df$cumallacts
+wrk.df$baselinecumacts[wrk.df$k1born==1]<-wrk.df$cumallacts[which(wrk.df$k1born==1)-1]
+
+##fix this for thos people who had a kid in 1965 (i.e. don't use someone else's 1997 data for them).
+wrk.df$baselineacts[wrk.df$k1born==1&wrk.df$year==65]<-wrk.df$allacts[wrk.df$k1born==1&wrk.df$year==65]
+wrk.df$baselinecumacts[wrk.df$k1born==1&wrk.df$year==65]<-wrk.df$cumallacts[wrk.df$k1born==1&wrk.df$year==65]
+
+tmp<-wrk.df$baselineacts
+names(tmp)<-row.names(wrk.df)
+baselineactsDist<-match_on(tmp,z=wrk.df$k1born, 
+			    within=exactMatch(k1born~female,wrk.df))
+summary(wrk.df$baselineacts)
+as.matrix(baselineactsDist)[1:10,1:10]
+
+@
+
+Also, we might prefer cumulative number of acts rather than number of acts in
+a given year when it comes to comparing like with like. Or even a combination
+of cumulative and year-pre-baby acts (like the actsDist matrix below). Why
+might we be concerned to match on baseline outcomes rather than primarily on
+other covariates?
+
+<<actsdistmats>>=
+
+##So, we'll start with an mh distance of the two versions of the baseline outcomes
+##cor(wrk.df[,c("baselinecumacts","baselineacts")])
+## I am not ranking these because I am happy to have the cumulative acts be more important
+
+## sd(wrk.df$baselinecumacts)
+## sd(wrk.df$baselineacts)
+
+actsDist<-match_on(k1born~baselineacts+baselinecumacts,
+		    data=wrk.df,
+		    within=exactMatch(k1born~female,wrk.df))
+
+tmp<-wrk.df$baselinecumacts
+names(tmp)<-row.names(wrk.df)
+baselinecumactsDist<-match_on(tmp,z=wrk.df$k1born, 
+			    within=exactMatch(k1born~female,wrk.df))
+
+@ 
+
+
+Now make some other distance matrices for use as penalties: we have
+opinions about which years we want to be allowable as controls, and we
+have opinions about whether or not we want to match people to
+themselves (the preference is not to do so in this application because
+of the difference-in-differences kind of logic articulated above).
+
+
+<<yeardistmat>>=
+## Make a scalar distance in year (both for period and age)
+## probably a nicer way to do this but this is clear for now.
+## we probably don't want to match treated people to others at times far in the future or past.
+
+## Make a distance matrix by hand
+yearDist<-with(wrk.df,outer(year[k1born==1],year[k1born==0],"-"))
+dimnames(yearDist) <- list(rownames(wrk.df[wrk.df$k1born==1,]),
+		      rownames(wrk.df[wrk.df$k1born==0,])
+		      )
+
+##femExact<-exactMatch(k1born~female,data=wrk.df)
+##yearDist<-tmp+femExact
+@
+
+<<iddistmat>>=
+
+## Make a matrix telling us who is the same person.
+## tmp<-wrk.df$id65
+## names(tmp)<-row.names(wrk.df)
+## id65Dist<-match_on(tmp,z=wrk.df$k1born, 
+## 			    within=exactMatch(k1born~female,wrk.df))
+## 
+
+id65Dist<-with(wrk.df,outer(id65[k1born==1],id65[k1born==0],function(x,y){as.numeric(x==y)}))
+dimnames(id65Dist) <- list(rownames(wrk.df[wrk.df$k1born==1,]),
+		      rownames(wrk.df[wrk.df$k1born==0,])
+		      )
+
+@ 
+
+
+Next make a mahalanobis distance matrix using information about them
+and their parents in 1965 and also contemporaneous education and
+information about missingness in those variables with missing data.
+<<mhdistmat>>=
+
+## Make a version of the dataset with no missing data
+wrk.df.noNAs<-fill.NAs(wrk.df)
+
+## Make a mh distance matrix
+mhDist<-match_on(k1born~baselineacts+baselinecumacts+maxdegP+pmdeg65+
+	       pmdeg65.NA+hsact65+civics65+churP+churP.NA,
+	       data=wrk.df.noNAs,
+	       within=exactMatch(k1born~female,data=wrk.df.noNAs)
+				 )
+summary(mhDist)
+@ 
+
+
+Finally a propensity score (could have used a cox survival model but here just
+a plain old logit --- predicted probability of having a first child born in a
+given year.) Perhaps a better approach here would have been to use a
+multilevel model with random effects for person.
+
+<<psmat>>=
+## A propensity to have kids year score
+pscore.glm<-glm(k1born~female*(baselineacts+baselinecumacts+maxdegP+pmdeg65+
+			       pmdeg65.NA+hsact65+civics65+churP+churP.NA),
+		family=binomial(link="logit"),data=wrk.df.noNAs)
+
+psDist<-match_on(pscore.glm,
+		 data=wrk.df.noNAs,
+		 within=exactMatch(k1born~female,data=wrk.df.noNAs))
+
+## Add the pscores to the data for use later
+wrk.df[names(pscore.glm$linear.predictors),"pscore"]<-pscore.glm$linear.predictors
+wrk.df.noNAs[names(pscore.glm$linear.predictors),"pscore"]<-pscore.glm$linear.predictors
+
+@ 
+
+\paragraph{Penalty/Caliper 1} Now, can you impose a penalty on whichever distance matrix you are
+using as primary to avoid having people match themselves?
+
+\begin{comment}
+
+
+<<noselfmatches>>=
+##make self-matches infinite
+baselineactsDist.pen1<-actsDist+caliper(id65Dist,width=0)
+sometrtnms<-rownames(actsDist)[1:10]
+as.matrix(id65Dist)[sometrtnms,grep("^8\\.",colnames(id65Dist),value=TRUE)]
+as.matrix(baselineactsDist.pen1)[sometrtnms,grep("^8\\.",colnames(baselineactsDist.pen1),value=TRUE)]
+
+@ 
+
+\end{comment}
+
+Here are some other penalties that I applied. Feel free to use them or
+not depending on how you want to approach this problem.
+
+\paragraph{Penalty/Caliper 2} Only allow matches with previous years. (If treated in 66 only allow
+matches with 66 or 65, not with 90!)
+
+<<nofuturematches>>=
+
+##baselineactsDist.pen2<-baselineactsDist.pen1+caliper(width=0,yearDist<0)
+baselineactsDist.pen2<-baselineactsDist.pen1+caliper(yearDist,width=0,compare=`>`)
+
+as.matrix(yearDist)[sometrtnms,grep("^8\\.",colnames(yearDist),value=TRUE)]
+as.matrix(baselineactsDist.pen1)[sometrtnms,grep("^8\\.",colnames(baselineactsDist.pen1),value=TRUE)]
+as.matrix(baselineactsDist.pen2)[sometrtnms,grep("^8\\.",colnames(baselineactsDist.pen2),value=TRUE)]
+
+@ 
+
+\paragraph{Penalty 3} We might want to require matches that are close
+in terms of year too.
+
+<<yearpen>>=
+summary(actsDist)
+sd(actsDist)
+
+max.baselineactsDist<-max(actsDist)
+
+baselineactsDist.pen3<-baselineactsDist.pen2+caliper(yearDist,width=3) 
+@ 
+
+\paragraph{Penalty/Caliper 4} Penalize people who are very dissimilar in mhDistance
+<<mhdistcal>>=
+
+summary(mhDist)
+sd(mhDist)
+
+baselineactsDist.pen4<-baselineactsDist.pen3+caliper(mhDist,4)
+
+@ 
+
+\paragraph{Penalty/Caliper 5:} Exclude controls who have a child
+within 5 years after a treated person has a child
+
+<<kidposttreatcal>>=
+
+wrk.df$kid1[is.na(wrk.df$kid1)]<--99 ## people without kids are always eligible to match
+
+kid1Dist<-with(wrk.df,outer(kid1[k1born==1],kid1[k1born==0],
+			    function(x,y){
+			    kdist<-(x-y)
+			    as.numeric( kdist>=0 & kdist<=5)}
+			    ))
+dimnames(kid1Dist) <- list(rownames(wrk.df[wrk.df$k1born==1,]),
+		      rownames(wrk.df[wrk.df$k1born==0,])
+		      )
+
+## This next just to show how the caliper works:
+kid1DistA<-with(wrk.df,outer(kid1[k1born==1],kid1[k1born==0],
+			    function(x,y){
+			    (x-y)
+			    }
+			    ))
+dimnames(kid1DistA) <- list(rownames(wrk.df[wrk.df$k1born==1,]),
+		      rownames(wrk.df[wrk.df$k1born==0,])
+		      )
+
+kid1DistA[sometrtnms,1:15]
+kid1Dist[sometrtnms,1:15]
+
+## Since FALSE=0 and TRUE=1, we set the caliper at 0.
+baselineactsDist.pen5<-baselineactsDist.pen4+caliper(kid1Dist,width=0)
+
+as.matrix(baselineactsDist.pen5)[sometrtnms,1:15]
+@ 
+
+\item Now, do a matching using your penalized distance matrix
+  list. Is summary(yourmatch) informative? (What does it tell you
+  that might be of interest?)
+
+  \begin{comment}
+    Look at the distributions of some of the distances for extra caliper creation.
+
+<<>>=
+quantile(baselineactsDist,seq(0,1,.1)) ##look for extreme distances to make Inf
+quantile(baselinecumactsDist,seq(0,1,.1),na.rm=TRUE)
+quantile(baselineactsDist.pen4,seq(0,1,.1))
+quantile(mhDist,,seq(0,1,.1),na.rm=TRUE)
+quantile(psDist,,seq(0,1,.1),na.rm=TRUE)
+
+@ 
+
+<<fullmatch>>=
+fm1<-fullmatch(baselineactsDist.pen5 
+	       ,data=wrk.df.noNAs,
+	       remove.unmatchables=TRUE)
+
+summary(fm1)
+@ 
+
+The summary mainly reminds us of how many treated observations we
+have, and also tells us that we have a few really badly matched
+sets. 
+
+\end{comment}
+
+\item What about balance? We've been using xBalance so far, but feel
+  free to use any of the approaches that Rosenbaum uses,
+  too. \emph{Hint:} It turns out that this is a bit tricky. The
+  pairing reduces the noise in the covariates so much that small
+  differences become much easier to detect. I don't want us to hang up
+  on this right now, so I'll push ahead even though balance may be
+  elusive.
+
+
+  \begin{comment}
+
+
+    The balance (1) worsens from the perspective of the omnibus hypothesis
+    test but (2) improves from the perspective of the adjusted
+    differences. This is pretty interesting: our matches diminish the
+    variation in the covariates so much that we have a lot more power to
+    detect differences (like a paired-randomized study is more powerful
+    than a simply randomized study). 
+
+<<xb1>>=
+##Add the set factors to the dataframes for ease of analysis.
+wrk.df.noNAs[names(fm1),"fm1"]<-factor(fm1)
+wrk.df[names(fm1),"fm1"]<-factor(fm1)
+
+xb1<-xBalance(k1born~baselineacts+baselinecumacts+maxdegP+pmdeg65+
+	      pmdeg65.NA+hsact65+civics65+churP+churP.NA+female+year,
+	      strata=list(nostrat=NULL,fm1=~fm1),
+	      data=wrk.df.noNAs,
+	      report="all")
+
+print(xb1,horizontal=FALSE)
+@   
+
+<<plotxb1,fig.keep='last'>>=
+plot(xb1)
+@ 
+
+
+\end{comment}  
+
+
+\item Let's inspect the matches a little more closely: What
+  person-year was matched with person 1012 who had her first child in
+  1972? Did this seem like a reasonable match when you look at the
+  rows of data in wrk.df associated with those two person-years?
+  \emph{Hint:} You might want to use \texttt{matched(fm1)} as in
+  \Verb+fm1[fm1=="theset"&matched(fm1)]+ to see the row names for the
+  person-years in "theset". Also remember that the names here are
+  "person.year" see for example \Verb+names(fm1[matched(fm1)])[1:10]+.
+
+  \begin{comment}
+
+    Seems reasonable. The differences seem small by eye.
+
+<<>>=
+fm1["1012.72"]
+(thematch<-fm1[fm1=="1.1"&matched(fm1)])
+wrk.df[names(thematch),]
+@   
+
+\end{comment}  
+
+\item Now, let's assess the effects of having kids on short term
+  political participation. I made a variable earlier which counts the
+  number of acts of political activity five years in the future for
+  each year, for each person.
+
+  Just to help us think about this, here is a little look at the data:
+
+<<>>=
+good.df<-wrk.df[!is.na(wrk.df$fm1),,drop=TRUE] ## dump unmatched folks
+good.df$fm1<-factor(good.df$fm1) ## get rid of unused levels
+good.df<-good.df[order(good.df$fm1),]
+good.df[1:50,c("id65","year","female","fm1","k1born","futureacts","allacts")]
+
+@   
+
+\begin{comment}  
+
+  Here are a couple of ways to do this
+
+<<>>=
+
+xb2<-xBalance(k1born~futureacts,strata=list(fm1=~fm1),data=good.df,report="all")
+xb2
+
+lm1<-lm(futureacts~k1born+fm1,data=good.df)
+coef(lm1)["k1born"]
+
+## Thisi next requires pairs
+##wilcox.test(good.df$futureacts[good.df$k1born==1],good.df$futureacts[good.df$k1born==0],paired=TRUE,conf.int=TRUE)
+
+##Now shouldn't we take baseline into account? (perhaps just make a mhDist of this?)
+
+lm3<-lm(futureacts~k1born+baselineacts+baselinecumacts+fm1,data=good.df)
+coef(lm3)[c("(Intercept)","k1born","baselineacts","baselinecumacts")]
+
+@   
+
+
+Other options: one could use the boxplots that we see in Rosenbaum's
+discussion of non-bipartite matching and difference-in-differences
+design.
+
+Notice that we really have two kinds of comparisons here: Might there
+be a distinction between pairs in which the effect is that of a delay
+in having children (more than 5 years), versus ever having children?
+
+So, compare sets where all eventually had children, to sets where only one of
+them had a child.
+
+<<>>=
+
+good.df$fm1.bothkids<-unsplit(lapply(split(good.df$havekids,good.df$fm1),function(x){
+				     all(x==1)}),good.df$id65)
+
+lm4a<-lm(futureacts~k1born+baselineacts+baselinecumacts+fm1,data=good.df,subset=fm1.bothkids)
+coef(lm4a)[c("(Intercept)","k1born","baselineacts","baselinecumacts")]
+
+lm4b<-lm(futureacts~k1born+baselineacts+baselinecumacts+fm1,data=good.df,subset=!fm1.bothkids)
+coef(lm4b)[c("(Intercept)","k1born","baselineacts","baselinecumacts")]
+
+
+@ 
+
+\end{comment}
+
+\item Is the effect different for men versus women?
+
+  \begin{comment}
+
+    Stronger effect for women.
+
+<<>>=
+
+    lm5a<-lm(futureacts~k1born+baselineacts+baselinecumacts+fm1,data=good.df,subset=female==1)
+    coef(lm5a)[c("(Intercept)","k1born","baselineacts","baselinecumacts")]
+
+    lm5b<-lm(futureacts~k1born+baselineacts+baselinecumacts+fm1,data=good.df,subset=female==0)
+    coef(lm5b)[c("(Intercept)","k1born","baselineacts","baselinecumacts")]
+
+
+@    
+
+
+
+  \end{comment} 
+
+
+\end{enumerate}
+
+
+
+
+%%\bibliography{~/Documents/BIB/big}
+
+\end{document}
+<<>>=
+options(prompt="> ",continue="+ ")
+@
+
