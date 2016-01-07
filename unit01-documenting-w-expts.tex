@@ -12,7 +12,7 @@
 
 \title{Unit 1: Documenting causation with experiments}
 % \autho moved to beamer-preamble-*-all.tex
-\date{July 2015}
+\date{January 2016}
 
 \begin{document}
 
@@ -27,10 +27,11 @@
 \end{frame}
 
 \itnote{
-\item Re emails: (1) UM address, if you have it and you use it for UM
-  resources; (2) address you gave the s.p., provided that you use it;
-  (3) another address if you prefer to receive email there (clearly
-  mark!). 
+\item 
+% Re emails: (1) UM address, if you have it and you use it for UM
+%   resources; (2) address you gave the s.p., provided that you use it;
+%   (3) another address if you prefer to receive email there (clearly
+%   mark!). 
 }
 
 \section{Overview}
@@ -45,13 +46,13 @@
 \begin{frame}[label=whatWeWillCoverFr]{Methods we'll study in the course}
   \begin{itemize}
   \item Randomization-based analysis for experiments
-  \item Instrumental variables
   \item Natural experiments, quasi-experiments,
     difference-in-differences
+  \item Effect estimation \& inference in the presence of interference 
   \item Propensity scores, propensity score matching
-  \item Regression discontinuity
-  \item Interference
+%  \item Regression discontinuity
   \item Omitted variable sensitivity analysis
+  \item Instrumental variables \& principal stratification
   \item \ldots
   \end{itemize}
 \end{frame}
@@ -89,7 +90,8 @@ analysis in social science, by century:
 \end{frame}
 
 \subsection{Two influential examples}
-\begin{frame}{Example 1a: The Salk vaccine trial}
+\begin{frame}{Example 1a: The Salk vaccine trial\footnote{Source:
+      \href{http://www.cengage.com/resource_uploads/downloads/0534094929_46500.pdf}{Meier 1972}{}, ``The biggest public health experiment ever\ldots''}}
 
 
 \igrphx{SalkVtable-rctonly}
@@ -119,7 +121,30 @@ analysis in social science, by century:
   primarily conceptual, not technical, having to do w/ IVs.
 }
 
-\begin{frame}{Example 2: Did ideological innocence end in 1964?}
+\begin{frame}{Example 2: \sout{Did ideological innocence end in 1964?}
+  The Perry Preschool project}
+
+As the Coalition for Evidence-Based Policy describes it:
+\begin{columns}
+\begin{Column}[0.2\linewidth]
+  
+\end{Column}
+\begin{Column}[0.8\linewidth]
+\begin{itemize}
+\item[Intervention] A high-quality preschool for children from
+  disadvantaged backgrounds.
+\item[Methods] Randomized controlled trial shows major impact on educational and life outcomes; we note, however, that this was a demonstration project, and it is not yet known if the results can be replicated on a broader scale in typical classroom settings. 
+\end{itemize}
+  
+\end{Column}
+\end{columns}
+(\url{http://evidencebasedprograms.org/1366-2/65-2}.  The Perry
+Preschool is in Ypsilanti, MI, just 7 miles to the east of UM. )
+  
+\end{frame}
+\note{
+what the slide would have said re political ideology debate in
+political science:\\ 
   \begin{enumerate}
   \item Converse (1964): political ideology, workings of gov't
     bewildering to ordinary Americans.
@@ -128,9 +153,8 @@ analysis in social science, by century:
   \item Sullivan, Piereson \& Marcus's (1978)  split ballot experiment
     in Minneapolis-St. Paul
   \end{enumerate}
-  
-\end{frame}
 
+}
 \subsection{Conceptual framework}
 \begin{frame}{Goals of experimental design}
 
