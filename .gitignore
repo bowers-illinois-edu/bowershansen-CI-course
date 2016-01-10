@@ -2,13 +2,15 @@
 .local
 *.aux
 *.log
-./*.pdf
+*.pdf
 *.fdb_latexmk
 *.synctex.gz
+*-concordance.tex
 *.nav
 *.out
 *.snm
 *.toc
+*.vrb
 *.db
 *.db.yaml
 *.swp
@@ -17,13 +19,18 @@
 *.fls
 *.bak
 *-wmn.pdf
-./announcement-of-the-day.tex
-./2014
-./2015
-./BIB
 
 # biblatex stuff
 *.bbl
 *.blg
 
+# specific files and directories
 .Rproj.user
+announcement-of-the-day.tex
+2014
+2015
+BIB
+data/lawnsigns
+# tex files derived from tracked Rnw sources
+unit01-Rex.tex
+unit01-fishercombs.tex
