@@ -259,7 +259,7 @@ xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2,
 @ 
 Some p-values go up, others down. Again, this assumes version 0.1-13 or later of RItools.
 
-\section{Block random assignment and post-stratified designs}
+\section{Paired random assignment and post-stratified designs}
 
 To emulate a block-randomized study, let's post-stratify the Acorn
 experiment into pairs, on the basis of turnout rates in the last few
