@@ -1,0 +1,97 @@
+\documentclass{article}
+%\usepackage{natbib}
+
+\title{Solutions to simple random sampling exercises (set 1)}
+\input{../authoranddate}
+\usepackage{../icpsr-classwork}
+
+\begin{document}
+
+\maketitle
+
+\begin{enumerate}
+\item \textbf{Q}: Suppose $x_1, x_2, \ldots, x_n$ are observations in a
+    simple random sample (without replacement) from a population of size
+    $N$. Derive expressions for $\mathbf{E}(\bar x)$ and
+    $\mathrm{Var}(\bar x)$, in terms of $n$, $N$ and the population mean
+    and variance $\mu_x$ and $\sigma^2_x$. Hint: for the variance, you
+    can adapt formulas given by Finucan \textit{et al} 1974, first page or two,
+    for the variance of the sample \emph{total}.\\ 
+\textbf{A}: $\mathbf{E}(\bar x) = n^{-1} \mathbf{E} (\mathbf{Z}'\mathbf{x}) = n^{-1} \left( (\mathbf{E} \mathbf{Z})'\mathbf{x}\right) = n^{-1}(n/N)\sum_{1}^{N} x_{i} = \mu_{x}. $  For the variance, from the formula $\mathrm{Var} (n \bar x) =  n(N-n) \sigma^{2}/(N-1)$ reported by Finucan \textit{et al} one gets 
+\begin{equation}\label{eq:1}
+\mathrm{Var} ( \bar x) =  \frac{N-n}{n} \sigma^{2}/(N-1) =  \left(1-
+  \frac{n}{N}\right) \left(\frac{N}{N-1} \sigma^{2}\right)/n .
+\end{equation}
+\item \textbf{Q:} Also, assuming that
+    $y_1, y_2, \ldots, y_n$ are observations on the same sample, and
+    that $\sigma_{xy}$ is the population covariance of $x$'s and $y$'s,
+    derive an expression for $\mathrm{Cov}(\bar x, \bar y) $. Justify
+    your result with a mathematically correct and complete argument.
+    You're encouraged to use and adapt Finucan \textit{et al}'s style of
+    reasoning.\\ 
+\textbf{A:} To do this in the style of Finucan \textit{et al}, write $\mu_{xy}(n) $ for 
+  \begin{align*}
+\mathrm{Cov} (n\bar{x}_{\mathcal{I}}, n\bar{y}_{\mathcal{I}}) &=  \mathbf{E}n\left(\bar{x}_{\mathcal{I}} - \mathbf{E}\bar{x}_{\mathcal{I}} \right) n\left(\bar{y}_{\mathcal{I}} - \mathbf{E}\bar{y}_{\mathcal{I}} \right) = \mathbf{E} (n\bar{x}_{\mathcal{I}} n \bar{y}_{\mathcal{I}})\\
+&= \mathbf{E}(\sum _{i \in \mathcal{I}}{x}_{i} )(\sum _{j \in \mathcal{I}}{y}_{j}),    
+  \end{align*}
+ 
+with $\mathcal{I} \subseteq  \{1,2, \ldots, N\}$ uniformly distributed
+on sets of size $n$. Observe, following \S~3 of their paper, that:
+  \begin{enumerate}
+  \item  $\mu_{xy}(1) = \sigma_{xy}$;
+  \item $\mu_{xy}(N) = 0$;
+  \item $\mu_{xy}(n) = \mu_{xy}(N-n)$, b/c the complement of an SRS of size $n$ is an SRS of size $N-n$;
+  \item $\mu_{xy}(n) =  n \mathbf{E}(x_{I_{1}} y_{I_{1}}) + n(n-1)
+    \mathbf{E}(x_{I_{1}} y_{I_{2}})$, where $I_{1}$ is a random pick from $\{1,
+    \ldots, N\}$ and $I_{2}$ is a random pick from $\{1,
+    \ldots, N\} \setminus \{I_{1}\}$.   \label{item:1}
+  \end{enumerate}
+\vspace{-3ex}
+\ref{item:1} is the essence of Finucan \textit{et al}'s (v), on
+p.152:
+%\begin{center}
+  \igrphx[width=.5\textwidth]{finucanetal1974display5}
+%\end{center}
+  Reasoning as below on that page, in the development of their (5) as
+  it applies to the special case $r=2$, leads to $\mu_{xy}(n) = n(N-n) \sigma_{xy}/(N-1).$
+\item \textbf{Q}: Derive a formula for $\mathbf{E}(s^2_x)$, the expected
+    value of the sample variance
+    $s^2_x = [(x_1 - \bar x)^2 + \cdots + (x_n - \bar x)^2 ]/(n-1) $. If
+    you're a social scientist, you may use the formula Finucan \textit{et al}
+    give for $\mathbf{E}(v_n)$ in section 4 of their paper. If you're a
+    Stats PhD student, use the arguments of that section of the paper
+    but not that specific result.\\
+\textbf{A}: Write $S_{n} = (x_{I_{1}} - \bar{x}_{\mathcal{I}})^2 +
+\cdots + (x_{I_{n}} - \bar{x}_{\mathcal{I}})^2$, where $I_{1}, I_{2},
+\dots$ are distinct random picks from $1, \ldots, N$ and $\mathcal{I}
+= \{I_{1}, I_{2}, \ldots, I_{n}\} $.  This is Finucan \textit{et al}'s $v_{n}$,
+but without the initial factor of $n$. Just as with i.i.d. sampling, it be re-expressed as 
+\begin{align*}
+  S_{n} & = \sum_{i} x_{I_{i}}^{2} - 2x_{I_{i}}\bar{x}_\mathcal{I} + \bar{x}_\mathcal{I}^{2} = \sum_{i}
+          x_{I_{i}}^{2} - 2\bar{x}_\mathcal{I} \sum_{i}x_{I_{i}} + n\bar{x}_\mathcal{I}^{2} \\
+ & = \sum_{i}x_{I_{i}}^{2} - 2n \bar{x}_\mathcal{I}^{2} +
+   n\bar{x}_\mathcal{I}^{2} = \sum_{i}x_{I_{i}}^{2} -
+   n\bar{x}_\mathcal{I}^{2}.
+\end{align*}
+Now \eqref{eq:1} gives the form of
+$\mathbf{E}(\bar{x}_\mathcal{I}^{2}) =
+\mathrm{Var}(\bar{x}_\mathcal{I})$.  In essence this is enough to
+solve the problem, since it can be combined with
+$\mathbf{E} \sum_{i}x_{I_{i}}^{2} = n\mathbf{E}(x_{I}^{2}) = n
+\sigma_{x}^{2}$ to give $\mathbf{E} S_{n} = n\frac{N}{N-1}
+\sigma_{x}^{2}$.  If you wanted to complete the derivation in the
+style of Finucan \textit{et al}, however, then you'd go on to note that if we
+consider it as a function of $n$, $n \mathbf{E} (\bar{x}_{\mathcal{I}}^{2})$ is a
+  polynomial of degree 1, by \eqref{eq:1}.  Certainly  $\mathbf{E}
+  \sum_{i}x_{I_{i}}^{2} = n \sigma_{x}^{2}$ is also a degree 1
+  polynomial in $n$, and so too must be $\mathbf{E} S_{n} = \mathbf{E}
+  \sum_{i}x_{I_{i}}^{2} -  2n \mathbf{E}\bar{x}_\mathcal{I}^{2}$.  But
+  since 
+\begin{enumerate}
+\item $S_{1} \equiv 0$; \label{item:2} and
+\item $S_{N} = N \sigma_{x}^{2}$; \label{item:3}, 
+\end{enumerate}
+that degree 1 polynomial can only be $(n-1) \frac{N}{N-1} \sigma_{x}^{2}$.  
+
+\end{enumerate}
+\end{document}

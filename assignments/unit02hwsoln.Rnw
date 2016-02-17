@@ -1,0 +1,269 @@
+\documentclass{article}
+\usepackage{natbib}
+
+\title{Solutions to Unit 2 problems }
+\author{ICPSR Causal Inference '16}
+\usepackage{../icpsr-classwork}
+
+\begin{document}
+\maketitle
+
+<<echo=FALSE>>=
+acorn <- read.csv("../data/acorn03.csv")
+options(digits=3)
+@
+
+\section*{Answers to exercises (Q1-8)}
+\textit{Question.} \\[-1ex] \begin{itemize}
+\item[1.] Use the \texttt{acorn} data set to give an unbiased estimate of the
+  effect (ACE) of the campaign at the precinct level, on turnout
+  percentage.
+\item[2.]
+  Attach to your estimate a design-based standard error (SE) that's
+  based on (i.e.~the square root of) an unbiased estimate \emph{or
+  overestimate} of your ACE estimator's sampling variance.
+\end{itemize}
+
+\textit{Answer.}
+<<>>=
+nt <- sum(acorn$z); nc <- sum(!acorn$z)
+acorn <- transform(acorn, t=as.logical(z) )
+@
+
+Some motivation and caveats for the code above are given in Comments, below.
+
+Now here are the unbiased ACE estimate and corresponding SE:
+
+<<>>=
+with(acorn, mean(vote03[t]) - mean(vote03[!t]) )
+with(acorn, sqrt( var(vote03[t])/nt + var(vote03[!t])/nc ) )
+@
+This happens to give the same result as
+<<>>=
+coef(summary(lm(vote03~z, data=acorn)))[2,1:2]
+@
+
+However, the equivalence of the SEs here is an accident, a by-product
+of this being a balanced design.
+
+\textit{Question.} \\[-1ex] \begin{itemize}
+\item[3.]  Use the \texttt{acorn} data set to give an unbiased estimate of the
+  the campaign's ACE, now expressed in total votes irrespective of
+  precinct, on the entire study population.
+\item[4.]
+  Attach to your estimate a design-based standard error (SE) that's
+  based on (i.e.~the square root of) an unbiased estimate \emph{or
+  overestimate} of your ACE estimator's sampling variance.
+\end{itemize}
+
+\textit{Answer.}
+
+For an \textit{unbiased} estimate, use difference-of-means to estimate treatment's
+effect on precinct totals (as opposed to precinct means).     Then scale up by
+total number of precincts.
+<<>>=
+acorn <- transform(acorn, votecount = size*vote03)
+28* with(acorn, mean( votecount[t] ) - mean( votecount[!t] ) )
+@
+
+Shifting to this
+mode, we can apply the Neyman standard error formula directly.
+<<>>=
+28* with(acorn, sqrt( var( votecount[t])/nt + var( votecount[!t])/nc ) )
+@
+
+
+At one point I thought, and I may even have said, that adding a
+weights argument to the \texttt{lm()} call would lead to an unbiased
+estimate of the subject-level ACE.  I turn out to have been mistaken
+about this.  An indication of the mistake is that \texttt{lm()} with
+weights gives a different answer:
+<<>>=
+coef(summary(lm(vote03~z, data=acorn, weights=size)))[2,1:2]
+@
+
+What we're seeing here is the \textit{ratio} estimator of the average
+causal effect, not the \textit{unbiased} estimator:
+<<>>=
+with(acorn, weighted.mean(vote03[t], size[t]) - weighted.mean(vote03[!t], size[!t]) )
+@
+In these two weighted means, precinct weights take
+the forms $m_{i}/(\sum_{\{j: Z_{j}=1\}}m_{j})$ and  $m_{i}/(\sum_{\{j:
+  Z_{j}=0\}}m_{j})$, respectively. Because the denominators
+depend on treatment assignment, they're random, and
+we have a difference of ratio
+estimates. \citet{middletonAronow2015ATEforclusterRCTs}, among others,
+discuss ratio versus unbiased estimation with clusters.
+
+To express this ratio estimate in terms of total numbers of votes, you'd multiply through
+by the overall size of the study population:
+<<>>=
+with(acorn, sum(size) *
+         (weighted.mean(vote03[t], size[t]) - weighted.mean(vote03[!t], size[!t]) )
+     )
+
+@
+
+We haven't focused on standard errors for these sorts of quantities,
+but you won't be surprised to learn that the formulas that are
+available are not based on unbiased variance estimates, and capture
+sampling variability somewhat less reliably than does our variance
+formula the difference of means.
+
+
+\textit{Question.} \\[-1ex] \begin{itemize}
+\item[5.]  Use the \texttt{acorn} data set to give an unbiased estimate of the
+  total number of votes attributable to the 2003 Kansas City GOTV
+  campaign.
+\item[6.]
+  Attach to your estimate a design-based SE that's based on (i.e.~the
+  square root of) an unbiased estimate of the variance (of the
+  underlying estimate of voter turnout would have been if, counter to
+  fact, there had been no GOTV campaign).
+\end{itemize}
+
+\textit{Answer.}  To estimate total votes attributable to treatment
+(and the associated SE), it suffices to estimate the population total
+of $y_{c}$s, and to attach an SE to that estimate. To do this without
+bias:
+
+<<>>=
+( tot.yc.hat <- with(acorn, mean( votecount[!t] )*28) )
+fpc <- 1-14/28
+( se.tot.yc.hat <- with(acorn, sqrt( fpc * var( votecount[!t] )/14 )*28) )
+@
+
+So the estimated attributable effect, $\hat{A}$, and associated SE, are
+<<>>=
+(Ahat <- with(acorn, sum( votecount ) # total of votes cast
+              ) - tot.yc.hat )
+(se.Ahat <- se.tot.yc.hat)
+@
+
+I.e., we don't attempt to characterize the sampling variability of the
+total number of votes cast, our goal being to estimate how many of
+those votes were due to treatment (as opposed to how many votes
+treatment would produce on average across hypothetical random
+assignments).
+
+\textit{Question.} \\[-1ex] \begin{itemize}
+\item[7.]
+  Estimate the number of votes \emph{per voter contact} that were
+  generated by the campaign. Is your estimate unbiased? If not, could
+  you have estimated it without bias (using any of the techniques we've
+  studied, or a simple modification of one of them)?
+\end{itemize}
+
+\textit{Answer.}  Denote the number of voter contacts across the study
+population by $O$. The question asks for our estimate of $A/O$. As $O$
+is a known quantity, we can use $\hat{A}/O$; by the same token, we can
+used a scaled version of the s.e. of $\hat{A}$ as an SE for this estimate.
+
+<<>>=
+
+O <- with( acorn, sum(size*contact) )
+Ahat/O
+se.Ahat/O
+
+@
+
+\textit{Question.} \\[-1ex] \begin{itemize}
+\item[8.]
+  Estimate the CACE associated with this campaign (as averaged across
+  compliers in the treatment and control groups). Is your estimate
+  unbiased? If not, could you have estimated it without bias (using any
+  of the techniques we've studied, or a simple modification of one of
+  them)?
+\end{itemize}
+
+\textit{Answer.}
+Now we have to estimate a ratio of
+parameters, $\mathrm{ACE}(y)/\mathrm{ACE}(d)$.  We do this by taking
+the ratio of estimators of these two ACE's.  Because we'll wind up with a
+ratio of random quantities, even if they're both unbiased for their
+respective estimation targets their ratio will in general be biased.
+So we might as well use ratio estimates:
+<<>>=
+coef(lm(vote03~z, weights=size, data=acorn))[2]/
+    coef(lm(contact~z, weights=size, data=acorn))[2]
+@
+
+We could also answer the question by taking a ratio of unbiased estimates:
+<<>>=
+with(transform(acorn, contactcount = size*contact),
+     (mean(votecount[t]) - mean(votecount[!t]))/
+         (mean(contactcount[t]) - mean(contactcount[!t]))
+     )
+@
+In either case, the taking of the ratio means that we don't need  to
+rescale the estimates, as we did for some of those above.
+
+\subsection*{General comments}
+
+\begin{enumerate}
+\item Notes on code for Q1:
+\begin{itemize}
+\item I'm introducing a variable ``\textit{t}'' to mimic some nicely readable code I found in student solutions, where I saw ``\textit{mean( acorn\$ vote03[t] )}'' being used to indicate the treatment-group mean of \textit{vote03}.
+\item For this purpose it's important that \textit{z}, which is read in as a 0/1 variable, be explicitly transformed to logical.  (If you use a 0/1 variable for indexing another variable, R repeatedly tries to grab the 0th and 1st entry of that other variable, which isn't what we want.)
+\item I'm placing it within the \textit{acorn} data frame to avoid masking the R function \textit{t()}, used to transpose matrices.  And because it's a tidy practice in general to keep similar variables bundled in common contexts.
+\end{itemize}
+\item Tasked with calculating an SE for the mean of a binary variable, I see various of you using the standard error of a proportion formula that we teach in intro stats, $\widehat{\mathrm{Var}}(\bar p) = \bar{p}(1-\bar p)/n$.  Because of the clustering, that formula isn't valid.  (In fact the formula far less applicable than it may seem, and IMHO we'd all be better off if resigned it to the dustbin --- but I digress.)  What is valid is to estimate a $\sigma^2$ of cluster totals using an $s^2$ of cluster totals.  Up to a factor of $N/(N-1)$, that's unbiased.  It doesn't matter whether the variables being totalled up are binary or not.
+\item A heuristic to help you avoid some embarrassing errors in SE calculations: in clustered designs, the measure of sample size that's relevant to sampling variability is the number of clusters, not the number of elements within clusters.  So, if you find yourself dividing by the number of elements in the midst of a variance calculation, that's a hint that you should cross-check and be absolutely sure that you're using the proper formula.  (In presentations of sampling theory and methodology, where this matters quite a bit, the convention is to use $n$ and $N$ for numbers of \textit{clusters}, and $m$ and $M$ for numbers of elements.  I try to follow this convention and recommend it to others, despite its not being followed consistently in the cluster experiments literature.)
+\item Another common SE-related error was to give an SE as reported by \textit{summary(lm(\ldots))}.  In general that's a different standard error than the design-based SE.  If you want your regression routine to give you a standard error that makes sense from the design (randomization) perspective, hunt down "robust" standard error routine and look for the "HC2" option.  See \citet{samiiAronow2012HC2equivNeyman}.  (But note that their theorems don't treat the case where regressions of cluster means are performed with weighting for cluster size, as we're doing here.)
+\end{enumerate}
+
+\section*{Discussion questions}
+\textit{Question.} \\[-1ex] \begin{itemize}
+\item[9.]
+  Imagine that, due to a logistical slipup in the GOTV campaign,
+  canvassers were sent to one of the 14 precincts that had been assigned
+  to control, while one of the 14 treatment precincts did not get any
+  canvassers. Can we still estimate the votes per contact using same
+  techniques as were applicable otherwise? How about the CACE? (Hint: In
+  practice your preferred answer might depend on how ``random'' the
+  logistical slipup seemed to be. Make sure your answer addresses the
+  circumstance that it was not plausibly a random event -- e.g.,
+  canvassers decided that they'd prefer to canvass in a precinct
+  randomized to control rather than one of the precincts that had been
+  allocated to treatment.)
+\end{itemize}
+
+A sampling of nice answers. \textit{Sample student answer no. 1}:\\
+\begin{quote}
+  It seems like this mistake would reduce (most likely) the size of
+  our weighted ACE estimate in (3).  That, in turn, would reduce our
+  estimate of the number of votes attributable to the campaign, also
+  reducing votes per contact and CACE.  This mistake may, in a sense,
+  artificially reduce the estimated effect of the treatment. A mistake
+  like this would urge us to instead look into as-treated analysis.
+\end{quote}
+
+\textit{Sample student answer no. 2}:\\
+\begin{quote}
+  The way to address this question depends on whether you can assume that the logistical mistake occured in a way that is unrelated to the treatment effect of the precincts that were switched.
+
+Assuming that there is a correlation, and you cannot perform an 'as treated' analysis, we can perform an ITT analysis.  However, the CACE and the number of votes per contact will likely both be attenuated and the result will be closer to 0 than it would have been if this logistical mistake did not happen.
+
+On the other hand, it is possible to imagine a situation where a low turnout precinct was switched from the treatment group to the control group.  For example, canvassers did not want to go to a poor area with low turnout because they thought the neighborhood was dangerous, so they go to a wealthier, high-turnout neighborhood.  In this case, it is possible that the estimate for votes per contact will be biased upwards.
+\end{quote}
+
+\textit{Question.} \\[-1ex] \begin{itemize}
+\item \textbf{Either} (a) Use formula 21 of Schochet and Chiang (2011) to
+  estimate a standard error for your CACE; or (b) use the
+  characterization given by Middleton and Aronow of the bias of ratio
+  estimators to assess how large your CACE estimator's bias might
+  plausibly be. (Afterwards it will be interesting to compare the
+  results of these two exercises.)
+\end{itemize}
+
+I received one response to (a), culminating in an answer of 0.036.  Two
+responses provided numerical evaluations of the bias under specific
+potential response schedule scenarios, both on the order of
+$10^{-4}$ or $10^{-5}$.  So far as I could tell, however, neither of
+these reflected attempts to create potential responses manifesting
+strong correlations between contact rates and voting. Other responses
+noted that such configurations would be likely to lead to larger
+biases, without providing specific examples.  
+\bibliographystyle{apalike}
+\bibliography{../refs}
+\end{document}
