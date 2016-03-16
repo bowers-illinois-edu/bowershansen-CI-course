@@ -41,8 +41,9 @@
 
 
 
-\section[Extrapolation \& overlap]{Pitfalls of multiple covariates:
-  Extrapolation \& overlap}
+\section[Extrapolation \& overlap]%{Pitfalls of multiple covariates:
+                                %Extrapolation \& overlap}
+{Extrapolation, overlap \& the propensity score}
 
 
 \begin{frame} \frametitle{Contrasting two groups after adjustment for a covariate}
@@ -51,19 +52,22 @@
     \url{socialresearchmethods.net}; Fig.~1 of Rubin (1977, \textit{J. Educ. Statist.} \textbf{2}/1 1--26.).}}
 
 \begin{center}
-  \only<1\mynoteonly>{\igrphx[height=.6\textheight]{pretest-comp-group-design}}
-  \only<2>{\igrphx[height=.8\textheight]{rubin1977fig1}}
+%  \only<1\mynoteonly>
+{\igrphx[height=.6\textheight]{pretest-comp-group-design}}
+%  \only<2>{\igrphx[height=.8\textheight]{rubin1977fig1}}
 \end{center}
 
 \end{frame}
 \note[itemize]{
 \item {}\textit{[Explain picture]}
-\item Even if we knew these curves, we'd have to average both curves
-  over a common standard distribution in order to estimate a causal effect.
-  \item Even if we knew these curves, there'd be ETT, ETC, \ldots
-    \item Problem: we don't know the 2 curves.  Further, if we try to
-      estimate from data, might have to extrapolate.  In that case
-      have to be very careful!
+\item Nonequivalent but overlapping $x$ distributions.  Non-overlap
+  would be a bigger problem.
+% \item Even if we knew these curves, we'd have to average both curves
+%   over a common standard distribution in order to estimate a causal effect.
+%   \item Even if we knew these curves, there'd be ETT, ETC, \ldots
+%     \item Problem: we don't know the 2 curves.  Further, if we try to
+%       estimate from data, might have to extrapolate.  In that case
+%       have to be very careful!
 }
 
 \begin{frame}[label=contrast2grFr]
@@ -93,12 +97,346 @@
 \end{frame}
 
 \note[itemize]{
-\item The are ``propensity scores'' -- to be defined.
+\item The are estimated ``propensity scores'' -- to be defined presently.
 \item Propensity scores are immediate children of ``discriminant scores.'' As name suggests, their purpose is to discriminate between the groups.
 \item The scores fold together a potentially large number of variables.  So plots like this inform us about extent of extrapolation problem.
 \item Jargon: ``overlap''; ``common support''.
 \item Role of assumptions in comparisons outside region of overlap.  Minimizing assumptions often requires restricting the comparison, ie. ``throwing away data.''
 }
+
+\begin{frame}<1-5>[label=thePSfr]
+  \frametitle{The propensity score}
+
+Given covariates $\mathbf{X} (=(X_1, \ldots, X_k))$, and a
+treatment variable $Z$, $Z(u) \in \{0, 1\}$,  $\PP (Z \vert \mathbf{X})$ is known as the (true) \alert<1>{propensity score} (PS).  
+$$ \phi( \mathbf{X} ) \equiv \log\left( \PP (Z=1 \vert \mathbf{X})/\PP (Z=0 \vert \mathbf{X}) \right)$$
+is also known as the PS.  In practice, one works
+with an estimated PS, $\hat{\PP} (Z \vert \mathbf{X})$ or
+$\hat{\phi}(\mathbf{X})$.
+
+Theoretically, propensity-score strata or matched sets both
+\begin{enumerate}
+ \item<2-| alert@+> reduce extrapolation; and
+\item<3-| alert@+> balance each of $X_1, \ldots, X_k$.
+\end{enumerate}
+\uncover<4->{They do this by making the comparison more
+  ``experiment-like'', at least in terms of $X_1, \ldots, X_k$.}
+
+\uncover<5->{Theory also tells us that in the absence of hidden bias, such a stratification}
+\begin{enumerate}
+  \addtocounter{enumi}{2}
+\item<5-| alert@+> supports unbiased estimation of treatment effects.
+\end{enumerate}
+
+\end{frame}
+
+
+
+
+\begin{frame}
+  \frametitle{Propensity scoring in practice}
+
+\enlargethispage*{1000pt}
+
+\begin{columns}
+  \column{.65\linewidth}
+\begin{enumerate}[<+-| alert@+>]
+\item Fitted propensity scores help identify extrapolation.
+\item In practice, stratification on $\hat{\phi}(\mathbf{X})$
+helps balance each of $X_1, \ldots, X_k$.
+% \item Adjustment based on the
+% propensity score is arguably more transparent and more stable
+% that adjustment based on multiple regression.
+\item There are \emph{lots of cases} in which adjustment with the propensity
+score fails to generate estimates that square with those of
+randomized studies. \setcounter{saveenumi}{\value{enumi}}
+\end{enumerate}
+\column{.35\linewidth} \igrphx{psboxplot}
+\end{columns}
+
+\begin{enumerate}[<+-| alert@+>] \setcounter{enumi}{\value{saveenumi}}
+\item There are various reasons for this, starting with: lots of observational studies that
+  don't measure quite enough $x$es.
+\item (Propensity scores address bias on measured variables, not
+  unmeasured ones.)  \textit{hidden bias}.
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Bias removal with an ``estimated'' ``propensity
+score''}
+
+In the UCB Admissions data set, applicants to departments A and B
+appear to have roughly similar ``feminine propensities,'' as do
+applicants to departments C and E, or to D and F.
+
+%\only<1-2>
+{
+ \begin{tabular}[b]{|l|rrrrrr|} \hline
+& \multicolumn{6}{|c|}{Department} \\
+&   A &   B &   C &   D &   E &   F \\ \hline
+\% Female & .12 & .04 & .65 & .47 & .67 & .48 \\ \hline
+\end{tabular}
+ \pause
+ \begin{tabular}[b]{rrr|} \hline
+  \multicolumn{3}{c|}{Female App. \%}\\
+  Low & Med. & High \\ \hline
+  .09 & .66 & .48 \\ \hline
+\end{tabular}
+}
+
+How does this ``propensity'' stratification affect balance?
+% \begin{onlyenv}<3>%{
+%   An analysis that groups applicants to departments with similar
+% ``feminine propensities'' also removes the bias in the original
+% data.
+% {\small
+% \begin{center}
+% 1971 UCB Admissions \citep{Bickel:etal:1975}
+% \begin{tabular}{|ll|r|rrr|} \hline
+%          &       & Ignoring & \multicolumn{3}{|c|}{PS Stratum} \\
+% Admit    &Gender &department&Low& Med & High \\ \hline
+% Admitted &Male   & 1200    &860 & 170 & 160 \\
+%          &Female &  560    &110 & 300 & 160 \\
+% Rejected &Male   & 1500    &520 & 340 & 630 \\
+%          &Female & 1300    & 30 & 690 & 560 \\ \hline
+% \multicolumn{2}{|c|}{$\chi_1^2$-statistic} & $M^2=91.6$ &\multicolumn{3}{|c|}{$X^2=1.2$} \\
+% \multicolumn{2}{|c|}{$p$-value } & $p \leq 2.2\cdot 10^{-16}$
+% &\multicolumn{3}{|c|}{$p=.28$} \\ \hline
+% \end{tabular}
+% \end{center}
+% }
+% %}
+% \end{onlyenv}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Bias removal with an ``estimated'' ``propensity score''}
+\begin{Schunk}
+\begin{Sinput}
+> UCBA$PS.hat <- predict( glm(Female~Dept, binomial, data=UCBA) )
+> table(round(UCBA$PS.hat, 2))
+\end{Sinput}
+\begin{Soutput}
+-3.11 -2.03 -0.11 -0.09   0.6  0.72 
+  585   933   792   714   918   584 
+\end{Soutput}
+\begin{Sinput}
+> UCBA$PSS <- cut(UCBA$PS.hat, breaks=c(-4,-2,0,2))
+\end{Sinput}
+\end{Schunk}
+% \begin{Schunk}
+% \begin{Sinput}
+% > UCBA$PSS <- UCBA$Dept ; levels(UCBA$PSS)
+% \end{Sinput}
+% \begin{Soutput}
+% [1] "A" "B" "C" "D" "E" "F"
+% \end{Soutput}
+% \begin{Sinput}
+% > levels(UCBA$PSS) <-  scan(what="character", nlines=1)
+% 1: Low Low Hi Med Hi Med
+% Read 6 items
+% \end{Sinput}
+% \end{Schunk}
+
+% \begin{verbatim}
+% xBalance(Female ~ Dept, strata=data.frame(none='-',
+% +   UCBA[c("PSS", "Dept")]), data=UCBA, report=<...>)
+% \end{verbatim}
+\begin{Schunk}
+\begin{Sinput}
+> xBalance(Female ~ Dept, data=UCBA, report=c("adj.mean.diffs"), 
++          strata=data.frame(`none`="-", UCBA["PSS"])     )
+\end{Sinput}
+\begin{Soutput}
+      strata     none               PSS         
+      stat   adj.diff          adj.diff         
+vars                                            
+DeptA        -2.5e-01 ***      3.1e-02  ***     
+DeptB        -1.9e-01 ***      -3.1e-02 ***     
+DeptC        2.0e-01  ***      -1.2e-02         
+DeptD        4.9e-02  ***      -1.8e-03         
+DeptE        1.4e-01  ***      1.2e-02          
+DeptF        4.7e-02  ***      1.8e-03          
+\end{Soutput}
+\end{Schunk}
+
+\end{frame}
+\note[itemize]{
+\item Propensity subclassification isn't as good as exact matching on
+  Dept, but much better than nothing.
+\item Propensity works better for C--F than for A and B.
+\item Note that you don't have to have the same value on the
+  underlying covariate to have the same propensity score.  We balanced
+  C--F, but we didn't match exactly on them.
+\item Dimension reduction: turned a 5-dimensional covariate into a
+3-dimensional one.
+
+}
+%\mbox{}
+
+\begin{frame}[label=FemPptyFr]
+\frametitle{Bias removal with an ``estimated'' ``propensity
+score''}
+
+In the UCB Admissions data set, applicants to departments A and B
+appear to have roughly similar ``feminine propensities,'' as do
+applicants to departments C and E, or to D and F.
+
+%\only<1-2>
+{
+ \begin{tabular}[b]{|l|rrrrrr|} \hline
+& \multicolumn{6}{|c|}{Department} \\
+&   A &   B &   C &   D &   E &   F \\ \hline
+\% Female & .12 & .04 & .65 & .47 & .67 & .48 \\ \hline
+\end{tabular}
+ \pause
+ \begin{tabular}[b]{rrr|} \hline
+  \multicolumn{3}{c|}{Female App. \%}\\
+  Low & Med. & High \\ \hline
+  .09 & .66 & .48 \\ \hline
+\end{tabular}
+}
+
+%\begin{onlyenv}<3>%{
+  An analysis that groups applicants to departments with similar
+``feminine propensities'' also removes the bias in the original
+data.
+{\small
+\begin{center}
+1971 UCB Admissions \citep{Bickel:etal:1975}
+\begin{tabular}{|ll|r|rrr|} \hline
+         &       & Ignoring & \multicolumn{3}{|c|}{PS Stratum} \\
+Admit    &Gender &department&Low& Med & High \\ \hline
+Admitted &Male   & 1200    &860 & 170 & 160 \\
+         &Female &  560    &110 & 300 & 160 \\
+Rejected &Male   & 1500    &520 & 340 & 630 \\
+         &Female & 1300    & 30 & 690 & 560 \\ \hline
+\multicolumn{2}{|c|}{$\chi_1^2$-statistic} & $M^2=91.6$ &\multicolumn{3}{|c|}{$X^2=1.2$} \\
+\multicolumn{2}{|c|}{$p$-value } & $p \leq 2.2\cdot 10^{-16}$
+&\multicolumn{3}{|c|}{$p=.28$} \\ \hline
+\end{tabular}
+\end{center}
+}
+%}
+%\end{onlyenv}
+\end{frame}
+\Note{
+ Very much a toy example, but real ones work in much the same way.
+}
+
+
+\begin{frame}
+  \frametitle{Illustrative example: propensity stratification in an experiment}
+
+\begin{columns}
+  \begin{column}{.5\linewidth}
+    \begin{itemize}
+    \item The imbalance creates a small conditional bias in $\bar{y}_{t} - \bar{y}_{c}$.
+    \item<2-> PS stratification reduces covariate imbalance \citep{hill:etal:2000} \& thus reduces ``bias''
+   \end{itemize}
+  \end{column}
+  \begin{column}{.5\linewidth}
+\only<1| handout:0>{\igrphx{KC-bal+SDs}}
+    \only<2->{\igrphx{KC-balwithPS}}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% \begin{frame} \enlargethispage*{400pt}
+% \frametitle{The propensity score as an instrument of balance}
+% \begin{center}
+% \igrphx[height=7.8cm]{tomlovepic-lb-flat}
+% \end{center}
+% \end{frame}
+
+\begin{pedantic}
+\begin{frame}
+  \frametitle{Matching on a covariate versus matching to balance it}
+
+  \begin{itemize}
+\item   Distinct units $a$ and $b$ can be very
+  different in terms of each of $X_1, \ldots, X_k$, so that
+  $\mathbf{x}_a$ and $\mathbf{x}_b$ are very different, while at the same
+  time $\hat{\phi}(\mathbf{x}_a) \approx \hat{\phi}(\mathbf{x}_b)$.
+\item   Therefore matching on a propensity score involving $v$ (among other contributing covariates) will \emph{not} in general have the side effect of
+  matching on $v$ itself.
+\item It \textit{has} to be that way, because for most data sets it's
+  mathematically infeasible to match closely on more than a couple of
+  variables (Cochran, 1972; Abadie \& Imbens, 2006). \nocite{cochran:1972,abadie2006lsp}
+\end{itemize}
+
+\note{
+{\footnotesize
+
+Benefits of matching on, as opposed to merely balancing, a variable:
+  \begin{itemize}
+\item
+In some cases, an initial stratification is necessary to ensure that
+comparison of outcomes is meaningful.
+\item
+If a covariate is strongly predictive of outcomes, matching or stratifying
+upon it will tend to sharpen the eventual matched or stratified comparison.
+\item If you want to study interactions of a variable with the treatment, have
+to match on it, at least approximately.
+  \end{itemize}
+
+Cost of matching on as opposed to matching to balance:
+\begin{itemize}
+\item You can balance many more variables than you can match upon
+\item Harder to find good matches on other variables; may force you to reduce sample size, either literally or figuratively.
+\end{itemize}
+}
+}
+\end{frame}
+\end{pedantic}
+
+
+
+
+
+\begin{frame}[fragile,shrink]
+  \frametitle{Stratification on a propensity score: some concerns}
+\begin{Schunk}
+\begin{Sinput}
+> xBalance(Female ~ Dept, strata=data.frame(`none`="-", UCBA["PSS"]), 
++ data=UCBA, report=c("adj.mean.diffs"))
+\end{Sinput}
+\begin{Soutput}
+      strata     none               PSS         
+      stat   adj.diff          adj.diff         
+vars                                            
+DeptA        -2.5e-01 ***      3.1e-02  ***     
+DeptB        -1.9e-01 ***      -3.1e-02 ***     
+DeptC        2.0e-01  ***      -1.2e-02         
+DeptD        4.9e-02  ***      -1.8e-03         
+DeptE        1.4e-01  ***      1.2e-02          
+DeptF        4.7e-02  ***      1.8e-03          
+\end{Soutput}
+\end{Schunk}
+  \begin{itemize}[<+-| alert@+>]
+  \item 
+  Evidently, low propensity score stratum needs to be split.
+\item In general, covariates won't align with stratum boundaries.
+  \item Some software routines address this by ``testing'' for difference of means on the estimated propensity score, splitting a stratum when a difference is ``found.''
+  \item Better remedies frame ``success'' of the stratification as a
+    model, which is then tested using all the data at once.
+\end{itemize}
+\itnote{
+  \item 
+  Evidently, low propensity score stratum needs to be split.
+\item In general, covariates won't line up neatly with stratum boundaries, so when they're out of balance it's difficult to see which strata may be too wide.
+  \item Some software routines address this by ``testing'' for a difference of means on the estimated propensity score, splitting a stratum when a difference is ``found.''   But these tests ignore the estimated nature of the propensity score, and carry a multiplicity problem.
+  \item 
+
+}
+\end{frame}
+
+
+\nocite{hansen:klopfer:2006,rosenbaum:2002}
+
+
 
 \section{Pair matching with propensity scores}
 

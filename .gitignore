@@ -30,6 +30,7 @@ announcement-of-the-day.tex
 2014
 2015
 BIB
+units  #use this as a link to current-year directory's subfolder for slides, handouts etc
 data/lawnsigns
 # tex files derived from tracked Rnw sources
 unit01-Rex.tex
