@@ -13,15 +13,15 @@
 \usepackage{setspace}
 \setcounter{secnumdepth}{0}
 
-\title{Causal Inference for the Social Sciences\\2015 ICPSR Summer
-  Program, Session 2 
-}
+\title{Causal Inference for the Social Sciences}
+
+\input{../authoranddate} %misnomer, as of now file only carries date
 \author{ Jake Bowers\thanks{ Political Science and Statistics
     Departments, U. of Illinois, Champaign-Urbana; jwbowers@illinois.edu}
 \and Ben Hansen\thanks{Statistics Department and Survey Research
   Center, U. of Michigan; ben.hansen@umich.edu} \and Tom
 Leavitt\thanks{Political Science, Columbia U.; \mbox{thomasleavitt87@gmail.com}}\,  (t.a.)}
-\date{\today}
+
 
 \begin{document}
 
@@ -36,9 +36,14 @@ causality to analyze both randomized and observational studies,
 distinguishing different forms of random assignment and separating
 observational studies that involve instruments, discontinuities and
 other devices, highlighting relative strengths of the designs and the
-implications of study design for statistical analysis. Propensity
+implications of study design for statistical analysis.  Propensity
 score matching is treated in depth, with explicit instruction in the
-use of ``optmatch'' and related packages in R.  %The content is geared specifically toward students and researchers in the social sciences, with examples are drawn from economics, political science, public health, and sociology, among other fields.
+use of ``optmatch'' and related packages in R; other areas of
+methodological focus include assessment of covariate balance by
+specification tests and other methods; inference methods that are a
+robust to weak instruments, spillover and interaction effects, heterogeneous treatment effects,
+and/or misspecification of response surfaces; and omitted variable sensitivity
+analysis.  %The content is geared specifically toward students and researchers in the social sciences, with examples are drawn from economics, political science, public health, and sociology, among other fields.
 
 The course presupposes knowledge of multiple regression at the level
 of the ICPSR course Regression: II, as well as multiple regression
@@ -50,35 +55,7 @@ the course are readily implemented either in R or in Stata.
 
 % \section{Meetings}
 
-The course meets 3--5pm, Monday through Friday, July 20 through August
-14,  in room B137 of the Modern Languages
-  Building (MLB).
-% , in 296 Dennison\footnote{South end of  Dennison Hall's southern extension,
-%   second floor.%  (Dennison Hall's main wing is a 10 story, east-west
-%   % oriented building. The southern extension is two stories and runs
-%   % north-south.)
-% }, University of
-% Michigan Central Campus.  Periodically the course will move to the
-% computer lab in B760
-% East Hall\footnote{At the southeast corner of East Hall, the corner
-%   closest to the Church St/South University intersection.  Enter from
-%   Church St.}. 
-Ben is primary instructor for the first
-two weeks, Jake for the second.  
-
-Tom holds office hours 11am-2pm, in the Newberry Residence. %(room 224). 
-In weeks one and two, Ben holds office hours Monday, Wednesday and
-Friday between 9:30 and 10:30 a.m.
-% \footnote{With prior notice, BH
-%   \textit{may} be able to start 10-15 minutes earlier or stay 15-30
-%   minutes later.}, 
-at the Helen Newberry
-residence. %(Either in the first-floor common area near the rear of the
-%building or in room 225.) 
-In weeks three and four, Jake holds
-office hours Monday, Wednesday and Friday between 9:30 and 10:30 a.m. at the
-Helen Newberry residence. Additional office hours may be
-announced. 
+\input{meetings}
 
 \clearpage
 
@@ -167,9 +144,10 @@ years.  Many of them are quite good, including:\\
 
 Other readings will be assigned and distributed electronically through
 a password-protected ``Canvas'' Web site
-(\url{http://umich.instructure.com}).  (To use Canvas,
-set up a Friend account, as below, using the same email the summer
-program will have associated with you on our course roster.)
+(\url{http://umich.instructure.com}).  
+% (To use Canvas,
+% set up a Friend account, as below, using the same email the summer
+% program will have associated with you on our course roster.)
 
 
 If you're new to R, we suggest getting hold of:
@@ -250,6 +228,8 @@ electronic sign-up for \ref{it:part2}.
 
 \section{Course contents}
 
+\subsection{Random assignment as a basis for inference}
+
 \subsubsection{Experiments and the foundations of causal inference}
 
 Medical- and social-science data generating processes can be difficult to
@@ -261,23 +241,49 @@ work that Rubin, Holland and others reinvigorated beginning in the
 1970s.  The course begins by surveying the circle of ideas to emerge
 from this. 
 
-In partial compensation for this early focus on experiments to the
-expense of observational studies, for the course's
-first meeting please read  \textit{DOS,}  pages 3--4.  It's short and it
-contains a rationale for beginning by understanding experiments, even
-if you'll be working exclusively with observational data. 
+% In partial compensation for this early focus on experiments to the
+% expense of observational studies, for the course's
+% first meeting please read  \textit{DOS,}  pages 3--4.  It's short and it
+% contains a rationale for beginning by understanding experiments, even
+% if you'll be working exclusively with observational data. 
 
 Some readings for this course segment:
 %\begin{itemize}
 \begin{verse} Section~1.2, ``Experimentation defined,''  of 
 \bibentry{kinder1993experimental}.  (Particularly pp. 5--10.) \end{verse}
 
-\begin{verse}
-  Chapter 2 of \bibentry{gerber2012field}.
-\end{verse}
+\begin{verse}\bibentry{holland:1986a}, Sections~1--4. (The article that brought the ``Rubin 
+  Causal Model'' to  statisticians' attention.)\end{verse}
 
 \begin{verse}
+  Chapter 1 of DOS.
+\end{verse}
+
+
+\subsubsection{Inference for causal effects: the Neyman tradition}
+
+\begin{verse}
+  Chapters~1, 2 of \bibentry{gerber2012field}.
+\end{verse}
+
+\begin{verse} Endnote spanning pages A-32 and 33,
+  \bibentry{freedman:purv:pisa:1998}.  (This can be read as a pr{\'e}cis
+  of: \bibentry{neyman:1990}.)\end{verse}
+
+
+\subsubsection{Inference for causal effects: the Fisherian tradition}
+\begin{verse}
   Chapter 2 of \bibentry{rosenbaum2010design}.
+\end{verse}
+
+\bibverse{rosenbaum:1996:onAIR} (A Fisherian approach to instrumental variables.) 
+
+
+
+Additional reading:
+
+\begin{verse}
+  Section 5.3, ``Instruments,'' of \bibentry{rosenbaum2010design}.
 \end{verse}
 
 \begin{verse}
@@ -286,25 +292,12 @@ Some readings for this course segment:
 
 \begin{verse} Chapter~1, ``Introduction,'' of \bibentry {fisher:1935}.\end{verse}
 
-%\end{itemize}
 
-%\bibverse{free:etal:91} A-32 to A-33
 
-%\citealp[A-32 to A-33]{free:etal:91}
+\subsection{Found experiments}
 
-Additional references:
 
-\begin{verse}
-  Chapter 1 of \bibentry{gerber2012field}.
-\end{verse}
-\begin{verse}\bibentry{holland:1986a}. (The article that brought the ``Rubin 
-  Causal Model'' to  statisticians' attention.)\end{verse}
-
-\begin{verse} Endnote spanning pages A-32 and 33,
-  \bibentry{freedman:purv:pisa:1998}.  (This can be read as a pr{\'e}cis
-  of: \bibentry{neyman:1990}.)\end{verse}
-
-\section{Found experiments}
+\subsubsection{Principled search for designs with ignorable assignment}
 
 \begin{verse}
   Chapter 1 of DOS.
@@ -319,7 +312,7 @@ Additional references:
 
 
 
-\subsection{Propensity score methods}
+\subsubsection{Propensity score methods}
 
 Motivation and background:
 
@@ -351,9 +344,13 @@ A success and a failure:
 %\end{itemize}
 
 
-\subsubsection{Non-bipartite matching}
+\subsubsection{Regression Discontinuity Designs}
 
-(Readings tba.)
+\bibverse{lee08}
+\bibverse{mccrary2008manipulation}
+\bibverse{causek11}
+\bibverse{cattaneo2014randomization}
+\bibverse{salesHansen2015RIforRD}
 
 \subsection{Causal inference from assignment mechanism models}
 
@@ -365,13 +362,6 @@ A success and a failure:
 \bibverse{nickerson2008voting}
 \bibverse{gerber2010baseline}
 
-\subsubsection{Regression Discontinuity Designs}
-
-\bibverse{lee08}
-\bibverse{mccrary2008manipulation}
-\bibverse{causek11}
-\bibverse{cattaneo2014randomization}
-\bibverse{salesHansen2015RIforRD}
 
 \subsubsection{Modeling the assignment mechanism}
 
