@@ -1,36 +1,61 @@
 ## Unit 1, Documenting causation
 
-Learning goals
+### To build on or extend from prior courses
 
-- Experiments are well suited to documenting causation
-    - direct & direct evidence
-    - if you find something, supports argument of form _either_ treatment caused the effect _or_ ...
-- Roles of some key tools of experiment design in statistics
-    - control groups
-    - random assignment
-- Essentials of the conceptual framework
-    - timeline of comparative studies & associated distinctions (covariates vs "baseline" vs outcomes variables)
-    - potential outcomes notation and framework
-    - Fundamental Problem of Causal Inference (**2016**)
-    - ACEs
+N/A, but course prereqs:
+
+- formal logic, enough to identify valid/not valid math proofs/deductive arguments 
+-  Conditional probability and conditional expectation (you can fill this in, but it'll take additional self-study)
+- experience using a command-based computer program (as opposed to a menu-driven one)
+- willingness to learn R  (if it's new to you, consider taking the course)
+- willingness to learn markdown (you can do this on your own)
+
+
+### To be introduced in this unit
+#### examples
+
+- Fisher tea-tasting
+- Salk vaccine trials
+- dolphins(?)
+- Arceneaux et al 2010 experiment/matched study combo
+
+#### assumptions
+
+- The assignment of units of study to treatment conditions is (considered to be) a random process
+
+#### techniques 
+
 - permutation-based p-values
      - what are they?
      - basic examples
      - what they do & don't assume
-- Expected value and variance
+- reading and re-running R code from a script
+- **ITT analysis? or is this later?
 
-Statistical assumptions made throughout this unit:
+#### technical concepts
 
-- The assignment of units of study to treatment conditions is modeled as a random process
+- Random assignment
+- Comparative studies timeline
+- Hypothesis of absolutely no effect
+ - timeline of comparative studies & associated distinctions (covariates vs "baseline" vs outcomes variables)
+ 
 
+#### broader concepts
 
-Secondary learning goals:
+- Causal relativity: Documenting causation calls for comparison.  Whether the comparison of two groups is legitimate, apples-to-apples, is only partly a function of how similar the two groups are; it's also contextual:
+- 	- random assignment 
+	- how much is known about baseline characteristics
+	- sample size
+	- ...
+- Widely agreed that RCTs suffice to establish causation in social and medical science.  Less agreement re whether an RCT is necessary, importance of merely establishing causation.
 
-- Three trends in quantiative analysis
+### If it fits in....
+
+- Three trends in quantitative analysis
     - social physics (19th c)
     - sampling of populations (20th c)
     - modern causal inference (   )
-- Identify key issues that modern causal inference sees differently than earlier traditions in quantitative analysis:
+- A modern causal perspective may change your views on:
     - "the race effect was..."
     - "the intervention effect was..."
     - omitted variable bias
@@ -39,41 +64,54 @@ Secondary learning goals:
     - non-independence of outcomes (we'll develop some new concepts for thinking about this)
     - what quantitative analysis does and doesn't need theory for
     - what theory does and doesn't need quantitative analysis for
-
+    
 ## Unit 2
+## To build on/extend from prior units
 
+salk trial NFIP study (CACE estimation)
 
-Learning goals
+### To be introduced in this unit
 
-- Relevant mechanics of random assignment
+#### examples
+acorn
+
+#### assumptions
+- complete random assignment
+- no spillovers between units
+- exclusion (where appropriate)
+
+#### techniques
+- Expected value and variance
+- Aggregate by cluster
+- calculate expected values from a response schedule
+- calculate variances from a response schedule
+
+### technical concepts
+- structural characteristics of experiments & random assignment: 
     - common properties of randomized designs: complete, simple, balanced
-    - paired comparisons
+    - paired comparisons (? or next unit?)
     - unit of assignment vs unit of measurement; clustering
-    - To get the SE right, make sure you're dividing by $n$, num clusters, not $m$, a number of elements. <!-- In winter 2016 I learned that this isn't widely appreciated among stats PhD students (BH) -->
-
-- Exclusion and intention-to-treat
-    - Intention-to-treat vs effect on treated
+ -   potential outcomes schedules
+- Fundamental Problem of Causal Inference (**2016**)
+- With clusters, relevant "sample size" is the number of clusters, not the number of elements.
+- Exclusion
     - procedures to ensure exclusion
     - T>=0 issues, as opposed to omitted covariate problem in obs studies
 
-- Expected value
-- Unbiasedness
--  Conditional probability and conditional expectation
-- ACEs and FACEs
-- Intention-to-treat vs per-protocol
-- Unbiased estimators may or may not have Normal sampling dist'ns
-- Unlearn $\mathrm{s.e.}(\bar p) = \bar p(1-\bar p)/n$, since $s^2/n$ gives the same answer when it's valid and otherwise generalizes better.
+#### broader concepts
+ - ACEs vs FACEs
+ - SATEs vs PATEs
+ - ITT vs per-protocol
+ - ITT vs CACE
+ -   If there are clusters, proper SEs will have to attend carefully to them. Either aggregate data, or make sure your formula/computer program is attending to clustering
+ -  
+### If it fits in
 
 
-Statistical assumptions made throughout this unit:
-
-- The assignment of units of study to treatment conditions is
-      - random
-      - governed by known probabilities of assignment
-- Non-interference, between units of assignment
 
 
 ## Unit 3, Fisherian randomization inference & models of effects
+
 
 Basic learning goals
 - rerandomization to generate reference distributions, and thus p-values for arbitrary test statistics
@@ -87,6 +125,14 @@ special topics & by-products:
 - non-interference is presumed by Y_t/Y_c notation, but not necessarily by an incomplete response schedule
 - interference $\neq$ non-independence.  (Lots of non-independence among outcomes can be wrapped up into baseline differences, and doesn't require us to permit presence of interference.)
 -  Maybe $ \bar p(1-\bar p)/n$ has a usage after all: error of approximation of p-value simulation).
+
+
+Statistical assumptions made throughout this unit:
+
+- The assignment of units of study to treatment conditions is
+      - random
+      - governed by known probabilities of assignment
+
 
 ## Unit 04, baseline comparability and blocking
 
@@ -116,3 +162,16 @@ special topics & by-products:
   - standardization with a standard population
   - Inverse probability weighting
   - Variant of IPW to target the effect of treatment on treated
+
+## Unit Template
+
+### To build on/extend from prior units
+
+### To be introduced in this unit
+
+#### examples
+#### assumptions
+#### techniques
+#### broader concepts
+
+### If it fits in

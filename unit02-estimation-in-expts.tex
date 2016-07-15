@@ -1,6 +1,9 @@
 % TODOS:
 % Add intro to IVs, in the Bloom's method sense
-
+% remove/reduce SE material
+% smooth out hastily inserted experiment design material.  (Maybe
+% use it to motivate general idea that paired and cluster RCTS both give a basis for estimating
+% means of potential responses, within pair and then overall?
 
 
 %  For slides only
@@ -20,36 +23,6 @@
 \date{July 2015}
 
 \begin{document}
-
-\section{Experiment design \& design-based tests} %WORK ME IN OVER HERE
-
-
-\begin{frame}{Common design aspects of randomized studies} 
-  \begin{itemize}
-  \item<1-> Common properties of small, simple experiments:
-    \begin{itemize}
-    \item balanced 
-    \item complete
-    \item simple (same $\mathrm{Pr}(Z=z)$'s)
-    \end{itemize}
-  \item<2-> Common complications:
-    \begin{itemize}
-    \item<2-> pairs
-    \item<2-> blocks
-    \item<2-> cluster-level assignment
-    \end{itemize}
-  \item<3-> We'll handle complications by simplification, reorganizing so that we're looking at 1 or more simpler studies.
-  \item<4-> (Same considerations will apply to non-randomized studies.)
-  \end{itemize}
-
-\end{frame}
-\note{Examples:
-  \begin{itemize}
-  \item Fisher/coffee tasting
-  \item variations of the tasting experiment envisioned by us, by Neyman
-  \item Gosnell, \ldots, Arcenaux GOTV
-  \end{itemize}
-}
 
 
   \begin{frame}
@@ -118,6 +91,38 @@ the six cards.\ldots
   
 \end{frame}
 
+\section{Experiment design \& design-based tests} %WORK ME IN OVER HERE
+
+
+\begin{frame}{Common design aspects of randomized studies} 
+  \begin{itemize}
+  \item<1-> Common properties of small, simple experiments:
+    \begin{itemize}
+    \item balanced 
+    \item complete
+    \item simple (same $\mathrm{Pr}(Z=z)$'s)
+    \end{itemize}
+  \item<2-> Common complications:
+    \begin{itemize}
+    \item<2-> pairs
+    \item<2-> blocks
+    \item<2-> cluster-level assignment
+    \end{itemize}
+  \item<3-> We'll handle complications by simplification, reorganizing so that we're looking at 1 or more simpler studies.
+  \item<4-> (Same considerations will apply to non-randomized studies.)
+  \end{itemize}
+
+\end{frame}
+\note{Examples:
+  \begin{itemize}
+  \item Fisher/coffee tasting
+  \item variations of the tasting experiment envisioned by us, by Neyman
+  \item Gosnell, \ldots, Arcenaux GOTV
+  \end{itemize}
+}
+
+
+
 \section{Potential outcome schedules}
 
 \begin{frame}{Random variable notation; vector notation}
@@ -157,7 +162,7 @@ the six cards.\ldots
 \end{enumerate}
 \vfill
 
-\visible<2>{Either way, cannonical analyses treat observations as
+\visible<2>{Either way, canonical analyses treat observations as
 \textit{independent} samples, sizes $n_{0}$ and $n_{1}$, from
 ``\textit{superpopulations}'' of size $N_{0}, N_{1} \approx
 \infty$.  We'll see how one such analysis flows from more serious assumptions.}
