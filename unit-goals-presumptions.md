@@ -100,7 +100,7 @@ special topics & by-products:
 	  + Unstratified vs pair matched examples
 	  + for designs w/ blocks, shuffle w/in strata
   - Stratified and post-stratified experiments and natural experiments
-  
+
   - NAs in a covariate (reference DOS ch 9)
 	    + missingness as data
 	    + (MAR vs MCAR)
@@ -116,3 +116,26 @@ special topics & by-products:
   - standardization with a standard population
   - Inverse probability weighting
   - Variant of IPW to target the effect of treatment on treated
+
+## Unit 5
+
+## Unit 6
+
+## Unit 7
+
+## Unit 8
+
+## Unit 9: Currently Unbiased Estimation
+
+## Unit 10: Currently Standard Errors for Weak Hypotheses
+
+## Unit 11:
+
+## Unit 12:
+
+## Unit 13: Sensitivity Analysis
+
+## Unit 14:
+
+## Unit 15: Interference
+
