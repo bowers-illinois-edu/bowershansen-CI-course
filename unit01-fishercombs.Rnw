@@ -23,10 +23,10 @@
 \makeatother   
 %%END create new title appearance
 
-\title{Fisher teatasting worksheet}
+\title{Fisher teatasting worksheet (Unit 1)}
 % \author{ICPSR Causal Inference '14\\
 % J. Bowers, B. Hansen, T. Leavitt}
-\date{ICPSR Causal Inference; Unit 1}
+\input{authoranddate}
 \input{./defs-all}
 \pagestyle{empty}
 % \usepackage{tikz}
@@ -40,20 +40,20 @@
 library(xtable)
 @ 
 
-Here is a custom function in R to assemble a representation of the
-various treatment assignments in Fisher's tea-tasting experiment.
-(We don't expect anyone to follow this just by reading. It is
-reproducible, though.)
+Here is a custom R function to tabulate the possible
+treatment assignments in Fisher's tea-tasting experiment.
+% (We don't expect anyone to follow this just by reading. It is
+% reproducible, though.)
 
 <<>>=
 combmat <- function(n,k, picked="O", not.picked=" ")
   {
    nrow <- choose(n,k)
-   out <- matrix(not.picked,nrow, n+1)
+   out <- matrix(not.picked,nrow, n+2)
    powersof2 <- 2^(1:n)
    thecombs <- combn(n,k)
    for (ii in 1:nrow) {
-     out[ii,1] <- as.character(as.hexmode(sum(powersof2[thecombs[,ii]])))
+     out[ii,1] <- sum(powersof2[thecombs[,ii]])
      out[ii,1+thecombs[,ii]] <- picked
    }
    out
@@ -63,8 +63,7 @@ combmat <- function(n,k, picked="O", not.picked=" ")
 <<echo=TRUE,eval=FALSE>>=
 themat <- combmat(8,4)
 @ 
-After some formatting (code suppressed), we get:
-
+After some formatting (code suppressed), we get the below.    
 
 <<echo=FALSE,results=tex>>=
 ncups <- 8
@@ -72,11 +71,11 @@ themat <- combmat(ncups,floor(ncups/2), picked="\\textbullet", not.picked="\\hsp
 themat <- cbind(themat[1:floor(dim(themat)[1]/2),],
                    (floor(dim(themat)[1]/2)+1):dim(themat)[1],
                    themat[(floor(dim(themat)[1]/2)+1):dim(themat)[1],])
-colnames(themat) <- c( "(hex)",paste0("c",1:8)  , " ", "(hex)",paste0("c",1:8) ) 
+colnames(themat) <- c( "bin. rep'n",paste0("c",1:8), " "  , "  ", "bin. rep'n",paste0("c",1:8), "   " ) 
 
 print(xtable(themat, 
-             align=c(rep(c('|c|', 'c|', rep('c',ncups-1),'c|'), 2)),
-             display=rep(c('d', rep("s", ncups+1)), 2)), 
+             align=c(rep(c('|c|', 'c|', rep('c',ncups),'c|'), 2)),
+             display=rep(c(rep('d', 2), rep("s", ncups+1)), 2)), 
       sanitize.text.function=function(x) {x},
       latex.environment=NULL, floating=FALSE)
 @
@@ -89,5 +88,13 @@ print(xtable(themat,
 % \draw[step=1cm, line width=0.3mm, black!90!white] (0,0) grid (\width,\hauteur);
 % \end{tikzpicture}
 % \end{center}
+
+The
+column labeled ``bin. rep'n'' is the decimal equivalent of the
+treatment assignment as a binary number, ie\\
+\verb+sum(bin.assmt * 2^(1:n))+, where \texttt{bin.assmt} is a length $n$ vector encoding
+assignment to the treatment group as 0's and 1's. (Whereas there are
+512 ways to assign 0--8 of 8 subjects to treatment, there are only ${8
+  \choose 4} = 70$ ways to assign precisely 4 of them to treatment.)
 
 \end{document}

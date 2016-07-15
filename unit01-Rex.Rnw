@@ -1,8 +1,9 @@
+%% TODO (7-2016): Split me into a unit 2 and a unit 1
 \documentclass{article}
 %\usepackage{natbib}
 
-\title{P-values under a strong null hypothesis}
-\author{ICPSR Causal Inference}
+\title{P-values under a strong null hypothesis (Unit 1)}
+\input{authoranddate}
 \usepackage{icpsr-classwork}
 
 \begin{document}
