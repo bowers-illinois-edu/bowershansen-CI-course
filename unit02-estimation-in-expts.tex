@@ -1,16 +1,16 @@
 % TODOS:
-% Add intro to IVs, in the method of moments/AIR sense
-% Label this unit Neyman-type inference for experiments (or similar)?
+% Add intro to IVs, in the Bloom's method sense
+
 
 
 %  For slides only
-%\input{slidesonly}
+\input{slidesonly}
 
 % % For handout
 %\input{handout}
 
 %For handout + mynotes
-\input{handout+mynotes}
+%\input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -54,7 +54,7 @@ the six cards.\ldots
 \end{enumerate}
 
 \end{frame}
-
+\note{W2016: SKIP THIS}
 
 \section{Overview}
 
@@ -62,15 +62,29 @@ the six cards.\ldots
 
 \begin{frame}{Unit 2, estimating causal parameters}
   \begin{itemize}
-  \item In examples, easier to think about whether causation occurred than how one might measure it.
+  \item In coffee/tea tasting examples, easier to think about whether causation occurred than how one might measure it.
   \item Now, examples that lend themselves to talk of ``average causal effects,'' etc.
-  \item ``effect'' will have a different and more specific meaning than elsewhere in statistics; we'll begin by talking about it.
-  \item We'll continue to prefer methods that don't care whether outcomes are binary, continuous, etc, and don't make distributional assumptions on the outcomes.
+%  \item ``effect'' will have a different and more specific meaning than elsewhere in statistics; we'll begin by talking about it.
+  \item We'll continue to use methods that don't care whether outcomes
+    are binary, continuous, etc, and avoid distributional assumptions.
+  \item We will add an assumption of \textit{non-interference} (aka ``SUTVA'')
   \item In contrast to unit 1, focus on estimation rather than testing.
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Running examples: dolphins; GOTV campaign}
+\begin{frame}{Average causal effect estimates for simple
+    experiments\footnote{Example from Gerber and Green (2012) ch. 2.}}
+
+
+  \begin{columns}
+    \begin{Column}
+        \igrphx{ggch2tab2}
+    \end{Column}
+    \begin{Column}
+      
+    \end{Column}
+  \end{columns}
+
   
 \end{frame}
 
@@ -111,7 +125,12 @@ the six cards.\ldots
 \item[e] For which of the two methods does $\mathrm{Var}((\mathbf{Z}'\mathbf{Z})) = 0$?
 \end{itemize}
 \end{enumerate}
+\vfill
 
+\visible<2>{Either way, cannonical analyses treat observations as
+\textit{independent} samples, sizes $n_{0}$ and $n_{1}$, from
+``\textit{superpopulations}'' of size $N_{0}, N_{1} \approx
+\infty$.  We'll see how one such analysis flows from more serious assumptions.}
 \end{frame}
 
 
@@ -135,9 +154,13 @@ In the coffee experiment, $\mathbf{D} \equiv \mathbf{Z}$; also in experiments di
 
 \begin{frame}{Potential outcome schedules}%{Two potential outcome schedule for the coffee experiment}
 
-  A \textit{potential outcome schedule}%
-\footnote{Concept is due to Freedman (\textit{Statistical Models: Theory \& Practices}, C.U.P., 2009).}
-is a mapping of assignment vectors $\mathbf{z} = (z_1, \ldots, z_n)'$, all or mostly counter-to-fact, to outcomes.  \pause (A mapping of $\mathbf{z}$'s to $\mathbf{z}$s.) \pause Two examples:\\
+  A \textit{potential outcome schedule} %
+%\footnote{G.\&G. ch.2; concept due to Freedman (\textit{Statistical Models\ldots}, C.U.P., 2009).}
+is a mapping of assignment vectors $\mathbf{z} = (z_1, \ldots, z_n)'$,
+all or mostly counter-to-fact, to outcomes.  Alternatively, a listing of
+how each study participant would have responded to
+any combination of assignments $\mathbf{z}$ that
+the experiment could have produced. Two examples:\\
 \begin{columns}
   \begin{Column}
 %\hspace{1em} 
@@ -169,7 +192,7 @@ is a mapping of assignment vectors $\mathbf{z} = (z_1, \ldots, z_n)'$, all or mo
 0 &    1 \\ \hline
     \end{tabular}
 &
-$\vdots$
+$\cdots$
 &
     \begin{tabular}{cc} \hline
  $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
@@ -214,7 +237,7 @@ $\vdots$
  0& 0  \\ \hline
     \end{tabular}
 &
-$\vdots$
+$\cdots$
 & 
     \begin{tabular}{cc} \hline
  $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
@@ -239,7 +262,7 @@ Strict null hypotheses are potential outcome schedules, but not conversely.
 \item Walk them through -- meanings not self-evident!
 }
 
-\begin{frame}{Test statistics \& response schedules}
+\begin{frame}<\nottheirhandout>{Aside: Test statistics \& response schedules}
   
 \begin{itemize}
 \item One \texttt{test statistic} we discussed for the coffee experiment is the number of ``fancy-coffee'' cups among the cups identified as containing fancy coffee $y=1$. This translates to $Z'Y$. \pause
@@ -248,44 +271,51 @@ Strict null hypotheses are potential outcome schedules, but not conversely.
 \item The worksheet (\texttt{unit01-Rex}) has $Z'y$.  This leans on the fact that it assumes Fisher's null, under which $y$ is the same, whatever $Z$ may be. \pause
 
 \item When we're entertaining the possibility of perfect discrimination, we'd have to write $Z'Y$ .
-\item We also entertained the treatment-group mean of $y$s as a test statistic. To emphasize dependence on $Z$, write this as $Z'y/n_{t}$ ($Z'Y/n_{t}$). Or, if size of treatment group might be a random variable, $Z'y/Z'Z$ ($Z'Y/Z'Z$).
+\item We also entertained the treatment-group mean of $y$s as a test
+  statistic. To emphasize dependence on $Z$, write this as $Z'y/n_{t}$
+  ($Z'Y/n_{t}$). Or, if size of treatment group might be a random
+  variable, $Z'y/Z'Z$  ($Z'Y/Z'Z$).
 \end{itemize}
 \end{frame}
-
+\note{W16: SKIP ME}
 \begin{frame}{Potential outcome schedules}
   
-  A \texttt{potential outcome schedule} (G\& G 2012) is a listing of how each study participant \textit{would or would have} responded to any combination of assignments $\mathbf{z} = (z_1, \ldots, z_n)'$ that the experiment could have produced.   (A mapping of $\mathbf{z}$'s to $\mathbf{z}$s.)   
+  A \textit{potential outcome schedule}%
+\footnote{G.\&G. ch.2; concept due to Freedman (\textit{Statistical Models\ldots}, C.U.P., 2009).}
+is a mapping of assignment vectors $\mathbf{z} = (z_1, \ldots, z_n)'$,
+all or mostly counter-to-fact, to outcomes.  Alternatively, a listing of
+how each study participant would have responded to
+any combination of assignments $\mathbf{z}$ that
+the experiment could have produced. Two examples:\\
 
-
-Here are two possible potential outcome schedules for our coffee experiment, w/ evocative labels.
 \begin{columns}
   \begin{Column}
 \hspace{1em}    {\usebeamercolor[fg]{titlelike} Fisher's null} \\
-    \begin{tabular}{cc} \hline
- $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
-$z_1$ &  0   \\
-$z_2$ &  0   \\
-$z_3$ &  0   \\
-$z_4$ &  0   \\
-$z_5$ &  1   \\
-$z_6$ &  1   \\
-$z_7$ &  1   \\
-$z_8$ &  1   \\ \hline
+    \begin{tabular}{ccc} \hline
+ $\mathbf{z}$& $\mathbf{d} $ & $\mathbf{y}$ \\ \hline
+$z_1$ &$z_1$ &  0   \\
+$z_2$ &$z_2$ &  0   \\
+$z_3$ &$z_3$ &  0   \\
+$z_4$ &$z_4$ &  0   \\
+$z_5$ &$z_5$ &  1   \\
+$z_6$ &$z_6$ &  1   \\
+$z_7$ &$z_7$ &  1   \\
+$z_8$ &$z_8$ &  1   \\ \hline
     \end{tabular}
 
   \end{Column}
   \begin{Column}
 \hspace{1em}   {\usebeamercolor[fg]{titlelike} Perfect discrimination} \\
-    \begin{tabular}{cc} \hline
- $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
-$z_1$ & $z_1$  \\
-$z_2$ & $z_2$  \\
-$z_3$ & $z_3$  \\
-$z_4$ & $z_4$  \\
-$z_5$ & $z_5$  \\
-$z_6$ & $z_6$  \\
-$z_7$ & $z_7$  \\
-$z_8$ & $z_8$  \\ \hline
+    \begin{tabular}{ccc} \hline
+ $\mathbf{z}$ & $\mathbf{d} $ & $\mathbf{y}$ \\ \hline
+$z_1$ &$z_1$ & $z_1$  \\
+$z_2$ &$z_2$ & $z_2$  \\
+$z_3$ &$z_3$ & $z_3$  \\
+$z_4$ &$z_4$ & $z_4$  \\
+$z_5$ &$z_5$ & $z_5$  \\
+$z_6$ &$z_6$ & $z_6$  \\
+$z_7$ &$z_7$ & $z_7$  \\
+$z_8$ &$z_8$ & $z_8$  \\ \hline
     \end{tabular}
 
   \end{Column}
@@ -294,12 +324,15 @@ $z_8$ & $z_8$  \\ \hline
 
 \end{frame}
 \itnote{
-\item Sketch sampling distributions of $T = Z'y = D'y$
+\item Explain $z$ vs $d$. 
+\item W16 SKIP ME (Sketch sampling distributions of $T = Z'y = D'y$)
 }
 
 \begin{frame}{Potential outcomes}
   
-A much more common way of specifying potential outcome schedules is to specify \textit{potential outcomes}.  For binary $Z$, potential outcomes would be specified as
+A much more common way of specifying potential outcome schedules is to
+specify \textit{potential outcomes}.  For binary $Z$, and w/ perfect
+compliance ($\mathbf{d} \equiv \mathbf{z}$), potential outcomes would be specified as
 
 \begin{columns}
 \begin{Column}
@@ -319,11 +352,12 @@ Notes:\\
 
 \begin{itemize}[<+->]
 \item (Post-It analogy)
-\item Assumes each subject's response depends only on his $d$
-\item probably not appropriate for coffee experiment
+\item Assumes each subject $i$'s response depends only on $d_{i}$, not
+  other $d$s.
+\item not appropriate for coffee experiment
 \item not necessarily appropriate for Salk trial
 \item \textit{non-interference} has been assumed
-\item \ldots often unwittingly!
+\item \ldots often unwittingly! 
 \end{itemize}
   
 \end{Column}
@@ -340,13 +374,17 @@ Notes:\\
     \item How does $\mathbf{E}(Y(1) | Z=1)$ differ in meaning from $\mathbf{E}(Y(1))$?
     \item Give an example of type of study in which $\mathbf{E}(Y(1) | Z=1) = \mathbf{E}(Y(1))$, explaining why they're the same.
     \item Given an example of real or hypothetical study in which $\mathbf{E}(Y(1) | Z=1) \neq \mathbf{E}(Y(1))$.
-    \item Do randomized studies always satisfy $\mathbf{E}(Y(1) | Z=1) = \mathbf{E}(Y(1))$?  Why or why not?
+    \item Do randomized studies always satisfy $\mathbf{E}(Y(1) | Z=1)
+      = \mathbf{E}(Y(1))$?  Why or why not?
+    \item Do randomized studies always satisfy $\mathbf{E}(Y(1) | D=1)
+      = \mathbf{E}(Y(1))$?  (What's the difference between this q and
+      the last one?)
     \end{enumerate}
 \item (G.\&G. ex.4, ch 1) Suppose $z_{i} \in \{0,1\}$, all $i$; assume non-interference. Define the ATT as $\mathbf{z}'(\mathbf{y}_{T}-\mathbf{y}_{C})/\mathbf{z}'\mathbf{z}$.  Prove that if treatments are allocated using complete random assignment, then the ATT is equal in expectation to the average treatment effect.
   \end{enumerate}
 
 \end{frame}
-
+\note{W16: Maybe skip Q2, in interests of moving along?}
 \section{Expectations and ACEs}
 
 \begin{frame}{Probability review\footnote{See also G\& G, ch 2}}
@@ -370,9 +408,10 @@ $$\mathrm{E}\left(\frac{1}{n} \sum_{i=1}^n V_i\right) = \frac{1}{n} \sum_{i=1}^n
 \itnote{
 \item estimator/estimand; (statistic/parameter)
 \item $\mathrm{E}(Y(1))$ as a parameter
-\item $\frac{1}{N}\sum y_{Ti} $ as a parameter
-\item $\mathbf{Z}'\mathbf{y}/(\mathbf{Z}'\mathbf{Z})$ as a test statistic, and an estimator
-
+\item $\frac{1}{N}\sum y_{Ti} = \mu_{1}$ as a parameter
+\item $\mathbf{Z}'\mathbf{y}/(\mathbf{Z}'\mathbf{Z}) = \bar{y}_{1}$ as a test statistic, and an estimator
+\item If $\mathbf{z} \equiv \mathbf{d}$, then $\bar{y}_{1}$ is
+  unbiased for $\mu_{1}$, under both SRS and independent sampling.
 }
 
 
@@ -380,10 +419,77 @@ $$\mathrm{E}\left(\frac{1}{n} \sum_{i=1}^n V_i\right) = \frac{1}{n} \sum_{i=1}^n
   
 \end{frame}
 \itnote{
+\item For the moment, assume full compliance, so that $D \equiv Z$.
 \item G\&G on why unbiasedness is good: p. 34.
-\item A nice thing about this is that the difference of means is unbiased for the ACE whatever the potential outcome schedule.
+\item A nice thing about this is that the difference of means is
+  unbiased for the ACE whatever the (non-interfering) potential
+  outcome schedule.
+\item DISCUSS VARIANCE FORMULA HERE, OR IN SEPARATE SLIDE?
 }
 
+\begin{frame}{The Neyman justification for the 2-sample t-statistic} \pause
+ \framesubtitle{I.e., estimating treatment effect as %
+$\bar{y}_{1} - \bar{y}_0   \pm \sqrt{\mathrm{SE}(\bar{y}_{1})^{2} +
+  \mathrm{SE}(\bar{y}_{0}) ^{2}}$ ($\mathrm{SE}(\bar{y}_{j})^{2} = \sigma_{j}^{2}/n_{j} $) }
+\pause
+
+\begin{columns}
+  \begin{Column}
+    {\usebeamercolor[fg]{titlelike} Canonical approach}  
+    \begin{itemize}[<+->]
+    \item $(Y_{0i}: i=1, \ldots, n_{0})  $, $(Y_{1i}: i=1, \ldots, n_{1})  $ are
+i.i.d., mutually indep., with 2 finite moments. 
+    \item $\mathbf{E}(\bar{Y}_{1} - \bar{Y}_{0}) =
+      \mathbf{E}(\bar{Y}_{1}) - \mathbf{E}(\bar{Y}_{0}) = \mu_{1} - \mu_{0}$
+    \item $\mathrm{Var}(\bar{Y}_{1} - \bar{Y}_{0}) =
+      \mathrm{Var}(\bar{Y}_{1}) + \mathrm{Var}(\bar{Y}_{0}) =
+      \sigma_{1}/n_{1} + \sigma_{0}/n_{0}$
+    \item Finally, $\mathbf{E}(\frac{1}{n_{j}-1} \sum_{1}^{n_{j}}
+      (Y_{ji} - \bar{Y}_{j} )^{2}) = \sigma^{2}_{i}$.
+    \end{itemize}
+ \end{Column}
+  \begin{Column}
+    {\usebeamercolor[fg]{titlelike} Neyman's approach}  
+    \begin{itemize}[<+->]
+    \item Single population of size $N$. Potential outcomes, w/ no
+  interference.  T and C groups are simple
+   disjoint random samples, sizes $n_{0}$, $n_{1}$.
+ \item $\mathbf{E}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}_{t} - n_{0}^{-1}(\mathbf{1}-
+   \mathbf{Z})'\mathbf{y}_{c} ) = \cdots = N^{-1}\sum_{1}^{N} y_{ti} -
+   N^{-1}\sum_{1}^{N} y_{ci}$
+   \item $\mathrm{Var}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}_{t} - n_{0}^{-1}(\mathbf{1}-
+   \mathbf{Z})'\mathbf{y}_{c} ) = \cdots \leq \frac{N}{N-1}
+   \left(\frac{\sigma_{1}^{2}}{n_{1}}  +
+     \frac{\sigma_{0}^{2}}{n_{0}}\right)$     
+\item Finally, $\mathbf{E}(\frac{1}{\# \mathbf{s}} \sum_{i \in \mathbf{s}}
+      (y_{i} - \bar{y}_{\mathbf{s}} )^{2}) = \frac{N}{N-1}\sigma^{2}$.
+
+    \end{itemize}
+ \end{Column}
+\end{columns}
+\pause
+Either way, unbiasedness limits error of estimation, error of error of estimation. 
+\end{frame}
+
+\itnote{
+\item (go over this)
+\item Discuss unbiasedness, both ways.
+\item Put up Finucan
+}
+
+\begin{frame}{A Neyman-compatible justification for the paired t-statistic}
+ \framesubtitle{i.e., $\widehat{\mathrm{ACE}} = \bar{d} \pm s_{d}/\sqrt{n}$} 
+
+\end{frame}
+
+\itnote{
+\item If $d$'s aren't too crazy then $\hat{\mu}$ is consistent, in triangular array sense
+\item Estimating equation formulation
+\item The form of the ``robust standard error''
+\item Easy to add in weights
+\item See also Imai et al 2009 Prop 1 ff
+\item (ran out of time for tex-ing)
+}
 \section{Common estimation targets in comparative studies}
 
 
@@ -441,6 +547,7 @@ Jargon:
 \end{frame}
 
 \itnote{
+\item W16: SKIP ME
 \item Refer to sec 2.6 of G\&G 
 }
 \begin{frame}{Per-protocol and intention to treat}
@@ -472,6 +579,24 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
   \end{columns}
 \end{frame}
 
+\begin{frame}{The complier average causal effect via Bloom's(1984) method}
+  \begin{itemize}
+  \item intention-to-treat effect (Little \& Yau's [1998] $\delta$) vs
+    complier average causal effect ($\delta_{c}$).
+  \item $\delta = \pi_{c} \delta_{c} + \pi_{n} \delta_{n} $
+  \item Assumptions: SUTVA, exclusion, monotonicity.
+ \end{itemize}
+
+\igrphx{SalkVtable-full}
+\end{frame}
+
+\begin{frame}{Biased and unbiased ATE estimation in experiments}
+  
+\end{frame}
+\note{Having assigned Aronow and Middleton 2015 for reading, I
+  discussed a little bit how clusterintg means the subject level
+  difference in differences can be biased.}
+
 \begin{frame}{Attributable effects}
   
 When $y$ is binary (and sometimes otherwise), $\mathbf{z}'\mathbf{y} - \mathbf{z}'\mathbf{y}_{c}$ is known as the \textit{attributable effect} (Rosenbaum, 2001, \textit{Biometrika}).
@@ -489,6 +614,31 @@ When $y$ is binary (and sometimes otherwise), $\mathbf{z}'\mathbf{y} - \mathbf{z
 
 
 \end{frame}
+
+\begin{frame}{SE's for AEs}
+  
+\end{frame}
+\itnote{
+\item Conceptual issue: when you're estimating the value of an RV,
+  should your SE encapsulate the sampling variability that RV, or just
+  the variability of the error of your estimate?  Hansen \& Bowers
+  2009 opt for the latter. 
+\item Hansen \& Bowers's SE vs the Neyman SE
+  \begin{enumerate}
+  \item 2 terms rather than 1
+  \item Contrib from fpc
+  \end{enumerate}
+\item What the ? was the Abadie reference on this?
+}
+
+\begin{frame}{Votes-per-contact versus CACE}
+  
+\end{frame}
+\itnote{
+\item Two ratio-type estimators, one estimating a parameter, one an RV
+\item (See last couple of exercises)
+\item (There's an open problem lurking here)
+}
 \end{document}
 
 
