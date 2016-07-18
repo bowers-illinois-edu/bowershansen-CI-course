@@ -14,10 +14,10 @@ N/A, but course prereqs:
 ### To be introduced in this unit
 #### examples
 
-- Fisher tea-tasting
+
 - Salk vaccine trials
-- dolphins(?)
-- Arceneaux et al 2010 experiment/matched study combo
+- dolphins
+- Fisher tea-tasting
 
 #### assumptions
 
@@ -30,7 +30,7 @@ N/A, but course prereqs:
      - basic examples
      - what they do & don't assume
 - reading and re-running R code from a script
-- **ITT analysis? or is this later?
+
 
 #### technical concepts
 
@@ -47,8 +47,12 @@ N/A, but course prereqs:
 	- how much is known about baseline characteristics
 	- sample size
 	- ...
+ - In statistical computations, expect to err.  Trust but validate.
+ - ACEs vs FACEs
 - Widely agreed that RCTs suffice to establish causation in social and medical science.  Less agreement re whether an RCT is necessary, importance of merely establishing causation.
 
+
+ 
 ### If it fits in....
 
 - Three trends in quantitative analysis
@@ -73,12 +77,14 @@ salk trial NFIP study (CACE estimation)
 ### To be introduced in this unit
 
 #### examples
-acorn
+
+- village councilwomen in India
+- acorn
 
 #### assumptions
 - complete random assignment
 - no spillovers between units
-- exclusion (where appropriate)
+- exclusion (where appropriate - or maybe next unit)
 
 #### techniques
 - Expected value and variance
@@ -94,17 +100,18 @@ acorn
  -   potential outcomes schedules
 - Fundamental Problem of Causal Inference (**2016**)
 - With clusters, relevant "sample size" is the number of clusters, not the number of elements.
-- Exclusion
+- - ITT analysis
+- Exclusion (or maybe next unit?)
     - procedures to ensure exclusion
     - T>=0 issues, as opposed to omitted covariate problem in obs studies
 
 #### broader concepts
- - ACEs vs FACEs
+
  - SATEs vs PATEs
  - ITT vs per-protocol
- - ITT vs CACE
  -   If there are clusters, proper SEs will have to attend carefully to them. Either aggregate data, or make sure your formula/computer program is attending to clustering
- -  
+ -  Unbiased estimation is convenient, but limiting yourself to unbiased estimators may be too constraining
+ 
 ### If it fits in
 
 
@@ -126,6 +133,8 @@ special topics & by-products:
 - interference $\neq$ non-independence.  (Lots of non-independence among outcomes can be wrapped up into baseline differences, and doesn't require us to permit presence of interference.)
 -  Maybe $ \bar p(1-\bar p)/n$ has a usage after all: error of approximation of p-value simulation).
 
+
+- ITT vs CACE (or maybe next unit?)
 
 Statistical assumptions made throughout this unit:
 

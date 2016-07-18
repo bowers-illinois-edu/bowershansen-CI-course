@@ -92,8 +92,11 @@ analysis in social science, by century:
 \end{frame}
 
 \subsection{Two influential examples}
-\begin{frame}{Example 1a: The Salk vaccine trial\footnote{Source:
-      \href{http://www.cengage.com/resource_uploads/downloads/0534094929_46500.pdf}{Meier 1972}{}, ``The biggest public health experiment ever\ldots''}}
+\begin{frame}{Example 1a: Salk vaccine trial}
+\framesubtitle{
+   The version that is remembered \footnote{E.g.
+      \href{http://www.cengage.com/resource_uploads/downloads/0534094929_46500.pdf}{Meier
+        1972}, ``The biggest public health experiment ever\ldots''}, in statistics \& public health. }
 
 
 \igrphx{SalkVtable-rctonly}
@@ -109,7 +112,7 @@ analysis in social science, by century:
 \item Exercise: Abstract a relevant 2x2 table
 }
 
-\begin{frame}{The other Salk trial}
+\begin{frame}{Example 1b: Salk vaccine trial (the other one)}
 
 \igrphx{SalkVtable-full}
 \end{frame}
@@ -118,6 +121,10 @@ analysis in social science, by century:
 \item both versions are experiments in the everyday sense
 \item both control for age and physical locale
 \item large size, presence of these controls lends legitimacy to both
+\item In this case I maintain that markers of good design are an
+  illusion, it's an overtly unfair comparison.  Why isn't this
+  apples-to-apples?  
+\item Exercises: abstract $2\times 2$ table. \textrm{Think-pair-share}
 \item Demonstration of advantage of random assigment per se
 \item We'll see how to get the ``right answer'', despite shortcomings.  The move is
   primarily conceptual, not technical, having to do w/ IVs.
@@ -133,7 +140,7 @@ don't, you'll tend not to.
 \pause
 
 \begin{itemize}[<+->]
-\item Given these goals, \textit{random
+\item \textrm{Random
     assignment}  sure helps. Units 1-3 theorize this point along lines
   of Fisher, Neyman and their current-day followers.
 \item In comparative assessments of study designs, random assignment also benefits
@@ -190,7 +197,7 @@ findings as summarized by Rosenbaum, \textit{DOS} ch1?}
   \item Unit-level potential outcomes (Rubin, 1970s): $y_{t}, y_{c}$.
   \end{itemize}
 
-The Rosenbaum reading covers this material in detail, in context of an experiment.
+\uncover<+->{Rosenbaum's \textit{DOS} covers this material in detail (Ch.2, ``Causal inference in randomized experiments'').}
 \end{frame}
 
 \begin{frame}<1-3>[label=quasivstrueFr]{Quasi-experiments as
@@ -233,7 +240,8 @@ The Rosenbaum reading covers this material in detail, in context of an experimen
 \begin{frame}{Course prerequisites}
   \begin{enumerate}
 \item experience using a command-based computer program (as opposed to a menu-driven one)
-\item willingness to adopt a try-it-and-see-what-happens approach to software
+\item willingness to try on attitudes suitable to
+  non-commercial software: expect to err; trust but validate. 
 \item willingness to learn R  (if it's new to you, consider taking the course)
 \item willingness to learn markdown (you can do this on your own)
 \item Conditional probability and conditional expectation: prior
@@ -273,17 +281,20 @@ Total & 13 & 17 & 30 \\ \hline
 The \textit{hypothesis of (absolutely) no effect} says\ldots
 
 \footnotetext[1]{Antonioli, C. and
- Reveley, M.A. (2005)  ``Randomised controlled trial of animal facilitated therapy with dolphins in the treatment of depression.''  \textit{British Medical Journal} \textbf{331} (7527) 1231--4.}
+ Reveley, M.A. (2005)  ``Randomised controlled trial of animal
+ facilitated therapy with dolphins in the treatment of depression.''
+ \textit{British Medical Journal} \textbf{331} (7527) 1231--4; see
+ also \href{http://www.rossmanchance.com/applets/Dolphins/Dolphins.html}{rossmanchance.com Applet}. }
 \end{frame}
 \note{
 Then break to discuss testing of hypotheses of no effect, i.e. start worksheet.
 }
 
 
-\begin{frame}{Interference}
+\begin{frame}{Interference\footnote{(instructor agenda alert!)}}
   \begin{itemize}
     \item Intuitively, my treatment may affect your response
-  \item If there is interference, describing the true state of affairs calls for more elaborate notation that $(y_{T1}, Y_{C1}), (y_{T2}, Y_{C2}), \ldots, (y_{Tn}, Y_{Cn}).$
+  \item If there is interference, describing the true state of affairs calls for more elaborate notation than $(y_{T1}, y_{C1}), (y_{T2}, y_{C2}), \ldots, (y_{Tn}, y_{Cn}).$
   \item Nonetheless, possibility of interference does not threaten validity of tests of Fisher's null.
   \end{itemize}
 \end{frame}
