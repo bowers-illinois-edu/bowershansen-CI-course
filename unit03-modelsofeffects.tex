@@ -3,10 +3,10 @@
 %\input{slidesonly}
 
 % % For handout
-%\input{handout}
+\input{handout}
 
 %For handout + mynotes
-\input{handout+mynotes}
+%\input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -66,10 +66,14 @@ Suppose the goal is to test the hypothesis that $\tau = 0$.
 \begin{itemize}[<+->]
 \item If $\epsilon \sim \mathcal{N}(0, \sigma^{2})$, some $\sigma >0$, regardless of whether $Z=1$ or 0, the difference of means is optimal, in various senses, as an estimator of $\tau$. By extension, using it as a test statistic gives favorable power.
 \item True both for parametric tests (t-test) and permutation tests.
-\item If $\epsilon$ follows some other distribution, or isn't the same for the two groups, the situation changes.
-\item Parametric $t$-tests may have sizes larger than their levels. Permutation $t$-tests will maintain size.
-\item For both tests, \textit{power} suffers.
-\item A simple explanation: the difference of means reacts so strongly to outliers as to tend to obscure differences due to a treatment effect.
+\item If $\epsilon$ follows some other distribution, parametric
+  $t$-test's $\alpha$ level is only approximate, depending on CLT. (To
+  fix, use permutation $t$-test.)
+\item For both versions, \textit{power} suffers: the means reacts so
+  strongly to outliers unrelated to treatment that  the ACE becomes
+  hard to see.
+\item To fix, select a test statistic with built-in outlier
+  protection.
 \end{itemize}
 \end{frame}
 
@@ -221,21 +225,24 @@ dependence assumptions.   For instance, using random
 
  \begin{enumerate}[<+->]
  \item Let
-   $y(T)=$ neighborhood homicide rate in year $T$.  We test models of
-   effects of the form
-$$H_{0}: y_{t}(T) = \left\{ \begin{array}{lr}\exp(T \cdot r/4)
-                              y_{c}(T),& T>0 \\
-y_{c}(T),& T\leq 0\end{array} \right.$$ 
-where  $r \leq 0$.
+   $y(T)=$ neighborhood homicide rate in year $T=2002, \ldots, 2008$.  We test models of
+   effects of form, for rates $r \leq 0$:
+$$H_{0}: y_{t}(T) = \left\{ \begin{array}{lr}\exp((T-2004) r/4)
+                              y_{c}(T),& T> 2004; \\
+y_{c}(T),& T\leq 2004.\end{array} \right.$$ 
  \item We then fit a random effects model of this form:
 \begin{semiverbatim}
  lmer(Count \textasciitilde\  year + (year+1|nh) +\ \pause
-            \alert<@+>{offset}( nhTrt*(yr>2004)*(r/4)*(yr-2004) ),
+            \alert<@+| handout:0>{offset}( nhTrt*(yr>2004)*(r/4)*(yr-2004) ),
           family=poisson, data=homd)
 \end{semiverbatim}
-\item This fits 2 random effects, a slope and an intercept, for
-  each neighborhood.  To test $H_{0}$, I calculated a test statistic comparing $t$ vs $c$
-  differences in fitted slopes, then compared it to its rerandomization distribution.
+\item Fitted params include  ``fixed'' intercept and slope,
+  $\hat{\beta}_{0(r)}$ and $ \hat{\beta}_{1(r)}$,\pause  plus a
+  ``random'' slope and intercept (also specific to $r$) for
+  each n-hood.  
+\item To test $H_{0}$, I calculated a test statistic comparing $t$ vs $c$
+  n-hoods' fitted intercepts. For the reference dist'n, I rerandomized
+  $Z$ and recalculated.
  \end{enumerate}
 
   
@@ -296,7 +303,7 @@ the xes, \textit{after} the top and bottom coding.
     \end{column}
     \begin{column}{.75\linewidth}
         \begin{itemize}
-  \item[Matching/other] (if it's an obs study.  tbd)
+  \item[Comparison Design] Specify clustering, pairing or blocking
   \item[Estimation] Optionally, compute unbiased estimate of ATE
   \item[MOEs] Specify models of effect; separately for each, figure $\mathbf{y}_{\mathbf{z}\equiv 0} $ or a summary of it.
   \item[Tests \& CIs] Select test statistic, perform h-tests (separately for each MOE). Summarize the results with a 95\% CI, maybe also 2/3 CI. 
@@ -317,7 +324,7 @@ the xes, \textit{after} the top and bottom coding.
     \end{column}
     \begin{column}{.75\linewidth}
         \begin{itemize}
-  \item[Matching/other] 
+  \item[Comparison Design] 
   \item[Estimation] 
   \item[MOEs] 
   \item[Tests \& CIs] 
@@ -353,7 +360,7 @@ Covariance adjustments to enhance precision, of course.
     \end{column}
     \begin{column}{.75\linewidth}
         \begin{itemize}
-  \item[Matching/other] (if it's an obs study.  tbd)
+  \item[Comparison Design] Specify clustering, pairing or blocking
   \item[Gain scores] Optionally, adjust for lagged measure of the outcome by subtracting it off from the actual outcome.
   \item[Estimation] Optionally, compute unbiased estimate of ATE
   \item[MOEs] Specify models of effect; separately for each, figure $\mathbf{y}_{\mathbf{z}\equiv 0} $ or a summary of it.

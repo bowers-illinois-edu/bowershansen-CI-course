@@ -44,8 +44,8 @@
 \newlength{\boywidth} 
 \newlength{\girlwidth} 
 
-\newcommand{\igrphxG}[1]{\includegraphics[width=\girlwidth]{./2014/lectures/images/#1}}
-\newcommand{\igrphxB}[1]{\includegraphics[width=\boywidth]{./2014/lectures/images/#1}}
+\newcommand{\igrphxG}[1]{\includegraphics[width=\girlwidth]{../2014/lectures/images/#1}}
+\newcommand{\igrphxB}[1]{\includegraphics[width=\boywidth]{../2014/lectures/images/#1}}
 
 
 \begin{frame}
@@ -203,9 +203,10 @@ The model asks you to believe that matching on capacity is a
 sufficient adjustment.  We'll be able to do better than that, but what
 we do with those better matches will be much the same.
 
-After showing them this, STOP and have them do \S~1--3 of worksheet;
-do exercises 1 and 2 at the end of section~3.  
-(At \url{http://www.stat.lsa.umich.edu/~bbh/cscarworksheet.pdf}.)
+After showing them this, STOP and have them review and work thru
+worksheet up to first bundle of exercises (create \texttt{pm},
+\texttt{tm}; compare balance on \texttt{t2}, \texttt{date}).
+%(At \url{http://www.stat.lsa.umich.edu/~bbh/fullmatch-vignette.pdf}.)
 
 % \begin{pedantic}
 This will be first explicit use of object orientation, assignments.  Explain.
@@ -390,7 +391,7 @@ New site\\
 
 
 \begin{frame}<1>[fragile,label=MahalDFr]
-\frametitle{Combining differences on \texttt{cap} and \texttt{date} using Mahalanobis distance}
+\frametitle{Combining discrepancies via Mahalanobis distance}
 \addtolength{\tabcolsep}{-\tabcolsepadj} \vfill
 %\begin{center}
 {\footnotesize
@@ -511,10 +512,11 @@ A & -1.6 & {1.2} {\mlpnode{NA}} \\
 \end{tabular}}
 \end{center}
 \bigskip
-\bigskip
-\bigskip
-\bigskip
-{R code:
+{R code:\\
+
+\begin{semiverbatim}
+dcdist = match\_on(pr \textasciitilde\ date+cap, data=nuke.nopt) ;
+\end{semiverbatim}
 }
 \end{minipage}
 \begin{minipage}[t]{2in}
@@ -560,9 +562,9 @@ New site\\
  \path[draw,gray] (NG) edge (NU);
  \end{tikzpicture}
 \begin{semiverbatim}
-pairmatch( match\_on(pr \textasciitilde\ date+cap, data=nuke.nopt) )
+pairmatch(dcdist, data=nuke.nopt ) \# \textrm{\textit{or} just}
 
-\textrm{\textit{or}}\, \, pairmatch( pr \textasciitilde\ date+cap, data=nuke.nopt ) 
+pairmatch( pr \textasciitilde\ date+cap, data=nuke.nopt ) 
 \end{semiverbatim}
 
 \end{frame}
@@ -1168,7 +1170,12 @@ prior to matching, so that distances need only be calculated within subclasses.
 % structure.fmla= \textasciitilde\ pt)
 % \end{semiverbatim}
 
-(These generate Mahalanobis and propensity distances for all of the nuclear plants, not just the \texttt{pt==0} plants, after subclassifying the plants according to the value of \texttt{pt}.)
+\begin{itemize}
+\item (These generate Mahalanobis and propensity distances for all of the nuclear plants, not just the \texttt{pt==0} plants, after subclassifying the plants according to the value of \texttt{pt}.)
+\item<+-> For a sense of how this affects the size of the matching
+  problem, compare \texttt{with(nuclearplants, prod( table(pr) ) )}  to
+  \texttt{num\_eligible\_matches(em1)}. 
+\end{itemize}
 \end{frame}
 \note{
 % NB: for the second \texttt{mdist()} call, ``pt'' has to be in the

@@ -2,10 +2,10 @@
 %\input{slidesonly}
 
 % % For handout
-\input{handout}
+%\input{handout}
 
 %For handout + mynotes
-%\input{handout+mynotes}
+\input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -551,6 +551,33 @@ This matches units using the linear predictor, i.e. the logits of the fitted pro
 \item OK for a variable both to appear in Mahal dist and in PS.
 }
 %\mbox{}
+
+\begin{frame}{Mahalanobis matching, propensity matching or both?}
+\framesubtitle{Navigating implementation tradeoffs in matching}
+\begin{itemize}[<+->]
+\item Recap: \texttt{pairmatch(Tx \textasciitilde X1 + X2)}
+  vs. \texttt{pairmatch(psMod)} vs \texttt{pairmatch(Tx
+    \textasciitilde X1 + X2 + scores(psMod))}
+\item (This vastly understates the number of choices to be made!)
+\item Rubin, Rosenbaum on "designs," non-problem of trying out many
+  candidate designs 
+\item Some design criteria (there are others):
+  \begin{itemize}
+  \item simplicity; 
+\item balance.
+  \end{itemize}
+\item (Sequential intersection union principle [SIUP; Hansen \& Sales 2015]
+  and balance testing.)
+\item Aside from balance, may want PS to address extrapolation.
+  \begin{itemize}
+  \item PS as a diagnostic rather than a matching criterion
+  \item PS \textit{calipers} may address extrapolation more squarely than
+    does matching on the PS.
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+\subsection[PS calipers]{Pair matching with propensity score calipers}
 \begin{frame}[fragile]
   \frametitle{Propensity score calipers and pair matching}
 \citet{rosenbaum:rubi:1985a}, and \citet{rubin:thom:2000}, advise Mahalanobis distance (including the propensity score) + propensity score calipers.
@@ -568,13 +595,12 @@ In this case it's not possible to create nonoverlapping
 pairs while respecting this constraint: {%\footnotesize
 \begin{Schunk}
 \begin{Sinput}
-> try( pair(pr~cap+date+scores(my.ppty.mod), within=pcal, data=nuke.nopt) )
+> pairmatch(pr~cap+date+scores(my.ppty.mod), within=pcal, data=nuke.nopt) 
 \end{Sinput}
 \end{Schunk}
 \begin{Schunk}
 \begin{Soutput}
-Error in pairmatch.InfinitySparseMatrix(m, controls = controls, data = mfd,  : 
-  not enough controls in some subclasses
+Error in <...>
 \end{Soutput}
 \end{Schunk}
 }
@@ -583,18 +609,27 @@ But if you give up on the subset of
 treatments that are not within caliper width of any controls, the problem becomes feasible. (In this case.) {%\footnotesize
 \begin{Schunk}
 \begin{Sinput}
-> head( pair(pr~cap+date+scores(my.ppty.mod), data=nuke.nopt,
-+                within=pcal, remove.unmatchables=T) )
+> pairmatch(pr~cap+date+scores(my.ppty.mod), data=nuke.nopt,
++                within=pcal, remove.unmatchables=T) 
 \end{Sinput}
-\begin{Soutput}
-   A    B    C    D    E    F 
-<NA>  1.1  1.2 <NA>  1.3  1.4 
-\end{Soutput}
 \end{Schunk}
 \pause 
-(This doesn't always work.  More general solutions include widening the caliper and matching more flexibly.) } %\hyperlink{computeNotesFr}{\beamergotobutton{Jump to ``Worksheet updates''}}
+This time it works! (Although it doesn't always.  More general solutions include widening the caliper and matching more flexibly.) } %\hyperlink{computeNotesFr}{\beamergotobutton{Jump to ``Worksheet updates''}}
 \end{frame}
 
+\itnote{
+\item Reasons to caliper on the PS
+\begin{itemize}
+\item In gen'l you need a PS caliper or something like it to address
+  extrapolation
+\item If you're taking the complexity hit of including PSes, a simply
+  expressed caliper may somewhat mitigate it. 
+\item At the margins, calipers can help with balance.
+\end{itemize}
+\item Another tradeoff: you'll be forced to think about excluding
+  treatment group members. 
+\item (Why it's bad to loose treatment group members )
+}
 
 %\mbox{}
 \begin{frame}[label=selectCalFr]
@@ -678,10 +713,50 @@ Percentiles of matched distances:
 \end{frame}
 
 
+\begin{frame}[fragile]{Reasons to use a PS caliper}
+
+  \begin{itemize}[<+->]
+  \item Extrapolation
+  \item Balance
+  \item Computational speed/feasibility of matching
+  \item To try out Josh Errickson's R functions to help manage
+      this tradeoff, grab \texttt{optmatchExperimental} from github:
+      \begin{itemize}
+      \item       \texttt{install.packages('devtools', dep=T)} (This takes a while.)
+      \item Pick a temporary directory (TMP) for the install. Then:
+      \end{itemize}
+  \end{itemize}
+
+\begin{semiverbatim}
+> library(devtools)
+> with\_libpaths(<TMP>,
++   install\_github("markmfredrickson/optmatchExperimental") )
+> library(optmatchExperimental, lib.loc=<TMP>)
+> library(optmatch) \# use your regular optmatch
+\end{semiverbatim}
+  
+\end{frame}
+
 \section[full matching]{Matching with a varying number of controls and full matching}
-\Note{
-Point: if you insist on one fixed matching ratio, you'll probably have to leave meaningful chunks of the sample on the table. 
+
+\begin{frame}<1-3>[label=FixedVsFlexFr]{Fixed vs flexible ratio matching}
+\framesubtitle{Navigating implementation tradeoffs in matching}  
+
+\begin{itemize}[<+->]
+\item Pair matching \& sample size
+\item Effective vs real sample size
+\item If we limit ourselves to fixed matching ratios, we gain in
+  simplicity but pay a price in sample size (effective \& real).
+\item How big a price?  Trying is the best way to find out.
+\end{itemize}
+
+\end{frame}
+
+\itnote{
+\item (How big\ldots bullet does NOT appear now, it turns up on a
+  later slide.)
 }
+
 \begin{frame}
   \frametitle{Matching with a varying number of controls}
 \begin{minipage}[t]{2in}
@@ -937,6 +1012,7 @@ D & 3.1  {\mlpnode{Nd}} &{\mlpnode{Ny}\mbox{}} Y & 4.9 \\
 
 \end{frame}
 
+\againframe<4>{FixedVsFlexFr}
 
 \begin{frame}<1>[label=matchworkflowFr]
   \frametitle{Matching workflow}
@@ -946,13 +1022,20 @@ Steps:
     \item Choose structural requirements for match
     \item Create the match (checking that it worked)
     \item Evaluate quality, structure of matches
-    \item Try a few variations, iterating until satisfied with result.
+    \item Try a few variations, iterating until satisfied with result.\\[12ex]
     \item<2-> If match quality is borderline, ask computer to try a little harder\ldots
     \end{enumerate}
 
 \end{frame}
-\note{
-Break for worksheet work.
+\itnote{
+\item The vertical space is for a diagram like the following:
+  \begin{tabular}{l|rr} \hline
+& \multicolumn{2}{|c}{Complicatedness} \\
+    Effective s.s.&low & high \\ \hline
+high & & \\
+low & & \\ \hline
+  \end{tabular}
+\item Break for worksheet work here.
 }
 
 

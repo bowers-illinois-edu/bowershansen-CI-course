@@ -1,5 +1,5 @@
 \documentclass{article}
-%\usepackage{natbib}
+\usepackage{natbib}
 
 \title{Lab on Fisherian randomization inference and models of effects }
 \author{ICPSR Causal Inference '15}
@@ -8,6 +8,8 @@
 \begin{document}
 \maketitle
 
+% NB (2016): When we update RItools to >0.1-13, we'll have to go
+% through here and override xBal's multiplicity corrections.
 \section{Preliminaries}
 \subsection{Setup}
 Here is the Acorn GOTV experiment data described in Arceneaux (2005),
@@ -19,36 +21,32 @@ acorn <- read.csv("data/acorn03.csv")
 And here we load libraries containing some functions we'll be using later on:
 <<results='hide'>>=
 library(MASS)
-library(mosaic)
 library(optmatch)
-library(RItools)
 @ 
 
 NOTE: If running any of the above commands gives you an error like
 the below, you'll need to install\footnote{%
 To install, first make sure you have an active internet connection.  Next, if you're using RStudio, you might use the interactive dialog that pops up when you select ``Install Packages\ldots'' from the Tools menu.  (Leave the ``Install dependencies'' option checked.)  Otherwise, enter
 \texttt{
-install.packages(\"RItools\", dep=T)
+install.packages(\"optmatch\", dep=T)
 }
 into R.  You'll be prompted to select a CRAN mirror; choose one that's
 nearby.  You'll also be asked about the directory to install the
 package to. The default selection should be fine. The installation
 process may take a few seconds to a few minutes, depending on your
 internet connection and on how many dependencies need installation.
-(The mosaic package has a bunch of dependencies and may take some
-time.)  Once it's finished, you should be able to load the package.  
+Once it's finished, you should be able to load the package.  
 
-Jake \& Ben contribute to \texttt{RItools}, and may distribute a
-pre-release update to it, in the form of a file named something like ``\texttt{RItools\_0.1-13.tar.gz}.''  If so, you can load this in RStudio by
-opening the Install Packages tool and under ``Install from:'' select
-Package Archive File. It's a good idea to install the earlier version
-of the package first, in order to get the package dependencies.
+To use a development version of the RItools or optmatch packages, see
+their README files,
+\url{https://github.com/markmfredrickson/RItools/tree/master} or \url{https://github.com/markmfredrickson/optmatch/tree/master}
 } the package before loading it:\\
 \begin{verbatim}
-Error in library(RItools) : there is no package called 'RItools'
+Error in library(optmatch) : there is no package called 'optmatch'
 \end{verbatim}
 Each package can be installed via the ``Install Packages'' Tool in the RStudio
 menu.  Make sure to install package dependencies. 
+
 
 
 Sigfigs in display:
@@ -118,13 +116,13 @@ actualD = coef(lm(yc.moe0~z, data=acorn.e))[2]
 @ 
 This verifies that the response schedule is consistent w/ what was observed after the experiment.  Going on to simulate repeated trials of the experiment:
 <<>>=
-simD = replicate(1000, coef(lm(yc.moe0~shuffle(z), data=acorn.e))[2])
+simD = replicate(1000, coef(lm(yc.moe0~sample(z), data=acorn.e))[2])
 
 @ 
 
 (Note: the \texttt{mosaic} package provides a nifty alternative to \texttt{replicate()}:
 <<eval=FALSE>>=
-simD = do(1000) * coef(lm(yc~shuffle(z), data=acorn.e))[2]
+simD = do(1000) * coef(lm(yc~sample(z), data=acorn.e))[2]
 @ 
 For the demo we'll stick with \texttt{replicate()}, however, since
 some of won't otherwise have use for \texttt{mosaic} in your regular workflows.)
@@ -155,15 +153,16 @@ transformations to the outcomes prior to making comparisons between
 the two groups. For example, 
 <<eval=FALSE>>=
 actualD = coef(lm(rank(yc.moe0)~z, data=acorn.e))[2]
-simD = replicate(1000, coef(lm(rank(yc.moe0)~shuffle(z), data=acorn.e))[2])
+simD = replicate(1000, coef(lm(rank(yc.moe0)~sample(z), data=acorn.e))[2])
 @ 
 Under complete random assignment, this give a test equivalent to the  \textit{Wilcoxon rank-sum test}. 
 
 Robustification via robust regression is also pretty easy, at least
-with small data sets for which things run quickly.
+with small data sets for which things run quickly.  (The
+\texttt{rlm()} function lives in the MASS package.)
 <<eval=FALSE>>=
 actualD = coef(rlm(yc.moe0~z, data=acorn.e))[2]
-simD = replicate(1000, coef(rlm(yc.moe0~shuffle(z), data=acorn.e))[2])
+simD = replicate(1000, coef(rlm(yc.moe0~sample(z), data=acorn.e))[2])
 @ 
 
 \textbf{Exercise.}
@@ -181,7 +180,10 @@ determine a data-dependent threshold using iterative least squares.
 bottom-coded, ie $e \mapsto \max(-t, \min(t,e))$.)
 
 For a zippier variation, determine a threshold before starting the
-simulations, and apply the same one in each simulation.  
+simulations and then that  threshold repeatedly, rather than having
+\texttt{rlm()} calculate  a different threshold each time it's called.
+(This gives a slightly different test, probably no better or worse
+powered than the first.)
 <<>>=
 (rlm0 <- rlm(yc.moe0~1, data=acorn.e))
 @
@@ -195,20 +197,28 @@ rlm0$s
 thresh.moe0 <- 1.345 * rlm0$s
 acorn.e <- transform(acorn.e, yc.t.moe0 = sign(yc.moe0)*min(thresh.moe0, abs(yc.moe0)))
 actualD <- coef(lm(yc.t.moe0 ~z, data=acorn.e))[2]
-simD <-  replicate(1000, coef(lm(yc.t.moe0~shuffle(z), data=acorn.e))[2])
+simD <-  replicate(1000, coef(lm(yc.t.moe0~sample(z), data=acorn.e))[2])
 @ 
 
 \textbf{Exercise.}
 \begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
-\item If a test involving thresholding of $y$s is to be accurately
-  described as a permutation test, then the threshold shouldn't depend
-  on the realized value of $\mathbf{Z}$ --- any other $\mathbf{z}$
-  should give the same threshold.  How come?
- \item More specifically, \textit{if} the specific model-of-effects under test
-   is correct, \textit{then} any other value of $ \mathbf{Z}$ that's
-   consistent with the design should give rise to the same
-   threshold. Why is it OK for this not to be true of the
-   model-of-effect is untrue? 
+\item For the version of the test with a single threshold, that
+  threshold was taken from a fit of \texttt{rlm(yc.moe0
+    \textasciitilde\ 1)}.  It would have been a mistake to instead
+  extract it from a fit of \texttt{rlm(yc.moe0
+    \textasciitilde\ z)}, as we did in (each iteration of) the slower
+  test that the single-threshold test was intended to improve on --- had we
+  done that, our test would not have been a legitimate permutation
+  test.  How come?  
+ %%  \item If a test involving thresholding of $y$s is to be accurately
+ %%  described as a permutation test, then the threshold shouldn't depend
+ %%  on the realized value of $\mathbf{Z}$ --- any other $\mathbf{z}$
+ %%  should give the same threshold.  How come?
+ %% \item More specifically, \textit{if} the specific model-of-effects under test
+ %%   is correct, \textit{then} any other value of $ \mathbf{Z}$ that's
+ %%   consistent with the design should give rise to the same
+ %%   threshold. Why is it OK for this not to be true of the
+ %%   model-of-effect is untrue? 
   \setcounter{saveenumi}{\value{enumi}}
 \end{enumerate}
 
@@ -259,9 +269,11 @@ xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2,
 @ 
 Some p-values go up, others down. Again, this assumes version 0.1-13 or later of RItools.
 
+
+
 \section{Paired random assignment and post-stratified designs}
 
-To emulate a block-randomized study, let's post-stratify the Acorn
+To emulate a pair-randomized study, let's post-stratify the Acorn
 experiment into pairs, on the basis of turnout rates in the last few
 prior elections.
 
@@ -274,13 +286,18 @@ reflect stratification.
 <<>>=
 actualD = coef(lm(rank(yc.moe0)~z, data=acorn.e))[2]
 @ 
-Its reference distribution does, however.  
-<<>>=
+Its reference distribution does, however.  Here's how you'd do it
+using the Mosaic package's \texttt{shuffle()} function instead of base
+R's \texttt{sample()}:
+<<eval=FALSE>>=
+library(mosaic)
 simD = replicate(1000, coef(lm(rank(yc.moe0)~shuffle(z, groups=pairs), data=acorn.e))[2])
 @ 
-Note the \texttt{groups}
-argument given to \texttt{shuffle()}: to see what this is doing, try
-it yourself at the command line:
+Without a \texttt{groups}
+argument, \texttt{shuffle()} would have done the same as
+\texttt{sample()}, but with the groups argument permutations are
+performed within pairs (specifically, within levels of the factor
+variable \texttt{pairs}). Try it yourself at the command line:
 <<eval=FALSE>>=
 with(acorn.e, cbind(pairs, z, shuffle(vote03, groups=pairs)))
 @ 
@@ -303,4 +320,137 @@ xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2 + strata(pairs) -1,
 The \texttt{strata(pairs)} tells it to include stratification on
 \texttt{pairs}, and the \texttt{-1} signals that we don't also need
 the unstratified comparison.
+
+
+\section{Testing the hypothesis of no effect after adjustment for covariates}
+
+When there is  a lagged measure of the outcome, one can compare pre-post differences on that measure between treatment and control.  
+
+<<>>=
+acorn.e <- transform(acorn, pre.post.diff = vote03 - v_g2002)
+@ 
+
+Analyzing these differences, as opposed to the outcome itself, is sometimes called \textit{gain score analysis}.
+
+Unbiased estimation of the average treatment effect is the same as if you were comparing the outcome itself, rather than pre-post differences:
+
+<<>>=
+lm2 <- lm(pre.post.diff ~ z, data=acorn.e)
+coef(lm2)[2]
+vcovHC(lm2, type="HC2")
+@ 
+
+Likewise for setting up models of effects, and for permutation testing of them.
+<<>>=
+acorn.e <- transform(acorn.e, 
+                     dc.moe0 =  pre.post.diff,
+                     dc.moe1 = pre.post.diff - contact/10,
+                     dc.moe2 = pre.post.diff -contact/5
+                     )
+
+xBalance(z ~ dc.moe0 + dc.moe1 + dc.moe2, 
+         report=c("adj.means", "std.diffs", "z.scores"), 
+         data=acorn.e, post.alignment.transform=rank)
+
+@ 
+
+Interesting: with this adjustment, we're able to reject a hypothesis that we weren't able to reject previously.
+
+\textbf{Exercise.}  
+\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
+\item Using gain scores to adjust for the result of the last general election, test another model of effects (of your own chosing).
+    \setcounter{saveenumi}{\value{enumi}}
+\end{enumerate}
+Gain score analysis is easier to understand than comparisons involving regression (covariance) adjustment, and in some cases there's not much benefit to more complex regression-based methods.  
+
+I don't know that this is one of those cases, however.  It seems desirable also to include covariate adjustments for the results of the last election prior to the intervention.
+
+
+\subsection{Difference of means test with robust covariate adjustment}
+
+Now we'll covariate-adjust for the 2 most recent election results,  to beef up a test of the hypothesis of no effect. A reference for what we're doing here is \cite[\S2.3]{rosenbaum:2002a}.  Since \texttt{v\_g2002} is one of these, we'll use the original outcome rather than the gain scores; the results will be identical (if we use OLS for the covariate adjustments) or similar (if we use robust regression).
+<<>>=
+acorn.e <- transform(acorn.e, 
+                     yc.moe0 =  vote03,
+                     yc.moe1 = vote03 - contact/10,
+                     yc.moe2 = vote03 -contact/5
+                     )
+@ 
+
+The first step is to residualize.  One can do this using OLS, via R's \texttt{lm} function, but often robust regression is better for these purposes.  I use \texttt{rlm} from the \texttt{MASS} package, with default options.
+<<eval=FALSE>>=
+library(MASS) #Just a reminder; the script actually loaded MASS already
+@ 
+<<>>=
+rlm0 = rlm(yc.moe0 ~ v_g2002 + v_p2003, data=acorn.e)
+@ 
+Internally, \texttt{rlm()} has top- and bottom-coded the residuals in order to fit its regression coefficients.  But I couldn't find a convenience function for extracting these Winsorized (top- and bottom-coded) residuals, so I wrote one myself.
+<<>>=
+trimmed_resid <- function(arlm)
+  {
+   stopifnot(inherits(arlm, "rlm")) # only works for rlms
+   with(arlm, residuals * psi(residuals/s))
+  }
+r0 = trimmed_resid(rlm0)
+@ 
+
+To see the difference between trimming or no, 
+ run \texttt{stem(resid(rlm0))} vs \texttt{trimmed\_resid(rlm0))} and compare the results.
+
+Now we can take the difference in means in \texttt{r0} as our test statistic, whithout fear of an outlier or two's sapping away our power.
+
+<<>>=
+lm(r0~z, data=acorn.e)
+actualD = coef(lm(r0~z, data=acorn.e))["z"]
+coef(lm(r0~sample(z), data=acorn.e))["sample(z)"]
+simD = replicate(1000, coef(lm(r0~sample(z), data=acorn.e))["sample(z)"])
+table(simD>= actualD)/length(simD)
+@ 
+
+giving a one-sided p-value for the hypothesis of no effect. Since
+residualization was done without attention to the distinction between
+treatment and control, the statistical significance of the difference
+between treatment and control group means, of top- and bottom-coded residuals, speaks to the presence of a treatment effect.
+
+One can also combine these two approaches to limiting the play of
+outliers, i.e. robust regression and rank-based methods.  For example,
+one can use robust regression to fit the coefficients of the covariate
+adjustment, then go on to apply the rank transformation to the
+covariate adjusted residuals.  In the examples below, this is done
+without need for special coding, such as \texttt{trimmed\_resid} above.
+
+Covariate adjustment followed by a test based on rank transformed-residuals:
+<<>>=
+wilcox.test(e0~z, data=transform(acorn, e0=resid(rlm0)))
+@ 
+Using \texttt{xBalance} to conduct several of these tests at once:
+<<>>=
+xBalance(z ~ e0 + e1 + e2, 
+         report=c("adj.means", "z.scores", "p.values"), 
+         post.alignment.transform=rank,
+         data=transform(acorn.e, e0=resid(rlm(yc.moe0~v_g2002 + v_p2003)),
+                        e1=resid(rlm(yc.moe1~v_g2002 + v_p2003)),
+                        e2=resid(rlm(yc.moe2~v_g2002 + v_p2003)))
+         )
+
+@ 
+
+\texttt{Exercise.}\\
+\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
+\item   \texttt{xBalance} to test 4 models of effect, the 3 mentioned above and another of your devising.  Incorporate covariate adjustment, as above.
+\end{enumerate}
+
+\bibliographystyle{plain}
+% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+\begin{thebibliography}{1}
+
+\bibitem{rosenbaum:2002a}
+Paul~R. Rosenbaum.
+\newblock Covariance adjustment in randomized experiments and observational
+  studies.
+\newblock {\em Statistical Science}, 17(3):286--327, 2002.
+
+\end{thebibliography}
+
+
 \end{document}

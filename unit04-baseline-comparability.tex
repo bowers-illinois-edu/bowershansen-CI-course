@@ -1,8 +1,8 @@
 %  For slides only
-\input{slidesonly}
+%\input{slidesonly}
 
 % % For handout
-%\input{handout}
+\input{handout}
 
 %For handout + mynotes
 %\input{handout+mynotes}
@@ -10,7 +10,7 @@
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
 
-\title{Unit 4: Covariance adjustment for experiments and observational studies}
+\title{Unit 4: Baseline comparability and blocking}
 % \author, date moved to beamer-preamble-*-all.tex
 
 \begin{document}
@@ -21,94 +21,528 @@
 
 \tableofcontents[subsectionstyle=show/hide/hide]
 
-  \alert{Readings for this Unit:}\\
-  \begin{itemize}
-  \item Rosenbaum (2002), ``Covariance adjustment in randomized experiments and observational  studies, '' \S 2.3 ({\em Statistical Science}, 17/3:286--327).
-  \end{itemize}
+  % \alert{Readings for this Unit:}\\
+  % \begin{itemize}
+  % \item Rosenbaum (2002), ``Covariance adjustment in randomized experiments and observational  studies, '' \S 2.3 ({\em Statistical Science}, 17/3:286--327).
+  % \end{itemize}
 
 \input{announcement-of-the-day}  % announcement-of-the-day.tex not
                                 % part of repo
 
 \end{frame}
+\itnote{
+%Interesting template possibility: examples, assumptions, issues
+\item examples: UCBgrads/UMfac vs KC03; Medellin
+}
+\section[tests of assignment]{Testable manifestations of biased and random assignment}
 
-\begin{frame}{Workflow for analyzing experiments/obs studies}
-  \framesubtitle{To summarize from earlier units:}
+\begin{frame}[fragile]
+  \frametitle{1971 UC Berkeley Admissions}
 
-  \begin{columns}
-    \begin{column}{.25\linewidth}
-      
-    \end{column}
-    \begin{column}{.75\linewidth}
-        \begin{itemize}
-  \item[Matching/other] (if it's an obs study.  tbd)
-  \item[Estimation] Optionally, compute unbiased estimate of ATE
-  \item[MOEs] Specify models of effect; separately for each, figure $\mathbf{y}_{\mathbf{z}\equiv 0} $ or a summary of it.
-  \item[Tests \& CIs] Select test statistic, perform h-tests (separately for each MOE). Summarize the results with a 95\% CI, maybe also 2/3 CI. 
-  \item[HL estimates] Optionally, Hodges-Lehmann estimate
-  \end{itemize}
+Bickel \textit{et al.}'s (1975)%\citeyearpar{Bickel:etal:1975} 
+famous data set:\\[1ex]
 
-    \end{column}
-  \end{columns}
+% latex table generated in R 3.2.2 by xtable 1.8-0 package
+% Fri Dec  4 01:28:36 2015
+\begin{tabular}{rrr}
+  \hline
+ & Admitted & Rejected \\ 
+  \hline
+Male & 0.45 & 0.55 \\ 
+  Female & 0.30 & 0.70 \\ 
+   \hline
+\end{tabular}
+\vspace{2ex}
+
+Discrimination?\\[3ex]
+
+\pause
+\begin{Schunk}
+\begin{Soutput}
+	Pearson's Chi-squared test with Yates'
+	continuity correction
+
+data:  ucb1971
+X-squared = 90, df = 1, p-value <2e-16
+\end{Soutput}
+\end{Schunk}
 \end{frame}
 
-\section{Covariance adjustment}
-\begin{frame}<\nottheirhandout>{What's missing from this picture?}
+\begin{frame}[fragile]
+  \frametitle{1971 UC Berkeley Admissions}
 
 
-  \begin{columns}
-    \begin{column}{.25\linewidth}
-      
-    \end{column}
-    \begin{column}{.75\linewidth}
-        \begin{itemize}
-  \item[Matching/other] 
-  \item[Estimation] 
-  \item[MOEs] 
-  \item[Tests \& CIs] 
-  \item[HL estimates] 
-  \end{itemize}
+Bickel \textit{et al.}'s (1975)%\citeyearpar{Bickel:etal:1975} 
+famous data set:\\[1ex]
 
-    \end{column}
-  \end{columns}
-\pause
+% latex table generated in R 3.2.2 by xtable 1.8-0 package
+% Fri Dec  4 01:28:36 2015
+\begin{tabular}{rrr}
+  \hline
+ & Admitted & Rejected \\ 
+  \hline
+Male & 0.45 & 0.55 \\ 
+  Female & 0.30 & 0.70 \\ 
+   \hline
+\end{tabular}
+\vspace{2ex}
+
+Discrimination? ---Perhaps not.\\[3ex]
+
+Proportions of men and women applicants accepted, \textit{by department}, for 6 large departments.
+
+% latex table generated in R 3.2.2 by xtable 1.8-0 package
+% Fri Dec  4 01:28:36 2015
+\begin{tabular}{rrrrrrr}
+  \hline
+ & A & B & C & D & E & F \\ 
+  \hline
+Male & 0.62 & 0.63 & 0.37 & 0.33 & 0.28 & 0.06 \\ 
+  Female & 0.82 & 0.68 & 0.34 & 0.35 & 0.24 & 0.07 \\ 
+   \hline
+\end{tabular}
+\end{frame}
+\itnote{
+ \item What gives?  Look for a while and see you can see what's going on.  Not rocket science, but tricky.  Have to guess a little about stuff that's not evident from this table.
+\item {}\textit{[time permitting]} Now try to describe it to your neighbor.   
+\item {}\textit{[time permitting]} Anyone care to give a succinct explanation?
+}
+
+\begin{frame}<1>[fragile,label=ucbBalFr] 
+  \frametitle{1971 UC Berkeley Admissions}
+
+\bigskip
+
+Proportions of men and women \textit{applying} to the 6 departments.\\
+% latex table generated in R 3.2.2 by xtable 1.8-0 package
+% Fri Dec  4 01:28:36 2015
+\begin{tabular}{rrrrrrrr}
+  \hline
+ & A & B & C & D & E & F & Overall \\ 
+  \hline
+Male & 31 & 21 & 12 & 15 & 7 & 14 & 100 \\ 
+  Female & 6 & 1 & 32 & 20 & 21 & 19 & 100 \\ 
+  diff. & 25 & 19 & -20 & -5 & -14 & -5 & 0 \\ 
+   \hline
+\end{tabular}\\
+\vfill
+\end{frame}
+
+\note[itemize]{
+\item Recall that A--F are in descending order of ease of admission.
+}
+
+
+\begin{frame}[fragile] 
+  \frametitle{1971 UC Berkeley Admissions}
+
+\bigskip
+
+Proportions of men and women \textit{applying} to the 6 departments.\\
+% latex table generated in R 3.2.2 by xtable 1.8-0 package
+% Fri Dec  4 01:28:36 2015
+\begin{tabular}{rrrrrrrr}
+  \hline
+ & A & B & C & D & E & F & Overall \\ 
+  \hline
+Male & 31 & 21 & 12 & 15 & 7 & 14 & 100 \\ 
+  Female & 6 & 1 & 32 & 20 & 21 & 19 & 100 \\ 
+  diff. & 25 & 19 & -20 & -5 & -14 & -5 & 0 \\ 
+   \hline
+\end{tabular}\\
+\bigskip
+
+Define dummy variables \texttt{DeptA}, \ldots, \texttt{DeptF}. Comparison is \textit{balanced} for \texttt{DeptA} if M, W means of \texttt{DeptA} are similar.
+
 
 \vfill
-Covariance adjustments to enhance precision, of course.
+\mbox{ }
+
+\end{frame}
+
+\note[itemize]{
+%\item discuss conjectures from previous slide
+%\item Male/Female differences on these percentages as ANOVA contrasts, or as OLS regression coefficients.
+\item The results suggest it isn't OK to analyze ignoring department
+  --- at least, if department matters for likelihood of
+  admission. Pretty clear that it should --- it's a ``potential
+  confounders'';
+\item what's not clear yet is whether the difference we're
+  looking at might be a fluke of chance, similar to flukes we might
+  have seen had we been able to assign gender at random.
+\item Let's consider how this finding is reflected in terms of
+  goodness-of-fit tests of models. 
+}
+
+\begin{frame}[fragile,label=UCBAttestFr] 
+  \frametitle{1971 UC Berkeley Admissions}
+  \framesubtitle{$t$-tests to check balance}
+
+\bigskip
+
+Proportions of men and women \textit{applying} to the 6 departments.\\
+% latex table generated in R 3.2.2 by xtable 1.8-0 package
+% Fri Dec  4 01:28:36 2015
+\begin{tabular}{rrrrrrrr}
+  \hline
+ & A & B & C & D & E & F & Overall \\ 
+  \hline
+Male & 31 & 21 & 12 & 15 & 7 & 14 & 100 \\ 
+  Female & 6 & 1 & 32 & 20 & 21 & 19 & 100 \\ 
+  diff. & 25 & 19 & -20 & -5 & -14 & -5 & 0 \\ 
+   \hline
+\end{tabular}\\
+\bigskip
+
+% UCBAdefinition chunk included in pressetup.R
+
+Define dummy variables \texttt{DeptA}, \ldots, \texttt{DeptF}. Comparison is \textit{balanced} for \texttt{DeptA} if M, W means of \texttt{DeptA} are similar. One way to check this:\\
+\begin{Schunk}
+\begin{Sinput}
+> t.test(Dept=="A"~Gender, data=UCBA)
+\end{Sinput}
+\end{Schunk}
+\begin{Schunk}
+\begin{Soutput}
+	Welch Two Sample t-test
+data:  Dept == "A" by Gender 
+t = 24, df = 4232, p-value < 2.2e-16    
+\end{Soutput}
+\end{Schunk}
+\begin{Schunk}
+\begin{Sinput}
+> lm(Dept=="A"~Gender, data=UCBA)
+\end{Sinput}
+\end{Schunk}
+\begin{Schunk}
+\begin{Soutput}
+             Estimate Std. Error t value Pr(>|t|)
+(Intercept)      0.31     0.0074      41 1.6e-315
+GenderFemale    -0.25     0.0117     -21  3.3e-95
+\end{Soutput}
+\end{Schunk}
+
+
+\vfill
+{\footnotesize \ldots where \texttt{UCBA} is (essentially)
+  \texttt{as.data.frame(UCBAdmissions)}.}
+\mbox{ }
+
+\end{frame}
+\itnote{
+ \item Slight difference between $t$-stats is explained by the second
+   assuming equal variances, which the first doesn't. }
+
+
+\begin{frame}
+  \frametitle{The Neyman-Rubin Model for (simple) experiments}
+\vfill
+  This is what randomization ensures:
+$$ (\alert<4>{Y_t, Y_c},\alert<2>{X}) \perp \alert<3>{Z} $$
+\vfill
+
+\uncover<5->{I.e., each of $X$, $Y_{c}$ and $Y_{t}$is \alert<@+|
+  handout:0>{balanced}} \uncover<6->{in expectation; modulo sampling
+  variability.}
+\vfill
+
+\uncover<7->{You should test the part involving $X$ even before looking
+  at outcomes (Cochran, 1965; Hansen \& Bowers, 2008; Hansen, 2008).}
+  \uncover<8->{(For the opposite advice, see Senn, 1994; Imai et al 2008.)  }
+
+
+\end{frame}
+\note[itemize]{
+  \item In controlled experiments, random assignment warrants this.
+  \item In natural experiments, justified otherwise, or an article of
+    faith (i.e. a model).
+  \item In an experiment, the $x$es aren't necessary for inference.
+  \item However, the part with the $x$es has testable consequences.}
+
+
+
+
+\begin{frame}<\nottheirhandout>
+\frametitle{Grow your own Simpson's paradox}
+%\begin{columns}
+% \begin{column}{.4\linewidth}
+% \end{column}
+\begin{center}%{.6\linewidth}
+  UM-LSA Tenure-track faculty, by sex and
+  division\footnote{Given in round numbers.  Actual totals: 629M,
+    361W.  Source: ``Institutional indicators of Diversity: AY2010
+    (Public),'' \textsc{Advance} committee, U. of Michigan.}
+  \medskip
+  
+  \begin{tabular}{l|rrr|r} \hline
+    & \multicolumn{1}{c}{Nat. Sci.} & \multicolumn{1}{c}{Soc. Sci.}
+    &\multicolumn{1}{c}{ Humanities} & Overall\\ \hline
+Men & 230 &250& 160 & 640\\[1.5ex]
+Women & 60 &190& 110 & 360 \\[1.5ex] \hline
+All & 290& 440 & 270 & 1000\\[2ex] 
+\only<2->{Pub rate} & & & & \\ \hline
+  \end{tabular}
+\end{center}
+%\end{columns}
+
+\visible<2->{
+Exercise: invent ``publication rates'' that are the same for men and
+women in each division, but that lead to men having a higher
+publication rate overall.
+}    
+\end{frame}
+
+
+\againframe<\nottheirhandout>{UCBAttestFr}
+\itnote{
+\item Drawback \# 1: All hypothesis tests are bad, b/c we're not
+  interested in whether the two populations differ. (This is what
+  Senn, Imai et al are exercised about.)
+ \item Drawback \# 2: t-test involves parametric assumptions, assumptions that don't work so great here. 
+\item Drawback \# 3: doing a whole mess of t-tests is overly repetitive.
+}
+
+\begin{frame}[fragile] 
+  \frametitle{1971 UC Berkeley Admissions}
+
+\bigskip
+
+Proportions of men and women \textit{applying} to the 6 departments.\\
+% latex table generated in R 3.2.2 by xtable 1.8-0 package
+% Fri Dec  4 01:28:36 2015
+\begin{tabular}{rrrrrrrr}
+  \hline
+ & A & B & C & D & E & F & Overall \\ 
+  \hline
+Male & 31 & 21 & 12 & 15 & 7 & 14 & 100 \\ 
+  Female & 6 & 1 & 32 & 20 & 21 & 19 & 100 \\ 
+  diff. & 25 & 19 & -20 & -5 & -14 & -5 & 0 \\ 
+   \hline
+\end{tabular}\\
+\bigskip
+
+Define dummy variables \texttt{DeptA}, \ldots, \texttt{DeptF}. Comparison is \textit{balanced} for \texttt{DeptA} if M, W means of \texttt{DeptA} are similar.
+% \[ \mathtt{a}_{i}=\left\{
+%   \begin{array}{lr}
+%     1, & $i$\, \mathrm{applied\ to\ dept\ A}\\
+%     0, & \mathrm{otherwise}.
+%   \end{array}
+% \right.\]
+% The comparison is \textit{balanced} on \texttt{a} if $\bar{\mathtt{a}}_{m}
+% \approx \bar{\mathtt{a}}_{f}$, balanced on \texttt{b} if $\bar{\mathtt{b}}_{m}
+% \approx \bar{\mathtt{b}}_{f}$, etc.  \pause
+
+{\small
+\begin{Schunk}
+\begin{Sinput}
+> xBalance(Female ~ Dept, data=UCBA, 
++          report=c("adj.means", "adj.mean.diffs"))
+\end{Sinput}
+\begin{Soutput}
+      strata  unstrat                           
+      stat   Female=0 Female=1 adj.diff         
+vars                                            
+DeptA        3.1e-01  5.9e-02  -2.5e-01 ***     
+DeptB        2.1e-01  1.4e-02  -1.9e-01 ***     
+DeptC        1.2e-01  3.2e-01  2.0e-01  ***     
+DeptD        1.5e-01  2.0e-01  4.9e-02  ***     
+DeptE        7.1e-02  2.1e-01  1.4e-01  ***     
+DeptF        1.4e-01  1.9e-01  4.7e-02  ***     
+\end{Soutput}
+\end{Schunk}
+}
+
+\vfill
+\end{frame}
+
+\itnote{
+\item Discuss multiple comparisons strategies
+\item Hotelling's $T^{2}$; randomization test of Mahalanobis distance of imbalances from 0. 
+}
+
+
+\section{Additional issues in balance testing}
+
+\subsection{Clusters and strata}
+\begin{frame}{Simple and block-randomized experiments}
+\framesubtitle{Example: Gerber and Green's (2000, APSR) Vote 98
+  experiment}
+
+\begin{columns}
+  \begin{Column}[.3\textwidth]
+    \begin{itemize}[<+->]
+    \item The experiment(s)
+    \item Combined diff of means check for in-person expt?
+    \item (Have to 1st take sums across clusters)
+    \item Combined diff of means check for phone, mail  expts?
+    \item (Have to address the potential Simpson's paradox)
+    \end{itemize}
+  \end{Column}
+  \begin{Column}[.7\textwidth]
+    \igrphx{gg2k-exptdesign}
+  \end{Column}
+\end{columns}
   
 \end{frame}
 
-\begin{frame}{Basic varieties of covariance adjustment}
+\itnote{
+\item 
+}
+
+
+
+\begin{frame}{For permutation tests of block-randomized experiments}
   
+  \begin{enumerate}
+  \item If you're using a regression model to generate test
+    statistics, \textit{consider} adding fixed effects for blocks.  I.e., fit
+    the two-way ANOVA model
+$$
+Y = \sum_{s}\{S=s\}\alpha_{s} + Z\tau + \epsilon,\, \mathbf{E}(\epsilon) = 0.
+$$
+ (For randomization tests, the fixed effects aren't necessary; but
+ people expect to see them, and they can be helpful.)
+\item If there are strata, \texttt{RItools::xBalance()} figures
+  ``adjusted mean differences'' in this way.  (Separately
+  for each covariate, after summing the covariate over any designated \texttt{cluster}s.)
+  \item  You \textit{have to} permute $Z$ separately within strata -- i.e.,\\
+\texttt{> shuffle(z, groups=myblocks)}\\
+in order to have a  valid permutation test. True whether or not $\mathrm{Pr}(Z=1|S=s)$ depends on $s$, although more variation in that probability makes things worse.
+  \end{enumerate}
+
+
+
+
+\end{frame}
+
+\subsection{Covariates with NAs}
+
+\begin{frame}[fragile]{Item missingness as data}
+
   \begin{itemize}
-   \item{} {Differences-in-differences}
+  \item (Following Rosenbaum \& Rubin, 1984, JASA.
+See discussion of Rosenbaum, \textit{DOS}, ch. 9.)
+  \item Example, from analysis of an observational study of coaching
+    for the SAT, comparing a candidate post-stratification to a
+    matching within poststrata:
+  \end{itemize}
+
+\begin{semiverbatim}
+              strata racebySES          matched        
+              stat    std.diff         std.diff        
+vars                                                   
+psat.NATRUE            0.1183  *        0.0051         
+psatv                  -0.0622          0.0071         
+psatm                  0.0144           0.0142         
+presat.NATRUE          -0.0281          0.0289         
+presatv                -0.1161 *        0.0084         
+presatm                0.0275           -0.0116        
+---Overall Test---
+          chisquare df p.value
+racebySES     47.28  8 1.4e-07
+matched        0.81  8 1.0e+00
+---
+Signif. codes:  0 '***' 0.001 '** ' 0.01 '*  ' 0.05 '.  ' 0.1 '   ' 1     
+\end{semiverbatim}
+
   
-\item {} {Model-assisted covariance adjustment}
+\end{frame}
 
-  \end{itemize}
+\subsection{Covariates with funky distributions}
+
+\note{
+For now, this is a placeholder section for some slides on the combo
+of Huberized loss and stratum fixed effects.  It might be filled out
+with ref to some balance checks from the 2011 festschrift paper,
+which contained outliers using linear splines with user-chosen
+knots.
+}
+
+\begin{frame}{Test statistics for comparing means with Normal \& non-Normal data}
+
+If treatment was assigned separately within strata, a two-way anova model is often used:
+$$
+Y = \sum_{s}\{S=s\}\alpha_{s} + Z\tau + \epsilon,\, \mathbf{E}(\epsilon) = 0.
+$$
+OLS estimates of $\tau$:
+\begin{itemize}[<+->]
+  \item Are optimal, both as estimates and as statistics for testing hypotheses about $\tau$, if $\epsilon \sim \mathcal{N}(0, \sigma^{2})$;
+  \item Need not have the right size, and typically will have suboptimal power, otherwise.
+  \item Permutation-based versions of these tests have correct size\ldots
+  \item But still suffer in terms of power.
+\end{itemize}
 
 \end{frame}
 
-\begin{frame}{Workflow for analyzing experiments/obs studies}
-  \framesubtitle{To summarize from earlier units:}
 
-  \begin{columns}
-    \begin{column}{.25\linewidth}
-      
-    \end{column}
-    \begin{column}{.75\linewidth}
-        \begin{itemize}
-  \item[Matching/other] (if it's an obs study.  tbd)
-  \item[Gain scores] Optionally, adjust for lagged measure of the outcome by subtracting it off from the actual outcome.
-  \item[Estimation] Optionally, compute unbiased estimate of ATE
-  \item[MOEs] Specify models of effect; separately for each, figure $\mathbf{y}_{\mathbf{z}\equiv 0} $ or a summary of it.
-  \item[Cov Adj] Optionally, effect model-assisted covariance adjustments
-  \item[Tests \& CIs] Select test statistic, perform h-tests (separately for each MOE). Summarize the results with a 95\% CI, maybe also 2/3 CI. 
-  \item[HL estimates] Optionally, Hodges-Lehmann estimate
-  \end{itemize}
+\begin{frame}[fragile]{Example (Hansen 2011)}
 
-    \end{column}
-  \end{columns}
+{\small
+\begin{semiverbatim}
+xBalance(Coach \textasciitilde 
+         psatv + pmin(psatv,40) + pmax(psatv,60) + 
+         psatm + pmin(psatm,40) + pmax(psatm,60) + 
+         psat.NA + \ldots) 
+
+                    strata no.stratification          racebyses         
+                     stat            adj.diff           adj.diff         
+vars                                                                     
+psatv                                -1.1e-01           -5.0e-01         
+pmin(psatv, 40)                      9.5e-02            1.8e-01          
+pmax(psatv, 60)                      -2.1e-01 .         -3.7e-01 **      
+psatm                                9.1e-01  *         1.2e-01          
+pmin(psatm, 40)                      2.2e-01  *         2.0e-01  *       
+pmax(psatm, 60)                      1.5e-01            -5.6e-02         
+psat.NATRUE                          4.6e-02  *         5.6e-02  *       
+\end{semiverbatim}
+$\vdots$    
+
+}
+
+
+  
 \end{frame}
 
+\section[Isolating natural experiments]{Isolating \& testing natural experiments}
+
+
+\begin{frame}
+
+  \begin{itemize}
+  \item baseline comparability for Medellin data
+
+\item pair matching for Medellin
+
+  \end{itemize}
+  
+\end{frame}
+
+\begin{frame}{Stepwise intersection-union testing (Hansen \& Sales, 2015)}
+  
+\end{frame}
 
 \end{document}
+
+
+\begin{frame}{Adapting Huber's M-estimation to tests w/ stratified data}
+
+
+      Two approaches:
+      \begin{enumerate}
+      \item using Huber's loss, fit a two-way model  ---
+$$
+Y = \sum_{s}\{S=s\}\alpha_{s} + Z\tau + \epsilon,\, \mathbf{E}(\epsilon) = 0.
+$$
+The test statistic is the $\hat{\tau}$ that results.
+\item using Huber's loss, fit a one-way model \textit{with no $Z$-contribution},
+$$
+Y = \sum_{s}\{S=s\}\alpha_{s} + \epsilon,\, \mathbf{E}(\epsilon) = 0.
+$$
+Write residuals from this model as $e$, $\tilde{e} = \psi(e)$.  The test statistic is the difference-of-means in $\psi(e)$ (or, equivalently, $Z'\tilde{e}$).
+      \end{enumerate}
+
+
+
+  
+\end{frame}
+
