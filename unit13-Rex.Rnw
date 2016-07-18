@@ -25,7 +25,7 @@ options(width=110,digits=3)
   He also has now provided an R Package (\texttt{sensitivitymv}). 
 
 <<>>=
-load(url("http://jakebowers.org/Matching/meddat.rda"))
+meddat <- read.csv("./data/meddat.csv")
 @
 
 Setup a few useful variables and formula objects
@@ -42,8 +42,7 @@ time. You can substitute in your own match for mine.
 
 <<>>=
 library(optmatch)
-load("fm4.rda")
-meddat[names(fm4),"fm4"]<-fm4
+meddat <- transform(meddat, pairm = pairmatch(nhTrt~nhLogHom, data=meddat))
 @
 
 
@@ -64,8 +63,8 @@ library(RItools)
 meddat$HomRate0803<-with(meddat,HomRate08-HomRate03)
 
 xbtest3<-xBalance(nhTrt~HomRate0803,
-		  strata=list(fm4=~fm4),
-		  data=meddat[matched(meddat$fm4),],
+		  strata=list(pairm=~pairm),
+		  data=meddat[matched(meddat$pairm),],
 		  report="all")
 xbtest3$overall
 xbtest3$results
@@ -98,8 +97,7 @@ xbtest3$results
   nicely).
   
 <<dosens, results="hide">>=
-install.packages("http://jakebowers.org/Matching/sensitivitymv_1.3.tar.gz",
-		 type="source",repos=NULL, method="libcurl") ## or method="curl" if needed
+install.packages(c("sensitivitymv", "sensitivitymw"),repo="http://cran.case.edu") 
 
 library(sensitivitymv)
 
@@ -120,22 +118,8 @@ fullmatch2sensmat<-function(y,z,fm){
   return(respmat)
 }
 
-respmat<-with(meddat[matched(fm4),],fullmatch2sensmat(HomRate0803,nhTrt,fm4))
+respmat<-with(meddat[matched(meddat$pairm),],fullmatch2sensmat(HomRate0803,nhTrt,pairm))
 
-## This is a hack. It involves adding one control unit.
-## It appears that we have to have at least two sets of the
-## same size to make this code work.
-## Here I'm trying to set some bounds on the answers that we get with
-## different values for the difference between the treated unit and the new
-## fake control
-## respmat[4,4]<-max(respmat,na.rm=TRUE)
-## respmat[4,4]<-0
-## respmat[4,4]<-min(respmat,na.rm=TRUE)
-
-## Alternatively install a version of the package that I edited from the
-## website http://jakebowers.org/Matching
-
-## install.packages("http://jakebowers.org/Matching/sensitivitymv_1.3.tar.gz", repos=NULL, method="libcurl")
 
 senmv(-respmat,method="t",gamma=1)
 senmv(-respmat,method="t",gamma=2)
@@ -165,26 +149,23 @@ res1$root
 @
 
 
-If we had fixed size sets (i.e. all 1:1 or all 1:2...), we can also look at an example involving
+Since we have fixed size sets (i.e. all 1:1 or all 1:2...), we can also look at an example involving
 point-estimates and confidence intervals assuming an additive effect of
 treatment. Notice that the two-sided intervals have lower bounds that are
 lower than the one-sided intervals. Notice also that that when $\Gamma$ is
 greater than 1, we have a range of point estimates consistent with that
 $\Gamma$.
 
-<<>>=
-## Here, remove the one set that is not a pair:
-meddat$pmFake<-meddat$fm4
-meddat$pmFake[meddat$fm4 %in% names(table(meddat$fm4)[table(meddat$fm4)!=2])]<-NA
-table(meddat$pmFake,exclude=c())
-@
+%% meddat$pmFake<-meddat$pairm
+%% meddat$pmFake[meddat$pairm %in% names(table(meddat$pairm)[table(meddat$pairm)!=2])]<-NA
+%% table(meddat$pmFake,exclude=c())
 
 <<results='hide'>>=
 ## Not run here because we don't have all sets the same size
 ## install.packages("sensitivitymw")
 library(sensitivitymw)
 
-respmatPm<-with(droplevels(meddat[matched(meddat$pmFake),]),fullmatch2sensmat(HomRate0803,nhTrt,pmFake))
+respmatPm<-with(droplevels(meddat[matched(meddat$pairm),]),fullmatch2sensmat(HomRate0803,nhTrt,pairm))
 
 sensCItwosidedG1<-senmwCI(-respmatPm,method="t",one.sided=FALSE)
 sensCIonesidedG1<-senmwCI(-respmatPm,method="t",one.sided=TRUE)
