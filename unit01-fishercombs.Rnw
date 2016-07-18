@@ -26,7 +26,7 @@
 \title{Fisher teatasting worksheet (Unit 1)}
 % \author{ICPSR Causal Inference '14\\
 % J. Bowers, B. Hansen, T. Leavitt}
-\input{authoranddate}
+\input{courseedition}
 \input{./defs-all}
 \pagestyle{empty}
 % \usepackage{tikz}
