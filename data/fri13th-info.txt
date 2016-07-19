@@ -1,0 +1,3 @@
+Numbers of emergency admissions to SWTRHA hospital, somewhere in the UK, due to vehicular accidents, on consecutive fridays the second of which is a Friday the 13th. 
+URL: http://dasl.datadesk.com/data/view/52
+citation: Scanlon, T.J., Luben, R.N., Scanlon, F.L., Singleton, N. (1993), "Is Friday the 13th Bad For Your Health?," BMJ, 307, 1584-1586.
