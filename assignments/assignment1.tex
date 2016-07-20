@@ -1,0 +1,52 @@
+\documentclass{article}
+\usepackage{natbib}
+
+\title{Causal Inference Assignment 1}
+\input{../courseedition}
+\author{Due Friday 7/22, 3pm}
+\usepackage{../icpsr-classwork}
+
+
+\begin{document}
+\maketitle
+
+\begin{enumerate}
+\item Confirm to your own satisfaction that for analysis of the coffee experiment, the simulation method can approximate the exact, permutation-based calculation to as much accuracy as is practically meaningful.
+\item Does the chi-square procedure report a similar p-value?  (In R,
+  it's \texttt{chisq.test()}. For documentation, enter \texttt{?chisq.test}.)
+\item For this data set, are the chi-square test and the fisher test
+  both admissible? (Hint: read R's warnings and documentation.  Can
+  you remember the conditions for the chi-square test for two-way
+  tables, from a previous stats class?)
+\item Use your simulation to approximate $\mathrm{E} n_{1}^{-1}Z'y $ and
+  $\mathrm{Var}(n_{1}^{-1}Z'y) $. 
+\item Calculate $\mathrm{E}  n_{1}^{-1}Z'y $, the exact expected value of the
+  sample mean, from first principles.  
+\item In this setup, $\mathrm{Var}\, n_{1}^{-1}Z'y  = n_{1}^{-1}
+  \frac{n_{0}}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n-1} $.
+  If you've seen formulas for the sample variance in earlier stats
+  courses, you probably saw
+  $$
+  \mathrm{Var} \bar{y} = \frac{\sigma_{y}^{2}}{n_{1}} = \frac{1}{n_{1}}
+  \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n} .
+  $$
+Which of the two formulas gives a larger value?  Explain why it makes
+sense that the formula we've given would differ the direction it does
+from this other formula, in terms of the difference between this
+sampling situation and the sampling model that more commonly
+accompanies the Central Limit Theorem.
+\item Calculate $ \mathrm{Var}\, n_{1}^{-1}Z'y $ using the appropriate
+  formula. 
+\item Determine the normal theory approximation to
+  $\mathrm{Pr}_{0}(n_{1}^{-1}Z'y =1 ) $.  (To do this in R, use
+  \texttt{pnorm()}; type \texttt{?pnorm} for help. It's a good idea to
+  check your answer against some 
+  more user-friendly Normal table; you'll find one of these quickly
+  using any search engine.)
+\item
+\input{gg15i}
+\item
+\input{gg15ii}
+\end{enumerate}
+
+\end{document}
