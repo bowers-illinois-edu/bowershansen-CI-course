@@ -38,6 +38,8 @@ N/A, but course prereqs:
 - Comparative studies timeline
 - Hypothesis of absolutely no effect
  - timeline of comparative studies & associated distinctions (covariates vs "baseline" vs outcomes variables)
+ - rerandomization test of a strict null hypothesis
+ - $\mu$ vs $\mu_{t}/\mu_{c}$ vs $\mu_{t}(x)/\mu_{c}(x)$
  
 
 #### broader concepts
@@ -70,16 +72,23 @@ N/A, but course prereqs:
     - what theory does and doesn't need quantitative analysis for
     
 ## Unit 2
-## To build on/extend from prior units
+### To build on/extend from prior units
 
 salk trial NFIP study (CACE estimation)
+
+expected value/$\mu$ vs $\mu_{t}/\mu_{c}$ 
+
+random assignment
+
+baseline vs tx assmt vs outcome distinction
 
 ### To be introduced in this unit
 
 #### examples
 
 - village councilwomen in India
-- acorn
+- epidemic asthma in New Orleans (?)
+- acorn(?)
 
 #### assumptions
 - complete random assignment
@@ -107,7 +116,6 @@ salk trial NFIP study (CACE estimation)
 
 #### broader concepts
 
- - SATEs vs PATEs
  - ITT vs per-protocol
  -   If there are clusters, proper SEs will have to attend carefully to them. Either aggregate data, or make sure your formula/computer program is attending to clustering
  -  Unbiased estimation is convenient, but limiting yourself to unbiased estimators may be too constraining
@@ -145,8 +153,9 @@ Statistical assumptions made throughout this unit:
 
 ## Unit 04, baseline comparability and blocking
 
-(Interesting unit template possibility: examples, assumptions, issues.)
-
+**shove into here**:  
+- $\mu$ vs $\mu(x)$ (ie cond'l expectation in general);  $\mu_{t}(x)/\mu_{c}(x)$ (postponed from ch 2)
+-  SATEs vs PATEs
 
 - Baseline comparability
   - Randomization tests
