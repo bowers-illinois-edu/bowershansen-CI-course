@@ -1,0 +1,123 @@
+---
+title: "Assignment #1"
+author: "Your Name"
+date: \today
+output:
+  pdf_document: 
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    includes:
+    keep_tex: yes
+    latex_engine: xelatex
+    toc: no
+header-includes: \usepackage{bbm} \usepackage{hyperref} \usepackage[noabbrev]{cleveref}
+fontsize: 11pt
+---
+
+```{r Setup, include = FALSE, warning = FALSE}
+
+rm(list=ls())
+
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, results='markup')
+
+knitr::opts_knit$set(scipen = 10)
+
+RNGkind("L'Ecuyer-CMRG")
+
+set.seed(1:5)
+
+## load packages
+if (!require("pacman")) install.packages("pacman")
+
+pacman::p_load(
+  plyr, 
+  dplyr, 
+  tidyr, 
+  haven,
+  reshape2,
+  magrittr, 
+  haven,
+  knitr,
+  wakefield,
+  ggplot2,
+  ggthemes,
+  parallel,
+  sandwich,
+  xtable)
+
+```
+
+# 1
+
+## (a) 
+
+
+
+
+
+## (b)
+
+To put in new R code chunk:
+
+```{r}
+
+Z <- rep(x = 0:1, each = 4)
+
+y0 <- c(16, 22, 14, 7, 23, 27, 58, 61)
+
+true_tau <- 1.5
+
+y1 <- y0 + true_tau # This example does not require constant, additive effects
+
+Fake_Data <- data.frame(cbind(Z, y1, y0))
+
+New_Experiment <- function(orig_Z, y1, y0){
+  Z_new <- sample(orig_Z)
+  
+  Y <- Z_new * y1 + (1 - Z_new) * y0
+  
+  ATE <- coef(lm(Y ~ Z_new))[["Z_new"]]
+  return(ATE)
+}
+
+set.seed(12345)
+
+Randomization_Distribution <- replicate(1000,
+                                        New_Experiment(orig_Z = Fake_Data$Z,
+                                                       y1 = Fake_Data$y1,
+                                                       y0 = Fake_Data$y0))
+
+Randomization_Distribution <- data.frame(Randomization_Distribution)
+
+```
+
+To print a plot:
+
+```{r Rand_Dist_Plot, fig.cap = 'Randomization Distribution of ATE Test Statistic'}
+
+ggplot(Randomization_Distribution, aes(x = Randomization_Distribution)) +
+  geom_density() + 
+  xlab("ATEs") + 
+  ylab("Density") + 
+  ggtitle("Randomization Distribution") + 
+  geom_vline(xintercept = true_tau, colour= "red")
+
+```
+
+
+## 2
+
+
+## 3
+
+## 4
+
+## 5
+
+
+## 6
+
+\newpage
+
+# References
