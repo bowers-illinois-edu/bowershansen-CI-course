@@ -1,9 +1,8 @@
-%% TODO (7-2016): Split me into a unit 2 and a unit 1
 \documentclass{article}
 %\usepackage{natbib}
 
 \title{P-values under a strong null hypothesis (Unit 1)}
-\input{authoranddate}
+\input{courseedition}
 \usepackage{icpsr-classwork}
 
 \begin{document}
@@ -131,22 +130,32 @@ can itself be approximated as $1/\sqrt{N}$: in this case,
 \Sexpr{round(1/sqrt(1000), 2)}.  So the simulation approximation to
 our one-sided $p$-value is \Sexpr{sum(simT==4)/1000} $\pm$ \Sexpr{round(1/sqrt(1000), 2)}.
 
-\textbf{Exercise:} Replicate this analysis for yourself, but using a different choice of $N$ (and if you like, a different test statistic). 
+\textbf{Exercise:} 
+Replicate this analysis for yourself, but using different choices of
+$N$: a few small runs first, and then one that's large enough to
+double the precision of what was just shown. (How large is that?)
 
 \subsection{Exact p-values}
 
-The handout from unit 1 presents a table that visually presents all of the ${8 \choose 4} = 70
+The handout from unit 1 presents a table of all ${8 \choose 4} = 70
 $ ways to order the binary sequence \Sexpr{rep(1:0, each=4)}.  You can do
 this computation in R, but it's dangerous\footnote{Because ${2m \choose m}$ grows exponentially in $m$. With large $m$, attempting to list all of the permutations will choke up your
-computer.  For small $m$, no problem; but drawing the line between large and small is tricky and non-intuitive.}, so I'm not going to say how here.
-
-In the \textit{special case} of \textit{binary} outcomes, many software routines will have dedicated routines, under labels ``Fisher's exact test'' and/or ``hypergeometric distribution''.  
+computer.  For small $m$, no problem; but drawing the line between
+large and small is tricky and non-intuitive.}, so I'm not going to say
+how here. (In the \textit{special case} of \textit{binary} outcomes,
+many software routines will have dedicated routines, under labels
+``Fisher's exact test'' and/or ``hypergeometric distribution,'' for
+these so-called ``exact'' calculations.)
 
 \texttt{Exercise.}\\  \newcounter{saveenumi}
 \begin{enumerate}
 \item Confirm to your own satisfaction that for analysis of the coffee experiment, the simulation method can approximate the exact, permutation-based calculation to as much accuracy as is practically meaningful.
-\item How about the chi-square test, are you approximating that also?
-\item For this data set, are the chi-square test and the fisher test both admissible? (Hint: read R's warnings, and try to remember the conditions for the chi-square test for two-way tables.) \setcounter{saveenumi}{\value{enumi}}
+\item Does the chi-square procedure report a similar p-value?  (In R,
+  it's \texttt{chisq.test()}. For documentation, enter \texttt{?chisq.test}.)
+\item For this data set, are the chi-square test and the fisher test
+  both admissible? (Hint: read R's warnings and documentation.  Can
+  you remember the conditions for the chi-square test for two-way
+  tables, from a previous stats class?) \setcounter{saveenumi}{\value{enumi}}
 \end{enumerate}
 
 Code hints:
@@ -155,6 +164,61 @@ with(coffee, fisher.test(z, y))
 with(coffee, chisq.test(z, y))
 \end{verbatim}
 
+
+\subsection{Normal-theory p-values}
+
+You may have at some point studied the Central Limit Theorem, which
+says that if you draw a sufficiently large sample $\mathbf{s}$ of pebbles from an urn containing many more pebbles, each
+of which is marked
+with a number, then the probability distribution of the mean
+pebble-number in your sample, $\bar{Y}
+= \frac{1}{|s|} \sum_{i \in \mathbf{s}} Y_{i}$, is approximately Normal in
+shape.  To express this sample mean in a notation mirroring the
+present one, let $n$ be the number of pebbles in the
+entire urn, and let   ${Z} = (Z_{1}, Z_{2}, \ldots, Z_{N})$ be
+a random vector distributed uniformly on sequences of exactly $n_{1}$ ones
+and $n_{0}$ zeroes, $n = n_{1} + n_{0}$.  The sample mean can be
+written $n_{1}^{-1} {Z}'f{y} $.
+
+
+Even though our ``urn'' has only $2n$ pebbles, there's a
+version of the central limit theorem that applies to it,  i.e. to
+$\frac{1}{4} Z'y$.  On the other
+hand our $n$ is fairly small.  Let's investigate the quality of the
+Normal approximation.
+
+Normal curves are described by their means and variances (or standard
+deviations, i.e. square-rooted variances).
+
+\texttt{More exercises.} In each of the below, assume the hypothesis
+of strictly no effect to be true. \\
+\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
+\item Use your simulation to approximate $\mathrm{E} n_{1}^{-1}Z'y $ and
+  $\mathrm{Var}(n_{1}^{-1}Z'y) $. 
+\item Calculate $\mathrm{E}  n_{1}^{-1}Z'y $, the exact expected value of the
+  sample mean, from first principles.  
+\item In this setup, $\mathrm{Var}\, n_{1}^{-1}Z'y  = n_{1}^{-1}
+  \frac{n_{0}}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n-1} $.
+  If you've seen formulas for the sample variance in earlier stats
+  courses, you probably saw
+  $$
+  \mathrm{Var} \bar{y} = \frac{\sigma_{y}^{2}}{n_{1}} = \frac{1}{n_{1}}
+  \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n} .
+  $$
+Which of the two formulas gives a larger value?  Explain why it makes
+sense that the formula we've given would differ the direction it does
+from this other formula, in terms of the difference between this
+sampling situation and the sampling model that more commonly
+accompanies the Central Limit Theorem.
+\item Calculate $ \mathrm{Var}\, n_{1}^{-1}Z'y $ using the appropriate
+  formula. 
+\item Determine the normal theory approximation to
+  $\mathrm{Pr}_{0}(n_{1}^{-1}Z'y =1 ) $.  (To do this in R, use
+  \texttt{pnorm()}; type \texttt{?pnorm} for help. It's a good idea to
+  check your answer against some 
+  more user-friendly Normal table; you'll find one of these quickly
+  using any search engine.)
+\end{enumerate}
 
 \section{A GOTV experiment}
 
