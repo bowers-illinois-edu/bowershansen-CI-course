@@ -1,9 +1,8 @@
 % TODOS:
-% Add intro to IVs, in the Bloom's method sense
-% remove/reduce SE material
-% smooth out hastily inserted experiment design material.  (Maybe
-% use it to motivate general idea that paired and cluster RCTS both give a basis for estimating
-% means of potential responses, within pair and then overall?
+% limit scope of SE material (introduce idea of SE as an estimate of
+% the true SD_0)
+% Fill out "probability review" to cover some variance stuff also?
+% Remove AE stuff
 
 
 %  For slides only
@@ -21,7 +20,6 @@
 
 \title{Unit 2: Estimation in experiments}
 % \author moved to beamer-preamble-*-all.tex
-\date{July 2015}
 
 \begin{document}
 
@@ -36,63 +34,26 @@
 \end{frame}
 
 
-\begin{frame}<\nottheirhandout>{Exercise: random assignment methods}
-{\footnotesize (G\&G ch1 ex 5)}
-
-\begin{enumerate} \addtocounter{enumi}{-1}
-\item
-A researcher plans to ask six subjects to donate time to an adult
-literacy program. Each subject will be asked to donate either 30 or 60
-minutes. The researcher is considering three methods for randomizing
-the treatment. One method is to flip a coin before talking to each
-person and to ask for a 30-minute donation if the coin comes up heads
-or a 60-minute donation if it comes up tails. The second method is to
-write ``30'' and ``60'' on three playing cards each, and then shuffle
-the six cards.\ldots
-  
-\begin{itemize}
-\item[a] Discuss strengths \& weaknesses of each approach.
-\item[b] How would your answers to (a) change if $n: 6 \mapsto 600$?
-\item[c] Calculate $\mathbf{E}(Z_{1})$ under each of the two methods.
-\end{itemize}
-\end{enumerate}
-
-\end{frame}
-\note{W2016: SKIP THIS}
-
-\section{Overview}
 
 
 
-\begin{frame}{Unit 2, estimating causal parameters}
+
+\begin{frame}{Overview of Unit 2, estimating causal parameters}
   \begin{itemize}
   \item In coffee/tea tasting examples, easier to think about whether causation occurred than how one might measure it.
   \item Now, examples that lend themselves to talk of ``average causal effects,'' etc.
 %  \item ``effect'' will have a different and more specific meaning than elsewhere in statistics; we'll begin by talking about it.
   \item We'll continue to use methods that don't care whether outcomes
     are binary, continuous, etc, and avoid distributional assumptions.
-  \item We will add an assumption of \textit{non-interference} (aka ``SUTVA'')
+  \item  First example of a  twist of the study design that the
+    analysis has to take into account (clustering).   
+  \item We'll add an assumption of \textit{non-interference} (aka ``SUTVA'')
   \item In contrast to unit 1, focus on estimation rather than testing.
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Average causal effect estimates for simple
-    experiments\footnote{Example from Gerber and Green (2012) ch. 2.}}
 
-
-  \begin{columns}
-    \begin{Column}
-        \igrphx{ggch2tab2}
-    \end{Column}
-    \begin{Column}
-      
-    \end{Column}
-  \end{columns}
-
-  
-\end{frame}
-
-\section{Experiment design \& design-based tests} %WORK ME IN OVER HERE
+\section{Experiment design \& probability notation} 
 
 
 \begin{frame}{Common design aspects of randomized studies} 
@@ -100,8 +61,8 @@ the six cards.\ldots
   \item<1-> Common properties of small, simple experiments:
     \begin{itemize}
     \item balanced 
-    \item complete
-    \item simple (same $\mathrm{Pr}(Z=z)$'s)
+    \item complete (e.g., assignment by \texttt{sample()} or by card shuffle)
+    \item simple (e.g., card shuffle \textit{or} coin toss)
     \end{itemize}
   \item<2-> Common complications:
     \begin{itemize}
@@ -123,20 +84,63 @@ the six cards.\ldots
 }
 
 
+\begin{frame}<1>[label=EEreviewFr]{Review: expected value\footnote{See also G\& G, ch 2}}
 
-\section{Potential outcome schedules}
+  \begin{itemize}
+  \item Consider arbitrary \textit{random variables} $V$, $W$.
+  \item (For simplicity, assume discrete --- as $\mathbf{Z}$ generally is.)
+  \item  $\mathrm{E}(V) = \sum_{\mbox{all v's}} v\mathrm{P}(V=v) $.
+  \item<2-> For constant $\alpha$, $\EE  \alpha = \alpha$
+  \item<2-> For constants $\alpha, \beta$, $\mathrm{E}(\alpha + \beta V) =
+    \alpha + \beta\mathrm{E}(V)$.
+  \item<2-> Also $\mathrm{E}(\alpha V + \beta W) = \alpha \mathrm{E}(V) + \beta \mathrm{E}(W)$. 
+  \item<3-> In particular, 
+$$\mathrm{E}\left(\frac{1}{n} \sum_{i=1}^n V_i\right) = \frac{1}{n} \sum_{i=1}^n \mathrm{E} V_i.$$
+  \end{itemize}
 
-\begin{frame}{Random variable notation; vector notation}
+
+\end{frame}
+\note{  Note to self: Calculus of expectation items saved for later}
+
+\begin{frame}<\nottheirhandout>{Exercise: random assignment methods}
+{\footnotesize (based on G\&G ch1 ex 5)}
+
+\begin{enumerate} \addtocounter{enumi}{8}
+\item
+\input{assignments/gg15i}
+\end{enumerate}
+
+\end{frame}
+
+\againframe<2>{EEreviewFr}
+
+
+
+
+\begin{frame}{Notational conventions for random variables \& vectors}
   
   \begin{itemize}
+\item Matrices \& vectors: $(a_{1}, a_{2}, \ldots, a_{n})' = \left(
+    \begin{array}{c}
+      a_{1} \\ \vdots \\ a_{n}
+    \end{array}
+\right)$ ;  $\left(
+      \begin{array}{c}
+        b_{1} \\  \vdots \\ b_{n}\\
+      \end{array}
+\right)' = (b_{1}, \ldots, b_{n})$.
   \item By convention, $X, Y, Z$ denote random variables (RVs); $x, y, z$, realizations of the RVs.
     \begin{itemize}
     \item Rosenbaum (a statistician) observes this convention\ldots
     \item as I will.
     \item G\& G (political scientists) appear not to.
     \end{itemize}
-  \item $Z_i$= RV for subject $i$; $\mathbf{Z}=(Z_1, Z_2, \ldots, Z_n)'$ (a column vector).  Likewise for $X$, $Y$.
-  \item Also $\mathbf{z}=(z_1, z_2, \ldots, z_n)$, and similarly for $\mathbf{x}$, $\mathbf{y}$
+ \item $x_{i}$= subject $i$ measurement; $\mathbf{x} =(x_{1}, \ldots, x_{n})'$ column of measurements
+  \item $Z_i$= random variable for subject $i$; $\mathbf{Z}=(Z_1, Z_2,
+    \ldots, Z_n)'$ (a ``random vector'').  
+  \item So $\mathbf{z}=(z_1, z_2, \ldots, z_n)'$ denotes a particular
+    realization of $\mathbf{Z} $.
+  \item Vector cross products: $\mathbf{a}'\mathbf{b}  = a_{1}b_{1} + \cdots + a_{n}b_{n}$
   \end{itemize}
 
 
@@ -145,50 +149,65 @@ the six cards.\ldots
 \begin{frame}<\nottheirhandout>{Exercise: random assignment methods}
 {\footnotesize (G\&G ch1 ex 5)}
 
-\begin{enumerate}\addtocounter{enumi}{-1}
+\begin{enumerate} \addtocounter{enumi}{9}
 \item 
-A researcher plans to ask six subjects to donate time to an adult
-literacy program. Each subject will be asked to donate either 30 or 60
-minutes. The researcher is considering three methods for randomizing
-the treatment. One method is to flip a coin before talking to each
-person and to ask for a 30-minute donation if the coin comes up heads
-or a 60-minute donation if it comes up tails. The second method is to
-write ``30'' and ``60'' on three playing cards each, and then shuffle
-the six cards.\ldots
-
-\begin{itemize}
-\item[d] Calculate $\mathbf{E}(\mathbf{Z}'\mathbf{Z})$ under each of the two methods.
-\item[e] For which of the two methods does $\mathrm{Var}((\mathbf{Z}'\mathbf{Z})) = 0$?
-\end{itemize}
+{\small \input{assignments/gg15ii}
+}
 \end{enumerate}
 \vfill
 
-\visible<2>{Either way, canonical analyses treat observations as
-\textit{independent} samples, sizes $n_{0}$ and $n_{1}$, from
-``\textit{superpopulations}'' of size $N_{0}, N_{1} \approx
-\infty$.  We'll see how one such analysis flows from more serious assumptions.}
+% \visible<2>{Either way, canonical analyses treat observations as
+% \textit{independent} samples, sizes $n_{0}$ and $n_{1}$, from
+% ``\textit{superpopulations}'' of size $N_{0}, N_{1} \approx
+% \infty$.  We'll see how one such analysis flows from more serious assumptions.}
 \end{frame}
 
 
-\begin{frame}{$Z$s/$z$s vs $D$s/$d$s}
-  
-Additional conventions, this time shared by DOS, G\& G and this course:
+\section{Potential outcome schedules}
 
-\begin{tabular}{cc}
-  $Y$ & outcome \\
-  $X$ & covariate/baseline variable\\
-  $Z$ & treatment assignment\\
-  $D$ & treatment received \\
+\begin{frame}{Four study examples} 
+
+
+\begin{columns}
+\begin{Column}
+1. An election campaign randomized (complete) at the precinct level, w/ varying
+levels of ``compliance.''\\[2ex]
+ 2. A quasi-experiment: Hospital admissions on Friday the 13ths vs
+Friday the 6ths.\\
+{\small
+\begin{tabular}{ll|rr} \hline
+Yr & Month &	6th &	13th \\ \hline
+89 & Oct. &	9 &	13 \\
+90 & July &	6 &	12 \\
+91 & Sep. &11 &	14 \\
+91 & Dec. &	11 &	10 \\
+92 & Mar. &	3 &	4 \\
+92 & Nov. &	5 &	12 \\ \hline
 \end{tabular}
-\pause
+}
+\end{Column}
+\begin{Column}
 
-(Each may appear in caps or lowercase, indicating an RV or a realization; each may be bolded to indicate a vector.) \pause
+3. A natural experiment (w/ simple randomization)%
+%\footnote{Example from Gerber and Green (2012)  ch. 2.}
+:
+\\
+        \igrphx{ggch2tab2}\\[2ex]
 
-In the coffee experiment, $\mathbf{D} \equiv \mathbf{Z}$; also in experiments discussed in G\& G ch.2.  In general they may diverge (non-compliance). 
+4. Fisher's tea-tasting experiment. 
 
+\end{Column}
+\end{columns}
+
+  
 \end{frame}
 
-\begin{frame}{Potential outcome schedules}%{Two potential outcome schedule for the coffee experiment}
+\begin{frame}{Potential outcomes for the village heads study}
+\framesubtitle{under     the hypothesis of     strictly no effect}
+  
+\end{frame}
+
+\begin{frame}{Two potential outcome schedules for the tea-tasting experiment}%{Two potential outcome schedule for the coffee experiment}
 
   A \textit{potential outcome schedule} %
 %\footnote{G.\&G. ch.2; concept due to Freedman (\textit{Statistical Models\ldots}, C.U.P., 2009).}
@@ -298,6 +317,46 @@ Strict null hypotheses are potential outcome schedules, but not conversely.
 \item Walk them through -- meanings not self-evident!
 }
 
+\begin{frame}{Two potential outcome schedules for the tea-tasting experiment}
+\framesubtitle{Compact representation}
+
+\begin{columns}
+  \begin{Column}
+\hspace{1em}    {\usebeamercolor[fg]{titlelike} Fisher's null} \\
+    \begin{tabular}{cc} \hline
+ $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
+$z_1$ &  0   \\
+$z_2$ &  0   \\
+$z_3$ &  0   \\
+$z_4$ &  0   \\
+$z_5$ &  1   \\
+$z_6$ &  1   \\
+$z_7$ &  1   \\
+$z_8$ &  1   \\ \hline
+    \end{tabular}
+
+  \end{Column}
+  \begin{Column}
+\hspace{1em}   {\usebeamercolor[fg]{titlelike} Perfect discrimination} \\
+    \begin{tabular}{cc} \hline
+ $\mathbf{z}$ & $\mathbf{y}$ \\ \hline
+$z_1$ & $z_1$  \\
+$z_2$ & $z_2$  \\
+$z_3$ & $z_3$  \\
+$z_4$ & $z_4$  \\
+$z_5$ & $z_5$  \\
+$z_6$ & $z_6$  \\
+$z_7$ & $z_7$  \\
+$z_8$ & $z_8$  \\ \hline
+    \end{tabular}
+
+  \end{Column}
+
+\end{columns}
+
+
+
+\end{frame}
 \begin{frame}<\nottheirhandout>{Aside: Test statistics \& response schedules}
   
 \begin{itemize}
@@ -313,7 +372,25 @@ Strict null hypotheses are potential outcome schedules, but not conversely.
   variable, $Z'y/Z'Z$  ($Z'Y/Z'Z$).
 \end{itemize}
 \end{frame}
-\note{W16: SKIP ME}
+
+\begin{frame}{$Z$s/$z$s vs $D$s/$d$s}
+  
+Additional conventions, this time shared by DOS, G\& G and this course:
+
+\begin{tabular}{cc}
+  $Y$ & outcome \\
+  $X$ & covariate/baseline variable\\
+  $Z$ & treatment assignment\\
+  $D$ & treatment received \\
+\end{tabular}
+\pause
+
+(Each may appear in caps or lowercase, indicating an RV or a realization; each may be bolded to indicate a vector.) \pause
+
+In the coffee experiment, $\mathbf{D} \equiv \mathbf{Z}$; also in experiments discussed in G\& G ch.2.  In general they may diverge (non-compliance). 
+
+\end{frame}
+
 \begin{frame}{Potential outcome schedules}
   
   A \textit{potential outcome schedule}%
@@ -401,55 +478,29 @@ Notes:\\
 
 \end{frame}
 
-\begin{frame}<\nottheirhandout>{Exercises}
-  \begin{enumerate}
-  \item Re potential outcomes notation {}(G.\&G. ex.1, ch 1):
-    \begin{enumerate}
-    \item Explain the notation $Y_{i}(0)$ (as appears in G\&G 2012).
-    \item Contrast the meaning of ``$Y(0) | Z=1$'' w/ that of ``$Y(0) | Z=0$''.
-    \item How does $\mathbf{E}(Y(1) | Z=1)$ differ in meaning from $\mathbf{E}(Y(1))$?
-    \item Give an example of type of study in which $\mathbf{E}(Y(1) | Z=1) = \mathbf{E}(Y(1))$, explaining why they're the same.
-    \item Given an example of real or hypothetical study in which $\mathbf{E}(Y(1) | Z=1) \neq \mathbf{E}(Y(1))$.
-    \item Do randomized studies always satisfy $\mathbf{E}(Y(1) | Z=1)
-      = \mathbf{E}(Y(1))$?  Why or why not?
-    \item Do randomized studies always satisfy $\mathbf{E}(Y(1) | D=1)
-      = \mathbf{E}(Y(1))$?  (What's the difference between this q and
-      the last one?)
-    \end{enumerate}
-\item (G.\&G. ex.4, ch 1) Suppose $z_{i} \in \{0,1\}$, all $i$; assume non-interference. Define the ATT as $\mathbf{z}'(\mathbf{y}_{T}-\mathbf{y}_{C})/\mathbf{z}'\mathbf{z}$.  Prove that if treatments are allocated using complete random assignment, then the ATT is equal in expectation to the average treatment effect.
-  \end{enumerate}
-
-\end{frame}
-\note{W16: Maybe skip Q2, in interests of moving along?}
 \section{Expectations and ACEs}
 
-\begin{frame}{Probability review\footnote{See also G\& G, ch 2}}
 
-  \begin{itemize}
-  \item Fix a probability distribution for each RV.
-  \item (For simplicity, assume discrete.  As $\mathbf{Z}$ is discrete, in a randomized experiment)
-  \item  $\mathrm{E}(V) = \sum_v v\mathrm{P}(V=v) $, where $v$ ranges over possible values of $V$.
-  \item $\mathrm{E}(V + W) = \mathrm{E}(V) + \mathrm{E}(W)$.
-  \item For constant $c$, $\mathrm{E}(cV) = c\mathrm{E}(V)$.
-  \item In particular, 
-$$\mathrm{E}\left(\frac{1}{n} \sum_{i=1}^n V_i\right) = \frac{1}{n} \sum_{i=1}^n \mathrm{E} V_i.$$
-  \end{itemize}
-
-
-\end{frame}
-
-\begin{frame}{Test statistics and estimators}
+\againframe<3>{EEreviewFr}
+\begin{frame}{Expected value of ''$\bar{y}_{0}$''}
   
 \end{frame}
 \itnote{
-\item estimator/estimand; (statistic/parameter)
-\item $\mathrm{E}(Y(1))$ as a parameter
-\item $\frac{1}{N}\sum y_{Ti} = \mu_{1}$ as a parameter
-\item $\mathbf{Z}'\mathbf{y}/(\mathbf{Z}'\mathbf{Z}) = \bar{y}_{1}$ as a test statistic, and an estimator
-\item If $\mathbf{z} \equiv \mathbf{d}$, then $\bar{y}_{1}$ is
-  unbiased for $\mu_{1}$, under both SRS and independent sampling.
+\item Rewrite w/ $Z$, $y$
+\item Assuming complete RCT (so $(1-Z)'(1-Z)=n_{0}$), apply calc of expectations to remove $Z$s
+\item $\frac{1}{n}\sum y_{Ci} = \mu_{0}$ as a parameter 
+\item $(1-\mathbf{Z})'\mathbf{y}/n_{0} = \bar{y}_{0}$ as a test statistic, and an estimator
+\item Same conclusion for general simple RCTs via conditioning on $Z'Z$.
 }
 
+\begin{frame}{Expected value of $\bar{y}_{1}$}
+\framesubtitle{In the full compliance case, $D \equiv Z$}
+  
+\end{frame}
+\itnote{
+\item If $\mathbf{z} \equiv \mathbf{d}$, then $\bar{y}_{1}$ is also
+  unbiased for $\mu_{1}$, under both SRS and independent sampling.
+}
 
 \begin{frame}{The ACE ; unbiased estimation}
   
@@ -463,6 +514,29 @@ $$\mathrm{E}\left(\frac{1}{n} \sum_{i=1}^n V_i\right) = \frac{1}{n} \sum_{i=1}^n
 \item DISCUSS VARIANCE FORMULA HERE, OR IN SEPARATE SLIDE?
 }
 
+\begin{frame}<\nottheirhandout>{Exercises}
+  \begin{enumerate}
+  \item Re potential outcomes notation {}(G.\&G. ex.1, ch 1):
+    \begin{enumerate}
+    \item Explain the notation $Y_{i}(0)$ (as appears in G\&G 2012).
+    \item Contrast the meaning of ``$Y(0) | Z=1$'' w/ that of ``$Y(0) | Z=0$''.
+    \item How does $\EE(Y(1) | Z=1)$ differ in meaning from $\EE(Y(1))$?
+    \item Give an example in which you believe that $\EE(Y(1) | Z=1) =
+      \EE(Y(1))$.  Justify your opinion. 
+    \item Given an example of real or hypothetical study in which (you
+      believe)$\EE(Y(1) | Z=1) \neq \EE(Y(1))$.
+    \item Do randomized studies always satisfy $\EE(Y(1) | Z=1)
+      = \EE(Y(1))$?  Why or why not?
+    \item Do randomized studies always satisfy $\EE(Y(1) | D=1)
+      = \EE(Y(1))$?  (What's the difference between this q and
+      the last one?)
+    \end{enumerate}
+\item (G.\&G. ex.4, ch 1) Suppose $z_{i} \in \{0,1\}$, all $i$; assume non-interference. Define the ATT as $\mathbf{z}'(\mathbf{y}_{T}-\mathbf{y}_{C})/\mathbf{z}'\mathbf{z}$.  Prove that if treatments are allocated using complete random assignment, then the ATT is equal in expectation to the average treatment effect.
+  \end{enumerate}
+
+\end{frame}
+\note{Rewrite me in our notation?  (trim down? Skip?)}
+
 \begin{frame}{The Neyman justification for the 2-sample t-statistic} \pause
  \framesubtitle{I.e., estimating treatment effect as %
 $\bar{y}_{1} - \bar{y}_0   \pm \sqrt{\mathrm{SE}(\bar{y}_{1})^{2} +
@@ -475,12 +549,12 @@ $\bar{y}_{1} - \bar{y}_0   \pm \sqrt{\mathrm{SE}(\bar{y}_{1})^{2} +
     \begin{itemize}[<+->]
     \item $(Y_{0i}: i=1, \ldots, n_{0})  $, $(Y_{1i}: i=1, \ldots, n_{1})  $ are
 i.i.d., mutually indep., with 2 finite moments. 
-    \item $\mathbf{E}(\bar{Y}_{1} - \bar{Y}_{0}) =
-      \mathbf{E}(\bar{Y}_{1}) - \mathbf{E}(\bar{Y}_{0}) = \mu_{1} - \mu_{0}$
+    \item $\EE(\bar{Y}_{1} - \bar{Y}_{0}) =
+      \EE(\bar{Y}_{1}) - \EE(\bar{Y}_{0}) = \mu_{1} - \mu_{0}$
     \item $\mathrm{Var}(\bar{Y}_{1} - \bar{Y}_{0}) =
       \mathrm{Var}(\bar{Y}_{1}) + \mathrm{Var}(\bar{Y}_{0}) =
       \sigma_{1}/n_{1} + \sigma_{0}/n_{0}$
-    \item Finally, $\mathbf{E}(\frac{1}{n_{j}-1} \sum_{1}^{n_{j}}
+    \item Finally, $\EE(\frac{1}{n_{j}-1} \sum_{1}^{n_{j}}
       (Y_{ji} - \bar{Y}_{j} )^{2}) = \sigma^{2}_{i}$.
     \end{itemize}
  \end{Column}
@@ -490,14 +564,14 @@ i.i.d., mutually indep., with 2 finite moments.
     \item Single population of size $N$. Potential outcomes, w/ no
   interference.  T and C groups are simple
    disjoint random samples, sizes $n_{0}$, $n_{1}$.
- \item $\mathbf{E}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}_{t} - n_{0}^{-1}(\mathbf{1}-
+ \item $\EE(n_{1}^{-1}\mathbf{Z}'\mathbf{y}_{t} - n_{0}^{-1}(\mathbf{1}-
    \mathbf{Z})'\mathbf{y}_{c} ) = \cdots = N^{-1}\sum_{1}^{N} y_{ti} -
    N^{-1}\sum_{1}^{N} y_{ci}$
    \item $\mathrm{Var}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}_{t} - n_{0}^{-1}(\mathbf{1}-
    \mathbf{Z})'\mathbf{y}_{c} ) = \cdots \leq \frac{N}{N-1}
    \left(\frac{\sigma_{1}^{2}}{n_{1}}  +
      \frac{\sigma_{0}^{2}}{n_{0}}\right)$     
-\item Finally, $\mathbf{E}(\frac{1}{\# \mathbf{s}} \sum_{i \in \mathbf{s}}
+\item Finally, $\EE(\frac{1}{\# \mathbf{s}} \sum_{i \in \mathbf{s}}
       (y_{i} - \bar{y}_{\mathbf{s}} )^{2}) = \frac{N}{N-1}\sigma^{2}$.
 
     \end{itemize}
@@ -528,26 +602,6 @@ Either way, unbiasedness limits error of estimation, error of error of estimatio
 }
 \section{Common estimation targets in comparative studies}
 
-
-\begin{frame}{ATEs and ACEs; SATEs and PATEs}
-
-  \begin{itemize}
-  \item ATE = Average treatment effect; ACE = Average causal effect
-
-  \item SATE = \textit{sample} average treatment effect
-  \item Ordinarily, refer to the same thing: the effect of \textit{assignment} to treatment in the study population.
-  \item PATE = \textit{population} average treatment effect
-  \item Limitations of the PATE:
-    \begin{itemize}
-    \item estimability
-    \item ambiguity
-    \end{itemize}
-
-  \end{itemize}
-
-\end{frame}
-
-
 % \begin{frame}{Conditional expectation}
   
 %   \begin{itemize}
@@ -563,6 +617,8 @@ Either way, unbiasedness limits error of estimation, error of error of estimatio
 % ``ETT''=$\EE\{\mathrm{ACE}(\mathbf{X})| Z=1\} $}
 
 \begin{frame}{FACEs and ACEs (Holland, 1988, \textit{Soc Meth}) }
+\texttt{Revise me to remove conditioning on $\mathbf{x}$}
+
   \begin{enumerate}[<+->]
   \item   Compare $\EE(Y | Z=1, \mathbf{x})$ to $\EE(Y_{t}| \mathbf{x})$.  In
   an experiment, the same thing -- but how about in an obs study?
@@ -606,7 +662,8 @@ $\frac{1}{\# \{i: D_i = 1\}} \sum_{i:D_i=1} Y_i - \frac{1}{\# \{j: D_j = 0\}} \s
 $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \sum_{j:Z_j=0} Y_j$
 \bigskip
 
-\uncover<2->{Estimates the intention to treat effect (the ATE)}
+\uncover<2->{Estimates the intention to treat effect (the ACE of
+  \textit{assignnment} to treatment)}
 
 \vspace{.5\textheight} 
 \mbox{ }
