@@ -636,55 +636,6 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
 \igrphx{SalkVtable-full}
 \end{frame}
 
-\begin{frame}{Biased and unbiased ATE estimation in experiments}
-  
-\end{frame}
-\note{Having assigned Aronow and Middleton 2015 for reading, I
-  discussed a little bit how clusterintg means the subject level
-  difference in differences can be biased.}
-
-\begin{frame}{Attributable effects}
-  
-When $y$ is binary (and sometimes otherwise), $\mathbf{z}'\mathbf{y} - \mathbf{z}'\mathbf{y}_{c}$ is known as the \textit{attributable effect} (Rosenbaum, 2001, \textit{Biometrika}).
-\begin{itemize}
-\item Motivation: How does the number of successes that were observed
-  compare to the number of successes that would have been observed had
-  no one received treatment?
-\item An estimation target\ldots
-\item despite being the value of a random variable
-\item Rosenbaum (2001, 2002; \textit{DOS}) offers methods for testing hypotheses about the value of $\mathbf{z}'\mathbf{y} - \mathbf{z}'\mathbf{y}_{c}$.
-\item<2-> For estimation, suffices to estimate $\mathbf{z}'\mathbf{y}_{c}$. (Why?)
-\item<2-> If everyone w/ $z=0$ received control, then you can estimate  $\mathbf{z}'\mathbf{y}_{c}$ by estimating  $\mathbf{1}'\mathbf{y}_{c}$, the total of $y_{c}$s.
-\item<2-> To do that, can employ estimation techniques from survey sampling (Hansen \& Bowers, 2009, \textit{J Amer Statist Assoc}; Aronow \& Middleton, 2013, \textit{J. Causal Inference}).
-\end{itemize}
-
-
-\end{frame}
-
-\begin{frame}{SE's for AEs}
-  
-\end{frame}
-\itnote{
-\item Conceptual issue: when you're estimating the value of an RV,
-  should your SE encapsulate the sampling variability that RV, or just
-  the variability of the error of your estimate?  Hansen \& Bowers
-  2009 opt for the latter. 
-\item Hansen \& Bowers's SE vs the Neyman SE
-  \begin{enumerate}
-  \item 2 terms rather than 1
-  \item Contrib from fpc
-  \end{enumerate}
-\item What the ? was the Abadie reference on this?
-}
-
-\begin{frame}{Votes-per-contact versus CACE}
-  
-\end{frame}
-\itnote{
-\item Two ratio-type estimators, one estimating a parameter, one an RV
-\item (See last couple of exercises)
-\item (There's an open problem lurking here)
-}
 \end{document}
 
 
