@@ -226,7 +226,8 @@ Arceneaux (2005) presents a get-out-the-vote experiment that was
 randomized at the precinct level.  As in the coffee experiment, it's a
 completely randomized design: a predetermined number (14) of precincts
 were randomized to treatment, with the remaining precincts (also 14)
-randomized to control.  Provided that we can summarize the voting
+randomized to control.  (The dataset, \texttt{acorn03.csv}, was read in at the beginning of
+this script using the \texttt{read.csv} command.) Provided that we can summarize the voting
 outcome for each precinct in a single number, we can follow Fisher's
 template exactly to attach a $p$-value to the proposition that the
 GOTV campaign was inefficacious.
@@ -244,7 +245,7 @@ precincts assigned to treatment.
 <<>>=
 with(acorn, sum(z * vote03)/14)
 @
-(as there were 14 treatment precincts).
+
 
 An ostensibly different test statistic is the difference in mean turnout proportions
 between treatment and control precincts.  
