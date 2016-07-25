@@ -87,33 +87,37 @@ baseline vs tx assmt vs outcome distinction
 #### examples
 
 - village councilwomen in India
-- epidemic asthma in New Orleans (?)
-- acorn(?)
+- hospitalizations on fri 13th
+- acorn
 
 #### assumptions
 - complete random assignment
 - no spillovers between units
-- exclusion (where appropriate - or maybe next unit)
+- exclusion (where appropriate, near end of unit when non-compliance introduced)
 
 #### techniques
-- Expected value and variance
+- Expected values, variances for means under a strong null
+- Unpooled SE for difference of means
 - Aggregate by cluster
 - calculate expected values from a response schedule
-- calculate variances from a response schedule
+- ~~calculate variances from a response schedule~~
 
 ### technical concepts
 - structural characteristics of experiments & random assignment: 
     - common properties of randomized designs: complete, simple, balanced
-    - paired comparisons (? or next unit?)
-    - unit of assignment vs unit of measurement; clustering
+    - paired comparisons 
+    - clusters vs elements
  -   potential outcomes schedules
-- Fundamental Problem of Causal Inference (**2016**)
+ - SE as a generic estimate for SD_0
+ - Conditional probability
+      -  conditioning on Z'Z
+      - conditioning on Z=1 or Z=0
+- Non-compliance
+    - ITT analysis
+    - Exclusion/exclusivity
 - With clusters, relevant "sample size" is the number of clusters, not the number of elements.
-- - ITT analysis
-- Exclusion (or maybe next unit?)
-    - procedures to ensure exclusion
-    - T>=0 issues, as opposed to omitted covariate problem in obs studies
 
+  
 #### broader concepts
 
  - ITT vs per-protocol
@@ -122,6 +126,7 @@ baseline vs tx assmt vs outcome distinction
  
 ### If it fits in
 
+- Fundamental Problem of Causal Inference
 
 
 
@@ -141,8 +146,6 @@ special topics & by-products:
 - interference $\neq$ non-independence.  (Lots of non-independence among outcomes can be wrapped up into baseline differences, and doesn't require us to permit presence of interference.)
 -  Maybe $ \bar p(1-\bar p)/n$ has a usage after all: error of approximation of p-value simulation).
 
-
-- ITT vs CACE (or maybe next unit?)
 
 Statistical assumptions made throughout this unit:
 

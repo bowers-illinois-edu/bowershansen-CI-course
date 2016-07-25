@@ -1,10 +1,3 @@
-% TODOS:
-% limit scope of SE material (introduce idea of SE as an estimate of
-% the true SD_0)
-% Fill out "probability review" to cover some variance stuff also?
-% Remove AE stuff
-
-
 %  For slides only
 %\input{slidesonly}
 
@@ -89,13 +82,14 @@
   \begin{itemize}
   \item Consider arbitrary \textit{random variables} $V$, $W$.
   \item (For simplicity, assume discrete --- as $\mathbf{Z}$ generally is.)
-  \item  $\mathrm{E}(V) = \sum_{\mbox{all v's}} v\mathrm{P}(V=v) $.
+  \item  $\EE(V) = \sum_{\mbox{all v's}} v\mathrm{P}(V=v) $.
   \item<2-> For constant $\alpha$, $\EE  \alpha = \alpha$
-  \item<2-> For constants $\alpha, \beta$, $\mathrm{E}(\alpha + \beta V) =
-    \alpha + \beta\mathrm{E}(V)$.
-  \item<2-> Also $\mathrm{E}(\alpha V + \beta W) = \alpha \mathrm{E}(V) + \beta \mathrm{E}(W)$. 
+  \item<2-> For constants $\alpha, \beta$, $\EE (\alpha + \beta V) =
+    \alpha + \beta\EE(V)$.
+  \item<2-> Also $\EE(\alpha V + \beta W) = \alpha \EE(V) + \beta \EE(W)$. 
   \item<3-> In particular, 
-$$\mathrm{E}\left(\frac{1}{n} \sum_{i=1}^n V_i\right) = \frac{1}{n} \sum_{i=1}^n \mathrm{E} V_i.$$
+$$\EE\left(\frac{1}{n} \sum_{i=1}^n V_i\right) = \frac{1}{n}
+\sum_{i=1}^n \EE V_i.$$
   \end{itemize}
 
 
@@ -202,9 +196,26 @@ Yr & Month &	6th &	13th \\ \hline
   
 \end{frame}
 
+\itnote{
+\item Muddy point (2016): pairs vs clusters
+}
+
 \begin{frame}{Potential outcomes for the village heads study}
 \framesubtitle{under     the hypothesis of     strictly no effect}
-  
+
+\begin{tabular}{l|rrr|rrr} \hline
+& \multicolumn{6}{c}{Budget share (\%)} \\
+& \multicolumn{3}{c}{Observed} & \multicolumn{3}{c}{No effect} \\
+Village &$Y_{C}$& $Y_{T}$& $\tau$  &$Y_{C}$& $Y_{T}$& $\tau$ \\ \hline
+1&  ? & 15 & ? & 15 & 15 & 0 \\
+2& 15 & ? &   ?  & 15 & 15 & 0 \\ 
+3& 20 & ? &   ?  & 20 & 20 & 0 \\
+4& 20 & ? &   ?  & 20 & 20 & 0 \\
+5& 10 & ? &   ?  & 10 & 10 & 0 \\
+6& 15 & ? &   ?  & 15 & 15 & 0 \\
+7& ?   & 30&? & 30 &30 & 0 \\ \hline
+average & 16 & 22.5 & ? & 17.9 & 17.9 & 0 \\ \hline
+\end{tabular}
 \end{frame}
 
 \begin{frame}{Two potential outcome schedules for the tea-tasting experiment}%{Two potential outcome schedule for the coffee experiment}
@@ -214,7 +225,7 @@ Yr & Month &	6th &	13th \\ \hline
 is a mapping of assignment vectors $\mathbf{z} = (z_1, \ldots, z_n)'$,
 all or mostly counter-to-fact, to outcomes.  Alternatively, a listing of
 how each study participant would have responded to
-any combination of assignments $\mathbf{z}$ that
+any $\mathbf{z}$ that
 the experiment could have produced. Two examples:\\
 \begin{columns}
   \begin{Column}
@@ -308,13 +319,13 @@ $\cdots$
   \end{tabular}
 \end{Column}
 \end{columns}
-\pause \medskip
 
-Strict null hypotheses are potential outcome schedules, but not conversely. 
+
 
 \end{frame}
 \itnote{
 \item Walk them through -- meanings not self-evident!
+\item Strict null hypotheses are potential outcome schedules, but not conversely. 
 }
 
 \begin{frame}{Two potential outcome schedules for the tea-tasting experiment}
@@ -360,24 +371,27 @@ $z_8$ & $z_8$  \\ \hline
 \begin{frame}<\nottheirhandout>{Aside: Test statistics \& response schedules}
   
 \begin{itemize}
-\item One \texttt{test statistic} we discussed for the coffee experiment is the number of ``fancy-coffee'' cups among the cups identified as containing fancy coffee $y=1$. This translates to $Z'Y$. \pause
+\item One \textit{test statistic} we discussed for the tea experiment
+  is the number of milk-first cups ($z=1$) among the cups identified as
+  milk-first ($y=1$). I.e., $\mathbf{Z}'\mathbf{Y}$. \pause
 
 
-\item The worksheet (\texttt{unit01-Rex}) has $Z'y$.  This leans on the fact that it assumes Fisher's null, under which $y$ is the same, whatever $Z$ may be. \pause
+\item The worksheet (\texttt{unit01-Rex}) has $\mathbf{Z}'\mathbf{y}$.  This leans on the fact that it assumes Fisher's null, under which $y$ is the same, whatever $Z$ may be. \pause
 
-\item When we're entertaining the possibility of perfect discrimination, we'd have to write $Z'Y$ .
+\item When we're entertaining the possibility of perfect discrimination, we'd have to write $\mathbf{Z}'\mathbf{Y}$ .
 \item We also entertained the treatment-group mean of $y$s as a test
-  statistic. To emphasize dependence on $Z$, write this as $Z'y/n_{t}$
-  ($Z'Y/n_{t}$). Or, if size of treatment group might be a random
-  variable, $Z'y/Z'Z$  ($Z'Y/Z'Z$).
+  statistic. To emphasize dependence on $Z$, write this as $\mathbf{Z}'\mathbf{y}/n_{1}$
+  ($\mathbf{Z}'\mathbf{Y}/n_{1}$). Or, if size of treatment group might be a random
+  variable, $\mathbf{Z}'\mathbf{y}/\mathbf{Z}'\mathbf{Z}$  ($\mathbf{Z}'\mathbf{Y}/\mathbf{Z}'\mathbf{Z}$).
 \end{itemize}
 \end{frame}
 
+\note{Now start the part of unit01-Rex that looks at the acorn study}
 \begin{frame}{Potential outcomes}
   
 A much more common way of specifying potential outcome schedules is to
-specify \textit{potential outcomes}.  For binary $Z$, and w/ perfect
-compliance ($\mathbf{d} \equiv \mathbf{z}$), potential outcomes would be specified as
+specify \textit{potential outcomes}.  For binary $Z$, and w/ full
+compliance, potential outcomes would be specified as
 
 \begin{columns}
 \begin{Column}
@@ -395,14 +409,14 @@ $y_{0n}$ & $y_{1n}$  \\ \hline
 \begin{Column}
 Notes:\\
 
-\begin{itemize}[<+->]
-\item (Post-It analogy)
-\item Assumes each subject $i$'s response depends only on $d_{i}$, not
-  other $d$s.
-\item not appropriate for coffee experiment
-\item not necessarily appropriate for Salk trial
-\item \textit{non-interference} has been assumed
-\item \ldots often unwittingly! 
+\begin{itemize}
+\item<1-> (Post-It analogy)
+\item<2-> Assumes each subject $i$'s response depends only on $z_{i}$, not
+  other $z$s.
+\item<2-> not appropriate for coffee experiment
+\item<2-> not necessarily appropriate for Salk trial
+\item<2-> \textit{non-interference} has been assumed
+\item<3-> \ldots often unwittingly! 
 \end{itemize}
   
 \end{Column}
@@ -411,64 +425,163 @@ Notes:\\
 \end{frame}
 
 
-\section{Expectations and ACEs}
+\section[Estimating the ACE]{Estimating the average causal effect}
 
 
 \againframe<3>{EEreviewFr}
-\begin{frame}{Expected value of ''$\bar{y}_{0}$''}
+\begin{frame}{Expected values of ''$\bar{y}_{0}$'' \& ''$\bar{y}_{1}$''}
+\framesubtitle{in completely randomized designs}
   
 \end{frame}
 \itnote{
 \item Rewrite w/ $Z$, $y$
-\item Assuming complete RCT (so $(1-Z)'(1-Z)=n_{0}$), apply calc of expectations to remove $Z$s
-\item $\frac{1}{n}\sum y_{Ci} = \mu_{0}$ as a parameter 
-\item $(1-\mathbf{Z})'\mathbf{y}/n_{0} = \bar{y}_{0}$ as a test statistic, and an estimator
-\item Same conclusion for general simple RCTs via conditioning on $Z'Z$.
+\item Assuming complete RCT (so $Z'Z=n_{1}$), apply calc of expectations to remove $Z$s
+\item $\frac{1}{n}\sum y_{Ti} = \mu_{1}$ as a parameter 
+\item $\mathbf{Z}'\mathbf{y}/n_{1} = \bar{y}_{1}$ as a test statistic, and an estimator
+\item  (this is for the full compliance case, $D \equiv Z$) 
 }
 
-\begin{frame}{Expected value of $\bar{y}_{1}$}
-\framesubtitle{In the full compliance case, $D \equiv Z$}
+\begin{frame}{Potential outcomes in paired *-experiments}
   
+\begin{tabular}{ll|rrrrr} \hline
+ &  & \multicolumn{4}{c}{observed} \\
+Yr & Mon &   6th &	13th&$y_{Ti2} -y_{Ci1}$ &$y_{Ti1} -y_{Ci2}$\\ \hline
+89 & Oct. &	9 &	13  & +4 & ? \\
+90 & July &	6 &	12  & +6 & ? \\
+91 & Sep. &   11  &	14   & +3 & ?\\
+91 & Dec. &   11 &	10  & $-1$& ? \\
+92 & Mar. &	3 &	4    & +1& ?\\
+92 & Nov. &	5 &	12  & +7& ? \\ \hline
+\end{tabular}
+\medskip
+
+Assuming $\EE Z_{ij} \equiv .5 $:\\
+\begin{align*}
+\EE \big( Z_{i1}(y_{Ti1} -y_{Ci2}) + Z_{i2}(y_{Ti2} - y_{Ci1} )
+  \big) &=\hspace{.5\linewidth}  \\
+\frac{1}{6} \sum_{i=1}^6 \EE \big( Z_{i1}(y_{Ti1} -y_{Ci2}) + Z_{i2}(y_{Ti2} - y_{Ci1} ) \big)  &= \\  
+\end{align*}
 \end{frame}
+
 \itnote{
-\item If $\mathbf{z} \equiv \mathbf{d}$, then $\bar{y}_{1}$ is also
-  unbiased for $\mu_{1}$, under both SRS and independent sampling.
+\item $\EE \big( Z_{1}(y_{Ti1} -y_{Ci2}) + Z_{i2}(y_{Ti2} - y_{Ci1} )
+  \big)$
+\item \ldots
+\item $\mu_{T} - \mu_{C}$
+}
+
+\begin{frame}{Conditional probability, expected value}
+  \begin{itemize}
+  \item<1-> Consider any discrete random variables $V$, $W$;  any
+    \textit{event} $A$ with $\mathrm{Pr}(A) >0 $. 
+  \item<1-> \textit{Def.}: $\mathrm{Pr}(V= v | A) = \mathrm{Pr}(V=v,\, A) /\mathrm{Pr}(A) $. 
+  \item<2->  $\EE(V) = \sum_{\substack{\mbox{all v's}\\
+        \mathrm{s.t.}\, A}} v\mathrm{P}(V=v | A) $.
+  \item<3->  It follows that $\EE  (V | A) = (\mathrm{Pr}(A))^{-1} \EE
+    (V \mathbf{1}_{A} )$.  Accordingly, the algebra of $\EE ( \, ) $
+    applies also to $\EE(\, |A) $:\\
+    \begin{align*}
+     \EE(\alpha + \beta V| A) &=
+    \alpha + \beta\EE(V| A) \\
+     \EE(\alpha V + \beta W | A) &=  \alpha \EE(V|A) + \beta \EE(W|A)
+      \\
+      \EE\big(\frac{1}{n} \sum_{i=1}^n V_i \big| A \big) &= \frac{1}{n} \sum_{i=1}^n \EE (V_i|A).
+    \end{align*}
+\item<4-> \textit{Ex.} $\mathbf{Z} = (Z_{1}, \ldots, Z_{10}) $ records
+  10 indep tosses of a fair coin.\\ (a) $\EE (Z_{1}) = $
+  \underline{\hspace{2em}}. (b) $\EE (Z_{1} | \mathbf{Z}'\mathbf{Z}=4)
+  =$ \underline{\hspace{2em}}.
+
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Potential outcomes for the village heads study}
+\framesubtitle{(with no specific null hypothesis in view)}
+  
+\begin{columns}
+\column{.5\textwidth}
+\begin{tabular}{l|rrr|rrr} \hline
+& \multicolumn{6}{c}{Budget share (\%)} \\
+& \multicolumn{3}{c}{observed} & \multicolumn{3}{c}{all} \\
+v. &$Y_{C}$& $Y_{T}$& $\tau$  &$Y_{C}$& $Y_{T}$& $\tau$ \\ \hline
+1&     &15 &     & $y_{C1}$ & $y_{T1}$  & $\tau_{1}$\\
+2& 15 &   &      & $y_{C2}$ & $y_{T2}$ & $\tau_{2}$\\ 
+3& 20 &   &      & $y_{C3}$ & $y_{T3}$ & $\tau_{3}$\\
+4& 20 &   &      & $y_{C4}$ & $y_{T4}$ & $\tau_{4}$\\
+5& 10 &   &      & $y_{C5}$ & $y_{T5}$ & $\tau_{5}$\\
+6& 15 &   &      & $y_{C6}$ & $y_{T6}$ & $\tau_{6}$\\
+7&     & 30&     & $y_{C7}$ &$y_{T7}$ & $\tau_{7}$ \\ \hline
+avg & $\bar{y}_{0} $ & $\bar{y}_{1}$ &  & $\mu_{C} $ & $\mu_{T}$ & $\mu_{\tau}$ \\ \hline
+\end{tabular}
+    
+\column{.5\textwidth}
+$\EE \big( \frac{\mathbf{Z}'\mathbf{Y}}{\mathbf{Z}'\mathbf{Z}}\big|  \mathbf{Z}'\mathbf{Z} \big) =$\\[.5\textheight] 
+
+\mbox{ }
+\end{columns}
+\vfill
+
+Likewise $\EE \big(
+\frac{(1-\mathbf{Z})'\mathbf{Y}}{ (1-\mathbf{Z})'(1-\mathbf{Z})}\big|
+\mathbf{Z}'\mathbf{Z} \big) =$ \hfill 
+\hfill \mbox{} \\
+\end{frame}
+
+\itnote{
+\item $\mathbf{Z}'\mathbf{Y} = \mathbf{Z}'\mathbf{y}_{T}$
+\item $\EE  \big(
+  \frac{\mathbf{Z}'\mathbf{y}_{T}}{\mathbf{Z}'\mathbf{Z}}\big|
+  \mathbf{Z}'\mathbf{Z} \big) = \sum_{i} \EE
+  \big(\frac{Z_{i}y_{Ti}}{\mathbf{Z}'\mathbf{Z}} \big|
+  \mathbf{Z}'\mathbf{Z} \big)$
+\item $ \EE \big(\frac{Z_{i}}{\mathbf{Z}'\mathbf{Z}} \big|
+  \mathbf{Z}'\mathbf{Z} \big)$
 }
 
 \begin{frame}{The ACE ; unbiased estimation}
   
 \end{frame}
 \itnote{
-\item For the moment, assume full compliance, so that $D \equiv Z$.
+\item Relate to examples. villages, 
 \item G\&G on why unbiasedness is good: p. 34.
 \item A nice thing about this is that the difference of means is
   unbiased for the ACE whatever the (non-interfering) potential
   outcome schedule.
-\item DISCUSS VARIANCE FORMULA HERE, OR IN SEPARATE SLIDE?
 }
 
-\begin{frame}<\nottheirhandout>{Exercises}
-  \begin{enumerate}
-  \item Re potential outcomes notation {}(G.\&G. ex.1, ch 1):
-    \begin{enumerate}
-    \item Explain the notation $Y_{i}(0)$ (as appears in G\&G 2012).
-    \item Contrast the meaning of ``$Y(0) | Z=1$'' w/ that of ``$Y(0) | Z=0$''.
-    \item How does $\EE(Y(1) | Z=1)$ differ in meaning from $\EE(Y(1))$?
-    \item Give an example in which you believe that $\EE(Y(1) | Z=1) =
-      \EE(Y(1))$.  Justify your opinion. 
-    \item Given an example of real or hypothetical study in which (you
-      believe)$\EE(Y(1) | Z=1) \neq \EE(Y(1))$.
-    \item Do randomized studies always satisfy $\EE(Y(1) | Z=1)
-      = \EE(Y(1))$?  Why or why not?
-    \item Do randomized studies always satisfy $\EE(Y(1) | D=1)
-      = \EE(Y(1))$?  (What's the difference between this q and
-      the last one?)
-    \end{enumerate}
-\item (G.\&G. ex.4, ch 1) Suppose $z_{i} \in \{0,1\}$, all $i$; assume non-interference. Define the ATT as $\mathbf{z}'(\mathbf{y}_{T}-\mathbf{y}_{C})/\mathbf{z}'\mathbf{z}$.  Prove that if treatments are allocated using complete random assignment, then the ATT is equal in expectation to the average treatment effect.
-  \end{enumerate}
+\begin{frame}{Variances \& estimated variances  }
 
+  \begin{itemize}
+ \item A confusing distinction we won't need: $\sigma_{x}^{2} = \frac{1}{n} \sum_{1}^{n} (x_{i} - \bar
+   x)^{2}$ vs  $s_{x}^{2} = \frac{1}{n-1} \sum_{1}^{n} (x_{i} - \bar
+   x)^{2}$.  We just use $s_{x}^{2} =$\texttt{var(x)}.
+ \item Fact: if \texttt{spl}= $(x_{i}: Z_{i}=1) $ in a completely
+   randomized design, then $\EE s_{\mathtt{spl}}^{2} = s_{x}^{2} $. 
+  \item Confusing distinction we will need: \texttt{var(y)} vs \texttt{var(simT)}.
+  \item More necessary confusion: $\mathrm{Var}_{0}$ vs $\mathrm{Var}$ vs $\widehat{\mathrm{Var}} $\ldots
+  \end{itemize}
+
+  \begin{center}
+    {\small
+\begin{tabular}{l|rrr|rrr|rrr} \hline
+& \multicolumn{9}{c}{Budget share (\%)} \\
+& \multicolumn{3}{c}{Observed} & \multicolumn{3}{c}{No effect} &\multicolumn{3}{c}{all}\\
+Village &$Y_{C}$& $Y_{T}$& $\tau$  &$Y_{C}$& $Y_{T}$& $\tau$  &$Y_{C}$& $Y_{T}$& $\tau$ \\ \hline
+1    &  ? & 15 & ?  & 15 & 15  & 0 & $y_{C1}$ & $y_{T1}$  & $\tau_{1}$ \\
+2    & 15 & ? &   ?  & 15 & 15 & 0 & $y_{C2}$ & $y_{T2}$ & $\tau_{2}$ \\ 
+3    & 20 & ? &   ?  & 20 & 20 & 0 & $y_{C3}$ & $y_{T3}$ & $\tau_{3}$ \\
+4    & 20 & ? &   ?  & 20 & 20 & 0 & $y_{C4}$ & $y_{T4}$ & $\tau_{4}$ \\
+5    & 10 & ? &   ?  & 10 & 10 & 0 & $y_{C5}$ & $y_{T5}$ & $\tau_{5}$ \\
+6    & 15 & ? &   ?  & 15 & 15 & 0 & $y_{C6}$ & $y_{T6}$ & $\tau_{6}$ \\
+7    & ?   &30&?  & 30 & 30   & 0 & $y_{C7}$ &$y_{T7}$ & $\tau_{7}$ \\ \hline
+avg & 16 & 22.5 & ? & 17.9 & 17.9 & 0 & $\mu_{C} $ & $\mu_{T}$ & $\mu_{\tau}$\\ \hline
+\end{tabular}
+}
+  \end{center}
 \end{frame}
-\note{Rewrite me in our notation?  (trim down? Skip?)}
+\itnote{
+\item Start by going over variance problems
+}
 
 \begin{frame}{The Neyman justification for the 2-sample t-statistic} \pause
  \framesubtitle{I.e., estimating treatment effect as %
@@ -476,48 +589,46 @@ $\bar{y}_{1} - \bar{y}_0   \pm \sqrt{\mathrm{SE}(\bar{y}_{1})^{2} +
   \mathrm{SE}(\bar{y}_{0}) ^{2}}$ ($\mathrm{SE}(\bar{y}_{j})^{2} = \sigma_{j}^{2}/n_{j} $) }
 \pause
 
-\begin{columns}
-  \begin{Column}
-    {\usebeamercolor[fg]{titlelike} Canonical approach}  
-    \begin{itemize}[<+->]
-    \item $(Y_{0i}: i=1, \ldots, n_{0})  $, $(Y_{1i}: i=1, \ldots, n_{1})  $ are
-i.i.d., mutually indep., with 2 finite moments. 
-    \item $\EE(\bar{Y}_{1} - \bar{Y}_{0}) =
-      \EE(\bar{Y}_{1}) - \EE(\bar{Y}_{0}) = \mu_{1} - \mu_{0}$
-    \item $\mathrm{Var}(\bar{Y}_{1} - \bar{Y}_{0}) =
-      \mathrm{Var}(\bar{Y}_{1}) + \mathrm{Var}(\bar{Y}_{0}) =
-      \sigma_{1}/n_{1} + \sigma_{0}/n_{0}$
-    \item Finally, $\EE(\frac{1}{n_{j}-1} \sum_{1}^{n_{j}}
-      (Y_{ji} - \bar{Y}_{j} )^{2}) = \sigma^{2}_{i}$.
-    \end{itemize}
- \end{Column}
-  \begin{Column}
-    {\usebeamercolor[fg]{titlelike} Neyman's approach}  
-    \begin{itemize}[<+->]
-    \item Single population of size $N$. Potential outcomes, w/ no
-  interference.  T and C groups are simple
-   disjoint random samples, sizes $n_{0}$, $n_{1}$.
- \item $\EE(n_{1}^{-1}\mathbf{Z}'\mathbf{y}_{t} - n_{0}^{-1}(\mathbf{1}-
-   \mathbf{Z})'\mathbf{y}_{c} ) = \cdots = N^{-1}\sum_{1}^{N} y_{ti} -
-   N^{-1}\sum_{1}^{N} y_{ci}$
-   \item $\mathrm{Var}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}_{t} - n_{0}^{-1}(\mathbf{1}-
-   \mathbf{Z})'\mathbf{y}_{c} ) = \cdots \leq \frac{N}{N-1}
-   \left(\frac{\sigma_{1}^{2}}{n_{1}}  +
-     \frac{\sigma_{0}^{2}}{n_{0}}\right)$     
-\item Finally, $\EE(\frac{1}{\# \mathbf{s}} \sum_{i \in \mathbf{s}}
-      (y_{i} - \bar{y}_{\mathbf{s}} )^{2}) = \frac{N}{N-1}\sigma^{2}$.
+% \begin{columns}
+%   \begin{Column}
+%     {\usebeamercolor[fg]{titlelike} Canonical approach}  
+%     \begin{itemize}[<+->]
+%     \item $(Y_{0i}: i=1, \ldots, n_{0})  $, $(Y_{1i}: i=1, \ldots, n_{1})  $ are
+% i.i.d., mutually indep., with 2 finite moments. 
+%     \item $\EE(\bar{Y}_{1} - \bar{Y}_{0}) =
+%       \EE(\bar{Y}_{1}) - \EE(\bar{Y}_{0}) = \mu_{1} - \mu_{0}$
+%     \item $\mathrm{Var}(\bar{Y}_{1} - \bar{Y}_{0}) =
+%       \mathrm{Var}(\bar{Y}_{1}) + \mathrm{Var}(\bar{Y}_{0}) =
+%       \sigma_{1}/n_{1} + \sigma_{0}/n_{0}$
+%     \item Finally, $\EE(\frac{1}{n_{j}-1} \sum_{1}^{n_{j}}
+%       (Y_{ji} - \bar{Y}_{j} )^{2}) = \sigma^{2}_{i}$.
+%     \end{itemize}
+%  \end{Column}
+%   \begin{Column}
+%     {\usebeamercolor[fg]{titlelike} Neyman's approach}  
+%     \begin{itemize}[<+->]
+%     \item Single population of size $N$. Potential outcomes, w/ no
+%   interference.  T and C groups are simple
+%    disjoint random samples, sizes $n_{0}$, $n_{1}$.
+%  \item $\EE(n_{1}^{-1}\mathbf{Z}'\mathbf{y}_{t} - n_{0}^{-1}(\mathbf{1}-
+%    \mathbf{Z})'\mathbf{y}_{c} ) = \cdots = N^{-1}\sum_{1}^{N} y_{ti} -
+%    N^{-1}\sum_{1}^{N} y_{ci}$
+%    \item $\mathrm{Var}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}_{t} - n_{0}^{-1}(\mathbf{1}-
+%    \mathbf{Z})'\mathbf{y}_{c} ) = \cdots \leq \frac{N}{N-1}
+%    \left(\frac{\sigma_{1}^{2}}{n_{1}}  +
+%      \frac{\sigma_{0}^{2}}{n_{0}}\right)$     
+% \item Finally, $\EE(\frac{1}{\# \mathbf{s}} \sum_{i \in \mathbf{s}}
+%       (y_{i} - \bar{y}_{\mathbf{s}} )^{2}) = \frac{N}{N-1}\sigma^{2}$.
 
-    \end{itemize}
- \end{Column}
-\end{columns}
-\pause
-Either way, unbiasedness limits error of estimation, error of error of estimation. 
+%     \end{itemize}
+%  \end{Column}
+% \end{columns}
+% \pause
+% Either way, unbiasedness limits error of estimation, error of error of estimation. 
 \end{frame}
 
 \itnote{
 \item (go over this)
-\item Discuss unbiasedness, both ways.
-\item Put up Finucan
 }
 
 \begin{frame}{A Neyman-compatible justification for the paired t-statistic}
@@ -533,48 +644,61 @@ Either way, unbiasedness limits error of estimation, error of error of estimatio
 \item See also Imai et al 2009 Prop 1 ff
 \item (ran out of time for tex-ing)
 }
-\section{Common estimation targets in comparative studies}
+\section{Caveats and extensions}
 
-% \begin{frame}{Conditional expectation}
+
+
+\begin{frame}{Average causal effects for samples of populations}
   
-%   \begin{itemize}
-%   \item $\mathrm{P}(A|B) =  $ conditional probability of A given that B
-%   \item $\mathrm{E}(V|B) = \sum_v v\mathrm{P} ((V=v|B)$
-%   \item if RVs $W$ and $V$ are independent, then $\mathrm{E}(V|W=w) = \mathrm{E}(V)$.
-%   \item Random assignment ensures that $Z$ is independent of $Y_0$, $Y_1$.
-%   \item So under random assignment, $\mathrm{E}(Y_0|Z=0) = \mathrm{E}(Y_0)$;  $\mathrm{E}(Y_1|Z=1) = \mathrm{E}(Y_1)$.
-%   \item Note that $Z$ is not generally independent of $Y=DY_1 + (1-D)Y_0$!
-%   \end{itemize}
-% \end{frame}
-% \note{
-% ``ETT''=$\EE\{\mathrm{ACE}(\mathbf{X})| Z=1\} $}
+  \begin{itemize}
+  \item Many writers assume 1,\ldots, n to be a sample from a
+  broader population. Then notation $(Y_{T}, Y_{C})$ is appropriate
+  (vs $(y_{T}, y_{C})$). 
+  \item Random assignment ensures that $Z$ is independent of $Y_0$, $Y_1$.
+  \item So under random assignment, $\mathrm{E}(Y_C|Z=0) =
+  \mathrm{E}(Y_C)$;  $\mathrm{E}(Y_T|Z=1) = \mathrm{E}(Y_T)$.
+  \item W/ simple, complete or paired rand. assmt, $\EE( \bar{Y}_{1}
+  - \bar{Y}_{2}) = $ ACE. 
+  \item Note that $Z$ is not generally independent of $Y=ZY_1 +
+  (1-Z)Y_0$!
+  \item Without random assignment, $\EE( \bar{Y}_{1}
+  - \bar{Y}_{2}) = $ ACE may fail, even if the sample is perfectly
+  representative of the population.
+\item This framing is also invoked for ``samples'' from
+  ``populations,'' in order to apply apparati of conventional
+  frequentist \& Bayesian inference.
+  \end{itemize}
+\end{frame}
 
 \begin{frame}{FACEs and ACEs (Holland, 1988, \textit{Soc Meth}) }
-\texttt{Revise me to remove conditioning on $\mathbf{x}$}
+
+Example: a university operates 2 oversubscribed charter schools
+serving a nearby high-poverty neighborhood. Admission to both is by
+lottery; the 2 schools' lotteries are separate, and some families
+choose to enter their children in 
+both. Let $Z=$ offered admission to at least one.
 
   \begin{enumerate}[<+->]
-  \item   Compare $\EE(Y | Z=1, \mathbf{x})$ to $\EE(Y_{t}| \mathbf{x})$.  In
-  an experiment, the same thing -- but how about in an obs study?
-\item Likewise  $\EE(Y | Z=0, \mathbf{x})$ vs $\EE(Y_{c}| \mathbf{x})$.
-\item ``ACE'' = $\EE(Y_t - Y_c| \mathbf{x}) = \EE(Y_{t}| \mathbf{x}) - \EE(Y_{c}| \mathbf{x})$
-\item ``FACE'' = $\EE(Y | Z=1, \mathbf{x}) - \EE(Y | Z=0, \mathbf{x})$
-\item In the absence of selection bias, the two coincide:
-$$ (Y_{t}, Y_{c}) \perp Z | \mathbf{X}$$
+  \item   Compare $\EE(Y | Z=1)$ to $\EE(Y_{T})$.  
+\item Likewise  $\EE(Y | Z=0)$ vs $\EE(Y_{c})$.
+\item ``ACE'' = $\EE(Y_t - Y_c) = \EE(Y_{t}) - \EE(Y_{c})$
+\item ``FACE'' = $\EE(Y | Z=1) - \EE(Y | Z=0)$
+\item If $\mathrm{Pr}(Z_{i}=1 | (Y_{T}, Y_{C})=(y_{T}, y_{C})) = \pi$
+  irrespective of $(y_{T}, y_{C}) $ --- as in simply randomized
+  experiments --- then the two coincide.  
 Not ordinarily otherwise.
   \end{enumerate}
 
-Jargon:
-``ACE'' above sometimes called ``$\mathrm{ACE}(\mathbf{x})$'',
-  in which case $\mathrm{ACE} = \EE\mathtt{ACE}(\mathtt{X}) = \EE\{ \EE(Y_{t}|\mathbf{X}) -
-  \EE(Y_{c}|\mathbf{X}) \}$.
+\pause
 
+(Holland  had nonrandomized studies in mind.  FACEs differ from ACEs
+in most observational studies.)
 
 \end{frame}
 
 \itnote{
 \item Refer to sec 2.6 of G\&G 
 }
-
 
 \begin{frame}{$Z$s/$z$s vs $D$s/$d$s}
   
@@ -615,8 +739,8 @@ $\frac{1}{\# \{i: D_i = 1\}} \sum_{i:D_i=1} Y_i - \frac{1}{\# \{j: D_j = 0\}} \s
 $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \sum_{j:Z_j=0} Y_j$
 \bigskip
 
-\uncover<2->{Estimates the intention to treat effect (the ACE of
-  \textit{assignnment} to treatment)}
+\uncover<2->{Estimates the intention to treat effect (ITT) --- the ACE of
+  \textit{assignment} to treatment}
 
 \vspace{.5\textheight} 
 \mbox{ }
@@ -627,25 +751,73 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
 
 \begin{frame}{The complier average causal effect via Bloom's(1984) method}
   \begin{itemize}
-  \item intention-to-treat effect (Little \& Yau's [1998] $\delta$) vs
-    complier average causal effect ($\delta_{c}$).
-  \item $\delta = \pi_{c} \delta_{c} + \pi_{n} \delta_{n} $
-  \item Assumptions: SUTVA, exclusion, monotonicity.
+  \item intention-to-treat effect ($\delta$) vs
+    complier average causal effect (CACE; $\delta_{c}$).
+ \item Although complier/always-taker/never-taker/defier status isn't
+   observed, $\delta = p_{c}\delta_{c} + p_{a} \delta_{a} + p_{n} \delta_{n}
+   + p_{d} \delta_{d}$.
+  \item Assuming no effects for always-takers or never-takers
+    (exclusivity), $\delta = p_{c} \delta_{c} + p_{d} \delta_{d} $.
+  \item Assuming no defiers (monotonicity), $\delta = p_{c}
+    \delta_{c}$. 
+  \item both $\delta$ and $p_{c}$ are ACEs of assignment.
  \end{itemize}
 
-\igrphx{SalkVtable-full}
+\visible<2->{\igrphx{SalkVtable-full}}
 \end{frame}
+
+\begin{frame}<\nottheirhandout>{Exercises}
+  \begin{enumerate}
+  \item Re potential outcomes notation {}(G.\&G. ex.1, ch 1):
+    \begin{enumerate}
+    \item Explain the notation $Y_{i}(0)$ (as appears in G\&G 2012).
+    \item Contrast the meaning of ``$Y(0) | Z=1$'' w/ that of ``$Y(0) | Z=0$''.
+    \item How does $\EE(Y(1) | Z=1)$ differ in meaning from $\EE(Y(1))$?
+    \item Give an example in which you believe that $\EE(Y(1) | Z=1) =
+      \EE(Y(1))$.  Justify your opinion. 
+    \item Given an example of real or hypothetical study in which (you
+      believe)$\EE(Y(1) | Z=1) \neq \EE(Y(1))$.
+    \item Do randomized studies always satisfy $\EE(Y(1) | Z=1)
+      = \EE(Y(1))$?  Why or why not?
+    \item Do randomized studies always satisfy $\EE(Y(1) | D=1)
+      = \EE(Y(1))$?  (What's the difference between this q and
+      the last one?)
+    \end{enumerate}
+\item (G.\&G. ex.4, ch 1) Suppose $z_{i} \in \{0,1\}$, all $i$; assume non-interference. Define the ATT as $\mathbf{z}'(\mathbf{y}_{T}-\mathbf{y}_{C})/\mathbf{z}'\mathbf{z}$.  Prove that if treatments are allocated using complete random assignment, then the ATT is equal in expectation to the average treatment effect.
+  \end{enumerate}
+
+\end{frame}
+
+\note{Rewrite me in our notation?  (trim down? Skip?)}
+
+
+\begin{frame}{Cluster-level assignment}
+
+  \begin{enumerate}
+  \item Simple solution: remove clustering by aggregation
+\item In effect estimation, be aware of distinctions among\ldots
+  \begin{enumerate}
+    \item \texttt{sum(z*y)/sum(z)} w/ individual data, $y$= voted?
+  \item \texttt{sum(z*y)/sum(z)} w/ clusters,  $y$= precinct turnout rate
+  \item \texttt{sum(z*y*pop)/sum(z*pop)} w/ clusters, $y$= precinct turnout rate
+  \end{enumerate}
+and similarly w \texttt{lm(\ldots)} vs \texttt{lm(\ldots,
+  weights=pop)}
+\item In estimation of standard errors/calculation of p-values:
+  \begin{enumerate}
+  \item relevant $n$ is the $n$ of clusters, not of elements
+  \item Any software routine that uses element data can't be giving
+    you the right answer unless it makes you identify clusters
+  \end{enumerate}
+
+  \end{enumerate}
+
+\end{frame}
+
 
 \end{document}
 
 
 \section{Differences-in-differences}
 
-\begin{frame}{D-in-D for studies with a lagged measure of the outcome}
-
-The \texttt{acorn} data set has
-
-  
-
-\end{frame}
 
