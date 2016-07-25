@@ -76,3 +76,7 @@
 %%% NEWBLOCK UNDEFINED BUG
 \def\newblock{\hskip .11em plus .33em minus .07em}
 
+%%% tightlist undefined control sequence bug 
+%%% http://tex.stackexchange.com/questions/257418/error-tightlist-converting-md-file-into-pdf-using-pandoc
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
