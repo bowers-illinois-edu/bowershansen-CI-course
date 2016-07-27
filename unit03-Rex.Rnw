@@ -2,7 +2,7 @@
 \usepackage{natbib}
 
 \title{Lab on Fisherian randomization inference and models of effects }
-\author{ICPSR Causal Inference '15}
+\input{courseedition}
 \usepackage{icpsr-classwork}
 
 \begin{document}
@@ -20,8 +20,9 @@ acorn <- read.csv("data/acorn03.csv")
 
 And here we load libraries containing some functions we'll be using later on:
 <<results='hide'>>=
-library(MASS)
-library(optmatch)
+library('MASS')
+library('sandwich')
+library('optmatch')
 @ 
 
 NOTE: If running any of the above commands gives you an error like
@@ -47,7 +48,31 @@ Error in library(optmatch) : there is no package called 'optmatch'
 Each package can be installed via the ``Install Packages'' Tool in the RStudio
 menu.  Make sure to install package dependencies. 
 
+Exception: We encourage you to use the development version of our
+\texttt{RItools} package, installing it to a local directory that you
+set up for this course.  This will require a few steps. First, create
+a \texttt{lib} subdirectory within your working directory.   Next,
+install the \texttt{devtools} and \texttt{withr} packages from CRAN
+(along with any dependencies).  Finally, do
 
+<<eval=FALSE>>=
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+@ 
+
+If you've done that, then load the RItools package using
+<<>>=
+unloadNamespace(c('optmatch', 'RItools')) # as optmatch may have implicitly loaded the other version
+library('RItools', lib.loc='./lib')
+library('optmatch')
+@ 
+
+If you're instead working with an RItools that you installed the same
+way you installed the other packages we've mentioned, then do
+<<eval=FALSE>>=
+library('RItools')
+@ 
 
 Sigfigs in display:
 <<>>=
@@ -116,16 +141,13 @@ actualD = coef(lm(yc.moe0~z, data=acorn.e))[2]
 @ 
 This verifies that the response schedule is consistent w/ what was observed after the experiment.  Going on to simulate repeated trials of the experiment:
 <<>>=
-simD = replicate(1000, coef(lm(yc.moe0~sample(z), data=acorn.e))[2])
+simD = replicate(1000, 
+    coef(lm(yc.moe0~z, 
+            data=transform(acorn.e, z=sample(z))) # temporarily replaces z w/ permuted z
+         )[2])
 
 @ 
 
-(Note: the \texttt{mosaic} package provides a nifty alternative to \texttt{replicate()}:
-<<eval=FALSE>>=
-simD = do(1000) * coef(lm(yc~sample(z), data=acorn.e))[2]
-@ 
-For the demo we'll stick with \texttt{replicate()}, however, since
-some of won't otherwise have use for \texttt{mosaic} in your regular workflows.)
 
 One and two-sided p-value can be calculated as follows:
 <<>>=
@@ -146,14 +168,16 @@ follows the interpretation $2\min\big( \mathrm{Pr}(T\leq t),
 This uses as a test statistic the simple difference of means between
 the groups.  As discussed in this unit, this choice often fails to maximize power. To focus ideas, however, we'll continue with it, for the moment.
 
-\subsection{Modifying the test statistic for robustness}
+\subsection{Modifications of the test statistic}
 
+\paragraph{Modifications for robustness to non-Normality}
 It's very simple to adapt this procedure by applying the rank
 transformations to the outcomes prior to making comparisons between
 the two groups. For example, 
 <<eval=FALSE>>=
 actualD = coef(lm(rank(yc.moe0)~z, data=acorn.e))[2]
-simD = replicate(1000, coef(lm(rank(yc.moe0)~sample(z), data=acorn.e))[2])
+simD = replicate(1000, coef(lm(rank(yc.moe0)~z, 
+    data=transform(acorn.e, z=sample(z))))[2])
 @ 
 Under complete random assignment, this give a test equivalent to the  \textit{Wilcoxon rank-sum test}. 
 
@@ -162,7 +186,7 @@ with small data sets for which things run quickly.  (The
 \texttt{rlm()} function lives in the MASS package.)
 <<eval=FALSE>>=
 actualD = coef(rlm(yc.moe0~z, data=acorn.e))[2]
-simD = replicate(1000, coef(rlm(yc.moe0~sample(z), data=acorn.e))[2])
+simD = replicate(1000, coef(rlm(yc.moe0~z, data=transform(acorn.e, z=sample(z))))[2])
 @ 
 
 \textbf{Exercise.}
@@ -173,7 +197,7 @@ simD = replicate(1000, coef(rlm(yc.moe0~sample(z), data=acorn.e))[2])
 \end{enumerate}
 
 
-The version using \textit{rlm} is a little bit slower because robust regression is marginally
+\textit{Aside comment.} The version using \texttt{rlm} is a little bit slower because robust regression is marginally
 slower than ordinary least squares regression, since it has to
 determine a data-dependent threshold using iterative least squares.
 (It's the threshold $t$ at which the residuals/deviations are to be top- and
@@ -197,8 +221,9 @@ rlm0$s
 thresh.moe0 <- 1.345 * rlm0$s
 acorn.e <- transform(acorn.e, yc.t.moe0 = sign(yc.moe0)*min(thresh.moe0, abs(yc.moe0)))
 actualD <- coef(lm(yc.t.moe0 ~z, data=acorn.e))[2]
-simD <-  replicate(1000, coef(lm(yc.t.moe0~sample(z), data=acorn.e))[2])
+simD <-  replicate(1000, coef(lm(yc.t.moe0~z, data=transform(acorn.e, z=sample(z))))[2])
 @ 
+
 
 \textbf{Exercise.}
 \begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
@@ -222,25 +247,100 @@ simD <-  replicate(1000, coef(lm(yc.t.moe0~sample(z), data=acorn.e))[2])
   \setcounter{saveenumi}{\value{enumi}}
 \end{enumerate}
 
+\textit{End of aside comment.}
+
+\paragraph{Modifications to take account of differences in size
+  between units}
+
+$ \vdots$ 
+
+\paragraph{Modifications to take advantage of informative $x$es}
+
+
+Now we'll covariate-adjust for the 2 most recent election results,  to beef up a test of the hypothesis of no effect. A reference for what we're doing here is \cite[\S2.3]{rosenbaum:2002a}.  Since \texttt{v\_g2002} is one of these, we'll use the original outcome rather than the gain scores; the results will be identical (if we use OLS for the covariate adjustments) or similar (if we use robust regression).
+<<>>=
+acorn.e <- transform(acorn.e, 
+                     yc.moe0 =  vote03,
+                     yc.moe1 = vote03 - contact/10,
+                     yc.moe2 = vote03 -contact/5
+                     )
+@ 
+
+The first step is to residualize.  One can do this using OLS, via R's \texttt{lm} function, but often robust regression is better for these purposes.  I use \texttt{rlm} from the \texttt{MASS} package, with default options.
+<<eval=FALSE>>=
+library(MASS) #Just a reminder; the script actually loaded MASS already
+@ 
+<<>>=
+rlm0 = rlm(yc.moe0 ~ v_g2002 + v_p2003, data=acorn.e)
+@ 
+Internally, \texttt{rlm()} has top- and bottom-coded the residuals in order to fit its regression coefficients.  But I couldn't find a convenience function for extracting these Winsorized (top- and bottom-coded) residuals, so I wrote one myself.
+<<>>=
+trimmed_resid <- function(arlm)
+  {
+   stopifnot(inherits(arlm, "rlm")) # only works for rlms
+   with(arlm, residuals * psi(residuals/s))
+  }
+r0 = trimmed_resid(rlm0)
+@ 
+
+To see the difference between trimming or no, 
+ run \texttt{stem(resid(rlm0))} vs \texttt{trimmed\_resid(rlm0))} and compare the results.
+
+Now we can take the difference in means in \texttt{r0} as our test statistic, whithout fear of an outlier or two's sapping away our power.
+
+<<>>=
+lm(r0~z, data=acorn.e)
+actualD = coef(lm(r0~z, data=acorn.e))["z"]
+coef(lm(r0~z, data=transform(acorn.e, z=sample(z))))["sample(z)"]
+simD = replicate(1000, coef(lm(r0~z, 
+    data=transform(acorn.e, z=sample(z))))["sample(z)"])
+table(simD>= actualD)/length(simD)
+@ 
+
+giving a one-sided p-value for the hypothesis of no effect. Since
+residualization was done without attention to the distinction between
+treatment and control, the statistical significance of the difference
+between treatment and control group means, of top- and bottom-coded residuals, speaks to the presence of a treatment effect.
+
+One can also combine these two approaches to limiting the play of
+outliers, i.e. robust regression and rank-based methods.  For example,
+one can use robust regression to fit the coefficients of the covariate
+adjustment, then go on to apply the rank transformation to the
+covariate adjusted residuals.  In the examples below, this is done
+without need for special coding, such as \texttt{trimmed\_resid} above.
+
+Covariate adjustment followed by a test based on rank transformed-residuals:
+<<>>=
+wilcox.test(e0~z, data=transform(acorn, e0=resid(rlm0)))
+@ 
+
 \section{Testing without simulations}
-The function \texttt{xBalance}, pre-defined in the \texttt{RItools} library, can be used to calculate this test statistic and immediately obtain a large-sample approximation to its p-value. 
+The function \texttt{xBalance}, pre-defined in the \texttt{RItools}
+library, can be used to calculate the difference of means or
+Wilcoxon rank sum test statistic and immediately obtain a large-sample
+approximation to its p-value.   Here's the procedure for the
+difference of means statistic. 
 
 <<>>=
 xBalance(z ~ yc.moe0, data=acorn.e, report="all")
 @ 
 (Observe that the formula I use at the beginning, \texttt{z \textasciitilde\  vote03}, is the mirror image of the formula I would have given to \texttt{lm}, \texttt{vote03 \textasciitilde\ z}.  The reasons for this will come into focus when we use \texttt{xBalance} with observational studies, later.)
-This test is based on the difference of means.  You can fix in much
-the same way we touched up our simulations, above:
-<<>>=
 
-@ 
-Starting with RItools version 0.1-13%
+
+This test is based on the difference of means.  
+RItools%
 \footnote{%
-  The version just before, 0.1-13, accepts the
-  \texttt{post.alignment.transform} argument, but it's a little buggy.
-}, you can ask the funtion to
+  in earlier RItools versions, 0.1-13 and previous, use of the 
+  \texttt{post.alignment.transform} argument may be affected by a bug.
+} lets you ask the funtion to
 report the ordinary difference of means while using a transformed
-version of the variable to calculate corresponding z-statistics and p values:
+version of the variable to calculate corresponding z-statistics and p
+values.  The transformation to be used is specified in the optional
+\texttt{post.alignment.transform} argument.  For the Wilcoxon rank sum
+test, for example, as \texttt{xBalance} to apply \texttt{rank()} to
+the observations, after subtracting off within-group means.  (This is
+done as part of computation of the test statistic; it doesn't affect
+the summary statistics that \texttt{xBalance} also provides.)
 <<>>=
 xBalance(z ~ yc.moe0, data=acorn.e, 
          report=c("adj.means", "std.diffs", "z.scores"), 
@@ -269,6 +369,18 @@ xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2,
 @ 
 Some p-values go up, others down. Again, this assumes version 0.1-13 or later of RItools.
 
+Using \texttt{xBalance} to conduct several of covariate-adjusted randomization tests at once:
+<<>>=
+xBalance(z ~ e0 + e1 + e2, 
+         report=c("adj.means", "z.scores", "p.values"), 
+         post.alignment.transform=rank,
+         data=transform(acorn.e, e0=resid(rlm(yc.moe0~v_g2002 + v_p2003)),
+                        e1=resid(rlm(yc.moe1~v_g2002 + v_p2003)),
+                        e2=resid(rlm(yc.moe2~v_g2002 + v_p2003)))
+         )
+
+@ 
+
 
 
 \section{Paired random assignment and post-stratified designs}
@@ -287,25 +399,27 @@ reflect stratification.
 actualD = coef(lm(rank(yc.moe0)~z, data=acorn.e))[2]
 @ 
 Its reference distribution does, however.  Here's how you'd do it
-using the Mosaic package's \texttt{shuffle()} function instead of base
+using the \texttt{permute} package's \texttt{shuffle()} function instead of base
 R's \texttt{sample()}:
 <<eval=FALSE>>=
-library(mosaic)
-simD = replicate(1000, coef(lm(rank(yc.moe0)~shuffle(z, groups=pairs), data=acorn.e))[2])
+library(permute)
+n = nrow(acorn.e)
+h1 <- how(blocks=acorn.e$pairs)
+simD = replicate(1000, coef(lm(rank(yc.moe0)~z), 
+    data=transform(acorn.e, z=z[shuffle(n, how=h1)]))[2])
 @ 
-Without a \texttt{groups}
+Without a \texttt{how}
 argument, \texttt{shuffle()} would have done the same as
-\texttt{sample()}, but with the groups argument permutations are
-performed within pairs (specifically, within levels of the factor
-variable \texttt{pairs}). Try it yourself at the command line:
+\texttt{sample()}.  Try it yourself at the command line:
 <<eval=FALSE>>=
-with(acorn.e, cbind(pairs, z, shuffle(vote03, groups=pairs)))
+shuffle(n)
+shuffle(n, how=h1)
+with(acorn.e, cbind(pairs, z, z[shuffle(n, how=h1)]))
 @ 
 
 To achieve the same effect without simulating, 
 <<>>=
-xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2, 
-         strata=acorn.e$pairs,
+xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2, strata=acorn.e$pairs,
          report=c("adj.means", "std.diffs", "z.scores"), 
          data=acorn.e, post.alignment.transform=rank)
 
@@ -313,7 +427,7 @@ xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2,
 
 In the development version of RItools you can get the same effect via
 <<eval=FALSE>>=
-xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2 + strata(pairs) -1, 
+balanceTest(z ~ yc.moe0 + yc.moe1 + yc.moe2 + strata(pairs) -1, 
          report=c("adj.means", "std.diffs", "z.scores"), 
          data=acorn.e, post.alignment.transform=rank)
 @ 
@@ -366,79 +480,22 @@ Gain score analysis is easier to understand than comparisons involving regressio
 I don't know that this is one of those cases, however.  It seems desirable also to include covariate adjustments for the results of the last election prior to the intervention.
 
 
-\subsection{Difference of means test with robust covariate adjustment}
-
-Now we'll covariate-adjust for the 2 most recent election results,  to beef up a test of the hypothesis of no effect. A reference for what we're doing here is \cite[\S2.3]{rosenbaum:2002a}.  Since \texttt{v\_g2002} is one of these, we'll use the original outcome rather than the gain scores; the results will be identical (if we use OLS for the covariate adjustments) or similar (if we use robust regression).
-<<>>=
-acorn.e <- transform(acorn.e, 
-                     yc.moe0 =  vote03,
-                     yc.moe1 = vote03 - contact/10,
-                     yc.moe2 = vote03 -contact/5
-                     )
-@ 
-
-The first step is to residualize.  One can do this using OLS, via R's \texttt{lm} function, but often robust regression is better for these purposes.  I use \texttt{rlm} from the \texttt{MASS} package, with default options.
-<<eval=FALSE>>=
-library(MASS) #Just a reminder; the script actually loaded MASS already
-@ 
-<<>>=
-rlm0 = rlm(yc.moe0 ~ v_g2002 + v_p2003, data=acorn.e)
-@ 
-Internally, \texttt{rlm()} has top- and bottom-coded the residuals in order to fit its regression coefficients.  But I couldn't find a convenience function for extracting these Winsorized (top- and bottom-coded) residuals, so I wrote one myself.
-<<>>=
-trimmed_resid <- function(arlm)
-  {
-   stopifnot(inherits(arlm, "rlm")) # only works for rlms
-   with(arlm, residuals * psi(residuals/s))
-  }
-r0 = trimmed_resid(rlm0)
-@ 
-
-To see the difference between trimming or no, 
- run \texttt{stem(resid(rlm0))} vs \texttt{trimmed\_resid(rlm0))} and compare the results.
-
-Now we can take the difference in means in \texttt{r0} as our test statistic, whithout fear of an outlier or two's sapping away our power.
-
-<<>>=
-lm(r0~z, data=acorn.e)
-actualD = coef(lm(r0~z, data=acorn.e))["z"]
-coef(lm(r0~sample(z), data=acorn.e))["sample(z)"]
-simD = replicate(1000, coef(lm(r0~sample(z), data=acorn.e))["sample(z)"])
-table(simD>= actualD)/length(simD)
-@ 
-
-giving a one-sided p-value for the hypothesis of no effect. Since
-residualization was done without attention to the distinction between
-treatment and control, the statistical significance of the difference
-between treatment and control group means, of top- and bottom-coded residuals, speaks to the presence of a treatment effect.
-
-One can also combine these two approaches to limiting the play of
-outliers, i.e. robust regression and rank-based methods.  For example,
-one can use robust regression to fit the coefficients of the covariate
-adjustment, then go on to apply the rank transformation to the
-covariate adjusted residuals.  In the examples below, this is done
-without need for special coding, such as \texttt{trimmed\_resid} above.
-
-Covariate adjustment followed by a test based on rank transformed-residuals:
-<<>>=
-wilcox.test(e0~z, data=transform(acorn, e0=resid(rlm0)))
-@ 
-Using \texttt{xBalance} to conduct several of these tests at once:
-<<>>=
-xBalance(z ~ e0 + e1 + e2, 
-         report=c("adj.means", "z.scores", "p.values"), 
-         post.alignment.transform=rank,
-         data=transform(acorn.e, e0=resid(rlm(yc.moe0~v_g2002 + v_p2003)),
-                        e1=resid(rlm(yc.moe1~v_g2002 + v_p2003)),
-                        e2=resid(rlm(yc.moe2~v_g2002 + v_p2003)))
-         )
-
-@ 
+%\subsection{Difference of means test with robust covariate adjustment}
 
 \texttt{Exercise.}\\
 \begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
-\item   \texttt{xBalance} to test 4 models of effect, the 3 mentioned above and another of your devising.  Incorporate covariate adjustment, as above.
+\item   \texttt{xBalance} to test 4 models of effect, the 3 mentioned
+  above and another of your devising.  Incorporate covariate
+  adjustment --- gain scores, regression based covariate adjustment or both.
 \end{enumerate}
+
+\section*{Notes and references}
+
+
+R and R package versions used in this demo:
+<<>>=
+sessionInfo()
+@ 
 
 \bibliographystyle{plain}
 % \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
@@ -451,6 +508,7 @@ Paul~R. Rosenbaum.
 \newblock {\em Statistical Science}, 17(3):286--327, 2002.
 
 \end{thebibliography}
+
 
 
 \end{document}

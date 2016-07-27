@@ -115,6 +115,56 @@ $\vdots$& & & & \\
 This family of hypotheses, as $p$ varies between $-100$ and $100$, can be called a \textit{model of effects}.
 \end{frame}
 
+\begin{frame}{Testing simple models other than the no-effect model}
+
+\begin{columns}
+\column{.4\linewidth}
+
+\begin{itemize}
+\item At right: 3 models/hypotheses
+\item You can decide how to test:
+  \begin{itemize}
+  \item $t$
+  \item one-sided or 2? 
+  \item \ldots
+  \end{itemize}
+\item Relative to the model that assignment to GOTV increases turnout by
+  $p$, and to designated tests (each $p$) ---  
+\end{itemize}
+\column{.6\linewidth}    
+{\small
+\addtolength{\tabcolsep}{-\tabcolsepadj} 
+  \begin{tabular}{r|rr|rr|rrr}
+  \hline
+  &       &                           &           &         &
+                                                              \multicolumn{3}{c}{$y_{C
+                                                              | p=
+                                                              \underline{\hspace{1em}}}$} \\
+ & $z$ & $y_{\mathrm{obs}}$ & $y_C$ & $y_T$ & $-10$\% & 0\% & 10\% \\
+  \hline
+1 & 0 & 38 & 38 & $38+p$ & 38 & 38 & 38\\
+$\vdots$& & & & & &  &\\
+13 & 0 & 19 & 19& $19+p$ & 19 & 19 & 19\\
+14 & 0 & 34 & 34& $34+p$& 34 & 34 & 34 \\
+15 & 1 & 49 & $49-p$& 49 & 59 & 49 & 39 \\
+16 & 1 & 38 & $38-p$& 38 & 48 & 38 & 28 \\
+$\vdots$& & & & & & &\\
+28 & 1 & 29 & $29-p$& 29 & 39 & 29 & 19 \\
+   \hline
+\end{tabular}
+ \addtolength{\tabcolsep}{\tabcolsepadj}
+}
+
+\end{columns}
+  \vfill 
+\begin{quote}
+$1-\alpha$ confidence set for $p$ $\equiv $ \{$p$: $H_{p}$ not rejected at
+  level $\alpha$\} .  
+\end{quote}
+
+\vfill
+\end{frame}
+
 \begin{frame}{A more nuanced model for the Acorn GOTV experiment} % if
                                 % "more nuanced" changes, drop from
                                 % next slide too
