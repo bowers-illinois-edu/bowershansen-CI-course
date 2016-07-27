@@ -1,5 +1,6 @@
 *.Rout
 .local
+lib
 *.aux
 *.log
 *.pdf
