@@ -34,29 +34,35 @@
 \end{frame}
 
 
-\begin{frame}[<+->]{Review: permutation tests vs parametric tests}
+\begin{frame}[<+->]{Background: permutation tests vs parametric tests}
 
-When comparing 2 or more groups, one can often choose between
-permutation tests and parametric tests. E.g., Fisher vs. $\chi^{2}$ tests.
+To compare 2 (or more) groups, one chooses between
+permutation and parametric tests. E.g., Fisher vs. $\chi^{2}$ tests.
 \begin{itemize}
 \item both begin by computing a test statistic
 \item they differ in terms of what they compare the statistic to in order to get a p-value
-\item parametric tests lean on stronger assumptions
-\item permutation tests can use a model to ``motivate'' a test statistic, then compare that test statistic to a permutation-based reference distribution in order committing to the model's assumptions.
+\item parametric tests posit a model for $Y| \mathrm{group}$
+\item W/ random assignment, permutation tests don't have to
+  assume any model for $Y| \mathrm{group}$\ldots
+\item but a provisionally entertained model can suggest a test
+  statistic.  E.g., $Y| G=g \sim \mathcal{N}(\mu_{g}, \sigma^{2})
+  \Rightarrow $ $t(\mathbf{z}, \mathbf{y}) =$ difference of means statistic; $Y| G=g \sim \mathrm{Logistic}(\mu_{g}, s)
+  \Rightarrow $ $t(\mathbf{z}, \mathbf{y}) =$  rank sum statistic.
 \item likewise, the permutational approach circumvents sample-size requirements for p-values' validity.
 \end{itemize}
 
 Software notes:
 \begin{itemize}
 \item In unit 2, $z$'s were permuted using \texttt{sample(z)}.
-\item \texttt{sample()} is part of base R, but ``\textrm{shuffle}'' would be more intuitive.
-\item The ``mosaic'' add-on package provides a \texttt{shuffle()} command.
+\item \texttt{sample()} is part of base R.  the ``mosaic'' library's
+  ``\textrm{shuffle}''  is more evocative.
 \end{itemize}
 
 \end{frame}
 
 
-\begin{frame}<1-4\mynoteonly>[label=testStats4MeanComparison1Fr]{Test statistics for comparing means with Normal \& non-Normal data}
+\begin{frame}<1-4\mynoteonly>[label=testStats4MeanComparison1Fr]{Background:
+    non-Normality robustness; choice of $t(\mathbf{z}, \mathbf{y})$}
 
 Stepping back momentarily from issues specific to causal inference, consider the one-way model
 $$
@@ -128,9 +134,15 @@ Note that these models don't specify $y_{t}$ for precincts we only got to observ
 \end{frame}
 
 \begin{frame}<\nottheirhandout>{Incomplete response schedules and statistical testing}
-   An incomplete response schedule can still give us enough to do statistical testing. For example, if the schedule specifies $y_c$ for all subjects, then we can compare the difference in means in $y_c$ under the realized assigment and all possible other assigments.
+   An incomplete response schedule can still give us enough to do
+   statistical testing. For example, if the schedule specifies $y_c$
+   for all subjects --- more generally, if hypothesis +
+   $\mathbf{y}_{\mathrm{obs}}$ together determine $\mathbf{y}_{U}$,
+   the vector of responses that would have been obtained in the
+   \textit{uniformity trial}   then for any test statistic $t $ we can
+   test by comparing $t(\mathbf{z}, \mathbf{y}_{U})$ to the permutation distribution of $t(\mathbf{Z}, \mathbf{y}_{U}) $ .
 
-Using this test statistic for a two-sided test gives approximately
+Using $t(\mathbf{z}, \mathbf{y}_{U}) = \bar{y}_{U1} - \bar{y}_{U0} $,
 
 \begin{center}
 \begin{tabular}{l|rrr} \hline
