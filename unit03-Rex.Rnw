@@ -1,7 +1,7 @@
 \documentclass{article}
 \usepackage{natbib}
 
-\title{Lab on Fisherian randomization inference and models of effects }
+\title{Lab on Fisherian randomization inference and models of effects}
 \input{courseedition}
 \usepackage{icpsr-classwork}
 
@@ -29,7 +29,7 @@ NOTE: If running any of the above commands gives you an error like
 the below, you'll need to install\footnote{%
 To install, first make sure you have an active internet connection.  Next, if you're using RStudio, you might use the interactive dialog that pops up when you select ``Install Packages\ldots'' from the Tools menu.  (Leave the ``Install dependencies'' option checked.)  Otherwise, enter
 \texttt{
-install.packages(\"optmatch\", dep=T)
+install.packages('optmatch', dep=T)
 }
 into R.  You'll be prompted to select a CRAN mirror; choose one that's
 nearby.  You'll also be asked about the directory to install the
@@ -37,10 +37,6 @@ package to. The default selection should be fine. The installation
 process may take a few seconds to a few minutes, depending on your
 internet connection and on how many dependencies need installation.
 Once it's finished, you should be able to load the package.  
-
-To use a development version of the RItools or optmatch packages, see
-their README files,
-\url{https://github.com/markmfredrickson/RItools/tree/master} or \url{https://github.com/markmfredrickson/optmatch/tree/master}
 } the package before loading it:\\
 \begin{verbatim}
 Error in library(optmatch) : there is no package called 'optmatch'
@@ -50,26 +46,41 @@ menu.  Make sure to install package dependencies.
 
 Exception: We encourage you to use the development version of our
 \texttt{RItools} package, installing it to a local directory that you
-set up for this course.  This will require a few steps. First, create
-a \texttt{lib} subdirectory within your working directory.   Next,
+set up for this course. For instructions on how to do this, see the
+package's github site:
+\url{https://github.com/markmfredrickson/RItools}.  (That assumes you
+have an active connection to github at the time you want to use the
+package.  It's also possible to install it so that you'll have it when
+you're offline, although this requires some additional housekeeping.\footnote{%
+First, create a \texttt{lib} subdirectory within your working directory.   Next,
 install the \texttt{devtools} and \texttt{withr} packages from CRAN
 (along with any dependencies).  Finally, do
+\begin{alltt}
+> library('devtools')
+> library('withr')
+with\_libpaths('./lib', install\_github("markmfredrickson/RItools"), 'pre')
+\end{alltt}
+After this you'll be able to load this version of the RItools package using
+\begin{alltt}
+> detach("package:optmatch", unload=T) \# as optmatch may have implicitly 
+> unloadNamespace('RItools') \# loaded the other version
+> library('RItools', lib.loc='./lib')
+\end{alltt}
+If \texttt{optmatch} had been loaded, reload it as follows:
+\begin{alltt}
+> library('optmatch')  
+\end{alltt}
+} )
 
-<<eval=FALSE>>=
-library('devtools')
-library('withr')
-with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
-@ 
-
-If you've done that, then load the RItools package using
-<<>>=
-unloadNamespace(c('optmatch', 'RItools')) # as optmatch may have implicitly loaded the other version
+<<echo=FALSE,message=FALSE,results='hide'>>=
+detach("package:optmatch", unload=T) # as optmatch may have implicitly 
+unloadNamespace('RItools') #loaded the other version
 library('RItools', lib.loc='./lib')
 library('optmatch')
 @ 
 
 If you're instead working with an RItools that you installed the same
-way you installed the other packages we've mentioned, then do
+way you installed the other packages we've mentioned, just do
 <<eval=FALSE>>=
 library('RItools')
 @ 

@@ -14,9 +14,43 @@ We'll examine baseline comparability for two studies, Arceneaux et
 al's (2005) Kansas City GOTV experiment and Cerda et al's (2012) study of
 the Medellin Metrocable's effects on neighborhood violence.
 
+We recommend using the current development version of RItools --- see
+the package web site for instructions, or mimic the still fussier
+procedure I used to produce this script, involving installing it to a
+``\texttt{lib}'' subdirectory of your working directory\footnote{%
+First, create a \texttt{lib} subdirectory within your working directory.   Next,
+install the \texttt{devtools} and \texttt{withr} packages from CRAN
+(along with any dependencies).  Finally, do
+\begin{alltt}
+> library('devtools')
+> library('withr')
+with\_libpaths('./lib', install\_github("markmfredrickson/RItools"), 'pre')
+\end{alltt}
+} and then loading it via
+\begin{alltt}
+> library('RItools', lib.loc='./lib')  
+\end{alltt}
+
+% A still fussier procedure that I use b/c I keep this script on a
+% dropbox folder and then run it on different machines:
+<<echo=FALSE,message=FALSE>>=
+localpkgdir <- paste("./lib",
+         paste0(R.version$platform, "-library"),
+         with(R.version, paste(major, substring(minor,1,1), sep=".")),
+         sep="/")
+stopifnot(file.exists(localpkgdir))
+library('RItools', lib.loc=localpkgdir)
+@ 
+
+Alternatively, if you're using a stable release from CRAN, load it in
+the usual way:
+<<eval=FALSE>>=
+library(RItools)
+@ 
+(If you do this, you won't be able run any of the commands below that
+involve \texttt{balanceTest()}.)  Continuing, 
 
 <<results='hide'>>=
-library(RItools)
 library(optmatch)
 acorn <- read.csv("data/acorn03.csv", row.names=1)
 meddat <- read.csv('data/meddat.csv', 
@@ -138,7 +172,7 @@ xBalance(nhTrt ~ nhLogHom+nhClass+nhSisben+nhPopD+nhQP03+nhPV03+nhTP03+
          report=c("adj.means", "std.diffs", "chisquare.test"))
 @ 
 
-The \textit{optmatch} package provides a function to translate these
+The \texttt{optmatch} package provides a function to translate these
 structural differences into effective sample sizes, presented in
 matched pair equivalents.  
 <<>>=
