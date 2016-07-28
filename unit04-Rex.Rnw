@@ -14,6 +14,7 @@ We'll examine baseline comparability for two studies, Arceneaux et
 al's (2005) Kansas City GOTV experiment and Cerda et al's (2012) study of
 the Medellin Metrocable's effects on neighborhood violence.
 
+\section{Setup}
 We recommend using the current development version of RItools --- see
 the package web site for instructions, or mimic the still fussier
 procedure I used to produce this script, involving installing it to a
@@ -22,11 +23,11 @@ First, create a \texttt{lib} subdirectory within your working directory.   Next,
 install the \texttt{devtools} and \texttt{withr} packages from CRAN
 (along with any dependencies).  Finally, do
 \begin{alltt}
-> library('devtools')
-> library('withr')
-with\_libpaths('./lib', install\_github("markmfredrickson/RItools"), 'pre')
+> library('devtools') \\
+> library('withr') \\
+with\_libpaths('./lib', install\_github("markmfredrickson/RItools"),'pre') \\
 \end{alltt}
-} and then loading it via
+} and then load it via\\
 \begin{alltt}
 > library('RItools', lib.loc='./lib')  
 \end{alltt}
@@ -53,7 +54,7 @@ involve \texttt{balanceTest()}.)  Continuing,
 <<results='hide'>>=
 library(optmatch)
 acorn <- read.csv("data/acorn03.csv", row.names=1)
-meddat <- read.csv('data/meddat.csv', 
+meddat <- read.csv('data/meddat.csv', row.names=1,
                    colClasses=c("nhClass"="factor"))
 @ 
 (With the Medellin data we had to direct the software to interpret \texttt{nhClass}'s integer
@@ -83,27 +84,78 @@ For the Medellin comparison, it's not quite as clear.
 xBalance(nhTrt ~ nhLogHom+nhClass+nhSisben+nhPopD+nhQP03+nhPV03+nhTP03+
                 nhBI03+nhCE03+nhNB03+nhMale+nhAgeYoung+nhAgeMid+
                 nhMarDom+nhSepDiv+nhOwn+nhRent+nhEmp+nhAboveHS+nhHS,
-                data=meddat, report=c("std.diffs", "adj.means", "chisquare.test"))
+                data=meddat, report='all')
 
 @ 
+
+In both cases, the relevance of the assessment would be improved by
+weighting by cluster size.  The update/replacement for
+\texttt{xBalance} that we've been working on makes this easy to
+do. Another improvement of the \texttt{balanceTest} function is that
+it multiplicity-corrects its significance assessments, at least in its
+default settings; so the presence or absence of significance stars in
+\texttt{balanceTest} displays will be a better guide than significance
+stars shown by \texttt{xBalance}.
+
+<<>>=
+balanceTest(z ~ v_p2003 + v_m2003 + v_g2002 + v_p2002 + v_m2002 + v_s2001 + 
+         v_g2000 + v_p2000 + v_m2000 + v_s1999 + v_m1999 + v_g1998 + 
+         v_m1998 + v_s1998 + v_m1997 + v_s1997 + v_g1996 + v_p1996 + 
+         v_m1996 + v_s1996, element.weights=size, data=acorn, 
+         report = 'all')
+
+balanceTest(nhTrt ~ nhLogHom+nhClass+nhSisben+nhPopD+nhQP03+nhPV03+nhTP03+
+                nhBI03+nhCE03+nhNB03+nhMale+nhAgeYoung+nhAgeMid+
+                nhMarDom+nhSepDiv+nhOwn+nhRent+nhEmp+nhAboveHS+nhHS,
+            element.weights=Pop2003, data=meddat, 
+            report='all')
+
+
+@ 
+
+
+We see that the unstratified Medellin study comes off looking a bit
+better --- more like what we'd expect of a true RCT, that is.
+However, the omnibus p-value reported at the bottom is somewhat at
+odds with the the fact that there are individually significant
+differences (even after correction for multiplicity). This can be
+explained in terms of a known bug in the omnibus test; see
+\href{https://github.com/markmfredrickson/RItools/issues/25}{issue 25}
+on the RItools Github page. In a small sample, or a moderate sample
+with lots of baseline variables, it's better to look for significance
+stars in the variable-by-variable display (at least until issue 25
+gets fixed). 
+
+
 \section{Addressing baseline imbalances via matching or subclassification}
+
+(In what follows, you can use \texttt{xBalance} instead of
+\texttt{balanceTest} if you're willing to forgo weighting for
+population size -- just change ``balanceTest'' to ``xBalance'' and
+remove \texttt{element.weights} arguments.)
 
 \subsection{Subclassification}
 There are many ways to subclassify.  A natural starting point is to
 subclassify on the variable that appeared to be most out of balance
 in the initial baseline comparability check.
 
-<<eval=FALSE>>=
-xBalance(nhTrt ~ nhLogHom+
+<<>>=
+balanceTest(nhTrt ~ nhLogHom+
          strata(nhClass)+
          nhSisben+nhPopD+nhQP03+nhPV03+nhTP03+
                 nhBI03+nhCE03+nhNB03+nhMale+nhAgeYoung+nhAgeMid+
                 nhMarDom+nhSepDiv+nhOwn+nhRent+nhEmp+nhAboveHS+nhHS,
-                data=meddat, report=c("std.diffs", "adj.means", "chisquare.test"))
+                element.weights=Pop2003, data=meddat, report=c("std.diffs", "adj.means", "chisquare.test"))
 
 @ 
- 
-<<echo=FALSE>>=
+Quite a bit better! 
+
+\paragraph{Remarks.}  
+\begin{enumerate}
+\item 
+If you're using \texttt{xBalance} rather than \texttt{balanceTest},
+you'll need to specify the strata as follows:
+<<eval=FALSE>>=
 xBalance(nhTrt ~ nhLogHom+
          nhSisben+nhPopD+nhQP03+nhPV03+nhTP03+
                 nhBI03+nhCE03+nhNB03+nhMale+nhAgeYoung+nhAgeMid+
@@ -111,14 +163,6 @@ xBalance(nhTrt ~ nhLogHom+
                 strata=list(nhClass=~nhClass),
                 data=meddat, report=c("std.diffs", "adj.means", "chisquare.test"))
 @ 
-Quite a bit better! 
-
-\paragraph{Remarks.}  
-\begin{enumerate}
-\item 
-The use of \texttt{strata()} to specifying a stratifying variable was introduced in
-RItools version 0.1-13.  If you have an earlier version, update or
-check out the help page for the old way.
 \item Strictly speaking, this is
 \textit{poststratification}, not stratification, since these strata
 were specified after the fact and played no explicit role in the
@@ -147,35 +191,27 @@ that differs between treatment and control and that unambiguously
 matters to outcomes of interest. 
 
 <<>>=
-pairs.m <- pairmatch(nhTrt~nhLogHom, data=meddat)
-xBalance(nhTrt ~ nhLogHom+nhClass+nhSisben+nhPopD+nhQP03+nhPV03+nhTP03+
+pairs.m <- pairmatch(nhTrt~nhLogHom, element.weights=Pop2003, data=meddat)
+balanceTest(nhTrt ~ nhLogHom+nhClass+nhSisben+nhPopD+nhQP03+nhPV03+nhTP03+
                 nhBI03+nhCE03+nhNB03+nhMale+nhAgeYoung+nhAgeMid+
-                nhMarDom+nhSepDiv+nhOwn+nhRent+nhEmp+nhAboveHS+nhHS,
-                strata=list(pairs=~pairs.m), data=meddat, 
+                nhMarDom+nhSepDiv+nhOwn+nhRent+nhEmp+nhAboveHS+nhHS+
+                strata(pairs.m), element.weights=Pop2003, data=meddat, 
          report=c("std.diffs", "adj.means", "chisquare.test"))
 @ 
 
 Given the sizes of treatment and control groups, our decision to
-match in nonoverlapping pairs meant that a few control neighborhoods
+match in nonoverlapping pairs meant that a 1 control neighborhood
 would have to be left out:
 <<>>=
-with(meddat, table(nhTrt, nhClass) )
+with(meddat, table(nhTrt, is.na(pairs.m)) )
 @ 
 This omission is the whole and entire
 source of the improvements in balance that we saw above!
 
-<<>>=
-xBalance(nhTrt ~ nhLogHom+nhClass+nhSisben+nhPopD+nhQP03+nhPV03+nhTP03+
-                nhBI03+nhCE03+nhNB03+nhMale+nhAgeYoung+nhAgeMid+
-                nhMarDom+nhSepDiv+nhOwn+nhRent+nhEmp+nhAboveHS+nhHS,
-                strata=list(unstrat=NULL, pairs=~pairs.m), data=meddat,
-         report=c("adj.means", "std.diffs", "chisquare.test"))
-@ 
-
 The \texttt{optmatch} package provides a function to translate these
 structural differences into effective sample sizes, presented in
 matched pair equivalents.  
-<<>>=
+<<warning=FALSE>>=
 
 with(meddat, stratumStructure(nhClass, nhTrt))
 with(meddat, stratumStructure(pairs.m, nhTrt)) 
