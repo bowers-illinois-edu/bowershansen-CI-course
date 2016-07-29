@@ -1,0 +1,928 @@
+%  For slides only
+\input{slidesonly}
+
+% % For handout
+%\input{handout}
+
+%For handout + mynotes
+%\input{handout+mynotes}
+
+\input{beamer-preamble-bbh-all}
+\input{defs-all}
+\input{courseedition}
+\usepackage{natbib}
+\newcounter{saveenumi}
+\title{Unit 5: The propensity score}
+% \author, date moved to beamer-preamble-*-all.tex
+
+\begin{document}
+
+
+
+
+
+  \begin{frame}
+    \frametitle{Outline \& Readings}
+
+\tableofcontents[subsectionstyle=show/hide/hide]
+
+  % \alert{Readings for this Unit:}\\
+  % \begin{itemize}
+  % \item Rosenbaum (2002), ``Covariance adjustment in randomized experiments and observational  studies, '' \S 2.3 ({\em Statistical Science}, 17/3:286--327).
+  % \end{itemize}
+
+\input{announcement-of-the-day}  % announcement-of-the-day.tex not
+                                % part of repo
+
+\end{frame}
+
+
+\section[Extrapolation \& overlap]{Pitfalls of multiple covariates:
+  Extrapolation \& overlap}
+
+
+\begin{frame} \frametitle{Contrasting two groups after adjustment for a covariate}
+\framesubtitle{The case of a single continuous
+  covariate\footnote{Trochim, ``Nonequivalent groups design,''
+    \url{socialresearchmethods.net}; Fig.~1 of Rubin (1977, \textit{J. Educ. Statist.} \textbf{2}/1 1--26.).}}
+
+\begin{center}
+  \only<1\mynoteonly>{\igrphx[height=.6\textheight]{pretest-comp-group-design}}
+%  \only<2>{\igrphx[height=.8\textheight]{rubin1977fig1}}
+\end{center}
+
+\end{frame}
+\note[itemize]{
+\item {}\textit{[Explain picture]}
+\item Even if we knew these curves, we'd have to average both curves
+  over a common standard distribution in order to estimate a causal effect.
+  \item Even if we knew these curves, there'd be ETT, ETC, \ldots
+    \item Problem: we don't know the 2 curves.  Further, if we try to
+      estimate from data, might have to extrapolate.  In that case
+      have to be very careful!
+}
+
+\begin{frame}[label=contrast2grFr]
+  \frametitle{Contrasting two groups after adjustment for a covariate}
+\framesubtitle{Preventing extrapolation with two covariates}
+
+\begin{center}
+  \igrphx[angle=270,width=\linewidth]{mvextrapsketch}
+\end{center}
+
+\end{frame}
+
+\note[itemize]{
+  \item W/ multiple variables, extrapolation can't necessarily be identified by looking for extrapolation on the variables individually.  
+  \item The problem gets worse as the number of variables increases.
+  }
+
+\begin{frame}
+  \frametitle{Contrasting two groups after adjustment for a covariate}
+\framesubtitle{Preventing extrapolation with \textit{many}
+  covariates\citep[\textit{cf.} ][\textit{Ann. Intern. Med.}]{rubin:1997}}
+
+  \begin{center}
+    \igrphx[height=.9\textheight]{psboxplot}
+  \end{center}
+
+\end{frame}
+
+\note[itemize]{
+\item The are ``propensity scores'' -- to be defined.
+\item Propensity scores are immediate children of ``discriminant scores.'' As name suggests, their purpose is to discriminate between the groups.
+\item The scores fold together a potentially large number of variables.  So plots like this inform us about extent of extrapolation problem.
+\item Jargon: ``overlap''; ``comon support''.
+\item Role of assumptions in comparisons outside region of overlap.  Minimizing assumptions often requires restricting the comparison, ie. ``throwing away data.''
+}
+\section{Balance in controlled and natural experiments}
+%\mbox{}
+\begin{frame}
+  \frametitle{The Neyman-Rubin Model for (simple) experiments}
+\vfill
+  This is what randomization ensures:
+$$ (\alert<4>{Y_t, Y_c},\alert<2>{X}) \perp \alert<3>{Z} $$
+\vfill
+
+\uncover<5->{I.e., each of $X$, $Y_{c}$ and $Y_{t}$ is balanced} \uncover<6->{(in expectation; modulo sampling variability).}
+
+\end{frame}
+\note[itemize]{
+  \item In controlled experiments, random assignment warrants this.
+  \item In natural experiments, justified otherwise, or an article of faith.
+  \item In an experiment, the $x$es aren't necessary for inference.
+  \item However, the part with the $x$es has testable consequences.}
+
+ \begin{frame}%<1>[label=covbalexptsFr]
+  \frametitle{Covariate balance in experiments}
+%\only<2>{\framesubtitle{The importance of comparing it to balance in other experiments}}
+
+\begin{columns}
+  \begin{column}{.4\linewidth}
+    \begin{itemize}
+    \item<1-> \citet{arceneaux:2005}
+    \item<1-> Kansas City, November 2003
+    \item<1-> Completely randomized design: 14 precincts $\rightarrow$ Tx; 14 $\rightarrow $ Control.
+
+    \item<1-> Substantively large baseline differences
+%    \item<2-> Differences not large compared to other assignments from same design.
+%    \item<2-> $\PP(\chi^{2} > x) = .94$ \citep{hansen:bowers:2008}.
+    \end{itemize}
+  \end{column}
+  
+\begin{column}{.6\linewidth}
+\only<1>{\igrphx{KC-baseline}}
+%\only<2>{\igrphx{KC-bal+SDs}}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+%  \begin{frame}
+%\frametitle{Balance in randomized experiments}
+% \begin{center}
+%   \igrphx[width=4in]{balanceAtBaseline}
+% \end{center}
+
+% \enlargethispage*{1000pt}
+% \only<1>{\footnotesize Table 1 of Bray et al. (2002), ``A 9-mo
+%   randomized clinical trial comparing fat-substituted and fat-reduced
+%   diets in healthy obese men: the Ole Study,''
+%   \emph{Am. J. Clin. Nutr.} \textbf{76}/5, 928--934.}
+% \only<2>{Balance due to randomized assignment: not perfect, but good enough.}
+%\end{frame}
+
+\begin{frame}[fragile] 
+  \frametitle{1971 UC Berkeley Admissions}
+
+\bigskip
+
+Proportions of men and women \textit{applying} to the 6 departments.\\
+% latex table generated in R 3.2.3 by xtable 1.8-2 package
+% Fri Jul 29 14:16:35 2016
+\begin{tabular}{rrrrrrrr}
+  \hline
+ & A & B & C & D & E & F & Overall \\ 
+  \hline
+Male & 31 & 21 & 12 & 15 & 7 & 14 & 100 \\ 
+  Female & 6 & 1 & 32 & 20 & 21 & 19 & 100 \\ 
+  diff. & 25 & 19 & -20 & -5 & -14 & -5 & 0 \\ 
+   \hline
+\end{tabular}\\
+\bigskip
+
+Define dummy variables \texttt{DeptA}, \ldots, \texttt{DeptF}. Comparison is \textit{balanced} for \texttt{DeptA} if M, W means of \texttt{DeptA} are similar.
+% \[ \mathtt{a}_{i}=\left\{
+%   \begin{array}{lr}
+%     1, & $i$\, \mathrm{applied\ to\ dept\ A}\\
+%     0, & \mathrm{otherwise}.
+%   \end{array}
+% \right.\]
+% The comparison is \textit{balanced} on \texttt{a} if $\bar{\mathtt{a}}_{m}
+% \approx \bar{\mathtt{a}}_{f}$, balanced on \texttt{b} if $\bar{\mathtt{b}}_{m}
+% \approx \bar{\mathtt{b}}_{f}$, etc.  \pause
+
+{\small
+\begin{Schunk}
+\begin{Sinput}
+> xBalance(Female ~ Dept, data=UCBA, 
++          report=c("adj.means", "adj.mean.diffs"))
+\end{Sinput}
+\begin{Soutput}
+      strata  unstrat                           
+      stat   Female=0 Female=1 adj.diff         
+vars                                            
+DeptA        3.1e-01  5.9e-02  -2.5e-01 ***     
+DeptB        2.1e-01  1.4e-02  -1.9e-01 ***     
+DeptC        1.2e-01  3.2e-01  2.0e-01  ***     
+DeptD        1.5e-01  2.0e-01  4.9e-02  ***     
+DeptE        7.1e-02  2.1e-01  1.4e-01  ***     
+DeptF        1.4e-01  1.9e-01  4.7e-02  ***     
+\end{Soutput}
+\end{Schunk}
+}
+
+\vfill
+\end{frame}
+
+
+\note[itemize]{
+\item Explain lack of balance on dept.
+% \begin{pedantic}
+% \item  ``Loose Definition''
+% \item Lack of balance on one or more covariates is a precondition for Simpson.
+% \end{pedantic}
+\item Balance in a stratified obs study can be compared to balance in a block-randomized experiment, as lower panel does.
+\item Significance stars at left report 6 Pearson chi-square tests.  In an experiment, would general three stars less than .1\% of random assignments.
+}
+
+
+
+\begin{frame}
+  \frametitle{The Neyman-Rubin Model for stratified experiments}
+
+  This is what randomization ensures in a \textit{simple} experiment:
+$$ ({Y_t, Y_c},{X}) \perp {Z} .$$
+
+In a \textit{stratified} experiment, this becomes:
+$$ ({Y_t, Y_c},{X}) \perp {Z} | \alert<2>{S} .$$
+In words, there are independent simple experiments in each stratum.  
+
+\uncover<3->{Methods of outcome analysis, as well as methods of inspecting covariate balance, have to be updated to account for the additional structure.}
+
+
+\end{frame}
+
+\begin{frame}[fragile,label=SpafFr] 
+%  \frametitle{Simpson's paradox: A fix}
+\frametitle{Combining contrasts across strata}
+
+How to compare male and female acceptance rates? 
+% latex table generated in R 3.2.3 by xtable 1.8-2 package
+% Fri Jul 29 14:16:35 2016
+\begin{tabular}{rrrrrrrrr}
+  \hline
+ & A & B & C & D & E & F & Unweighted & n.apps.weighted \\ 
+  \hline
+Male & 62 & 63 & 37 & 33 & 28 & 6 & 45 & 39 \\ 
+  Female & 82 & 68 & 34 & 35 & 24 & 7 & 30 & 43 \\ 
+  diff & -20 & -5 & 3 & -2 & 4 & -1 & 14 & -4 \\ 
+  \hline n.apps & 21 & 13 & 20 & 17 & 13 & 16 &  &  \\ 
+   \hline
+\end{tabular}
+\pause
+
+One way that
+doesn't acknowledges departmental differences, and two ways that do. 
+\begin{enumerate}
+ \item Compute Male and Female rates; compare. 
+\item<2-> \label{item:4}Take a weighted average of \texttt{diff}, weighting in
+  proportion to, say, \texttt{n.apps}.
+\item<3-> \label{item:5}Standardize male and female acceptance rates, using \texttt{n.apps} to define the standard population; subtract standardized female rate from standardized male rate.
+\end{enumerate}
+
+\uncover<4->{
+Both (\ref{item:4}) and (\ref{item:5}) give the same answer.
+}
+\end{frame}
+
+\itnote[10]{
+% \begin{pedantic}
+% \item {To pool the by-department comparisions, natural to take weighted average of differences.  (How does this differ from just averaging men and then women, without regard to dept.?)}
+% \end{pedantic}
+
+\item {Weighting the differences by the number of applicants to each department gives -0.043.\\
+}
+\item {\textbf{A good time to stop and have them} verify my
+    equivalence claim using the Simpson's paradox examples that they
+    created earlier.} %+5 to time estimate for this frame
+}
+\begin{frame}[fragile]
+  \frametitle{Combining across strata: varying the recipe}
+
+Different standards give different assessments of the male advantage, all of them adjusted.  Some possible standard populations:
+\begin{itemize}
+\item  \alert<2| handout:0>{all applicants, categorized by dept};
+\item  \alert<3| handout:0>{Depts' \textit{harmonic means} of \# M, \# F applicants };
+\item  \alert<4| handout:0>{all M applicants, categorized by dept };
+\item  \alert<5| handout:0>{all F applicants, categorized by dept
+    (compare to ``effect of treatment on the treated'' [ETT])}.
+\end{itemize}
+
+
+% latex table generated in R 3.2.3 by xtable 1.8-2 package
+% Fri Jul 29 14:16:35 2016
+\begin{tabular}{rrrrrrrrr}
+  \hline
+ & A & B & C & D & E & F & unweighted & weighted \\ 
+  \hline
+diff & -20 & -5 & 3 & -2 & 4 & -1 & 14 &  \\ 
+  \alert<2| handout:0>{n.apps} & 21 & 13 & 20 & 17 & 13 & 16 &  & -4 \\ 
+  \alert<3| handout:0>{h.wts} & 11 & 3 & 25 & 24 & 15 & 21 &  & -7 \\ 
+  \alert<4| handout:0>{n.m} & 31 & 21 & 12 & 15 & 7 & 14 &  & -0 \\ 
+  \alert<5| handout:0>{n.f} & 6 & 1 & 32 & 20 & 21 & 19 &  & -2 \\ 
+   \hline
+\end{tabular}
+
+
+\end{frame}
+\itnote{
+\item \texttt{n.apps} simplest to describe, but it gives similar weights
+  to Depts A and C on the basis of their similar sizes, despite the
+  fact that A had was v small in terms of F applicants, making its
+  total size somewhat deceptive as an indicator of what it can
+  contribute to this comparison.
+\item harmonic takes into account the sizes of both groups in each
+  stratum.  (\textbf{Calculate for own Simpson's example as a HW?} )
+\item The \# of men applicants is difficult to motivate, but \# women
+  is v natural, as women are the focus of the study.
+}
+
+\begin{frame}[fragile]
+  \frametitle{Using the \textsc{anova} to combine across strata}
+
+ Using OLS/\textsc{anova} to address the problem gives
+\begin{Schunk}
+\begin{Sinput}
+> lm(Admit~Gender+Dept, data=UCBA)
+\end{Sinput}
+\end{Schunk}
+\begin{Schunk}
+\begin{Soutput}
+             Estimate Std. Error t value Pr(>|t|)
+(Intercept)     0.642      0.015   43.88     0.00
+GenderFemale    0.018      0.015    1.20     0.23
+DeptB          -0.010      0.023   -0.44     0.66
+\end{Soutput}
+\end{Schunk}
+$\vdots$
+
+ Recall that using harmonic means of the departments' numbers of men and women applicants to standardize led to an adjusted difference of $-1.84\% $.
+  
+\end{frame}
+\itnote{
+\item So the ANOVA t-test uses harmonic weighting.  
+\item So does the CMH test, which is designed for binary data. 
+\item ``Precision weighting.''
+}
+
+%\begin{pedantic}
+\begin{frame}[fragile]
+  \frametitle{(Aside: \texttt{xBalance()} and \texttt{lm()} both use precision weighting)}
+
+\begin{Schunk}
+\begin{Sinput}
+> xBalance(Female ~ Dept+Admit, strata=list(Department=~Dept),
++          data=UCBA, report=c("adj.means","adj.mean.diffs"))
+\end{Sinput}
+\begin{Soutput}
+          strata Department                           
+          stat     Female=0 Female=1 adj.diff         
+vars                                                  
+DeptA              1.1e-01  1.1e-01  -1.4e-15         
+DeptB              2.9e-02  2.9e-02  9.3e-17          
+DeptC              2.5e-01  2.5e-01  -4.4e-15         
+DeptD              2.4e-01  2.4e-01  2.4e-15          
+DeptE              1.5e-01  1.5e-01  7.9e-16          
+DeptF              2.1e-01  2.1e-01  -3.4e-17         
+AdmitTRUE          3.2e-01  3.3e-01  1.8e-02          
+\end{Soutput}
+\end{Schunk}
+\end{frame}
+\note[itemize]{
+\item Weighting produces both \texttt{Female=0} and \texttt{Female=1} columns
+\item Although maybe not immediately clear, the \texttt{adj.diff}'s for \texttt{DeptX} variables are effectively 0
+\item As they should be
+\item The adj.diff for \texttt{AdmitTRUE} is .018 --- \textit{not} 0; also the same as we got from the ANOVA.
+}
+%\end{pedantic}
+
+\begin{frame}%<1>[label=covbalexptsFr]
+  \frametitle{Covariate balance in experiments}
+\only<2>{\framesubtitle{The importance of comparing it to balance in other experiments}}
+
+\begin{columns}
+  \begin{column}{.4\linewidth}
+    \begin{itemize}
+    \item<1-> \citet{arceneaux:2005}
+    \item<1-> Kansas City, November 2003
+    \item<1-> Completely randomized design: 14 precincts $\rightarrow$ Tx; 14 $\rightarrow $ Control.
+
+    \item<1-> Substantively large baseline differences
+    \item<1-| alert@+> Differences not large compared to other assignments from same design.
+    \item<2-> $\PP(\chi^{2} > x) = .94$ \citep{hansen:bowers:2008}.
+    \end{itemize}
+  \end{column}
+  
+\begin{column}{.6\linewidth}
+%\only<1| handout:0>{\igrphx{KC-baseline}}
+\only<2>{\igrphx{KC-bal+SDs}}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\Note{
+There's also a natural way of combining imbalances on different
+measures into a single chi-square measure.
+}
+
+
+\section{Inducing balance with the propensity score}
+%\frame{\tableofcontents[]}
+
+
+\begin{frame}
+  \frametitle{A limitation}
+
+  Propensity-score methods are made for \textit{prospective} designs;
+  application to retrospective (case-control) studies is limited.
+\end{frame}
+
+%\mbox{}
+\begin{frame}<1-3>[label=thePSfr]
+  \frametitle{The propensity score}
+
+Given covariates $\mathbf{X} (=(X_1, \ldots, X_k))$, and a
+treatment variable $Z$, $Z(u) \in \{0, 1\}$,  $\PP (Z \vert \mathbf{X})$ is known as the (true) \alert<1>{propensity score} (PS).  
+$$ \phi( \mathbf{X} ) \equiv \log\left( \PP (Z=1 \vert \mathbf{X})/\PP (Z=0 \vert \mathbf{X}) \right)$$
+is also known as the PS.  In practice, one works
+with an estimated PS, $\hat{\PP} (Z \vert \mathbf{X})$ or
+$\hat{\phi}(\mathbf{X})$.
+
+Theoretically, propensity-score strata or matched sets both
+\begin{enumerate}
+ \item<2-| alert@+> reduce extrapolation; and
+\item<3-| alert@+> balance each of $X_1, \ldots, X_k$.
+\end{enumerate}
+\uncover<4->{They do this by making the comparison more
+  ``experiment-like'', at least in terms of $X_1, \ldots, X_k$.}
+
+\uncover<5->{Theory also tells us that in the absence of hidden bias, such a stratification}
+\begin{enumerate}
+  \addtocounter{enumi}{2}
+\item<5-| alert@+> supports unbiased estimation of treatment effects.
+\end{enumerate}
+
+\end{frame}
+
+
+
+\againframe<4-5>{thePSfr}
+%\mbox{}
+\begin{frame}
+  \frametitle{Propensity scoring in practice}
+
+\enlargethispage*{1000pt}
+
+\begin{columns}
+  \column{.65\linewidth}
+\begin{enumerate}[<+-| alert@+>]
+\item Fitted propensity scores help identify extrapolation.
+\item In practice, stratification on $\hat{\phi}(\mathbf{X})$
+helps balance each of $X_1, \ldots, X_k$.
+% \item Adjustment based on the
+% propensity score is arguably more transparent and more stable
+% that adjustment based on multiple regression.
+\item There are \emph{lots of cases} in which adjustment with the propensity
+score fails to generate estimates that square with those of
+randomized studies. \setcounter{saveenumi}{\value{enumi}}
+\end{enumerate}
+\column{.35\linewidth} \igrphx{psboxplot}
+\end{columns}
+
+\begin{enumerate}[<+-| alert@+>] \setcounter{enumi}{\value{saveenumi}}
+\item There are various reasons for this, starting with: lots of observational studies that
+  don't measure quite enough $x$es.
+\item (Propensity scores address bias on measured variables, not
+  unmeasured ones.)  \textit{hidden bias}.
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Bias removal with an ``estimated'' ``propensity
+score''}
+
+In the UCB Admissions data set, applicants to departments A and B
+appear to have roughly similar ``feminine propensities,'' as do
+applicants to departments C and E, or to D and F.
+
+%\only<1-2>
+{
+ \begin{tabular}[b]{|l|rrrrrr|} \hline
+& \multicolumn{6}{|c|}{Department} \\
+&   A &   B &   C &   D &   E &   F \\ \hline
+\% Female & .12 & .04 & .65 & .47 & .67 & .48 \\ \hline
+\end{tabular}
+ \pause
+ \begin{tabular}[b]{rrr|} \hline
+  \multicolumn{3}{c|}{Female App. \%}\\
+  Low & Med. & High \\ \hline
+  .09 & .66 & .48 \\ \hline
+\end{tabular}
+}
+
+How does this ``propensity'' stratification affect balance?
+% \begin{onlyenv}<3>%{
+%   An analysis that groups applicants to departments with similar
+% ``feminine propensities'' also removes the bias in the original
+% data.
+% {\small
+% \begin{center}
+% 1971 UCB Admissions \citep{Bickel:etal:1975}
+% \begin{tabular}{|ll|r|rrr|} \hline
+%          &       & Ignoring & \multicolumn{3}{|c|}{PS Stratum} \\
+% Admit    &Gender &department&Low& Med & High \\ \hline
+% Admitted &Male   & 1200    &860 & 170 & 160 \\
+%          &Female &  560    &110 & 300 & 160 \\
+% Rejected &Male   & 1500    &520 & 340 & 630 \\
+%          &Female & 1300    & 30 & 690 & 560 \\ \hline
+% \multicolumn{2}{|c|}{$\chi_1^2$-statistic} & $M^2=91.6$ &\multicolumn{3}{|c|}{$X^2=1.2$} \\
+% \multicolumn{2}{|c|}{$p$-value } & $p \leq 2.2\cdot 10^{-16}$
+% &\multicolumn{3}{|c|}{$p=.28$} \\ \hline
+% \end{tabular}
+% \end{center}
+% }
+% %}
+% \end{onlyenv}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Bias removal with an ``estimated'' ``propensity score''}
+\begin{Schunk}
+\begin{Sinput}
+> UCBA$PS.hat <- predict( glm(Female~Dept, binomial, data=UCBA) )
+> table(round(UCBA$PS.hat, 2))
+\end{Sinput}
+\begin{Soutput}
+-3.11 -2.03 -0.11 -0.09   0.6  0.72 
+  585   933   792   714   918   584 
+\end{Soutput}
+\begin{Sinput}
+> UCBA$PSS <- cut(UCBA$PS.hat, breaks=c(-4,-2,0,2))
+\end{Sinput}
+\end{Schunk}
+% \begin{Schunk}
+% \begin{Sinput}
+% > UCBA$PSS <- UCBA$Dept ; levels(UCBA$PSS)
+% \end{Sinput}
+% \begin{Soutput}
+% [1] "A" "B" "C" "D" "E" "F"
+% \end{Soutput}
+% \begin{Sinput}
+% > levels(UCBA$PSS) <-  scan(what="character", nlines=1)
+% 1: Low Low Hi Med Hi Med
+% Read 6 items
+% \end{Sinput}
+% \end{Schunk}
+
+% \begin{verbatim}
+% xBalance(Female ~ Dept, strata=data.frame(none='-',
+% +   UCBA[c("PSS", "Dept")]), data=UCBA, report=<...>)
+% \end{verbatim}
+\begin{Schunk}
+\begin{Sinput}
+> xBalance(Female ~ Dept, data=UCBA, report=c("adj.mean.diffs"), 
++          strata=data.frame(`none`="-", UCBA["PSS"])     )
+\end{Sinput}
+\begin{Soutput}
+      strata     none               PSS         
+      stat   adj.diff          adj.diff         
+vars                                            
+DeptA        -2.5e-01 ***      3.1e-02  ***     
+DeptB        -1.9e-01 ***      -3.1e-02 ***     
+DeptC        2.0e-01  ***      -1.2e-02         
+DeptD        4.9e-02  ***      -1.8e-03         
+DeptE        1.4e-01  ***      1.2e-02          
+DeptF        4.7e-02  ***      1.8e-03          
+\end{Soutput}
+\end{Schunk}
+
+\end{frame}
+\note[itemize]{
+\item Propensity subclassification isn't as good as exact matching on
+  Dept, but much better than nothing.
+\item Propensity works better for C--F than for A and B.
+\item Note that you don't have to have the same value on the
+  underlying covariate to have the same propensity score.  We balanced
+  C--F, but we didn't match exactly on them.
+\item Dimension reduction: turned a 5-dimensional covariate into a
+3-dimensional one.
+
+}
+%\mbox{}
+
+\begin{frame}[label=FemPptyFr]
+\frametitle{Bias removal with an ``estimated'' ``propensity
+score''}
+
+In the UCB Admissions data set, applicants to departments A and B
+appear to have roughly similar ``feminine propensities,'' as do
+applicants to departments C and E, or to D and F.
+
+%\only<1-2>
+{
+ \begin{tabular}[b]{|l|rrrrrr|} \hline
+& \multicolumn{6}{|c|}{Department} \\
+&   A &   B &   C &   D &   E &   F \\ \hline
+\% Female & .12 & .04 & .65 & .47 & .67 & .48 \\ \hline
+\end{tabular}
+ \pause
+ \begin{tabular}[b]{rrr|} \hline
+  \multicolumn{3}{c|}{Female App. \%}\\
+  Low & Med. & High \\ \hline
+  .09 & .66 & .48 \\ \hline
+\end{tabular}
+}
+
+%\begin{onlyenv}<3>%{
+  An analysis that groups applicants to departments with similar
+``feminine propensities'' also removes the bias in the original
+data.
+{\small
+\begin{center}
+1971 UCB Admissions \citep{Bickel:etal:1975}
+\begin{tabular}{|ll|r|rrr|} \hline
+         &       & Ignoring & \multicolumn{3}{|c|}{PS Stratum} \\
+Admit    &Gender &department&Low& Med & High \\ \hline
+Admitted &Male   & 1200    &860 & 170 & 160 \\
+         &Female &  560    &110 & 300 & 160 \\
+Rejected &Male   & 1500    &520 & 340 & 630 \\
+         &Female & 1300    & 30 & 690 & 560 \\ \hline
+\multicolumn{2}{|c|}{$\chi_1^2$-statistic} & $M^2=91.6$ &\multicolumn{3}{|c|}{$X^2=1.2$} \\
+\multicolumn{2}{|c|}{$p$-value } & $p \leq 2.2\cdot 10^{-16}$
+&\multicolumn{3}{|c|}{$p=.28$} \\ \hline
+\end{tabular}
+\end{center}
+}
+%}
+%\end{onlyenv}
+\end{frame}
+\Note{
+ Very much a toy example, but real ones work in much the same way.
+}
+
+
+\begin{frame}
+  \frametitle{Illustrative example: propensity stratification in an experiment}
+
+\begin{columns}
+  \begin{column}{.5\linewidth}
+    \begin{itemize}
+    \item The imbalance creates a small conditional bias in $\bar{y}_{t} - \bar{y}_{c}$.
+    \item<2-> PS stratification reduces covariate imbalance \citep{hill:etal:2000} \& thus reduces ``bias''
+   \end{itemize}
+  \end{column}
+  \begin{column}{.5\linewidth}
+\only<1| handout:0>{\igrphx{KC-bal+SDs}}
+    \only<2->{\igrphx{KC-balwithPS}}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% \begin{frame} \enlargethispage*{400pt}
+% \frametitle{The propensity score as an instrument of balance}
+% \begin{center}
+% \igrphx[height=7.8cm]{tomlovepic-lb-flat}
+% \end{center}
+% \end{frame}
+
+%\begin{pedantic}
+\begin{frame}
+  \frametitle{Matching on a covariate versus matching to balance it}
+
+  \begin{itemize}
+\item   Distinct units $a$ and $b$ can be very
+  different in terms of each of $X_1, \ldots, X_k$, so that
+  $\mathbf{x}_a$ and $\mathbf{x}_b$ are very different, while at the same
+  time $\hat{\phi}(\mathbf{x}_a) \approx \hat{\phi}(\mathbf{x}_b)$.
+\item   Therefore matching on a propensity score involving $v$ (among other contributing covariates) will \emph{not} in general have the side effect of
+  matching on $v$ itself.
+\item It \textit{has} to be that way, because for most data sets it's mathematically infeasible to match closely on more than a couple of variables \citep{cochran:1972,abadie2006lsp}.
+\end{itemize}
+
+\note{
+{\footnotesize
+
+Benefits of matching on, as opposed to merely balancing, a variable:
+  \begin{itemize}
+\item
+In some cases, an initial stratification is necessary to ensure that
+comparison of outcomes is meaningful.
+\item
+If a covariate is strongly predictive of outcomes, matching or stratifying
+upon it will tend to sharpen the eventual matched or stratified comparison.
+\item If you want to study interactions of a variable with the treatment, have
+to match on it, at least approximately.
+  \end{itemize}
+
+Cost of matching on as opposed to matching to balance:
+\begin{itemize}
+\item You can balance many more variables than you can match upon
+\item Harder to find good matches on other variables; may force you to reduce sample size, either literally or figuratively.
+\end{itemize}
+}
+}
+\end{frame}
+%\end{pedantic}
+
+
+
+
+
+\begin{frame}[fragile,shrink]
+  \frametitle{Stratification on a propensity score: some concerns}
+\begin{Schunk}
+\begin{Sinput}
+> xBalance(Female ~ Dept, strata=data.frame(`none`="-", UCBA["PSS"]), 
++ data=UCBA, report=c("adj.mean.diffs"))
+\end{Sinput}
+\begin{Soutput}
+      strata     none               PSS         
+      stat   adj.diff          adj.diff         
+vars                                            
+DeptA        -2.5e-01 ***      3.1e-02  ***     
+DeptB        -1.9e-01 ***      -3.1e-02 ***     
+DeptC        2.0e-01  ***      -1.2e-02         
+DeptD        4.9e-02  ***      -1.8e-03         
+DeptE        1.4e-01  ***      1.2e-02          
+DeptF        4.7e-02  ***      1.8e-03          
+\end{Soutput}
+\end{Schunk}
+  \begin{itemize}[<+-| alert@+>]
+  \item 
+  Evidently, low propensity score stratum needs to be split.
+\item In general, covariates won't align with stratum boundaries.
+  \item Some software routines address this by ``testing'' for difference of means on the estimated propensity score, splitting a stratum when a difference is ``found.''
+  \item Better remedies frame ``success'' of the stratification as a
+    model, which is then tested using all the data at once.
+\end{itemize}
+\itnote{
+  \item 
+  Evidently, low propensity score stratum needs to be split.
+\item In general, covariates won't line up neatly with stratum boundaries, so when they're out of balance it's difficult to see which strata may be too wide.
+  \item Some software routines address this by ``testing'' for a difference of means on the estimated propensity score, splitting a stratum when a difference is ``found.''   But these tests ignore the estimated nature of the propensity score, and carry a multiplicity problem.
+  \item 
+
+}
+\end{frame}
+
+
+\nocite{hansen:klopfer:2006,rosenbaum:2002}
+
+
+%\subsection{Balance checking in practice}
+
+\begin{frame}
+  \frametitle{Balance checking}
+\begin{itemize}
+\item \textit{Overt} vs. \textit{hidden} bias \citep{rosenbaum:2002}.
+\item Balance checks address a form of overt bias.
+\item Two ways of thinking about balance each suggests a method of assessing it:
+  \begin{itemize}
+  \item If covariate $x$ were the outcome variable, how biased would my treatment effect estimate of it be? (Hopefully not much.)
+  \item How do average differences on $x$ compare with what we'd see under matched randomization?
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{If $x$ were the outcome, how biased would my treatment effect estimate be?}
+
+  It's natural to look to effect sizes, between-group differences
+  expressed as fractions of corresponding standard deviations, for a
+  context-independent indication of severity of bias.
+  
+  
+\begin{Schunk}
+\begin{Sinput}
+> xBalance(Female ~ Dept, strata=data.frame(`none`="-", UCBA["PSS"]), 
++ data=UCBA, report=c("adj.mean.diffs", "std.diffs"))
+\end{Sinput}
+\begin{Soutput}
+      strata     none                        PSS                  
+      stat   adj.diff std.diff          adj.diff std.diff         
+vars                                                              
+DeptA        -2.5e-01 -6.4e-01 ***      3.1e-02  8.1e-02  ***     
+DeptB        -1.9e-01 -6.0e-01 ***      -3.1e-02 -9.8e-02 ***     
+DeptC        2.0e-01  5.2e-01  ***      -1.2e-02 -3.0e-02         
+DeptD        4.9e-02  1.3e-01  ***      -1.8e-03 -4.9e-03         
+DeptE        1.4e-01  4.4e-01  ***      1.2e-02  3.5e-02          
+DeptF        4.7e-02  1.3e-01  ***      1.8e-03  5.1e-03          
+\end{Soutput}
+\end{Schunk}
+
+Standard reference points --- $.2s_{p}$, $.1s_{p}$ --- say this is
+pretty good, despite significance stars.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle[Compare to matched randomization]{How do differences on $x$ compare with what we'd see under matched randomization?}
+
+The model stating that propensity scores are the same within each
+propensity stratum can be directly tested.
+
+\begin{Schunk}
+\begin{Sinput}
+> xBalance(Female ~ Dept, strata=data.frame(`none`="-", UCBA["PSS"]), 
++ data=UCBA, report=c("chisquare.test"))
+\end{Sinput}
+\begin{Soutput}
+---Overall Test---
+     chisquare df  p.value
+none      1068  5 1.1e-228
+PSS         25  3  1.4e-05
+---
+Signif. codes:  0 
+\end{Soutput}
+\end{Schunk}
+
+This gives a different picture.
+\end{frame}
+
+\begin{frame}{My \$.02}
+ 
+  \begin{itemize}
+  \item My advice \citep{hansen:bowers:2008,hansen:statmed:2008} is to
+    do the chi-square test\footnote{\citet*{imaiKingStuart:2007}
+      disagree, as does \citet*{austin2008critical}.  The Rosenbaum
+      text (2009) and Stuart review \citeyearpar{stuart2010matching} have some discussion of the debate.}.
+  \item If this goodness-of-fit test fails, we need a better model:
+    ordinarily a finer stratification on the PS, or a closer match on it.
+  \item Alternately, the chi-square test compares to a stratified
+    experiment.  We know that covariance adjustment (regression) works
+    pretty well in experiments.  If we've got the right $X$es,
+    covariate adjustment should work in our non-experiment -- provide
+    its balance on those $X$es is on par with that of a comparable experiment.
+  \end{itemize}
+  
+  
+  
+\end{frame}
+
+\section*{References}
+
+%\mbox{}
+\begin{frame}[allowframebreaks]
+\nocite{hansen:2004,hansen:klopfer:2006}
+{\scriptsize
+% \bibliographystyle{asa}
+% \bibliography{abbrev_long,causalinference,misc,computing,biomedicalapplications}
+\begin{thebibliography}{14}
+\newcommand{\enquote}[1]{``#1''}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[{Abadie and Imbens(2006)}]{abadie2006lsp}
+Abadie, A. and Imbens, G.~W. (2006), \enquote{{Large Sample Properties of
+  Matching Estimators for Average Treatment Effects},} \textit{Econometrica},
+  74, 235--267.
+
+\bibitem[{Arceneaux(2005)}]{arceneaux:2005}
+Arceneaux, K. (2005), \enquote{Using cluster randomized field experiments to
+  study voting behavior,} \textit{Annals of the Americal Academy of Political
+  and Social Science}, 601, 169--179.
+
+\bibitem[{Austin(2008)}]{austin2008critical}
+Austin, P.~C. (2008), \enquote{{A critical appraisal of propensity-score
+  matching in the medical literature between 1996 and 2003},}
+  \textit{Statistics in Medicine}, 27, 2037--2049.
+
+\bibitem[{Bickel et~al.(1975)Bickel, Hammel, and O'Connell}]{Bickel:etal:1975}
+Bickel, P.~J., Hammel, E.~A., and O'Connell, J.~W. (1975), \enquote{Sex bias in
+  graduate admissions: Data from Berkeley,} \textit{Science}, 187, 398--403.
+
+\bibitem[{Cochran(1972)}]{cochran:1972}
+Cochran, W.~G. (1972), \enquote{Observational Studies,} in \textit{Statistical
+  Papers in Honor of George Snedecor}, Iowa State University Press, pp. 77--90.
+
+\bibitem[{Hansen(2004)}]{hansen:2004}
+Hansen, B.~B. (2004), \enquote{Full matching in an observational study of
+  coaching for the {SAT},} \textit{Journal of the American Statistical
+  Association}, 99, 609--618.
+
+\bibitem[{Hansen(2008)}]{hansen:statmed:2008}
+--- (2008), \enquote{The essential role of balance tests in propensity-matched
+  observational studies: Comments on ``A critical appraisal of propensity-score
+  matching in the medical literature between 1996 and 2003'' by Peter Austin,
+  Statistics in Medicine.} \textit{Statistics in Medicine}, 27, 2050--2054.
+
+\bibitem[{Hansen and Bowers(2008)}]{hansen:bowers:2008}
+Hansen, B.~B. and Bowers, J. (2008), \enquote{Covariate balance in simple,
+  stratified and clustered comparative studies,} \textit{Statistical Science},
+  23, 219--236.
+
+\bibitem[{Hansen and Klopfer(2006)}]{hansen:klopfer:2006}
+Hansen, B.~B. and Klopfer, S.~O. (2006), \enquote{Optimal full matching and
+  related designs via network flows,} \textit{Journal of Computational and
+  Graphical Statistics}, 15, 609--627.
+
+\bibitem[{Hill et~al.(2000)Hill, Rubin, and Thomas}]{hill:etal:2000}
+Hill, J., Rubin, D.~B., and Thomas, N. (2000), \enquote{The Design of the New
+  York School Choice Scholarship Program Evaluation,} in \textit{Research
+  Design: Donald Campbell's Legacy}, ed. Bickman, L., Sage Publications.
+
+\bibitem[{Imai et~al.(2008)Imai, King, and Stuart}]{imaiKingStuart:2007}
+Imai, K., King, G., and Stuart, E. (2008), \enquote{Misunderstandings among
+  Experimentalists and Observationalists: Balance Test Fallacies in Causal
+  Inference,} \textit{Journal of the Royal Statistical Society}, 171, 481--502.
+
+\bibitem[{Rosenbaum(2002)}]{rosenbaum:2002}
+Rosenbaum, P.~R. (2002), \textit{Observational Studies}, Springer-Verlag, 2nd
+  ed.
+
+\bibitem[{Rubin(1997)}]{rubin:1997}
+Rubin, D.~B. (1997), \enquote{Estimating Causal Effects from Large Data Sets
+  Using Propensity Scores,} \textit{Annals of Internal Medicine}, 127,
+  757--763.
+
+\bibitem[{Stuart(2010)}]{stuart2010matching}
+Stuart, E.~A. (2010), \enquote{{Matching methods for causal inference: A review
+  and a look forward},} \textit{Statistical Science}, 25, 1.
+
+\end{thebibliography}
+
+}
+\end{frame}
+
+\end{document}

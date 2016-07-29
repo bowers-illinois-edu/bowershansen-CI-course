@@ -1,4 +1,3 @@
-## TODO: work in hastily inserted SATE/PATE slides
 %  For slides only
 %\input{slidesonly}
 
@@ -18,24 +17,6 @@
 \begin{document}
 
 
-
-\begin{frame}{ATEs and ACEs; SATEs and PATEs}
-
-  \begin{itemize}
-  \item ATE = Average treatment effect; ACE = Average causal effect
-
-  \item SATE = \textit{sample} average treatment effect
-  \item Ordinarily, refer to the same thing: the effect of \textit{assignment} to treatment in the study population.
-  \item PATE = \textit{population} average treatment effect
-  \item Limitations of the PATE:
-    \begin{itemize}
-    \item estimability
-    \item ambiguity
-    \end{itemize}
-
-  \end{itemize}
-
-\end{frame}
 
 
 
@@ -385,6 +366,22 @@ DeptF        1.4e-01  1.9e-01  4.7e-02  ***
 
 
 \section{Additional issues in balance testing}
+
+\subsection{Weighted observations}
+\begin{frame}{Aside: SATEs and PATEs}
+
+  \begin{itemize}
+  \item SATE = \textit{sample} average treatment effect
+  \item Ordinarily, refer to the same thing: the effect of \textit{assignment} to treatment in the study population.
+  \item However, some authors distinguish the PATE =
+    \textit{population} average treatment effect from the SATE.
+  \item In practice, the difference boils down to whether/how weights get
+    incorporated into the analysis.
+  \item (With clustered data, weighted analysis can be helpful even
+    for estimation of the SATE.)
+  \end{itemize}
+
+\end{frame}
 
 \subsection{Clusters and strata}
 \begin{frame}{Simple and block-randomized experiments}
