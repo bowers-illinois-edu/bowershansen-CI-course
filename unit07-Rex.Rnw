@@ -2,7 +2,7 @@
 %\usepackage{natbib}
 
 \title{Making and justifying a matched design.}
-\author{ICPSR Causal Inference '15}
+\author{ICPSR Causal Inference '16}
 \usepackage{icpsr-classwork}
 
 \begin{document}
