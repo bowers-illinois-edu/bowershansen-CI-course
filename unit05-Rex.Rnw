@@ -8,6 +8,12 @@
 \begin{document}
 \maketitle
 
+<<include=FALSE,cache=FALSE>>=
+opts_chunk$set(tidy=TRUE,echo=TRUE,results='markup',strip.white=TRUE,fig.path='figs/fig',cache=FALSE,highlight=TRUE,width.cutoff=132,size='footnotesize',out.width='1.2\\textwidth',message=FALSE,comment=NA)
+
+options(width=100,digits=3)
+@
+
 \begin{enumerate}
     \setcounter{enumi}{-1}
 
@@ -82,8 +88,7 @@ meddat<-transform(meddat, HomRate08=(HomCount2008/Pop2008)*1000)
 So, we have three kinds of variables: an intervention, covariates, and
 outcomes.
 
-\item How much evidence do we have to argue against the idea that the Metrocable
-intervention had no effect in Medellin?  Make your best matched design to
+\item  Make your best matched design to
 counter arguments that the intervention-versus-non-intervention comparison is
 confounded. Choose an outcome and assess the hypothesis of no effects and
 perhaps hypotheses arising from some model of effects.
@@ -91,7 +96,7 @@ perhaps hypotheses arising from some model of effects.
 If you use propensity scores, you may find \texttt{brglm} to work better than
 \texttt{glm}.
 
-Here is one approach
+Here is one approach, but I encourage you to make your own.
 
 <<>>=
 
