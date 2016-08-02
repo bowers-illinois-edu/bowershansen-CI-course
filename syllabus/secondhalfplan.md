@@ -1,9 +1,9 @@
 ICPSR 2016 Second Half Plan
 
-# Aug 2
+# Aug 2 (unit05-Rex.Rnw)
  - Practice with creating matched designs
 
-# Aug 3
+# Aug 3 (unit08-Rex.Rnw --> unit06-Rex.Rnw)
  - Practicing judgement with matched designs.
 
 # Aug 4
