@@ -9,7 +9,8 @@
 \maketitle
 
 <<include=FALSE,cache=FALSE>>=
-opts_chunk$set(tidy=TRUE,echo=TRUE,results='markup',strip.white=TRUE,fig.path='figs/fig',cache=FALSE,highlight=TRUE,width.cutoff=132,size='footnotesize',out.width='1.2\\textwidth',message=FALSE,comment=NA)
+library(knitr)
+opts_chunk$set(tidy=TRUE,echo=TRUE,results='verbatim',strip.white=TRUE,fig.path='figs/fig',cache=FALSE,highlight=TRUE,width.cutoff=132,size='footnotesize',out.width='1.2\\textwidth',message=FALSE,comment=NA)
 
 options(width=100,digits=3)
 @
