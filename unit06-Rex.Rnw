@@ -1,5 +1,4 @@
 \documentclass{article}
-%\usepackage{natbib}
 
 \title{Developing judgement about matched designs}
 \author{ICPSR Causal Inference '15}
@@ -16,15 +15,14 @@ options(width=110,digits=3)
 \maketitle
 
 \begin{enumerate}
-    \setcounter{enumi}{-1}
+		\setcounter{enumi}{-1}
 
-  \item We'll continue to work with the Cerd\'{a} et al data.
+	\item We'll continue to work with the Cerd\'{a} et al data.
 
 <<results='hide',messages=FALSE>>=
 library(MASS)
 library(RItools)
 library(optmatch)
-## Alternatively you can load it directly from the web
 load(url("http://jakebowers.org/Matching/meddat.rda"))
 @
 
@@ -38,8 +36,8 @@ meddat<-transform(meddat, HomRate08=(HomCount2008/Pop2008)*1000)
 @
 
 \item Here are some ingredients for a matched design for this study. Can you
-  use these, and/or other, distance matrices and choices to come up with a
-  defensible matched design?
+	use these, and/or other, distance matrices and choices to come up with a
+	defensible matched design?
 
 <<results='hide'>>=
 # Ingredients: Distance Matrices
@@ -76,8 +74,8 @@ require no more than 1 treated per control unit.
 <<results='hide'>>=
 
 fm3<-fullmatch(psDist2+caliper(psDist2,4)
-               +caliper(absDist,2)
-               +caliper(mahalDist,40),data=meddat,tol=.00001,min.controls=1)
+	       +caliper(absDist,2)
+	       +caliper(mahalDist,40),data=meddat,tol=.00001,min.controls=1)
 
 summary(fm3)
 
@@ -96,36 +94,36 @@ zapsmall(xb2$results["pScore2",,])
 @
 
 \item Hansen and Sales (2015) suggest one way to stop iterating between
-  \texttt{fullmatch} and \texttt{xBalance} when you have one caliper. The idea
-  is that if you would reject the null of balance with one caliper, you would
-  also certainly reject it with a wider caliper. That is, the idea is that
-  hypothesis tests about balance using calipers can be understood as nested,
-  or ordered. Rosenbaum (2008) talks about this in his paper ``Testing
-  Hypotheses in Order'' and Hansen and Sales (2008) how these ideas can
-  help us choose a matched design:
+	\texttt{fullmatch} and \texttt{xBalance} when you have one caliper. The idea
+	is that if you would reject the null of balance with one caliper, you would
+	also certainly reject it with a wider caliper. That is, the idea is that
+	hypothesis tests about balance using calipers can be understood as nested,
+	or ordered. Rosenbaum (2008) talks about this in his paper ``Testing
+	Hypotheses in Order'' and Hansen and Sales (2008) how these ideas can
+	help us choose a matched design:
 
-  ``The SIUP[sequential intersection union principle] states that if a researcher pre-specifies a sequence of
-  hypotheses and corresponding level-$\alpha$ tests, tests those hypotheses in
-  order, and stops testing after the first non-rejected hypothesis, then the
-  probability of incorrectly rejecting at least one correct hypothesis is at
-  most $\alpha$.'' (page 2)
+	``The SIUP[sequential intersection union principle] states that if a researcher pre-specifies a sequence of
+	hypotheses and corresponding level-$\alpha$ tests, tests those hypotheses in
+	order, and stops testing after the first non-rejected hypothesis, then the
+	probability of incorrectly rejecting at least one correct hypothesis is at
+	most $\alpha$.'' (page 2)
 
-  Let us try this out and also try to assess it. Say, we start by saying that
-  we will reject the null of balance at $\alpha=.50$.
+	Let us try this out and also try to assess it. Say, we start by saying that
+	we will reject the null of balance at $\alpha=.50$.
 
 <<results='hide',cache=TRUE>>=
 
 matchAndBalance<-function(x,distmat){
-  #x is a caliper width
-  ## message(paste(x,collapse=" "))
-  thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
+	#x is a caliper width
+	## message(paste(x,collapse=" "))
+	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
 
-  thexb<-xBalance(balfmla,
-		      strata=data.frame(thefm=thefm[matched(thefm)]),
-		      data=droplevels(meddat[matched(thefm),]),
-		      report=c("chisquare.test"))
+	thexb<-xBalance(balfmla,
+			strata=data.frame(thefm=thefm[matched(thefm)]),
+			data=droplevels(meddat[matched(thefm),]),
+			report=c("chisquare.test"))
 
-  return(c(x=x,d2p=thexb$overall[,"p.value"]))
+	return(c(x=x,d2p=thexb$overall[,"p.value"]))
 }
 
 ## Start with the maximum caliper for psDist2 (i.e. the largest distance
@@ -163,27 +161,27 @@ plot(t(results1))
 @
 
 \item Say we used a different kind of caliper (rank based mahalanobis, baseline
-outcome, something else) and felt better about the ordering of the hypothesis
-tests. How might we improve the procedure that I just used? Here is one idea
-(not the only one of course).
+	outcome, something else) and felt better about the ordering of the hypothesis
+	tests. How might we improve the procedure that I just used? Here is one idea
+	(not the only one of course).
 
 <<eval=FALSE>>=
 
 matchAndBalance2<-function(x,distmat,alpha){
-  #x is a caliper width
-  ## message(paste(x,collapse=" "))
-  thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
+	#x is a caliper width
+	## message(paste(x,collapse=" "))
+	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
 
-  thexb<-xBalance(balfmla,
-		      strata=data.frame(thefm=thefm),
-		      data=meddat,
-		      report=c("chisquare.test"))
+	thexb<-xBalance(balfmla,
+			strata=data.frame(thefm=thefm),
+			data=meddat,
+			report=c("chisquare.test"))
 
-  ## Get as close to alpha as possible: for optim()
-  ## return(abs(thexb$overall[,"p.value"]-alpha))
+	## Get as close to alpha as possible: for optim()
+	## return(abs(thexb$overall[,"p.value"]-alpha))
 
-  ## Uniroot knows that we are trying to get close to zero.
-  return(thexb$overall[,"p.value"]-alpha)
+	## Uniroot knows that we are trying to get close to zero.
+	return(thexb$overall[,"p.value"]-alpha)
 }
 
 
@@ -199,20 +197,20 @@ cutpoint and/or \texttt{uniroot} was too annoying:
 <<eval=FALSE,tidy=FALSE>>=
 
 matchAndBalance3<-function(x,distmat,alpha){
-  #x is a caliper width
-  ## message(paste(x,collapse=" "))
+	#x is a caliper width
+	## message(paste(x,collapse=" "))
 
-  if(x>max(as.vector(distmat)) | x<min(as.vector(distmat))){ return(99999) }
+	if(x>max(as.vector(distmat)) | x<min(as.vector(distmat))){ return(99999) }
 
-  thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
+	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
 
-  thexb<-xBalance(balfmla,
-		      strata=data.frame(thefm=thefm),
-		      data=meddat,
-		      report=c("chisquare.test"))
+	thexb<-xBalance(balfmla,
+			strata=data.frame(thefm=thefm),
+			data=meddat,
+			report=c("chisquare.test"))
 
-  ## Get as close to alpha as possible: for optim()
-  return(abs(thexb$overall[,"p.value"]-alpha))
+	## Get as close to alpha as possible: for optim()
+	return(abs(thexb$overall[,"p.value"]-alpha))
 }
 
 
@@ -222,7 +220,7 @@ results3<-optim(par=c(x=minPsDist2), ## starting values
 		#lower=minPsDist2,upper=maxPsDist2,
 		method="BFGS",
 		control=list(trace=10,maxit=1000))
-		##method="L-BFGS-B")
+##method="L-BFGS-B")
 
 
 matchAndBalance2(results3$par,distmat=psDist2,alpha=.25)
@@ -232,46 +230,46 @@ matchAndBalance(results3$par,distmat=psDist2)
 
 
 \item Sometimes we want our matched designs to relate well not only to an
-  equivalent block-randomized experiment, but also to specific substantive and
-  statistical concerns. That is, among matched designs that we might call
-  "balanced", we might one which drops the fewest observations, and perhaps
-  one that has specially good balance on certain special covariates (like
-  baseline outcomes). So, here is one example, of doing such a search.
+	equivalent block-randomized experiment, but also to specific substantive and
+	statistical concerns. That is, among matched designs that we might call
+	"balanced", we might one which drops the fewest observations, and perhaps
+	one that has specially good balance on certain special covariates (like
+	baseline outcomes). So, here is one example, of doing such a search.
 
-  In this case, we are not doing strictly nested hypothesis testing, but are
-  using the $p$ values to tell us about information against the null of
-  balance rather than using them strictly speaking to reject this null, or
-  not-reject it.
+	In this case, we are not doing strictly nested hypothesis testing, but are
+	using the $p$ values to tell us about information against the null of
+	balance rather than using them strictly speaking to reject this null, or
+	not-reject it.
 
 <<gridsearch, cache=TRUE>>=
 
 findbalance<-function(x){
-  # x contains three calipers, ps, absDist, mahaldist
-  ##message(paste(x,collapse=" "))
-  thefm<-try(fullmatch(psDist2+caliper(psDist2,x[1])+
-		   caliper(absDist,x[2])+caliper(mahalDist,x[3]),data=meddat,tol=.00001,min.controls=1))
+	# x contains three calipers, ps, absDist, mahaldist
+	##message(paste(x,collapse=" "))
+	thefm<-try(fullmatch(psDist2+caliper(psDist2,x[1])+
+			     caliper(absDist,x[2])+caliper(mahalDist,x[3]),data=meddat,tol=.00001,min.controls=1))
 
-  if(inherits(thefm,"try-error")){
-    return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
-  }
+	if(inherits(thefm,"try-error")){
+		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
+	}
 
-  thexb<-try(xBalance(update(balfmla,.~.+pScore2),
-		  strata=data.frame(thefm=thefm),
-		  data=meddat,
-		  report=c("chisquare.test","p.values")))
+	thexb<-try(xBalance(update(balfmla,.~.+pScore2),
+			    strata=data.frame(thefm=thefm),
+			    data=meddat,
+			    report=c("chisquare.test","p.values")))
 
-  if(inherits(thexb,"try-error")){
-    return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
-  }
+	if(inherits(thexb,"try-error")){
+		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
+	}
 
-  HomRate03diff<-sapply(split(meddat[!is.na(thefm),c("HomRate03","nhTrt")],thefm[!is.na(thefm)]),
-			function(dat){ with(dat,abs(
-						    mean(HomRate03[nhTrt==1])-mean(HomRate03[nhTrt==0])))})
-  maxHomRate03diff<-max(HomRate03diff)
+	HomRate03diff<-sapply(split(meddat[!is.na(thefm),c("HomRate03","nhTrt")],thefm[!is.na(thefm)]),
+			      function(dat){ with(dat,abs(
+							  mean(HomRate03[nhTrt==1])-mean(HomRate03[nhTrt==0])))})
+	maxHomRate03diff<-max(HomRate03diff)
 
-  return(c(x=x,d2p=thexb$overall[,"p.value"],maxHR03diff=maxHomRate03diff,n=sum(!is.na(thefm)),
-	   effn=summary(thefm)$effective.sample.size,
-	   psp=thexb$results["pScore2","p",]))
+	return(c(x=x,d2p=thexb$overall[,"p.value"],maxHR03diff=maxHomRate03diff,n=sum(!is.na(thefm)),
+		 effn=summary(thefm)$effective.sample.size,
+		 psp=thexb$results["pScore2","p",]))
 }
 
 
@@ -280,9 +278,9 @@ findbalance<-function(x){
 
 set.seed(123455)
 system.time({
-results<-replicate(5000,findbalance(c(runif(1,minPsDist2,maxPsDist2),
-				      runif(1,minAbsDist,maxAbsDist),
-				      runif(1,minMhDist,maxMhDist)))),
+	results<-replicate(5000,findbalance(c(runif(1,minPsDist2,maxPsDist2),
+					      runif(1,minAbsDist,maxAbsDist),
+					      runif(1,minMhDist,maxMhDist))))
 }
 )
 
@@ -292,13 +290,13 @@ results<-replicate(5000,findbalance(c(runif(1,minPsDist2,maxPsDist2),
 ## If you have a mac or linux machine you can speed this up:
 library(parallel)
 system.time({
-resultsList<-mclapply(1:5000,function(i){
-			findbalance(c(runif(1,minPsDist2,maxPsDist2),
-				      runif(1,minAbsDist,maxAbsDist),
-				      runif(1,minMhDist,maxMhDist)))},
-		      mc.cores=detectCores())
-resultsListNA<-sapply(resultsList,function(x){ any(is.na(x)) })
-resultsArr<-simplify2array(resultsList[!resultsListNA])
+	resultsList<-mclapply(1:5000,function(i){
+				      findbalance(c(runif(1,minPsDist2,maxPsDist2),
+						    runif(1,minAbsDist,maxAbsDist),
+						    runif(1,minMhDist,maxMhDist)))},
+			      mc.cores=detectCores())
+	resultsListNA<-sapply(resultsList,function(x){ any(is.na(x)) })
+	resultsArr<-simplify2array(resultsList[!resultsListNA])
 }
 )
 
@@ -334,23 +332,23 @@ Which matched design might we prefer? Here is one idea
 candDesigns<-resNoNA[,resNoNA["d2p",]>.6 & resNoNA["n",]>=40 &
 		     resNoNA["maxHR03diff",]<=1 & resNoNA["effn",] > 10]
 
-str(candDesigns)
+	     str(candDesigns)
 
-apply(candDesigns,1,summary)
+	     apply(candDesigns,1,summary)
 
-candDesigns<-candDesigns[,order(candDesigns["d2p",],decreasing=TRUE)]
-## plot(candDesigns["d2p",],candDesigns["n",],
-##      col=gray(1- ( candDesigns["maxHR03diff",]/max(candDesigns["maxHR03diff",]))),
-##      pch=19)
-##
-## ##identify(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7)
-## text(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7,
-##      pos=1)
-##
-##
-## mymatchSol<-candDesigns[,candDesigns["maxHR03diff",]<1 & candDesigns["n",]==43]
-## mymatchSol[,order(mymatchSol["d2p",])]
-##
+	     candDesigns<-candDesigns[,order(candDesigns["d2p",],decreasing=TRUE)]
+	     ## plot(candDesigns["d2p",],candDesigns["n",],
+	     ##      col=gray(1- ( candDesigns["maxHR03diff",]/max(candDesigns["maxHR03diff",]))),
+	     ##      pch=19)
+	     ##
+	     ## ##identify(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7)
+	     ## text(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7,
+	     ##      pos=1)
+	     ##
+	     ##
+	     ## mymatchSol<-candDesigns[,candDesigns["maxHR03diff",]<1 & candDesigns["n",]==43]
+	     ## mymatchSol[,order(mymatchSol["d2p",])]
+	     ##
 @
 
 How would we use this information in \texttt{fullmatch}?
@@ -358,8 +356,8 @@ How would we use this information in \texttt{fullmatch}?
 <<>>=
 
 fm4<-fullmatch(psDist2+caliper(psDist2,candDesigns["x1",2])
-               +caliper(absDist,candDesigns["x2",2])
-               +caliper(mahalDist,candDesigns["x3",2]),data=meddat,tol=.00001,min.controls=1)
+	       +caliper(absDist,candDesigns["x2",2])
+	       +caliper(mahalDist,candDesigns["x3",2]),data=meddat,tol=.00001,min.controls=1)
 
 summary(fm4,min.controls=0,max.controls=Inf)
 
@@ -379,8 +377,8 @@ save(fm4,file="fm4.rda")
 @
 
 \item Now, let's getting back to the sequential intersection union principle.
-  How would we assess the claim that it controls the family-wise error rate
-  for balance tests?
+	How would we assess the claim that it controls the family-wise error rate
+	for balance tests?
 
 
 \end{enumerate}
