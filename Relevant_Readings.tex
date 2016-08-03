@@ -1,0 +1,305 @@
+\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
+\documentclass[12pt,leqno]{article}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb}          % AMS Stuff
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{afterpage}% http://ctan.org/pkg/afterpage
+\usepackage[T1]{fontenc}
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfig}
+\usepackage{titling}            % modify maketitle in latex
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage{verbatim}
+\usepackage{geometry}
+\usepackage{bigfoot}
+\usepackage[format=hang,
+            font={small},
+            labelfont=bf,
+            textfont=rm]{caption}
+
+\geometry{verbose,margin=2cm,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=page,
+            colorlinks=true,
+            hyperfootnotes=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1},
+            citecolor=blue!70!black,
+            linkcolor=red!70!black,
+            urlcolor=green!70!black]{hyperref}
+\usepackage{hypernat}
+
+\usepackage{multirow}
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+
+\parskip=12pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{12pt} %Aboveskip
+{12pt} %Below skip
+{\itshape} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+% \DeclareMathOperator{\Pr}{\rm{Pr}}
+
+% paper specific definitions
+\newcommand*{\AR}{\textit{Always-Reporters}}%
+\newcommand*{\ITR}{\textit{If-Treated-Reporters}}%
+\newcommand*{\IUR}{\textit{If-Untreated-Reporters}}%
+\newcommand*{\NR}{\textit{Never-Reporters}}%
+
+
+% COLORS FOR GRAPHICS (3-class Set1)
+\definecolor{Blue}{RGB}{55,126,184}
+\definecolor{Red}{RGB}{228,26,28}
+\definecolor{Green}{RGB}{77,175,74}
+
+% COLORS FOR EQUATIONS (3-class Dark2)
+\definecolor{eqgreen}{RGB}{27,158,119}
+\definecolor{eqblue}{RGB}{117,112,179}
+\definecolor{eqred}{RGB}{217,95,2}
+
+
+
+\title{Supplemental Course Readings}
+\author{Jake Bowers, Ben Hansen \& Tom Leavitt}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\newpage
+
+\section{Statistical Inference}
+
+\subsection{Unbiasedness}
+
+\begin{itemize}
+
+\item \citet[Section 2.4]{gerbergreen2012}
+
+\end{itemize}
+
+\subsection{Standard Errors}
+
+\begin{itemize}
+
+\item \citet[Chapter 3]{gerbergreen2012}
+
+\item \citet[Chapter 6]{dunning2012}
+
+\item \citet[Chapter 33, footnote 11]{fpp2007}
+
+\item \citet{lin2013}
+
+\item \citet{aronowetal2014}
+
+\end{itemize}
+
+\subsection{Covariance Adjustment}
+
+\begin{itemize}
+
+\item \citet[Chapter 4]{gerbergreen2012}
+
+\item \citet{rosenbaum2002}
+
+\end{itemize}
+
+\subsection{Weighting}
+
+\subsubsection{Harmonic Mean Weighting}
+
+\begin{itemize}
+
+\item \citet[Section 9.3.3]{hansen2011}
+
+\item \citet[Section 2.1]{hansenbowers2008}
+
+\end{itemize}
+
+\subsubsection{Block-Size Weights}
+
+\begin{itemize}
+
+\item \citet[Section 3.6.1]{gerbergreen2012}
+
+\end{itemize}
+
+\subsubsection{ATT Weighting}
+
+\begin{itemize}
+
+\item
+
+\end{itemize}
+
+\subsection{Logistic Regression}
+
+\begin{itemize}
+
+\item \citet{freedman2008b}
+
+\end{itemize}
+
+\section{Fisherian Inference}
+
+\subsection{Fisherian Inference with Binary Outcomes}
+
+\subsubsection{Attributable Effects}
+
+\begin{itemize}
+
+\item \citet[Section 5.5]{rosenbaum2002observational}
+
+\item \citet[Section 2.5]{rosenbaum2010}
+
+\item \citet{rosenbaum2001}
+
+\item \citet{hansenbowers2009}
+
+\end{itemize}
+
+\subsection{Fisherian Inference with Uncommon but Dramatic Responses to Treatment}
+
+\subsubsection{Stephenson's Rank Test}
+
+\begin{itemize}
+
+\item \citet{stephenson1981}
+
+\item \citet[Chapter 16]{rosenbaum2010}
+
+\item \citet{rosenbaum2007b}
+
+\end{itemize}
+
+\section{Difference-in-Differences}
+
+\begin{itemize}
+
+\item \citet[Section 4.1]{gerbergreen2012}
+
+\item \citet[Section 5.2]{angristpischke2008}
+
+\item \citet[Chapter 5]{angristpischke2014}
+
+\end{itemize}
+
+\section{Regression Discontinuity Designs}
+
+\begin{itemize}
+
+\item \citet{lee2008}
+
+\item \citet{caugheysekhon2011}
+
+\item \citet{cattaneoetal2015}
+
+\item \citet{saleshansen2014}
+
+\end{itemize}
+
+\section{Sensitivity Analysis}
+
+\subsection{Rosenbaum-Style Sensitivity Analysis}
+
+\begin{itemize}
+
+\item \citet[Chapter 3]{rosenbaum2010}
+
+\item \citet{rosenbaumsilber2009}
+
+\end{itemize}
+
+\subsubsection{SIUP}
+
+\begin{itemize}
+
+\item \citet{rosenbaum2008}
+
+\item \citet{hansensales2015}
+
+\end{itemize}
+
+\subsection{Sensitivity Analysis for Statistical Inference}
+
+\begin{itemize}
+
+\item \citet{hhh2010}
+
+\item \citet{imbens2003}
+
+\end{itemize}
+
+\newpage
+
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{master_bibliography}   % name your BibTeX data base
+\end{singlespace}
+
+\end{document}
