@@ -69,7 +69,8 @@ mahalDist<-match_on(balfmla,data=meddat,method="rank_mahalanobis")
 
 In this example I matched on the propensity score, within calipers defined by
 baseline outcomes, mahalanobis distance, and propensity distance. I also
-require no more than 1 treated per control unit.
+require no more than 1 treated per control unit, and I told the matching
+algorithm to search fairly hard for the best solution. 
 
 <<results='hide'>>=
 
@@ -152,89 +153,37 @@ apply(results1HR,1,summary)
 
 @
 
-Which caliper would we choose? How would we diagnose whether the background
-assumptions of this procedure are met in this case?
+Which caliper would we choose? Now, the p-values are not strictly ordered (as
+we can see here), but the procedure actually keeps the \textbf{maximum}
+p-value of the preceding tests. 
 
-<<eval=FALSE>>=
-## Here is one hint
-plot(t(results1))
+<<>>=
+## Reorder the data from low to high to make cummax work better
+results1 <- data.frame(t(results1))
+results1 <- results1[order(results1$x),]
+results1$maxp <- cummax(results1$d2p)
 @
 
-\item Say we used a different kind of caliper (rank based mahalanobis, baseline
-	outcome, something else) and felt better about the ordering of the hypothesis
-	tests. How might we improve the procedure that I just used? Here is one idea
-	(not the only one of course).
+So, you can see that keeping the maximum produces a set of nested tests so
+that if I reject some caliper at some $p$, I know that any caliper tighter
+than the chosen one would have less balance ( a smaller $p$, more information
+against the null that our design is like a well randomized block randomized
+study).
+
 
 <<eval=FALSE>>=
-
-matchAndBalance2<-function(x,distmat,alpha){
-	#x is a caliper width
-	## message(paste(x,collapse=" "))
-	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
-
-	thexb<-xBalance(balfmla,
-			strata=data.frame(thefm=thefm),
-			data=meddat,
-			report=c("chisquare.test"))
-
-	## Get as close to alpha as possible: for optim()
-	## return(abs(thexb$overall[,"p.value"]-alpha))
-
-	## Uniroot knows that we are trying to get close to zero.
-	return(thexb$overall[,"p.value"]-alpha)
-}
-
-
-results2<-uniroot(matchAndBalance2,alpha=.5,distmat=psDist2,lower=minPsDist2,upper=maxPsDist2)
-matchAndBalance2(results2$root,distmat=psDist2,alpha=.5)
-matchAndBalance(results2$root,distmat=psDist2)
-
-@
-
-Alternatively, if we don't actually have values on either side of the alpha
-cutpoint and/or \texttt{uniroot} was too annoying:
-
-<<eval=FALSE,tidy=FALSE>>=
-
-matchAndBalance3<-function(x,distmat,alpha){
-	#x is a caliper width
-	## message(paste(x,collapse=" "))
-
-	if(x>max(as.vector(distmat)) | x<min(as.vector(distmat))){ return(99999) }
-
-	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
-
-	thexb<-xBalance(balfmla,
-			strata=data.frame(thefm=thefm),
-			data=meddat,
-			report=c("chisquare.test"))
-
-	## Get as close to alpha as possible: for optim()
-	return(abs(thexb$overall[,"p.value"]-alpha))
-}
-
-
-results3<-optim(par=c(x=minPsDist2), ## starting values
-		fn=matchAndBalance3,
-		alpha=.25,distmat=psDist2,
-		#lower=minPsDist2,upper=maxPsDist2,
-		method="BFGS",
-		control=list(trace=10,maxit=1000))
-##method="L-BFGS-B")
-
-
-matchAndBalance2(results3$par,distmat=psDist2,alpha=.25)
-matchAndBalance(results3$par,distmat=psDist2)
-
+with(results1,{plot(x,d2p);points(x,maxp,col="blue")})
 @
 
 
 \item Sometimes we want our matched designs to relate well not only to an
-	equivalent block-randomized experiment, but also to specific substantive and
-	statistical concerns. That is, among matched designs that we might call
-	"balanced", we might one which drops the fewest observations, and perhaps
-	one that has specially good balance on certain special covariates (like
-	baseline outcomes). So, here is one example, of doing such a search.
+	equivalent block-randomized experiment, but also to help us make the
+	argument that our comparisons are comparing specific kinds of like
+	with like and/or that our comparisons are statistically powerful.
+	That is, among matched designs that we might call "balanced", we might
+	one which drops the fewest observations, and perhaps one that has
+	specially good balance on certain special covariates (like baseline
+	outcomes). So, here is one example, of doing such a search.
 
 	In this case, we are not doing strictly nested hypothesis testing, but are
 	using the $p$ values to tell us about information against the null of
@@ -275,7 +224,7 @@ findbalance<-function(x){
 
 ## Test the function
 ## findbalance(c(3,3,64))
-
+## Don't worry about errors for certain combinations of parameters
 set.seed(123455)
 system.time({
 	results<-replicate(5000,findbalance(c(runif(1,minPsDist2,maxPsDist2),
@@ -300,61 +249,57 @@ system.time({
 }
 )
 
-results<-resultsArr
 @
 
 Now, how might we interpret the results of this search for matched designs?
 Here are a few ideas.
 
-<<eval=FALSE>>=
+<<>>=
 
-resNoNA<-results[,!apply(results,2,function(x){ any(is.na(x))})]
-
+resAnyNA<-sapply(results,function(x){ any(is.na(x)) })
+resNoNA<-simplify2array(results[!resAnyNA])
 apply(resNoNA,1,summary)
 
 highbalres<-resNoNA[,resNoNA["d2p",]>.5]
 
 apply(highbalres,1,summary)
+@
 
+<<eval=FALSE>>=
 # color points more dark for smaller differences
 plot(resNoNA["d2p",],resNoNA["n",],
      col=gray(1- ( resNoNA["maxHR03diff",]/max(resNoNA["maxHR03diff",]))),
      pch=19)
 
 ## identify(resNoNA["d2p",],resNoNA["n",],labels=round(resNoNA["maxHR03diff",],3),cex=.7)
-
 @
 
 Which matched design might we prefer? Here is one idea
 
-<<eval=FALSE>>=
-
-candDesigns<-resNoNA[,resNoNA["d2p",]>.6 & resNoNA["n",]>=40 &
-		     resNoNA["maxHR03diff",]<=1 & resNoNA["effn",] > 10]
-
-	     str(candDesigns)
-
-	     apply(candDesigns,1,summary)
-
-	     candDesigns<-candDesigns[,order(candDesigns["d2p",],decreasing=TRUE)]
-	     ## plot(candDesigns["d2p",],candDesigns["n",],
-	     ##      col=gray(1- ( candDesigns["maxHR03diff",]/max(candDesigns["maxHR03diff",]))),
-	     ##      pch=19)
-	     ##
-	     ## ##identify(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7)
-	     ## text(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7,
-	     ##      pos=1)
-	     ##
-	     ##
-	     ## mymatchSol<-candDesigns[,candDesigns["maxHR03diff",]<1 & candDesigns["n",]==43]
-	     ## mymatchSol[,order(mymatchSol["d2p",])]
-	     ##
+<<>>=
+interestingDesigns<- (resNoNA["d2p",]>.6 & resNoNA["n",]>=40 &
+		      resNoNA["maxHR03diff",]<=1 & resNoNA["effn",] > 10)
+candDesigns <- resNoNA[,interestingDesigns]
+str(candDesigns)
+apply(candDesigns,1,summary)
+candDesigns<-candDesigns[,order(candDesigns["d2p",],decreasing=TRUE)]
+## plot(candDesigns["d2p",],candDesigns["n",],
+##      col=gray(1- ( candDesigns["maxHR03diff",]/max(candDesigns["maxHR03diff",]))),
+##      pch=19)
+##
+## ##identify(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7)
+## text(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7,
+##      pos=1)
+##
+##
+## mymatchSol<-candDesigns[,candDesigns["maxHR03diff",]<1 & candDesigns["n",]==43]
+## mymatchSol[,order(mymatchSol["d2p",])]
+##
 @
 
 How would we use this information in \texttt{fullmatch}?
 
 <<>>=
-
 fm4<-fullmatch(psDist2+caliper(psDist2,candDesigns["x1",2])
 	       +caliper(absDist,candDesigns["x2",2])
 	       +caliper(mahalDist,candDesigns["x3",2]),data=meddat,tol=.00001,min.controls=1)
@@ -380,6 +325,65 @@ save(fm4,file="fm4.rda")
 	How would we assess the claim that it controls the family-wise error rate
 	for balance tests?
 
+
+\item EXTRA: Say we used a different kind of caliper (rank based mahalanobis,
+	baseline outcome, something else). How might we improve the procedure
+	that I just used? Here is one idea (not the only one of course) and it
+	doesn't really work as well as we'd like because the function is full
+	of flat pieces (as we saw above).
+
+<<eval=FALSE>>=
+
+matchAndBalance2<-function(x,distmat,alpha){
+	#x is a caliper widths
+	## message(paste(x,collapse=" "))
+	if(x>max(as.vector(distmat)) | x<min(as.vector(distmat))){ return(99999) }
+
+	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
+
+	thexb<-xBalance(balfmla,
+			strata=data.frame(thefm=thefm),
+			data=meddat,
+			report=c("chisquare.test"))
+
+	return(thexb$overall[,"p.value"])
+}
+
+maxpfn<-function(x,distmat,alpha){
+	## here x is the targeted caliper width and x2 is the next wider
+	## caliper width
+	p1<-matchAndBalance2(x=x[1],distmat,alpha)
+	p2<-matchAndBalance2(x=x[2],distmat,alpha)
+	return(abs( max(p1,p2) - alpha) )
+}
+
+library(Rsolnp)
+
+maxpfn(c(minPsDist2,minPsDist2+1),distmat=psDist2,alpha=.25)
+
+quantile(as.vector(psDist2),seq(0,1,.1))
+sort(as.vector(psDist2))[1:10]
+
+### This takes a long time
+results3<-gosolnp(fun=maxpfn,
+		ineqfun=function(x,distmat,alpha){ x[2] - x[1] },
+		ineqLB = 0,
+		ineqUB = maxPsDist2,
+		LB=c(minPsDist2,minPsDist2+.01),
+		UB=c(maxPsDist2-.01,maxPsDist2),
+		n.restarts=2,
+		alpha=.25,distmat=psDist2,
+		n.sim=500,
+		rseed=12345,
+		control=list(trace=1)
+		)
+
+
+maxpfn(results3$pars,distmat=psDist2,alpha=.25)
+matchAndBalance2(results3$pars[1],distmat=psDist2,alpha=.25)
+matchAndBalance(results3$par[1],distmat=psDist2)
+
+@
 
 \end{enumerate}
 
