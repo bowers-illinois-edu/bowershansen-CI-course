@@ -175,7 +175,7 @@ kable(news_df[, c(1, 3:4, 8:9)])
 
 @
 
-Now let's imagine the \textit{true} unit-level treatment effect is some specific positive natural number that differs for almost every unit. What do we mean by ``\textit{true} unit-level treatment effect'' as opposed to a unit-level treatment effect that we hypothesize and subsequently assume to be true?
+Now let's imagine the \textit{true} unit-level treatment effect is some specific positive natural number that differs for almost every unit. What do we mean by ``\textit{true} unit-level treatment effect'' as opposed to a unit-level treatment effect that we hypothesize and subsequently assume to be true in order to assess evidence in favor of or against the hypothesis?
 
 << >>=
 
@@ -199,6 +199,10 @@ kable(news_df[, c(1, 3:4, 8:9)])
 
 We have an experiment that consists of complete random assignment within pairs. How many treatment assignment permutations are in the set $\Omega$? How many elements would there be in $\Omega$ if the experiment consisted of complete random assignment \textit{without} blocked pairs? What is the probability associated with each $\mathbf{Z} = \mathbf{z} \in \Omega$?
 
+I claim that the difference-in-means estimator and the stratified difference-in-means estimator are both good estimators. Name some criteria that people use to assess the quality of estimators . . .
+
+In the code chunk below, we create a function that calculates $\widehat{ATE}$ on the outcomes we observe under different treatment assignment permutations.
+
 << >>=
 
 treatment_permutations <- function(z, yc, yt, s){
@@ -207,7 +211,8 @@ treatment_permutations <- function(z, yc, yt, s){
 		## If this is not a block-randomized experiment then do the following
 
 		## Permute treatment assignment
-		## Student Question: What is the difference between Z and z? Why is one uppercase and the other lower?
+		## Student Question: What is the difference between Z and z? 
+	  ## Why is one uppercase and the other lower?
 		Z = sample(z)
 
 		Y = Z * yt + (1 - Z) * yc
@@ -237,6 +242,8 @@ treatment_permutations <- function(z, yc, yt, s){
 @
 
 Describe in words what the function above is doing.
+
+Now we are repeatedly estimating the ATE under 1000 treatment assignment permutations in order to assess unbiasedness. What two quantities would we like to compare in order to assess whether the difference-in-means estimator is unbiased?
 
 << >>=
 
@@ -284,21 +291,17 @@ ggplot(randomization_dists, aes(x = ate, fill = type)) +
 
 @
 
-Notice that the randomization distributions looks a little strange; that is,
+Notice that the randomization distributions look a little strange; that is,
 both randomization distributions are very different from the normal
-distribution to which we are accustomed. This is important. Nothing so far has
-invoked any claim about the shape of the randomization distribution, such as
-its normality if the finite population central limit theorem obtains
-\citep{hajek1960}. What matters (in terms of unbiasedness) is whether the mean
-of the randomization distribution---i.e., the mean of all the estimated
-difference in means---is equal to the true average treatment effect.\footnote{
-	Notice that we do not have simulated results that are \emph{exactly}
+distribution to which we are accustomed. This is important. Nothing so far has invoked any claim about the shape of the randomization distribution, such as its normality if the finite population central limit theorem obtains
+\citep{hajek1960}. What matters (in terms of unbiasedness) is whether the mean of the randomization distribution---i.e., the mean of all the estimated
+difference in means---is equal to the true average treatment effect.\footnote{Notice that we do not have simulated results that are \emph{exactly}
 	equal to the truth. Why is that? What might we do to move them closer
 	to the truth? If I ran this simulation with one seed, and you ran it
 	with another seed, by how much would we expect our two averages to
 	differ?}
 
-Is the variance of the randomization distribution tighter when treatment is assigned within blocks or when treatment is \textit{not} assigned within blocks?
+Is the variance of the randomization distribution tighter when treatment is assigned within blocks or when treatment is \textit{not} assigned within blocks? If so, why?
 
 Our \textit{single} estimated $\widehat{ATE}$ from the experiment is our ``best guess'' about the true ATE. But what do we mean by ``best guess''? And can one's ``best guess'' be misleading?
 
@@ -391,115 +394,93 @@ you should make your own.
 
 <<>>=
 
-rm(list=ls())
-
-load(url("http://jakebowers.org/Matching/meddat.rda"))
-meddat <- transform(meddat, HomRate03=(HomCount2003/Pop2003)*1000)
-meddat <- transform(meddat, HomRate08=(HomCount2008/Pop2008)*1000)
-balfmla<-reformulate(c(names(meddat)[c(6:7,9:24)],"HomRate03"),response="nhTrt")
-
-brglm1<-brglm(balfmla,data=meddat,family=binomial)
-psDist2<-match_on(brglm1,data=meddat)
-
-meddat$pScore2<-predict(brglm1)
-
-balfmla <- reformulate(c(names(meddat)[c(6:7,9:24)],"HomRate03"),response="nhTrt")
-
-mahalDist <- match_on(balfmla,data=meddat,method="rank_mahalanobis")
-
-quantile(as.vector(psDist2),seq(0,1,.1))
-fm1 <- fullmatch(mahalDist + caliper(psDist2,3),data=meddat,min.controls=.5)
-summary(fm1,propensity.model=brglm1,data=meddat)
-
-meddat[names(fm1),"fm1"] <- fm1
-
-meddat %<>% filter(!is.na(fm1)) %>% arrange(desc(fm1)) %>% mutate(fm1 = as.numeric(fm1))
+load("matched_data.Rdata")
 
 @
 
+Now let's think about how we can draw upon the principles above in order to actually do outcome analysis once we have a matched design.
+
+We want to perform outcome analysis (in this case to estimate average treatment effects) as if we have a \textit{block} randomized experiment in which the matched sets are the experiment's blocks. We therefore want to estimate an average treatment effect \textit{within} each block. But then we need some scheme to weight each block-specific $\widehat{ATE}$ to yield one overall $\widehat{ATE}$. There are three different weighting possibilities below.
+
 \subsection{Harmonic Mean Weighting}
 
-<<>>=
+Let's first estimate the average treatment effect \textit{within} each block:
 
-obs_ate <- coef(lm(HomRate08 ~ nhTrt + as.factor(fm1), data = meddat))[["nhTrt"]]
+<< >>=
 
 blocks <- unique(meddat$fm1)
 
-ATE_by_block <- sapply(blocks, function(x) {
+ATE_hat_by_block <- sapply(blocks, function(x) {
     coef(lm(HomRate08 ~ nhTrt, data = meddat, subset = fm1 == x))[["nhTrt"]]
 })
 
+ATE_hat_by_block
+
+@
+
+Describe what the output above is giving us . . .
+
+Now let's calculate an overall $\widehat{ATE}$ that uses harmonic mean weighting. Harmonic mean weighting weights each block by $\frac{ \frac{2}{n_{st}^{-1} + n_{sc}^{-1}} }{\sum \limits_{s = 1}^{S} \frac{2}{n_{st}^{-1} + n_{sc}^{-1}} }$. 
+
+Why is there a $2$ in the numerator? Pick a block with more than $2$ units and calculate its ``effective sample size'' by hand using the appropriate formula---i.e., $\frac{2}{n_{ts}^{-1} + n_{cs}^{-1}}$.
+
+Now let's estimate an overall ATE using harmonic mean weights:
+
+<< >>=
+
 num_treated <- meddat %$% {sapply(split(nhTrt, fm1), sum)}
+
 num_control <- meddat %$% {sapply(split(1 - nhTrt, fm1), sum)}
 
 harm_mean <- 2/(1/num_treated + 1/num_control)
 
-ATE <- sum(ATE_by_block * (harm_mean/sum(harm_mean)))
+obs_overall_ate_hat_hm <- sum(ATE_hat_by_block * (harm_mean/sum(harm_mean)))
 
 @
 
+What are some other weighting schemes one could use? Let's try two others.
 
 \subsection{Block-Size Weighting}
 
-<<>>=
+Write a mathematical expression for the weights attached to each block-specific $\widehat{ATE}$ in which each block-specific $\widehat{ATE}$ is weighted by the total number of units in each block.
 
-ATE_by_block <- sapply(blocks, function(x) {
-    coef(lm(HomRate08 ~ nhTrt, data = meddat, subset = fm1 == x))[["nhTrt"]]
-})
+$\dots$
+
+Now let's implement this estimation strategy in \texttt{[R]}:
+
+<<>>=
 
 num_units_per_block <- sapply(blocks, function(x){
   length(meddat$nhTrt[meddat$fm1 == x])
 })
 
-overall_est_ATE <- sum(ATE_by_block * (num_units_per_block/nrow(meddat)))
-
-block_size_ATE_weighting <- function(z, Y, s){
-
-  # Permute treatment assignment
-  Z <- unsplit(lapply(split(z, s), sample), s)
-
-  # Average Treatment Effect mean(Y[Z_New == 1]) - mean(Y[Z_New == 0])
-  # ATE <- coef(lm(Y ~ Z_New + B))[["Z_New"]]
-  W_ATE <- 0
-
-  for (i in unique(s)) {
-    W_ATE <- W_ATE + (sum(s == i)/length(s)) *
-      coef(lm(Y ~ Z, subset = (s == i)))[2]
-    }
-
-  return(W_ATE)
-  }
-
-null_dist_block_size_weighting <- data.frame(replicate(10^3,
-                                            block_size_ATE_weighting(z = meddat$nhTrt,
-                                                                     Y =  meddat$HomRate08,
-                                                                     s = meddat$fm1)))
-
-p_value <- mean(abs(overall_est_ATE) >= abs(null_dist_block_size_weighting))
+obs_overall_ate_hat_bs <- sum(ATE_hat_by_block * (num_units_per_block/nrow(meddat)))
 
 @
 
 \subsection{ETT Weighting}
 
+Let's try one final weighting scheme (although there are surely many other possibilities.) Let's weight each block-specific $\widehat{ATE}$ by the number of \textit{treated} units within that block. 
+
+That is, the weights associated with each block-specific $\widehat{ATE}$ are: $W_{ETT} = \frac{n_{st}}{\sum \limits_{s = 1}^S n_{st}}$.
+
 <<>>=
 
-ett_ATE_weighting <- function(z, Y, s){
+num_treated_units_per_block <- sapply(blocks, function(x){
+  sum(meddat$nhTrt[meddat$fm1 == x])
+})
 
-  # Permute treatment assignment
-  Z <- unsplit(lapply(split(z, s), sample), s)
-
-  ett_ATE <- 0
-
-  for (i in unique(s)) {
-    ett_ATE <- ett_ATE + (sum(s == i[Z == 1])/length(s[Z == 1])) *
-      coef(lm(Y ~ Z, subset = (s == i)))[2]
-    }
-
-  return(ett_ATE)
-  }
+obs_overall_ate_hat_ett <- sum(ATE_hat_by_block * (num_treated_units_per_block/sum(meddat$nhTrt)))
 
 @
 
+Now, compare all the overall estimates of the ATE from the $3$ different weighting schemes. Are they all similar?
+
+Notice that thus far we have not talked about standard errors, confidence intervals, or hypothesis testing. We have focused on only \textit{estimating} causal effects. 
+
+How would you describe difference between \textit{estimation} and \textit{testing}?
+
+Tomorrow we will discuss standard errors and \textit{testing} hypotheses about causal effects.
 
 \newpage
 

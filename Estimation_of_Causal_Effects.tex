@@ -1,0 +1,576 @@
+\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
+\documentclass[11pt,leqno]{article}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb}          % AMS Stuff
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{afterpage}% http://ctan.org/pkg/afterpage
+\usepackage[T1]{fontenc}
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfig}
+\usepackage{titling}            % modify maketitle in latex
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage{verbatim}
+\usepackage{geometry}
+\usepackage{bigfoot}
+\usepackage[format=hang,
+            font={small},
+            labelfont=bf,
+            textfont=rm]{caption}
+
+\geometry{verbose,margin=2cm,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=page,
+            colorlinks=true,
+            hyperfootnotes=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1},
+            citecolor=blue!70!black,
+            linkcolor=red!70!black,
+            urlcolor=green!70!black]{hyperref}
+\usepackage{hypernat}
+
+\usepackage{multirow}
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+
+\parskip=12pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{12pt} %Aboveskip
+{12pt} %Below skip
+{\itshape} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+% \DeclareMathOperator{\Pr}{\rm{Pr}}
+
+% COLORS FOR GRAPHICS (3-class Set1)
+\definecolor{Blue}{RGB}{55,126,184}
+\definecolor{Red}{RGB}{228,26,28}
+\definecolor{Green}{RGB}{77,175,74}
+
+% COLORS FOR EQUATIONS (3-class Dark2)
+\definecolor{eqgreen}{RGB}{27,158,119}
+\definecolor{eqblue}{RGB}{117,112,179}
+\definecolor{eqred}{RGB}{217,95,2}
+
+
+\title{Estimation of Causal Effects}
+\author{Jake Bowers, Ben Hansen \& Tom Leavitt}
+\date{\today}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+
+
+\newpage
+
+\section{Estimation of Mean Unit-Level Causal Effects}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## Load data}
+\hlstd{news_df} \hlkwb{<-} \hlkwd{read.csv}\hlstd{(}\hlstr{"http://jakebowers.org/PS531Data/news.df.csv"}\hlstd{)}
+
+\hlcom{## Create potential outcomes}
+\hlstd{news_df} \hlopt{%<>%} \hlkwd{rename}\hlstd{(}\hlkwc{y} \hlstd{= r)} \hlopt{%>%} \hlkwd{mutate}\hlstd{(}\hlkwc{yc} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{= z} \hlopt{==} \hlnum{0}\hlstd{,} \hlkwc{yes} \hlstd{= y,} \hlkwc{no} \hlstd{=} \hlnum{NA}\hlstd{),} \hlkwc{yt} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{= z} \hlopt{==}
+    \hlnum{1}\hlstd{,} \hlkwc{yes} \hlstd{= y,} \hlkwc{no} \hlstd{=} \hlnum{NA}\hlstd{))}
+
+\hlkwd{kable}\hlstd{(news_df[,} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{3}\hlopt{:}\hlnum{4}\hlstd{,} \hlnum{8}\hlopt{:}\hlnum{9}\hlstd{)])}
+\end{alltt}
+\end{kframe}
+\begin{tabular}{l|r|r|r|r}
+\hline
+city & y & z & yc & yt\\
+\hline
+Saginaw & 16 & 0 & 16 & NA\\
+\hline
+Sioux City & 22 & 1 & NA & 22\\
+\hline
+Battle Creek & 14 & 0 & 14 & NA\\
+\hline
+Midland & 7 & 1 & NA & 7\\
+\hline
+Oxford & 23 & 0 & 23 & NA\\
+\hline
+Lowell & 27 & 1 & NA & 27\\
+\hline
+Yakima & 58 & 0 & 58 & NA\\
+\hline
+Richland & 61 & 1 & NA & 61\\
+\hline
+\end{tabular}
+
+
+\end{knitrout}
+
+Now let's imagine the \textit{true} unit-level treatment effect is some specific positive natural number that differs for almost every unit. What do we mean by ``\textit{true} unit-level treatment effect'' as opposed to a unit-level treatment effect that we hypothesize and subsequently assume to be true in order to assess evidence in favor of or against the hypothesis?
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{news_df} \hlopt{%<>%} \hlkwd{mutate}\hlstd{(}\hlkwc{true_tau} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{6}\hlstd{,} \hlnum{4}\hlstd{,} \hlnum{19}\hlstd{,} \hlnum{12}\hlstd{,} \hlnum{9}\hlstd{,} \hlnum{9}\hlstd{,} \hlnum{13}\hlstd{,} \hlnum{15}\hlstd{),} \hlkwc{yc} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{=} \hlkwd{is.na}\hlstd{(yc),} \hlkwc{yes} \hlstd{= yt} \hlopt{-}
+    \hlstd{true_tau,} \hlkwc{no} \hlstd{= yc),} \hlkwc{yt} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{=} \hlkwd{is.na}\hlstd{(yt),} \hlkwc{yes} \hlstd{= yc} \hlopt{+} \hlstd{true_tau,} \hlkwc{no} \hlstd{= yt))}
+
+\hlcom{## Other ways to get the true ATE if you knew the true individual level effects.}
+\hlcom{## true_ate<-with(news_df,mean(yt) - mean(yc)) true_ate<-news_df %$% \{mean(yt) - mean(yc)\}}
+
+\hlstd{true_ate} \hlkwb{<-} \hlstd{news_df} \hlopt{%$%} \hlkwd{mean}\hlstd{(true_tau)}
+
+\hlkwd{kable}\hlstd{(news_df[,} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{3}\hlopt{:}\hlnum{4}\hlstd{,} \hlnum{8}\hlopt{:}\hlnum{9}\hlstd{)])}
+\end{alltt}
+\end{kframe}
+\begin{tabular}{l|r|r|r|r}
+\hline
+city & y & z & yc & yt\\
+\hline
+Saginaw & 16 & 0 & 16 & 22\\
+\hline
+Sioux City & 22 & 1 & 18 & 22\\
+\hline
+Battle Creek & 14 & 0 & 14 & 33\\
+\hline
+Midland & 7 & 1 & -5 & 7\\
+\hline
+Oxford & 23 & 0 & 23 & 32\\
+\hline
+Lowell & 27 & 1 & 18 & 27\\
+\hline
+Yakima & 58 & 0 & 58 & 71\\
+\hline
+Richland & 61 & 1 & 46 & 61\\
+\hline
+\end{tabular}
+
+
+\end{knitrout}
+
+We have an experiment that consists of complete random assignment within pairs. How many treatment assignment permutations are in the set $\Omega$? How many elements would there be in $\Omega$ if the experiment consisted of complete random assignment \textit{without} blocked pairs? What is the probability associated with each $\mathbf{Z} = \mathbf{z} \in \Omega$?
+
+I claim that the difference-in-means estimator and the stratified difference-in-means estimator are both good estimators. Name some criteria that people use to assess the quality of estimators . . .
+
+In the code chunk below, we create a function that calculates $\widehat{ATE}$ on the outcomes we observe under different treatment assignment permutations.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{treatment_permutations} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{z}\hlstd{,} \hlkwc{yc}\hlstd{,} \hlkwc{yt}\hlstd{,} \hlkwc{s}\hlstd{) \{}
+
+    \hlkwa{if} \hlstd{(}\hlkwd{missing}\hlstd{(s)) \{}
+        \hlcom{## If this is not a block-randomized experiment then do the following}
+
+        \hlcom{## Permute treatment assignment Student Question: What is the difference between Z and z?  Why is one}
+        \hlcom{## uppercase and the other lower?}
+        \hlstd{Z} \hlkwb{=} \hlkwd{sample}\hlstd{(z)}
+
+        \hlstd{Y} \hlkwb{=} \hlstd{Z} \hlopt{*} \hlstd{yt} \hlopt{+} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{Z)} \hlopt{*} \hlstd{yc}
+
+        \hlcom{## Calculate unstratified test statistic}
+        \hlstd{ate_hat_unstrat} \hlkwb{=} \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(Y} \hlopt{~} \hlstd{Z))[[}\hlstr{"Z"}\hlstd{]]}
+
+        \hlkwd{return}\hlstd{(ate_hat_unstrat)}
+
+    \hlstd{\}} \hlkwa{else} \hlstd{\{}
+        \hlcom{# If the experiment is block randomized}
+
+        \hlcom{## Permute treatment assignment WITHIN blocks}
+        \hlstd{Z} \hlkwb{=} \hlkwd{unsplit}\hlstd{(}\hlkwd{lapply}\hlstd{(}\hlkwd{split}\hlstd{(}\hlkwc{x} \hlstd{= z,} \hlkwc{f} \hlstd{= s), sample), s)}
+
+        \hlstd{Y} \hlkwb{=} \hlstd{Z} \hlopt{*} \hlstd{yt} \hlopt{+} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{Z)} \hlopt{*} \hlstd{yc}
+
+        \hlcom{## Calculate stratified test-statistic}
+        \hlstd{ate_hat_strat} \hlkwb{=} \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(Y} \hlopt{~} \hlstd{Z} \hlopt{+} \hlstd{s))[[}\hlstr{"Z"}\hlstd{]]}
+
+        \hlkwd{return}\hlstd{(ate_hat_strat)}
+    \hlstd{\}}
+
+\hlstd{\}}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Describe in words what the function above is doing.
+
+Now we are repeatedly estimating the ATE under 1000 treatment assignment permutations in order to assess unbiasedness. What two quantities would we like to compare in order to assess whether the difference-in-means estimator is unbiased?
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## Set seed for simulations}
+\hlkwd{set.seed}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{)}
+
+\hlstd{obs_block_ate_hat} \hlkwb{<-} \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(y} \hlopt{~} \hlstd{z} \hlopt{+} \hlstd{s,} \hlkwc{data} \hlstd{= news_df))[[}\hlstr{"z"}\hlstd{]]}
+
+\hlstd{obs_ate_hat} \hlkwb{<-} \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(y} \hlopt{~} \hlstd{z,} \hlkwc{data} \hlstd{= news_df))[[}\hlstr{"z"}\hlstd{]]}
+
+\hlkwd{all.equal}\hlstd{(obs_block_ate_hat, obs_ate_hat)}
+\end{alltt}
+\begin{verbatim}
+[1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlcom{## If we use blocks}
+\hlstd{block_randomization_distribution} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{ate} \hlstd{=} \hlkwd{replicate}\hlstd{(}\hlnum{10}\hlopt{^}\hlnum{3}\hlstd{,} \hlkwd{treatment_permutations}\hlstd{(}\hlkwc{z} \hlstd{= news_df}\hlopt{$}\hlstd{z,}
+    \hlkwc{yc} \hlstd{= news_df}\hlopt{$}\hlstd{yc,} \hlkwc{yt} \hlstd{= news_df}\hlopt{$}\hlstd{yt,} \hlkwc{s} \hlstd{= news_df}\hlopt{$}\hlstd{s)))}
+
+\hlkwd{colMeans}\hlstd{(block_randomization_distribution)}
+\end{alltt}
+\begin{verbatim}
+ ate 
+10.7 
+\end{verbatim}
+\begin{alltt}
+\hlcom{## If we don't use blocks}
+\hlstd{randomization_distribution} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{ate} \hlstd{=} \hlkwd{replicate}\hlstd{(}\hlnum{10}\hlopt{^}\hlnum{3}\hlstd{,} \hlkwd{treatment_permutations}\hlstd{(}\hlkwc{z} \hlstd{= news_df}\hlopt{$}\hlstd{z,}
+    \hlkwc{yc} \hlstd{= news_df}\hlopt{$}\hlstd{yc,} \hlkwc{yt} \hlstd{= news_df}\hlopt{$}\hlstd{yt)))}
+
+\hlkwd{colMeans}\hlstd{(randomization_distribution)}
+\end{alltt}
+\begin{verbatim}
+ ate 
+10.6 
+\end{verbatim}
+\begin{alltt}
+\hlstd{block_randomization_distribution}\hlopt{$}\hlstd{type} \hlkwb{<-} \hlstr{"Stratified"}
+
+\hlstd{randomization_distribution}\hlopt{$}\hlstd{type} \hlkwb{<-} \hlstr{"Unstratified"}
+
+\hlstd{randomization_dists} \hlkwb{<-} \hlkwd{as.data.frame}\hlstd{(}\hlkwd{rbind}\hlstd{(block_randomization_distribution, randomization_distribution))}
+
+\hlkwd{ggplot}\hlstd{(randomization_dists,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= ate,} \hlkwc{fill} \hlstd{= type))} \hlopt{+} \hlkwd{geom_histogram}\hlstd{(}\hlkwc{alpha} \hlstd{=} \hlnum{0.5}\hlstd{,} \hlkwd{aes}\hlstd{(),} \hlkwc{position} \hlstd{=} \hlstr{"identity"}\hlstd{)} \hlopt{+}
+    \hlkwd{xlab}\hlstd{(}\hlstr{"ATEs"}\hlstd{)} \hlopt{+} \hlkwd{ylab}\hlstd{(}\hlstr{"Count"}\hlstd{)} \hlopt{+} \hlkwd{ggtitle}\hlstd{(}\hlstr{"Randomization Distributions"}\hlstd{)} \hlopt{+} \hlkwd{scale_fill_discrete}\hlstd{(}\hlkwc{name} \hlstd{=} \hlstr{"Random Assignment"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\includegraphics[width=1.2\textwidth]{figs/figunnamed-chunk-4-1} 
+\begin{kframe}\begin{alltt}
+\hlcom{## If you want to add the observed ate hat + geom_vline(xintercept = obs_ate_hat, colour = 'black',}
+\hlcom{## linetype = 'longdash')}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Notice that the randomization distributions look a little strange; that is,
+both randomization distributions are very different from the normal
+distribution to which we are accustomed. This is important. Nothing so far has invoked any claim about the shape of the randomization distribution, such as its normality if the finite population central limit theorem obtains
+\citep{hajek1960}. What matters (in terms of unbiasedness) is whether the mean of the randomization distribution---i.e., the mean of all the estimated
+difference in means---is equal to the true average treatment effect.\footnote{Notice that we do not have simulated results that are \emph{exactly}
+	equal to the truth. Why is that? What might we do to move them closer
+	to the truth? If I ran this simulation with one seed, and you ran it
+	with another seed, by how much would we expect our two averages to
+	differ?}
+
+Is the variance of the randomization distribution tighter when treatment is assigned within blocks or when treatment is \textit{not} assigned within blocks? If so, why?
+
+Our \textit{single} estimated $\widehat{ATE}$ from the experiment is our ``best guess'' about the true ATE. But what do we mean by ``best guess''? And can one's ``best guess'' be misleading?
+
+How would you relate this \texttt{[R]} exercise to the analytic proof we did in class?
+
+\section{Binary Outcomes}
+
+Now let's pretend that we have an experiment with a binary outcome:
+
+\citet{freedman2008b} famously argues that ``randomization does not justify logistic regression." Let's recall that the coefficient of a logistic regression model is the difference in potential log odds.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{experiment} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{unit} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{to} \hlstd{=} \hlnum{8}\hlstd{,} \hlkwc{by} \hlstd{=} \hlnum{1}\hlstd{))}
+
+\hlstd{experiment} \hlopt{%<>%} \hlkwd{mutate}\hlstd{(}\hlkwc{Z} \hlstd{=} \hlkwd{complete_ra}\hlstd{(}\hlkwc{N} \hlstd{=} \hlkwd{length}\hlstd{(unit)))} \hlopt{%>%} \hlkwd{arrange}\hlstd{(}\hlkwd{desc}\hlstd{(Z))}
+
+\hlstd{experiment} \hlopt{%<>%} \hlkwd{mutate}\hlstd{(}\hlkwc{y1} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{1}\hlstd{),} \hlkwc{y0} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{0}\hlstd{),} \hlkwc{Y} \hlstd{= Z} \hlopt{*} \hlstd{y1} \hlopt{+} \hlstd{(}\hlnum{1} \hlopt{-}
+    \hlstd{Z)} \hlopt{*} \hlstd{y0)}
+
+\hlstd{N} \hlkwb{<-} \hlkwd{length}\hlstd{(experiment}\hlopt{$}\hlstd{Z)}
+
+\hlstd{Z} \hlkwb{<-} \hlstd{experiment}\hlopt{$}\hlstd{Z}
+
+\hlstd{m} \hlkwb{<-} \hlkwd{sum}\hlstd{(experiment}\hlopt{$}\hlstd{Z} \hlopt{==} \hlnum{1}\hlstd{)}
+
+\hlstd{y1} \hlkwb{<-} \hlstd{experiment}\hlopt{$}\hlstd{y1}
+
+\hlstd{y0} \hlkwb{<-} \hlstd{experiment}\hlopt{$}\hlstd{y0}
+
+\hlstd{Y} \hlkwb{<-} \hlstd{experiment}\hlopt{$}\hlstd{Y}
+
+\hlstd{true_ate} \hlkwb{<-} \hlkwd{mean}\hlstd{(y1)} \hlopt{-} \hlkwd{mean}\hlstd{(y0)}
+
+\hlstd{true_logit} \hlkwb{<-} \hlkwd{log}\hlstd{(}\hlkwd{mean}\hlstd{(y1)}\hlopt{/}\hlstd{(}\hlnum{1} \hlopt{-} \hlkwd{mean}\hlstd{(y1)))} \hlopt{-} \hlkwd{log}\hlstd{(}\hlkwd{mean}\hlstd{(y0)}\hlopt{/}\hlstd{(}\hlnum{1} \hlopt{-} \hlkwd{mean}\hlstd{(y0)))}
+
+\hlstd{est_ate} \hlkwb{<-} \hlkwd{mean}\hlstd{(Y[Z} \hlopt{==} \hlnum{1}\hlstd{])} \hlopt{-} \hlkwd{mean}\hlstd{(Y[Z} \hlopt{==} \hlnum{0}\hlstd{])}
+
+\hlstd{est_logit} \hlkwb{<-} \hlkwd{log}\hlstd{(}\hlkwd{mean}\hlstd{(Y[Z} \hlopt{==} \hlnum{1}\hlstd{])}\hlopt{/}\hlstd{(}\hlnum{1} \hlopt{-} \hlkwd{mean}\hlstd{(Y[Z} \hlopt{==} \hlnum{1}\hlstd{])))} \hlopt{-} \hlkwd{log}\hlstd{(}\hlkwd{mean}\hlstd{(Y[Z} \hlopt{==} \hlnum{0}\hlstd{])}\hlopt{/}\hlstd{(}\hlnum{1} \hlopt{-} \hlkwd{mean}\hlstd{(Y[Z} \hlopt{==} \hlnum{0}\hlstd{])))}
+
+\hlstd{new_experiment} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{z}\hlstd{,} \hlkwc{y0}\hlstd{,} \hlkwc{y1}\hlstd{) \{}
+
+    \hlstd{Z} \hlkwb{=} \hlkwd{sample}\hlstd{(z)}
+
+    \hlstd{Y} \hlkwb{=} \hlstd{Z} \hlopt{*} \hlstd{y1} \hlopt{+} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{Z)} \hlopt{*} \hlstd{y0}
+
+    \hlstd{est_ate} \hlkwb{=} \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(Y} \hlopt{~} \hlstd{Z))[[}\hlstr{"Z"}\hlstd{]]}
+
+    \hlstd{est_logit} \hlkwb{=} \hlkwd{coef}\hlstd{(}\hlkwd{glm}\hlstd{(Y} \hlopt{~} \hlstd{Z,} \hlkwc{family} \hlstd{=} \hlkwd{binomial}\hlstd{(}\hlkwc{link} \hlstd{=} \hlstr{"logit"}\hlstd{)))[[}\hlstr{"Z"}\hlstd{]]}
+
+    \hlkwd{return}\hlstd{(}\hlkwd{c}\hlstd{(est_ate, est_logit))}
+\hlstd{\}}
+
+\hlkwd{set.seed}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{)}
+
+\hlstd{randomization_dists} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwd{t}\hlstd{(}\hlkwd{replicate}\hlstd{(}\hlnum{10}\hlopt{^}\hlnum{3}\hlstd{,} \hlkwd{new_experiment}\hlstd{(}\hlkwc{z} \hlstd{= Z,} \hlkwc{y0} \hlstd{= y0,} \hlkwc{y1} \hlstd{= y1))))} \hlopt{%>%} \hlkwd{rename}\hlstd{(}\hlkwc{est_ates} \hlstd{= X1,}
+    \hlkwc{est_logits} \hlstd{= X2)}
+
+\hlkwd{colMeans}\hlstd{(randomization_dists)}
+\end{alltt}
+\begin{verbatim}
+  est_ates est_logits 
+     0.134      1.943 
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Is the difference-in-means estimator still unbiased (give or take some simulation error) when potential outcomes are binary? Is the coefficient from a logistic regression model unbiased? To which quantities (defined as \texttt{[R]} objects above) are we comparing the means of the two respective randomization distributions in order to assess unbiasedness?
+
+How does the randomization distribution above differ from the \textit{null} randomization distribution?
+
+In a code chunk below, plot both randomization distributions (of the estimated ATEs and estimated logit coefficients) in \texttt{[R]}:
+
+
+
+\section{Application of Unbiased Inference to Matched Designs}
+
+Please create a matched design with a matched design with the data from the
+\citet{cerdaetal2012} paper. We made one of our own, that we call, `fm1`, but
+you should make your own.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{load}\hlstd{(}\hlstr{"matched_data.Rdata"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Now let's think about how we can draw upon the principles above in order to actually do outcome analysis once we have a matched design.
+
+We want to perform outcome analysis (in this case to estimate average treatment effects) as if we have a \textit{block} randomized experiment in which the matched sets are the experiment's blocks. We therefore want to estimate an average treatment effect \textit{within} each block. But then we need some scheme to weight each block-specific $\widehat{ATE}$ to yield one overall $\widehat{ATE}$. There are three different weighting possibilities below.
+
+\subsection{Harmonic Mean Weighting}
+
+Let's first estimate the average treatment effect \textit{within} each block:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{blocks} \hlkwb{<-} \hlkwd{unique}\hlstd{(meddat}\hlopt{$}\hlstd{fm1)}
+
+\hlstd{ATE_hat_by_block} \hlkwb{<-} \hlkwd{sapply}\hlstd{(blocks,} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+    \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(HomRate08} \hlopt{~} \hlstd{nhTrt,} \hlkwc{data} \hlstd{= meddat,} \hlkwc{subset} \hlstd{= fm1} \hlopt{==} \hlstd{x))[[}\hlstr{"nhTrt"}\hlstd{]]}
+\hlstd{\})}
+
+\hlstd{ATE_hat_by_block}
+\end{alltt}
+\begin{verbatim}
+ [1]  0.5269 -0.2250 -0.1704 -1.8248 -0.1292  0.0016  0.3156  0.1431 -0.7949 -0.3351 -1.6912 -0.4539
+[13] -0.6041 -0.1776  0.0572 -0.8062  0.2695  1.6010 -0.5905 -0.0246
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Describe what the output above is giving us . . .
+
+Now let's calculate an overall $\widehat{ATE}$ that uses harmonic mean weighting. Harmonic mean weighting weights each block by $\frac{ \frac{2}{n_{st}^{-1} + n_{sc}^{-1}} }{\sum \limits_{s = 1}^{S} \frac{2}{n_{st}^{-1} + n_{sc}^{-1}} }$. 
+
+Why is there a $2$ in the numerator? Pick a block with more than $2$ units and calculate its ``effective sample size'' by hand using the appropriate formula---i.e., $\frac{2}{n_{ts}^{-1} + n_{cs}^{-1}}$.
+
+Now let's estimate an overall ATE using harmonic mean weights:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{num_treated} \hlkwb{<-} \hlstd{meddat} \hlopt{%$%} \hlstd{\{}
+    \hlkwd{sapply}\hlstd{(}\hlkwd{split}\hlstd{(nhTrt, fm1), sum)}
+\hlstd{\}}
+
+\hlstd{num_control} \hlkwb{<-} \hlstd{meddat} \hlopt{%$%} \hlstd{\{}
+    \hlkwd{sapply}\hlstd{(}\hlkwd{split}\hlstd{(}\hlnum{1} \hlopt{-} \hlstd{nhTrt, fm1), sum)}
+\hlstd{\}}
+
+\hlstd{harm_mean} \hlkwb{<-} \hlnum{2}\hlopt{/}\hlstd{(}\hlnum{1}\hlopt{/}\hlstd{num_treated} \hlopt{+} \hlnum{1}\hlopt{/}\hlstd{num_control)}
+
+\hlstd{obs_overall_ate_hat_hm} \hlkwb{<-} \hlkwd{sum}\hlstd{(ATE_hat_by_block} \hlopt{*} \hlstd{(harm_mean}\hlopt{/}\hlkwd{sum}\hlstd{(harm_mean)))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+What are some other weighting schemes one could use? Let's try two others.
+
+\subsection{Block-Size Weighting}
+
+Write a mathematical expression for the weights attached to each block-specific $\widehat{ATE}$ in which each block-specific $\widehat{ATE}$ is weighted by the total number of units in each block.
+
+$\dots$
+
+Now let's implement this estimation strategy in \texttt{[R]}:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{num_units_per_block} \hlkwb{<-} \hlkwd{sapply}\hlstd{(blocks,} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+    \hlkwd{length}\hlstd{(meddat}\hlopt{$}\hlstd{nhTrt[meddat}\hlopt{$}\hlstd{fm1} \hlopt{==} \hlstd{x])}
+\hlstd{\})}
+
+\hlstd{obs_overall_ate_hat_bs} \hlkwb{<-} \hlkwd{sum}\hlstd{(ATE_hat_by_block} \hlopt{*} \hlstd{(num_units_per_block}\hlopt{/}\hlkwd{nrow}\hlstd{(meddat)))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\subsection{ETT Weighting}
+
+Let's try one final weighting scheme (although there are surely many other possibilities.) Let's weight each block-specific $\widehat{ATE}$ by the number of \textit{treated} units within that block. 
+
+That is, the weights associated with each block-specific $\widehat{ATE}$ are: $W_{ETT} = \frac{n_{st}}{\sum \limits_{s = 1}^S n_{st}}$.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{num_treated_units_per_block} \hlkwb{<-} \hlkwd{sapply}\hlstd{(blocks,} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+    \hlkwd{sum}\hlstd{(meddat}\hlopt{$}\hlstd{nhTrt[meddat}\hlopt{$}\hlstd{fm1} \hlopt{==} \hlstd{x])}
+\hlstd{\})}
+
+\hlstd{obs_overall_ate_hat_ett} \hlkwb{<-} \hlkwd{sum}\hlstd{(ATE_hat_by_block} \hlopt{*} \hlstd{(num_treated_units_per_block}\hlopt{/}\hlkwd{sum}\hlstd{(meddat}\hlopt{$}\hlstd{nhTrt)))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Now, compare all the overall estimates of the ATE from the $3$ different weighting schemes. Are they all similar?
+
+Notice that thus far we have not talked about standard errors, confidence intervals, or hypothesis testing. We have focused on only \textit{estimating} causal effects. 
+
+How would you describe difference between \textit{estimation} and \textit{testing}?
+
+Tomorrow we will discuss standard errors and \textit{testing} hypotheses about causal effects.
+
+\newpage
+
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{master_bibliography}   % name your BibTeX data base
+\end{singlespace}
+
+\newpage
+
+\end{document}
