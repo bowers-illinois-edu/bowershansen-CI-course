@@ -127,7 +127,7 @@
 
 << setup, include = FALSE, eval = TRUE >>=
 
-if (!require("pacman")) install.packages("pacman")
+if (!require("pacman")) { install.packages("pacman") }
 
 pacman::p_load(
   plyr, # data wrangling
@@ -147,10 +147,23 @@ pacman::p_load(
   brglm
 )
 
-opts_chunk$set(tidy=TRUE,echo=TRUE,results='markup',strip.white=TRUE,fig.path='figs/fig',cache=FALSE,highlight=TRUE,width.cutoff=100,
-	       size='footnotesize',out.width='1.2\\textwidth',message=FALSE,warning=FALSE,comment=NA)
+opts_chunk$set(tidy = TRUE,
+               echo = TRUE,
+               results = 'markup',
+               strip.white = TRUE,
+               fig.path = 'figs/fig',
+               cache = FALSE,
+               highlight = TRUE,
+               width.cutoff = 100,
+               size = 'footnotesize',
+               out.width = '1\\textwidth',
+               message = FALSE,
+               warning = FALSE,
+               comment = NA)
 
-options(width=100,digits=3)
+options(width = 100,
+        digits = 3)
+
 @
 
 \newpage
@@ -171,15 +184,15 @@ news_df %<>% rename(y = r) %>%
                      yes = y,
                      no = NA))
 
-kable(news_df[, c(1, 3:4, 8:9)])
+kable(news_df[, c(1, 3:4, 8:9, 7)])
 
 @
 
-Now let's imagine the \textit{true} unit-level treatment effect is some specific positive natural number that differs for almost every unit. What do we mean by ``\textit{true} unit-level treatment effect'' as opposed to a unit-level treatment effect that we hypothesize and subsequently assume to be true in order to assess evidence in favor of or against the hypothesis?
+Now let's imagine the \textit{true} unit-level treatment effect is some specific positive natural number that differs for almost every unit. What do we mean by ``\textit{true} unit-level treatment effect'' as opposed to a unit-level treatment effect that we hypothesize and subsequently assume to be true in order to assess evidence in favor of or against that hypothesis?
 
 << >>=
 
-news_df %<>% mutate(true_tau = c(6, 4, 19, 12, 9, 9, 13, 15),
+news_df %<>% mutate(true_tau = c(6, 4, 19, 3, 9, 9, 13, 15),
                     yc = ifelse(test = is.na(yc),
                                 yes = yt - true_tau,
                                 no = yc),
@@ -193,11 +206,11 @@ news_df %<>% mutate(true_tau = c(6, 4, 19, 12, 9, 9, 13, 15),
 
 true_ate <- news_df %$% mean(true_tau)
 
-kable(news_df[, c(1, 3:4, 8:9)])
+true_ate
+
+kable(news_df[, c(1, 3:4, 8:9, 7)])
 
 @
-
-We have an experiment that consists of complete random assignment within pairs. How many treatment assignment permutations are in the set $\Omega$? How many elements would there be in $\Omega$ if the experiment consisted of complete random assignment \textit{without} blocked pairs? What is the probability associated with each $\mathbf{Z} = \mathbf{z} \in \Omega$?
 
 I claim that the difference-in-means estimator and the stratified difference-in-means estimator are both good estimators. Name some criteria that people use to assess the quality of estimators . . .
 
@@ -243,18 +256,12 @@ treatment_permutations <- function(z, yc, yt, s){
 
 Describe in words what the function above is doing.
 
-Now we are repeatedly estimating the ATE under 1000 treatment assignment permutations in order to assess unbiasedness. What two quantities would we like to compare in order to assess whether the difference-in-means estimator is unbiased?
+Now we are repeatedly estimating the ATE under 1000 treatment assignment permutations in order to assess unbiasedness. Which two quantities would we like to compare in order to assess whether or not the difference-in-means estimator is unbiased?
 
 << >>=
 
 ## Set seed for simulations
 set.seed(1:5)
-
-obs_block_ate_hat <- coef(lm(y ~ z + s, data = news_df))[["z"]]
-
-obs_ate_hat <- coef(lm(y ~ z, data = news_df))[["z"]]
-
-all.equal(obs_block_ate_hat, obs_ate_hat)
 
 ## If we use blocks
 block_randomization_distribution <- data.frame(ate = replicate(10^3,
@@ -281,29 +288,39 @@ randomization_dists <- as.data.frame(rbind(block_randomization_distribution, ran
 
 ggplot(randomization_dists, aes(x = ate, fill = type)) +
 	geom_histogram(alpha = 0.5, aes(), position = 'identity') +
-	xlab("ATEs") +
+	xlab("Estimated ATEs") +
 	ylab("Count") +
 	ggtitle("Randomization Distributions") +
-	scale_fill_discrete(name = "Random Assignment")
+	scale_fill_discrete(name = "Random \nAssignment")
 
 ## If you want to add the observed ate hat
 # +  geom_vline(xintercept = obs_ate_hat, colour = "black", linetype = "longdash")
 
 @
 
-Notice that the randomization distributions look a little strange; that is,
-both randomization distributions are very different from the normal
-distribution to which we are accustomed. This is important. Nothing so far has invoked any claim about the shape of the randomization distribution, such as its normality if the finite population central limit theorem obtains
-\citep{hajek1960}. What matters (in terms of unbiasedness) is whether the mean of the randomization distribution---i.e., the mean of all the estimated
-difference in means---is equal to the true average treatment effect.\footnote{Notice that we do not have simulated results that are \emph{exactly}
-	equal to the truth. Why is that? What might we do to move them closer
-	to the truth? If I ran this simulation with one seed, and you ran it
-	with another seed, by how much would we expect our two averages to
-	differ?}
+Notice that the randomization distributions look a little strange; that is, both randomization distributions are very different from the normal distribution to which we are accustomed. This is important. Nothing so far has invoked any claim about the shape of the randomization distribution, such as its normality if the finite population central limit theorem obtains \citep{hajek1960}. What matters (in terms of unbiasedness) is whether the mean of the randomization distribution---i.e., the mean of all the estimated
+difference in means---is equal to the true average treatment effect.\footnote{Notice that we do not have simulated results that are \emph{exactly}	equal to the truth. Why is that? What might we do to move them closer to the truth? If I ran this simulation with one seed, and you ran it with another seed, by how much would we expect our two averages to	differ?}
 
 Is the variance of the randomization distribution tighter when treatment is assigned within blocks or when treatment is \textit{not} assigned within blocks? If so, why?
 
-Our \textit{single} estimated $\widehat{ATE}$ from the experiment is our ``best guess'' about the true ATE. But what do we mean by ``best guess''? And can one's ``best guess'' be misleading?
+Our \textit{single} $\widehat{ATE}$ from the experiment is our ``best guess'' about the true ATE. But what do we mean by ``best guess''? And can one's ``best guess'' be misleading?
+
+<< >>=
+
+## Let's calculate out single observed test statistic that accounts for blocks
+obs_block_ate_hat <- coef(lm(y ~ z + s, data = news_df))[["z"]]
+
+## This is our SINGLE estimated ATE that we actually observe
+obs_block_ate_hat
+
+## This is the expected value of the estimated ATE
+mean(block_randomization_distribution$ate)
+
+## This is the true ATE (not estimated) that we are trying to estimate
+true_ate
+
+@
+
 
 How would you relate this \texttt{[R]} exercise to the analytic proof we did in class?
 
@@ -336,14 +353,21 @@ y0 <- experiment$y0
 
 Y <- experiment$Y
 
-true_ate <- mean(y1) - mean(y0)
+true_ate_binary <- mean(y1) - mean(y0)
 
+true_ate_binary
+
+## Log odds
 true_logit <- log(mean(y1)/(1 - mean(y1))) - log(mean(y0)/(1 - mean(y0)))
+
+true_logit
 
 est_ate <- mean(Y[Z == 1]) - mean(Y[Z == 0])
 
 est_logit <- log(mean(Y[Z == 1])/(1 - mean(Y[Z == 1]))) -
 	log(mean(Y[Z == 0])/(1 - mean(Y[Z == 0])))
+
+all.equal(est_logit, coef(glm(Y ~ Z, family = binomial(link = "logit")))[["Z"]])
 
 new_experiment <- function(z, y0, y1){
 
@@ -361,9 +385,10 @@ new_experiment <- function(z, y0, y1){
 
 set.seed(1:5)
 
-randomization_dists <- data.frame(t(replicate(10^3, new_experiment(z = Z,
-                                                           y0 = y0,
-                                                           y1 = y1)))) %>%
+randomization_dists <- data.frame(t(replicate(10^3,
+                                              new_experiment(z = Z,
+                                                             y0 = y0,
+                                                             y1 = y1)))) %>%
   rename(est_ates = X1,
          est_logits = X2)
 
@@ -388,21 +413,33 @@ In a code chunk below, plot both randomization distributions (of the estimated A
 
 \section{Application of Unbiased Inference to Matched Designs}
 
+\subsection{Make Your Own Matched Design}
+
 Please create a matched design with a matched design with the data from the
 \citet{cerdaetal2012} paper. We made one of our own, that we call, `fm1`, but
 you should make your own.
 
 <<>>=
 
+## This our data with the matched sets that you DON'T have access to
 load("matched_data.Rdata")
 
 @
+
+<< eval = FALSE >>=
+
+## To load the meddat data and then make your own matched design
+load(url("http://jakebowers.org/Matching/meddat.rda"))
+
+@
+
+\subsection{Perform Outcome Analysis After Matching}
 
 Now let's think about how we can draw upon the principles above in order to actually do outcome analysis once we have a matched design.
 
 We want to perform outcome analysis (in this case to estimate average treatment effects) as if we have a \textit{block} randomized experiment in which the matched sets are the experiment's blocks. We therefore want to estimate an average treatment effect \textit{within} each block. But then we need some scheme to weight each block-specific $\widehat{ATE}$ to yield one overall $\widehat{ATE}$. There are three different weighting possibilities below.
 
-\subsection{Harmonic Mean Weighting}
+\subsubsection{Harmonic Mean Weighting}
 
 Let's first estimate the average treatment effect \textit{within} each block:
 
@@ -440,7 +477,7 @@ obs_overall_ate_hat_hm <- sum(ATE_hat_by_block * (harm_mean/sum(harm_mean)))
 
 What are some other weighting schemes one could use? Let's try two others.
 
-\subsection{Block-Size Weighting}
+\subsubsection{Block Size Weighting}
 
 Write a mathematical expression for the weights attached to each block-specific $\widehat{ATE}$ in which each block-specific $\widehat{ATE}$ is weighted by the total number of units in each block.
 
@@ -458,7 +495,7 @@ obs_overall_ate_hat_bs <- sum(ATE_hat_by_block * (num_units_per_block/nrow(medda
 
 @
 
-\subsection{ETT Weighting}
+\subsubsection{ETT Weighting}
 
 Let's try one final weighting scheme (although there are surely many other possibilities.) Let's weight each block-specific $\widehat{ATE}$ by the number of \textit{treated} units within that block. 
 
@@ -480,7 +517,56 @@ Notice that thus far we have not talked about standard errors, confidence interv
 
 How would you describe difference between \textit{estimation} and \textit{testing}?
 
+\section{Agenda for Tomorrow}
+
 Tomorrow we will discuss standard errors and \textit{testing} hypotheses about causal effects.
+
+\section{Recommended Readings}
+
+\subsection{Readings on Weighting Schemes}
+
+\subsubsection{Harmonic Mean Weighting}
+
+\begin{itemize}
+
+\item \citet[Section 9.3.3]{hansen2011}
+
+\item \citet[Section 2.1]{hansenbowers2008}
+
+\end{itemize}
+
+\subsubsection{Block-Size Weights}
+
+\begin{itemize}
+
+\item \citet[Section 3.6.1]{gerbergreen2012}
+
+\end{itemize}
+
+\subsubsection{ATT Weighting}
+
+\begin{itemize}
+
+\item
+	\url{http://egap.org/methods-guides/10-types-treatment-effect-you-should-know-about}
+
+\end{itemize}
+
+\subsection{Readings on Standard Errors for Tomorrow's Class}
+
+\begin{itemize}
+
+\item \citet[Chapter 3]{gerbergreen2012}
+
+\item \citet[Chapter 6]{dunning2012}
+
+\item \citet[Chapter 33, footnote 11]{fpp2007}
+
+\item \citet{lin2013}
+
+\item \citet{aronowetal2014}
+
+\end{itemize}
 
 \newpage
 

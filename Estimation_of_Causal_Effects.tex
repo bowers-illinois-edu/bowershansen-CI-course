@@ -190,40 +190,40 @@
 \hlstd{news_df} \hlopt{%<>%} \hlkwd{rename}\hlstd{(}\hlkwc{y} \hlstd{= r)} \hlopt{%>%} \hlkwd{mutate}\hlstd{(}\hlkwc{yc} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{= z} \hlopt{==} \hlnum{0}\hlstd{,} \hlkwc{yes} \hlstd{= y,} \hlkwc{no} \hlstd{=} \hlnum{NA}\hlstd{),} \hlkwc{yt} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{= z} \hlopt{==}
     \hlnum{1}\hlstd{,} \hlkwc{yes} \hlstd{= y,} \hlkwc{no} \hlstd{=} \hlnum{NA}\hlstd{))}
 
-\hlkwd{kable}\hlstd{(news_df[,} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{3}\hlopt{:}\hlnum{4}\hlstd{,} \hlnum{8}\hlopt{:}\hlnum{9}\hlstd{)])}
+\hlkwd{kable}\hlstd{(news_df[,} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{3}\hlopt{:}\hlnum{4}\hlstd{,} \hlnum{8}\hlopt{:}\hlnum{9}\hlstd{,} \hlnum{7}\hlstd{)])}
 \end{alltt}
 \end{kframe}
-\begin{tabular}{l|r|r|r|r}
+\begin{tabular}{l|r|r|r|r|r}
 \hline
-city & y & z & yc & yt\\
+city & y & z & yc & yt & s\\
 \hline
-Saginaw & 16 & 0 & 16 & NA\\
+Saginaw & 16 & 0 & 16 & NA & 1\\
 \hline
-Sioux City & 22 & 1 & NA & 22\\
+Sioux City & 22 & 1 & NA & 22 & 1\\
 \hline
-Battle Creek & 14 & 0 & 14 & NA\\
+Battle Creek & 14 & 0 & 14 & NA & 2\\
 \hline
-Midland & 7 & 1 & NA & 7\\
+Midland & 7 & 1 & NA & 7 & 2\\
 \hline
-Oxford & 23 & 0 & 23 & NA\\
+Oxford & 23 & 0 & 23 & NA & 3\\
 \hline
-Lowell & 27 & 1 & NA & 27\\
+Lowell & 27 & 1 & NA & 27 & 3\\
 \hline
-Yakima & 58 & 0 & 58 & NA\\
+Yakima & 58 & 0 & 58 & NA & 4\\
 \hline
-Richland & 61 & 1 & NA & 61\\
+Richland & 61 & 1 & NA & 61 & 4\\
 \hline
 \end{tabular}
 
 
 \end{knitrout}
 
-Now let's imagine the \textit{true} unit-level treatment effect is some specific positive natural number that differs for almost every unit. What do we mean by ``\textit{true} unit-level treatment effect'' as opposed to a unit-level treatment effect that we hypothesize and subsequently assume to be true in order to assess evidence in favor of or against the hypothesis?
+Now let's imagine the \textit{true} unit-level treatment effect is some specific positive natural number that differs for almost every unit. What do we mean by ``\textit{true} unit-level treatment effect'' as opposed to a unit-level treatment effect that we hypothesize and subsequently assume to be true in order to assess evidence in favor of or against that hypothesis?
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{news_df} \hlopt{%<>%} \hlkwd{mutate}\hlstd{(}\hlkwc{true_tau} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{6}\hlstd{,} \hlnum{4}\hlstd{,} \hlnum{19}\hlstd{,} \hlnum{12}\hlstd{,} \hlnum{9}\hlstd{,} \hlnum{9}\hlstd{,} \hlnum{13}\hlstd{,} \hlnum{15}\hlstd{),} \hlkwc{yc} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{=} \hlkwd{is.na}\hlstd{(yc),} \hlkwc{yes} \hlstd{= yt} \hlopt{-}
+\hlstd{news_df} \hlopt{%<>%} \hlkwd{mutate}\hlstd{(}\hlkwc{true_tau} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{6}\hlstd{,} \hlnum{4}\hlstd{,} \hlnum{19}\hlstd{,} \hlnum{3}\hlstd{,} \hlnum{9}\hlstd{,} \hlnum{9}\hlstd{,} \hlnum{13}\hlstd{,} \hlnum{15}\hlstd{),} \hlkwc{yc} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{=} \hlkwd{is.na}\hlstd{(yc),} \hlkwc{yes} \hlstd{= yt} \hlopt{-}
     \hlstd{true_tau,} \hlkwc{no} \hlstd{= yc),} \hlkwc{yt} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{=} \hlkwd{is.na}\hlstd{(yt),} \hlkwc{yes} \hlstd{= yc} \hlopt{+} \hlstd{true_tau,} \hlkwc{no} \hlstd{= yt))}
 
 \hlcom{## Other ways to get the true ATE if you knew the true individual level effects.}
@@ -231,35 +231,39 @@ Now let's imagine the \textit{true} unit-level treatment effect is some specific
 
 \hlstd{true_ate} \hlkwb{<-} \hlstd{news_df} \hlopt{%$%} \hlkwd{mean}\hlstd{(true_tau)}
 
-\hlkwd{kable}\hlstd{(news_df[,} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{3}\hlopt{:}\hlnum{4}\hlstd{,} \hlnum{8}\hlopt{:}\hlnum{9}\hlstd{)])}
+\hlstd{true_ate}
+\end{alltt}
+\begin{verbatim}
+[1] 9.75
+\end{verbatim}
+\begin{alltt}
+\hlkwd{kable}\hlstd{(news_df[,} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{3}\hlopt{:}\hlnum{4}\hlstd{,} \hlnum{8}\hlopt{:}\hlnum{9}\hlstd{,} \hlnum{7}\hlstd{)])}
 \end{alltt}
 \end{kframe}
-\begin{tabular}{l|r|r|r|r}
+\begin{tabular}{l|r|r|r|r|r}
 \hline
-city & y & z & yc & yt\\
+city & y & z & yc & yt & s\\
 \hline
-Saginaw & 16 & 0 & 16 & 22\\
+Saginaw & 16 & 0 & 16 & 22 & 1\\
 \hline
-Sioux City & 22 & 1 & 18 & 22\\
+Sioux City & 22 & 1 & 18 & 22 & 1\\
 \hline
-Battle Creek & 14 & 0 & 14 & 33\\
+Battle Creek & 14 & 0 & 14 & 33 & 2\\
 \hline
-Midland & 7 & 1 & -5 & 7\\
+Midland & 7 & 1 & 4 & 7 & 2\\
 \hline
-Oxford & 23 & 0 & 23 & 32\\
+Oxford & 23 & 0 & 23 & 32 & 3\\
 \hline
-Lowell & 27 & 1 & 18 & 27\\
+Lowell & 27 & 1 & 18 & 27 & 3\\
 \hline
-Yakima & 58 & 0 & 58 & 71\\
+Yakima & 58 & 0 & 58 & 71 & 4\\
 \hline
-Richland & 61 & 1 & 46 & 61\\
+Richland & 61 & 1 & 46 & 61 & 4\\
 \hline
 \end{tabular}
 
 
 \end{knitrout}
-
-We have an experiment that consists of complete random assignment within pairs. How many treatment assignment permutations are in the set $\Omega$? How many elements would there be in $\Omega$ if the experiment consisted of complete random assignment \textit{without} blocked pairs? What is the probability associated with each $\mathbf{Z} = \mathbf{z} \in \Omega$?
 
 I claim that the difference-in-means estimator and the stratified difference-in-means estimator are both good estimators. Name some criteria that people use to assess the quality of estimators . . .
 
@@ -305,7 +309,7 @@ In the code chunk below, we create a function that calculates $\widehat{ATE}$ on
 
 Describe in words what the function above is doing.
 
-Now we are repeatedly estimating the ATE under 1000 treatment assignment permutations in order to assess unbiasedness. What two quantities would we like to compare in order to assess whether the difference-in-means estimator is unbiased?
+Now we are repeatedly estimating the ATE under 1000 treatment assignment permutations in order to assess unbiasedness. Which two quantities would we like to compare in order to assess whether or not the difference-in-means estimator is unbiased?
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -313,16 +317,6 @@ Now we are repeatedly estimating the ATE under 1000 treatment assignment permuta
 \hlcom{## Set seed for simulations}
 \hlkwd{set.seed}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{)}
 
-\hlstd{obs_block_ate_hat} \hlkwb{<-} \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(y} \hlopt{~} \hlstd{z} \hlopt{+} \hlstd{s,} \hlkwc{data} \hlstd{= news_df))[[}\hlstr{"z"}\hlstd{]]}
-
-\hlstd{obs_ate_hat} \hlkwb{<-} \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(y} \hlopt{~} \hlstd{z,} \hlkwc{data} \hlstd{= news_df))[[}\hlstr{"z"}\hlstd{]]}
-
-\hlkwd{all.equal}\hlstd{(obs_block_ate_hat, obs_ate_hat)}
-\end{alltt}
-\begin{verbatim}
-[1] TRUE
-\end{verbatim}
-\begin{alltt}
 \hlcom{## If we use blocks}
 \hlstd{block_randomization_distribution} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{ate} \hlstd{=} \hlkwd{replicate}\hlstd{(}\hlnum{10}\hlopt{^}\hlnum{3}\hlstd{,} \hlkwd{treatment_permutations}\hlstd{(}\hlkwc{z} \hlstd{= news_df}\hlopt{$}\hlstd{z,}
     \hlkwc{yc} \hlstd{= news_df}\hlopt{$}\hlstd{yc,} \hlkwc{yt} \hlstd{= news_df}\hlopt{$}\hlstd{yt,} \hlkwc{s} \hlstd{= news_df}\hlopt{$}\hlstd{s)))}
@@ -330,8 +324,8 @@ Now we are repeatedly estimating the ATE under 1000 treatment assignment permuta
 \hlkwd{colMeans}\hlstd{(block_randomization_distribution)}
 \end{alltt}
 \begin{verbatim}
- ate 
-10.7 
+ate 
+9.6 
 \end{verbatim}
 \begin{alltt}
 \hlcom{## If we don't use blocks}
@@ -342,7 +336,7 @@ Now we are repeatedly estimating the ATE under 1000 treatment assignment permuta
 \end{alltt}
 \begin{verbatim}
  ate 
-10.6 
+9.53 
 \end{verbatim}
 \begin{alltt}
 \hlstd{block_randomization_distribution}\hlopt{$}\hlstd{type} \hlkwb{<-} \hlstr{"Stratified"}
@@ -352,10 +346,10 @@ Now we are repeatedly estimating the ATE under 1000 treatment assignment permuta
 \hlstd{randomization_dists} \hlkwb{<-} \hlkwd{as.data.frame}\hlstd{(}\hlkwd{rbind}\hlstd{(block_randomization_distribution, randomization_distribution))}
 
 \hlkwd{ggplot}\hlstd{(randomization_dists,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= ate,} \hlkwc{fill} \hlstd{= type))} \hlopt{+} \hlkwd{geom_histogram}\hlstd{(}\hlkwc{alpha} \hlstd{=} \hlnum{0.5}\hlstd{,} \hlkwd{aes}\hlstd{(),} \hlkwc{position} \hlstd{=} \hlstr{"identity"}\hlstd{)} \hlopt{+}
-    \hlkwd{xlab}\hlstd{(}\hlstr{"ATEs"}\hlstd{)} \hlopt{+} \hlkwd{ylab}\hlstd{(}\hlstr{"Count"}\hlstd{)} \hlopt{+} \hlkwd{ggtitle}\hlstd{(}\hlstr{"Randomization Distributions"}\hlstd{)} \hlopt{+} \hlkwd{scale_fill_discrete}\hlstd{(}\hlkwc{name} \hlstd{=} \hlstr{"Random Assignment"}\hlstd{)}
+    \hlkwd{xlab}\hlstd{(}\hlstr{"Estimated ATEs"}\hlstd{)} \hlopt{+} \hlkwd{ylab}\hlstd{(}\hlstr{"Count"}\hlstd{)} \hlopt{+} \hlkwd{ggtitle}\hlstd{(}\hlstr{"Randomization Distributions"}\hlstd{)} \hlopt{+} \hlkwd{scale_fill_discrete}\hlstd{(}\hlkwc{name} \hlstd{=} \hlstr{"Random \textbackslash{}nAssignment"}\hlstd{)}
 \end{alltt}
 \end{kframe}
-\includegraphics[width=1.2\textwidth]{figs/figunnamed-chunk-4-1} 
+\includegraphics[width=1\textwidth]{figs/figunnamed-chunk-4-1} 
 \begin{kframe}\begin{alltt}
 \hlcom{## If you want to add the observed ate hat + geom_vline(xintercept = obs_ate_hat, colour = 'black',}
 \hlcom{## linetype = 'longdash')}
@@ -363,19 +357,42 @@ Now we are repeatedly estimating the ATE under 1000 treatment assignment permuta
 \end{kframe}
 \end{knitrout}
 
-Notice that the randomization distributions look a little strange; that is,
-both randomization distributions are very different from the normal
-distribution to which we are accustomed. This is important. Nothing so far has invoked any claim about the shape of the randomization distribution, such as its normality if the finite population central limit theorem obtains
-\citep{hajek1960}. What matters (in terms of unbiasedness) is whether the mean of the randomization distribution---i.e., the mean of all the estimated
-difference in means---is equal to the true average treatment effect.\footnote{Notice that we do not have simulated results that are \emph{exactly}
-	equal to the truth. Why is that? What might we do to move them closer
-	to the truth? If I ran this simulation with one seed, and you ran it
-	with another seed, by how much would we expect our two averages to
-	differ?}
+Notice that the randomization distributions look a little strange; that is, both randomization distributions are very different from the normal distribution to which we are accustomed. This is important. Nothing so far has invoked any claim about the shape of the randomization distribution, such as its normality if the finite population central limit theorem obtains \citep{hajek1960}. What matters (in terms of unbiasedness) is whether the mean of the randomization distribution---i.e., the mean of all the estimated
+difference in means---is equal to the true average treatment effect.\footnote{Notice that we do not have simulated results that are \emph{exactly}	equal to the truth. Why is that? What might we do to move them closer to the truth? If I ran this simulation with one seed, and you ran it with another seed, by how much would we expect our two averages to	differ?}
 
 Is the variance of the randomization distribution tighter when treatment is assigned within blocks or when treatment is \textit{not} assigned within blocks? If so, why?
 
-Our \textit{single} estimated $\widehat{ATE}$ from the experiment is our ``best guess'' about the true ATE. But what do we mean by ``best guess''? And can one's ``best guess'' be misleading?
+Our \textit{single} $\widehat{ATE}$ from the experiment is our ``best guess'' about the true ATE. But what do we mean by ``best guess''? And can one's ``best guess'' be misleading?
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## Let's calculate out single observed test statistic that accounts for blocks}
+\hlstd{obs_block_ate_hat} \hlkwb{<-} \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(y} \hlopt{~} \hlstd{z} \hlopt{+} \hlstd{s,} \hlkwc{data} \hlstd{= news_df))[[}\hlstr{"z"}\hlstd{]]}
+
+\hlcom{## This is our SINGLE estimated ATE that we actually observe}
+\hlstd{obs_block_ate_hat}
+\end{alltt}
+\begin{verbatim}
+[1] 1.5
+\end{verbatim}
+\begin{alltt}
+\hlcom{## This is the expected value of the estimated ATE}
+\hlkwd{mean}\hlstd{(block_randomization_distribution}\hlopt{$}\hlstd{ate)}
+\end{alltt}
+\begin{verbatim}
+[1] 9.6
+\end{verbatim}
+\begin{alltt}
+\hlcom{## This is the true ATE (not estimated) that we are trying to estimate}
+\hlstd{true_ate}
+\end{alltt}
+\begin{verbatim}
+[1] 9.75
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
 
 How would you relate this \texttt{[R]} exercise to the analytic proof we did in class?
 
@@ -407,14 +424,33 @@ Now let's pretend that we have an experiment with a binary outcome:
 
 \hlstd{Y} \hlkwb{<-} \hlstd{experiment}\hlopt{$}\hlstd{Y}
 
-\hlstd{true_ate} \hlkwb{<-} \hlkwd{mean}\hlstd{(y1)} \hlopt{-} \hlkwd{mean}\hlstd{(y0)}
+\hlstd{true_ate_binary} \hlkwb{<-} \hlkwd{mean}\hlstd{(y1)} \hlopt{-} \hlkwd{mean}\hlstd{(y0)}
 
+\hlstd{true_ate_binary}
+\end{alltt}
+\begin{verbatim}
+[1] 0.125
+\end{verbatim}
+\begin{alltt}
+\hlcom{## Log odds}
 \hlstd{true_logit} \hlkwb{<-} \hlkwd{log}\hlstd{(}\hlkwd{mean}\hlstd{(y1)}\hlopt{/}\hlstd{(}\hlnum{1} \hlopt{-} \hlkwd{mean}\hlstd{(y1)))} \hlopt{-} \hlkwd{log}\hlstd{(}\hlkwd{mean}\hlstd{(y0)}\hlopt{/}\hlstd{(}\hlnum{1} \hlopt{-} \hlkwd{mean}\hlstd{(y0)))}
 
+\hlstd{true_logit}
+\end{alltt}
+\begin{verbatim}
+[1] 0.511
+\end{verbatim}
+\begin{alltt}
 \hlstd{est_ate} \hlkwb{<-} \hlkwd{mean}\hlstd{(Y[Z} \hlopt{==} \hlnum{1}\hlstd{])} \hlopt{-} \hlkwd{mean}\hlstd{(Y[Z} \hlopt{==} \hlnum{0}\hlstd{])}
 
 \hlstd{est_logit} \hlkwb{<-} \hlkwd{log}\hlstd{(}\hlkwd{mean}\hlstd{(Y[Z} \hlopt{==} \hlnum{1}\hlstd{])}\hlopt{/}\hlstd{(}\hlnum{1} \hlopt{-} \hlkwd{mean}\hlstd{(Y[Z} \hlopt{==} \hlnum{1}\hlstd{])))} \hlopt{-} \hlkwd{log}\hlstd{(}\hlkwd{mean}\hlstd{(Y[Z} \hlopt{==} \hlnum{0}\hlstd{])}\hlopt{/}\hlstd{(}\hlnum{1} \hlopt{-} \hlkwd{mean}\hlstd{(Y[Z} \hlopt{==} \hlnum{0}\hlstd{])))}
 
+\hlkwd{all.equal}\hlstd{(est_logit,} \hlkwd{coef}\hlstd{(}\hlkwd{glm}\hlstd{(Y} \hlopt{~} \hlstd{Z,} \hlkwc{family} \hlstd{=} \hlkwd{binomial}\hlstd{(}\hlkwc{link} \hlstd{=} \hlstr{"logit"}\hlstd{)))[[}\hlstr{"Z"}\hlstd{]])}
+\end{alltt}
+\begin{verbatim}
+[1] TRUE
+\end{verbatim}
+\begin{alltt}
 \hlstd{new_experiment} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{z}\hlstd{,} \hlkwc{y0}\hlstd{,} \hlkwc{y1}\hlstd{) \{}
 
     \hlstd{Z} \hlkwb{=} \hlkwd{sample}\hlstd{(z)}
@@ -452,6 +488,8 @@ In a code chunk below, plot both randomization distributions (of the estimated A
 
 \section{Application of Unbiased Inference to Matched Designs}
 
+\subsection{Make Your Own Matched Design}
+
 Please create a matched design with a matched design with the data from the
 \citet{cerdaetal2012} paper. We made one of our own, that we call, `fm1`, but
 you should make your own.
@@ -459,16 +497,28 @@ you should make your own.
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
+\hlcom{## This our data with the matched sets that you DON'T have access to}
 \hlkwd{load}\hlstd{(}\hlstr{"matched_data.Rdata"}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## To load the meddat data and then make your own matched design}
+\hlkwd{load}\hlstd{(}\hlkwd{url}\hlstd{(}\hlstr{"http://jakebowers.org/Matching/meddat.rda"}\hlstd{))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\subsection{Perform Outcome Analysis After Matching}
+
 Now let's think about how we can draw upon the principles above in order to actually do outcome analysis once we have a matched design.
 
 We want to perform outcome analysis (in this case to estimate average treatment effects) as if we have a \textit{block} randomized experiment in which the matched sets are the experiment's blocks. We therefore want to estimate an average treatment effect \textit{within} each block. But then we need some scheme to weight each block-specific $\widehat{ATE}$ to yield one overall $\widehat{ATE}$. There are three different weighting possibilities below.
 
-\subsection{Harmonic Mean Weighting}
+\subsubsection{Harmonic Mean Weighting}
 
 Let's first estimate the average treatment effect \textit{within} each block:
 
@@ -518,7 +568,7 @@ Now let's estimate an overall ATE using harmonic mean weights:
 
 What are some other weighting schemes one could use? Let's try two others.
 
-\subsection{Block-Size Weighting}
+\subsubsection{Block Size Weighting}
 
 Write a mathematical expression for the weights attached to each block-specific $\widehat{ATE}$ in which each block-specific $\widehat{ATE}$ is weighted by the total number of units in each block.
 
@@ -538,7 +588,7 @@ Now let's implement this estimation strategy in \texttt{[R]}:
 \end{kframe}
 \end{knitrout}
 
-\subsection{ETT Weighting}
+\subsubsection{ETT Weighting}
 
 Let's try one final weighting scheme (although there are surely many other possibilities.) Let's weight each block-specific $\widehat{ATE}$ by the number of \textit{treated} units within that block. 
 
@@ -562,7 +612,56 @@ Notice that thus far we have not talked about standard errors, confidence interv
 
 How would you describe difference between \textit{estimation} and \textit{testing}?
 
+\section{Agenda for Tomorrow}
+
 Tomorrow we will discuss standard errors and \textit{testing} hypotheses about causal effects.
+
+\section{Recommended Readings}
+
+\subsection{Readings on Weighting Schemes}
+
+\subsubsection{Harmonic Mean Weighting}
+
+\begin{itemize}
+
+\item \citet[Section 9.3.3]{hansen2011}
+
+\item \citet[Section 2.1]{hansenbowers2008}
+
+\end{itemize}
+
+\subsubsection{Block-Size Weights}
+
+\begin{itemize}
+
+\item \citet[Section 3.6.1]{gerbergreen2012}
+
+\end{itemize}
+
+\subsubsection{ATT Weighting}
+
+\begin{itemize}
+
+\item
+	\url{http://egap.org/methods-guides/10-types-treatment-effect-you-should-know-about}
+
+\end{itemize}
+
+\subsection{Readings on Standard Errors for Tomorrow's Class}
+
+\begin{itemize}
+
+\item \citet[Chapter 3]{gerbergreen2012}
+
+\item \citet[Chapter 6]{dunning2012}
+
+\item \citet[Chapter 33, footnote 11]{fpp2007}
+
+\item \citet{lin2013}
+
+\item \citet{aronowetal2014}
+
+\end{itemize}
 
 \newpage
 
