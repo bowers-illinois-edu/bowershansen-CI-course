@@ -10,7 +10,7 @@ We didn't really talk about debates about balance testing.
 
 One more day of practice with the tools of multivariate matching. Again, I
 provide some code in order to raise questions, but you should feel free to just
-match on, say, a mahalnobis distance matrix, maybe without ranks, or just
+match on, say, a Mahalanobis distance matrix, maybe without ranks, or just
 propensity scores, or just baseline homicides, or something else. The idea is
 to get comfortable with reasoning about making matched designs.
 
@@ -22,5 +22,3 @@ much fiddling around?")
 
 We get into estimating average causal effects after you have a matched design
 that you are happy to use in an "as-if random" fashion.
-
-
