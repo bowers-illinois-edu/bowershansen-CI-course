@@ -56,6 +56,8 @@
 \usepackage{natbib}
 \usepackage{booktabs}          % package for thick lines in tables
 \usepackage{amsfonts,amsthm,amsmath,amssymb}          % AMS Stuff
+\usepackage[linewidth=1pt]{mdframed}
+\usepackage{mdframed}
 \usepackage{empheq}            % To use left brace on {align} environment
 \usepackage{graphicx}          % Insert .pdf, .eps or .png
 \usepackage{enumitem}          % http://ctan.org/pkg/enumitem
@@ -218,7 +220,14 @@ Richland & 61 & 1 & NA & 61 & 4\\
 
 \end{knitrout}
 
-Now let's imagine the \textit{true} unit-level treatment effect is some specific positive natural number that differs for almost every unit. What do we mean by ``\textit{true} unit-level treatment effect'' as opposed to a unit-level treatment effect that we hypothesize and subsequently assume to be true in order to assess evidence in favor of or against that hypothesis?
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Now let's imagine the \textit{true} unit-level treatment effect is some specific positive natural number that differs for almost every unit. What do we mean by ``\textit{true} unit-level treatment effect'' as opposed to a unit-level treatment effect that we hypothesize and subsequently assume to be true in order to assess evidence in favor of or against that hypothesis?
+\end{itemize}
+\end{mdframed}
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -265,7 +274,14 @@ Richland & 61 & 1 & 46 & 61 & 4\\
 
 \end{knitrout}
 
-I claim that the difference-in-means estimator and the stratified difference-in-means estimator are both good estimators. Name some criteria that people use to assess the quality of estimators . . .
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item I claim that the difference-in-means estimator and the stratified difference-in-means estimator are both good estimators. Name some criteria that people use to assess the quality of estimators . . .
+\end{itemize}
+\end{mdframed}
 
 In the code chunk below, we create a function that calculates $\widehat{ATE}$ on the outcomes we observe under different treatment assignment permutations.
 
@@ -307,9 +323,25 @@ In the code chunk below, we create a function that calculates $\widehat{ATE}$ on
 \end{kframe}
 \end{knitrout}
 
-Describe in words what the function above is doing.
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Describe in words what the function above is doing.
+\end{itemize}
+\end{mdframed}
 
-Now we are repeatedly estimating the ATE under 1000 treatment assignment permutations in order to assess unbiasedness. Which two quantities would we like to compare in order to assess whether or not the difference-in-means estimator is unbiased?
+Now we are repeatedly estimating the ATE under 1000 treatment assignment permutations in order to assess unbiasedness. 
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Which two quantities would we like to compare in order to assess whether or not the difference-in-means estimator is unbiased?
+\end{itemize}
+\end{mdframed}
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -360,9 +392,15 @@ ate
 Notice that the randomization distributions look a little strange; that is, both randomization distributions are very different from the normal distribution to which we are accustomed. This is important. Nothing so far has invoked any claim about the shape of the randomization distribution, such as its normality if the finite population central limit theorem obtains \citep{hajek1960}. What matters (in terms of unbiasedness) is whether the mean of the randomization distribution---i.e., the mean of all the estimated
 difference in means---is equal to the true average treatment effect.\footnote{Notice that we do not have simulated results that are \emph{exactly}	equal to the truth. Why is that? What might we do to move them closer to the truth? If I ran this simulation with one seed, and you ran it with another seed, by how much would we expect our two averages to	differ?}
 
-Is the variance of the randomization distribution tighter when treatment is assigned within blocks or when treatment is \textit{not} assigned within blocks? If so, why?
-
-Our \textit{single} $\widehat{ATE}$ from the experiment is our ``best guess'' about the true ATE. But what do we mean by ``best guess''? And can one's ``best guess'' be misleading?
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Questions for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Is the variance of the randomization distribution tighter when treatment is assigned within blocks or when treatment is \textit{not} assigned within blocks? If so, why?
+\item Our \textit{single} $\widehat{ATE}$ from the experiment is our ``best guess'' about the true ATE. But what do we mean by ``best guess''? And can one's ``best guess'' be misleading?
+\end{itemize}
+\end{mdframed}
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -394,7 +432,14 @@ Our \textit{single} $\widehat{ATE}$ from the experiment is our ``best guess'' ab
 \end{knitrout}
 
 
-How would you relate this \texttt{[R]} exercise to the analytic proof we did in class?
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item How would you relate this \texttt{[R]} exercise to the analytic proof we did in class?
+\end{itemize}
+\end{mdframed}
 
 \section{Binary Outcomes}
 
@@ -478,11 +523,25 @@ Now let's pretend that we have an experiment with a binary outcome:
 \end{kframe}
 \end{knitrout}
 
-Is the difference-in-means estimator still unbiased (give or take some simulation error) when potential outcomes are binary? Is the coefficient from a logistic regression model unbiased? To which quantities (defined as \texttt{[R]} objects above) are we comparing the means of the two respective randomization distributions in order to assess unbiasedness?
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Questions for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Is the difference-in-means estimator still unbiased (give or take some simulation error) when potential outcomes are binary? Is the coefficient from a logistic regression model unbiased?
+\item To which quantities (defined as \texttt{[R]} objects above) are we comparing the means of the two respective randomization distributions in order to assess unbiasedness?
+\item How does the randomization distribution above differ from the \textit{null} randomization distribution?
+\end{itemize}
+\end{mdframed}
 
-How does the randomization distribution above differ from the \textit{null} randomization distribution?
-
-In a code chunk below, plot both randomization distributions (of the estimated ATEs and estimated logit coefficients) in \texttt{[R]}:
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Exercise for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item In a code chunk below, plot both randomization distributions (of the estimated ATEs and estimated logit coefficients) in \texttt{[R]}:
+\end{itemize}
+\end{mdframed}
 
 
 
@@ -490,9 +549,16 @@ In a code chunk below, plot both randomization distributions (of the estimated A
 
 \subsection{Make Your Own Matched Design}
 
-Please create a matched design with a matched design with the data from the
-\citet{cerdaetal2012} paper. We made one of our own, that we call, `fm1`, but
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Exercise for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Please create a matched design with a matched design with the data from the
+\citet{cerdaetal2012} paper. We made one of our own, that we call, `fm1,' but
 you should make your own.
+\end{itemize}
+\end{mdframed}
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -540,11 +606,26 @@ Let's first estimate the average treatment effect \textit{within} each block:
 \end{kframe}
 \end{knitrout}
 
-Describe what the output above is giving us . . .
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Describe what the output above is giving us . . .
+\end{itemize}
+\end{mdframed}
 
 Now let's calculate an overall $\widehat{ATE}$ that uses harmonic mean weighting. Harmonic mean weighting weights each block by $\frac{ \frac{2}{n_{st}^{-1} + n_{sc}^{-1}} }{\sum \limits_{s = 1}^{S} \frac{2}{n_{st}^{-1} + n_{sc}^{-1}} }$. 
 
-Why is there a $2$ in the numerator? Pick a block with more than $2$ units and calculate its ``effective sample size'' by hand using the appropriate formula---i.e., $\frac{2}{n_{ts}^{-1} + n_{cs}^{-1}}$.
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question and Exercise for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Why is there a $2$ in the numerator? 
+\item Pick a block with more than $2$ units and calculate its ``effective sample size'' by hand using the appropriate formula---i.e., $\frac{2}{n_{ts}^{-1} + n_{cs}^{-1}}$.
+\end{itemize}
+\end{mdframed}
 
 Now let's estimate an overall ATE using harmonic mean weights:
 
@@ -570,9 +651,14 @@ What are some other weighting schemes one could use? Let's try two others.
 
 \subsubsection{Block Size Weighting}
 
-Write a mathematical expression for the weights attached to each block-specific $\widehat{ATE}$ in which each block-specific $\widehat{ATE}$ is weighted by the total number of units in each block.
-
-$\dots$
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Exercise for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Write a mathematical expression for the weights attached to each block-specific $\widehat{ATE}$ in which each block-specific $\widehat{ATE}$ is weighted by the total number of units in each block.
+\end{itemize}
+\end{mdframed}
 
 Now let's implement this estimation strategy in \texttt{[R]}:
 
@@ -606,11 +692,15 @@ That is, the weights associated with each block-specific $\widehat{ATE}$ are: $W
 \end{kframe}
 \end{knitrout}
 
-Now, compare all the overall estimates of the ATE from the $3$ different weighting schemes. Are they all similar?
-
-Notice that thus far we have not talked about standard errors, confidence intervals, or hypothesis testing. We have focused on only \textit{estimating} causal effects. 
-
-How would you describe difference between \textit{estimation} and \textit{testing}?
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Questions for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Now, compare all the overall estimates of the ATE from the $3$ different weighting schemes. Are they all similar?
+\item Notice that thus far we have not talked about standard errors, confidence intervals, or hypothesis testing. We have focused on only \textit{estimating} causal effects. How would you describe difference between \textit{estimation} and \textit{testing}?
+\end{itemize}
+\end{mdframed}
 
 \section{Agenda for Tomorrow}
 
