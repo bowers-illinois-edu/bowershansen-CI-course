@@ -1,0 +1,502 @@
+\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
+\documentclass[12pt,leqno]{article}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb}          % AMS Stuff
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{afterpage}% http://ctan.org/pkg/afterpage
+\usepackage[T1]{fontenc}
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfig}
+\usepackage{titling}            % modify maketitle in latex
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage{verbatim}
+\usepackage{geometry}
+\usepackage{bigfoot}
+\usepackage[format=hang,
+            font={small},
+            labelfont=bf,
+            textfont=rm]{caption}
+
+\geometry{verbose,margin=2cm,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=page,
+            colorlinks=true,
+            hyperfootnotes=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1},
+            citecolor=blue!70!black,
+            linkcolor=red!70!black,
+            urlcolor=green!70!black]{hyperref}
+\usepackage{hypernat}
+
+\usepackage{multirow}
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+
+\parskip=12pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{12pt} %Aboveskip
+{12pt} %Below skip
+{\itshape} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+% \DeclareMathOperator{\Pr}{\rm{Pr}}
+
+% COLORS FOR GRAPHICS (3-class Set1)
+\definecolor{Blue}{RGB}{55,126,184}
+\definecolor{Red}{RGB}{228,26,28}
+\definecolor{Green}{RGB}{77,175,74}
+
+% COLORS FOR EQUATIONS (3-class Dark2)
+\definecolor{eqgreen}{RGB}{27,158,119}
+\definecolor{eqblue}{RGB}{117,112,179}
+\definecolor{eqred}{RGB}{217,95,2}
+
+
+\title{Estimation of Causal Effects}
+\author{Jake Bowers, Ben Hansen \& Tom Leavitt}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+<< setup, include = FALSE, eval = TRUE >>=
+
+if (!require("pacman")) install.packages("pacman")
+
+pacman::p_load(
+  plyr, # data wrangling
+  dplyr, # data manipulation
+  magrittr, # pipes
+  tidyr, # gather and other data reshaping
+  haven, # read_dta, _sas, _sav files
+  broom, # tidy() and glance()
+  randomizr, # performs different random assignments
+  lmtest,
+  ggplot2,
+  knitr,
+  xtable,
+  devtools, # sourcing and working with github repos
+  optmatch,
+  RItools
+)
+
+opts_chunk$set(message=FALSE,
+               warning=FALSE,
+               size = "footnotesize")
+
+@
+
+\newpage
+
+\section{Estimation of Mean Unit-Level Causal Effects}
+
+<< >>=
+
+## Load data
+news_df <- read.csv("http://jakebowers.org/PS531Data/news.df.csv")
+
+## Create potential outcomes
+news_df %<>% rename(y = r) %>%
+  mutate(yc = ifelse(test = z == 0,
+                     yes = y,
+                     no = NA),
+         yt = ifelse(test = z == 1,
+                     yes = y,
+                     no = NA))
+
+kable(news_df[, c(1, 3:4, 8:9)])
+
+@
+
+Now let's imagine the \textit{true} unit-level treatment effect is some specific positive natural number that differs for almost every unit. What do we mean by ``\textit{true} unit-level treatment effect'' as opposed to a unit-level treatment effect that we hypothesize and subsequently assume to be true?
+
+<< >>=
+
+news_df %<>% mutate(true_tau = c(6, 4, 19, 12, 9, 9, 13, 15),
+                    yc = ifelse(test = is.na(yc),
+                                yes = yt - true_tau,
+                                no = yc),
+                    yt = ifelse(test = is.na(yt),
+                                yes = yc + true_tau, 
+                                no = yt))
+
+true_ate <- news_df %$% mean(true_tau)
+
+kable(news_df[, c(1, 3:4, 8:9)])
+
+@
+
+We have an experiment that consists of complete random assignment within pairs. How many treatment assignment permutations are in the set $\Omega$? How many elements would there be in $\Omega$ if the experiment consisted of complete random assignment \textit{without} blocked pairs? What is the probability associated with each $\mathbf{Z} = \mathbf{z} \in \Omega$? 
+
+<< >>=
+
+treatment_permutations <- function(z, yc, yt, s){
+  
+    if(missing(s)){
+      
+      ## Permute treatment assignment
+      ## Student Question: What is the difference between Z and z? Why is one uppercase and the other lower?
+      Z = sample(z)
+      
+      Y = Z * yt + (1 - Z) * yc
+      
+      ## Calculate unstratified test statistic
+      ate_hat_unstrat = coef(lm(Y ~ Z))[["Z"]]
+      
+      return(ate_hat_unstrat)
+      
+    }
+  
+  else {
+    
+    ## Permute treatment assignment WITHIN blocks
+    Z = unsplit(lapply(split(x = z, f = s), sample), s)
+    
+    Y = Z * yt + (1 - Z) * yc
+    
+    ## Calculate stratified test-statistic
+    ate_hat_strat = coef(lm(Y ~ Z + s))[["Z"]]
+    
+    return(ate_hat_strat)
+  }
+  
+  }
+
+@
+
+Describe in words what the function above is doing.
+
+<< >>=
+
+## Set seed for simulations
+set.seed(1:5)
+
+obs_block_ate_hat <- coef(lm(y ~ z + s, data = news_df))[["z"]]
+
+obs_ate_hat <- coef(lm(y ~ z, data = news_df))[["z"]]
+
+all.equal(obs_block_ate_hat, obs_ate_hat)
+
+## If we use blocks
+block_randomization_distribution <- data.frame(ate = replicate(10^3,
+                                                               treatment_permutations(z = news_df$z,
+                                                                                      yc = news_df$yc,
+                                                                                      yt = news_df$yt,
+                                                                                      s = news_df$s)))
+
+colMeans(block_randomization_distribution)
+
+## If we don't use blocks
+randomization_distribution <- data.frame(ate = replicate(10^3,
+                                                         treatment_permutations(z = news_df$z,
+                                                                                yc = news_df$yc,
+                                                                                yt = news_df$yt)))
+
+colMeans(randomization_distribution)
+
+block_randomization_distribution$type <- 'Stratified'
+
+randomization_distribution$type <- 'Unstratified'
+
+randomization_dists <- as.data.frame(rbind(block_randomization_distribution, randomization_distribution))
+
+ggplot(randomization_dists, aes(x = ate, fill = type)) + 
+  geom_histogram(alpha = 0.5, aes(), position = 'identity') +
+  xlab("ATEs") +
+  ylab("Count") +
+  ggtitle("Randomization Distributions") +
+  scale_fill_discrete(name = "Random Assignment") 
+
+## If you want to add the observed ate hat
+# +  geom_vline(xintercept = obs_ate_hat, colour = "black", linetype = "longdash")
+
+@
+
+Notice that the randomization distributions looks a little strange; that is, both randomization distributions are very different from the normal distribution to which we are accustomed. This is important. Nothing so far has invoked any claim about the shape of the randomization distribution, such as its normality if the finite population central limit theorem obtains \citep{hajek1960}. What matters (in terms of unbiasedness) is whether the mean of the randomization distribution---i.e., the mean of all the estimated difference in means---is equal to the true average treatment effect.
+
+Is the variance of the randomization distribution tighter when treatment is assigned within blocks or when treatment is \textit{not} assigned within blocks?
+
+Our \textit{single} estimated $\widehat{ATE}$ from the experiment is our ``best guess'' about the true ATE. But what do we mean by ``best guess''? And can one's ``best guess'' be misleading?
+
+How would you relate this \texttt{[R]} exercise to the analytic proof we did in class?
+
+\section{Binary Outcomes}
+
+Now let's pretend that we have an experiment with a binary outcome:
+
+\citet{freedman2008b} famously argues that ``randomization does not justify logistic regression." Let's recall that the coefficient of a logistic regression model is the difference in potential log odds.
+
+<< >>=
+
+experiment <- data.frame(unit = seq(from = 1, to = 8, by = 1))
+
+experiment %<>% mutate(Z = complete_ra(N = length(unit))) %>%
+  arrange(desc(Z))
+
+experiment %<>% mutate(y1 = c(1, 1, 0, 1, 1, 0, 0, 1),
+                       y0 = c(1, 1, 0, 1, 0, 0, 1, 0),
+                       Y = Z * y1 + (1 - Z) * y0)
+
+N <- length(experiment$Z)
+
+Z <- experiment$Z
+
+m <- sum(experiment$Z == 1)
+
+y1 <- experiment$y1
+
+y0 <- experiment$y0
+
+Y <- experiment$Y
+
+true_ate <- mean(y1) - mean(y0)
+
+true_logit <- log(mean(y1)/(1 - mean(y1))) - log(mean(y0)/(1 - mean(y0)))
+
+est_ate <- mean(Y[Z == 1]) - mean(Y[Z == 0])
+
+est_logit <- log(mean(Y[Z == 1])/(1 - mean(Y[Z == 1]))) - 
+  log(mean(Y[Z == 0])/(1 - mean(Y[Z == 0])))
+
+new_experiment <- function(z, y0, y1){
+  
+  Z = sample(z)
+  
+  Y = Z * y1 + (1 - Z) * y0
+  
+  est_ate = coef(lm(Y ~ Z))[["Z"]]
+  
+  est_logit = coef(glm(Y ~ Z,
+                  family = binomial(link = "logit")))[["Z"]]
+  
+  return(c(est_ate, est_logit))
+}
+
+set.seed(1:5)
+
+randomization_dists <- data.frame(t(replicate(10^3, new_experiment(z = Z,
+                                                           y0 = y0,
+                                                           y1 = y1)))) %>% 
+  rename(est_ates = X1,
+         est_logits = X2)
+
+colMeans(randomization_dists)
+
+@
+
+Is the difference-in-means estimator still unbiased (give or take some simulation error) when potential outcomes are binary? Is the coefficient from a logistic regression model unbiased? To which quantities (defined as \texttt{[R]} objects above) are we comparing the means of the two respective randomization distributions in order to assess unbiasedness?
+
+How does the randomization distribution above differ from the \textit{null} randomization distribution?
+
+In a code chunk below, plot both randomization distributions (of the estimated ATEs and estimated logit coefficients) in \texttt{[R]}:
+
+<< >>=
+
+
+
+
+
+
+@
+
+\section{Application of Unbiased Inference to Matched Designs}
+
+Lets's load a matched design that we created with the data from the \citet{cerdaetal2012} paper.
+
+<<>>=
+
+rm(list=ls())
+
+load(url("http://jakebowers.org/Matching/meddat.rda"))
+
+meddat <- transform(meddat, HomRate03=(HomCount2003/Pop2003)*1000)
+meddat <- transform(meddat, HomRate08=(HomCount2008/Pop2008)*1000)
+
+## Scalar distance on baseline outcome
+tmp <- meddat$HomRate03
+names(tmp) <- rownames(meddat)
+absDist <- match_on(tmp, z = meddat$nhTrt)
+
+balfmla <- reformulate(c(names(meddat)[c(6:7,9:24)],"HomRate03"),response="nhTrt")
+
+library(brglm)
+brglm1 <- brglm(balfmla,data=meddat,family=binomial)
+pScore2 <- predict(brglm1)
+meddat$pScore2 <- pScore2
+psDist2 <- match_on(nhTrt~pScore2,data=meddat)
+
+
+mahalDist <- match_on(balfmla,data=meddat,method="rank_mahalanobis")
+
+fm3 <- fullmatch(psDist2+caliper(psDist2,4)
+	       +caliper(absDist,2)
+	       +caliper(mahalDist,40),data=meddat,tol=.00001,min.controls=1)
+
+summary(fm3)
+
+meddat[names(fm3),"fm3"] <- fm3
+
+meddat %<>% filter(!is.na(fm3)) %>% arrange(desc(fm3)) %>% mutate(fm3 = as.numeric(fm3))
+
+@
+
+\subsection{Harmonic Mean Weighting}
+
+<<>>=
+
+obs_ate <- coef(lm(HomRate08 ~ nhTrt + as.factor(fm3), data = meddat))[["nhTrt"]]
+
+blocks <- unique(meddat$fm3)
+
+ATE_by_block <- sapply(blocks, function(x) {
+    coef(lm(HomRate08 ~ nhTrt, data = meddat, subset = fm3 == x))[["nhTrt"]]
+})
+
+num_treated <- meddat %$% {sapply(split(nhTrt, fm3), sum)}
+num_control <- meddat %$% {sapply(split(1 - nhTrt, fm3), sum)}
+
+harm_mean <- 2/(1/num_treated + 1/num_control)
+
+ATE <- sum(ATE_by_block * (harm_mean/sum(harm_mean)))
+
+@
+
+
+\subsection{Block-Size Weighting}
+
+<<>>=
+
+ATE_by_block <- sapply(blocks, function(x) {
+    coef(lm(HomRate08 ~ nhTrt, data = meddat, subset = fm3 == x))[["nhTrt"]]
+})
+
+num_units_per_block <- sapply(blocks, function(x){
+  length(meddat$nhTrt[meddat$fm3 == x])
+})
+
+overall_est_ATE <- sum(ATE_by_block * (num_units_per_block/nrow(meddat)))
+
+block_size_ATE_weighting <- function(z, Y, s){
+  
+  # Permute treatment assignment
+  Z <- unsplit(lapply(split(z, s), sample), s)
+    
+  # Average Treatment Effect mean(Y[Z_New == 1]) - mean(Y[Z_New == 0])
+  # ATE <- coef(lm(Y ~ Z_New + B))[["Z_New"]]
+  W_ATE <- 0
+  
+  for (i in unique(s)) {
+    W_ATE <- W_ATE + (sum(s == i)/length(s)) * 
+      coef(lm(Y ~ Z, subset = (s == i)))[2]
+    }
+  
+  return(W_ATE)
+  }
+
+null_dist_block_size_weighting <- data.frame(replicate(10^3,
+                                            block_size_ATE_weighting(z = meddat$nhTrt,
+                                                                     Y =  meddat$HomRate08,
+                                                                     s = meddat$fm3)))
+
+p_value <- mean(abs(overall_est_ATE) >= abs(null_dist_block_size_weighting))
+
+@
+
+\subsection{ETT Weighting}
+
+<<>>=
+
+ett_ATE_weighting <- function(z, Y, s){
+  
+  # Permute treatment assignment
+  Z <- unsplit(lapply(split(z, s), sample), s)
+    
+  ett_ATE <- 0
+  
+  for (i in unique(s)) {
+    ett_ATE <- ett_ATE + (sum(s == i[Z == 1])/length(s[Z == 1])) * 
+      coef(lm(Y ~ Z, subset = (s == i)))[2]
+    }
+  
+  return(ett_ATE)
+  }
+
+@
+
+
+\newpage
+
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{master_bibliography}   % name your BibTeX data base
+\end{singlespace}
+
+\newpage
+
+\end{document}
