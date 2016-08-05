@@ -150,9 +150,22 @@ pacman::p_load(
   lmtest
 )
 
-opts_chunk$set(message=FALSE,
-               warning=FALSE,
-               size = "footnotesize")
+opts_chunk$set(tidy = TRUE,
+               echo = TRUE,
+               results = 'markup',
+               strip.white = TRUE,
+               fig.path = 'figs/fig',
+               cache = FALSE,
+               highlight = TRUE,
+               width.cutoff = 100,
+               size = 'footnotesize',
+               out.width = '1\\textwidth',
+               message = FALSE,
+               warning = FALSE,
+               comment = NA)
+
+options(width = 100,
+        digits = 3)
 
 @
 
@@ -177,7 +190,6 @@ you should make your own.
 
 ## This our data with the matched sets that you DON'T have access to
 load("matched_data.Rdata")
-
 @
 
 << eval = FALSE >>=
@@ -191,7 +203,15 @@ load(url("http://jakebowers.org/Matching/meddat.rda"))
 
 Now let's think about how we can draw upon the principles above in order to actually do outcome analysis once we have a matched design.
 
-We want to perform outcome analysis (in this case to estimate average treatment effects) as if we have a \textit{block} randomized experiment in which the matched sets are the experiment's blocks. We therefore want to estimate an average treatment effect \textit{within} each block. But then we need some scheme to weight each block-specific $\widehat{ATE}$ to yield one overall $\widehat{ATE}$. There are three different weighting possibilities below.
+We want to perform outcome analysis (in this case to estimate average
+treatment effects) as if we have a \textit{block} randomized experiment in
+which the matched sets are the experiment's blocks. In a block randomized
+experiment, we imagine that each block is its own mini-experiment because the
+probability of assignment within one block does not depend on the probability
+of assignment in another block. We therefore want to estimate an average
+treatment effect \textit{within} each block. But then we need some scheme to
+weight each block-specific $\widehat{ATE}$ to yield one overall
+$\widehat{ATE}$. There are three different weighting possibilities below.
 
 \subsubsection{Harmonic Mean Weighting}
 
@@ -199,13 +219,24 @@ Let's first estimate the average treatment effect \textit{within} each block:
 
 << >>=
 
-blocks <- unique(meddat$fm1)
+blocks <- unique(meddat$fm1[!is.na(meddat$fm1)])
 
 ATE_hat_by_block <- sapply(blocks, function(x) {
-    coef(lm(HomRate08 ~ nhTrt, data = meddat, subset = fm1 == x))[["nhTrt"]]
+    coef(lm(HomRate08 ~ nhTrt, data = meddat, subset =
+	    !is.na(fm1) & fm1 == x))[["nhTrt"]]
 })
 
+names(ATE_hat_by_block)<-blocks
 ATE_hat_by_block
+
+## Alternatively:
+
+mean.diff<-function(y,z){ mean(y[z==1])-mean(y[z==0]) }
+
+ATEb2<-sapply(split(meddat[!is.na(meddat$fm1),],meddat$fm1[!is.na(meddat$fm1)]),function(dat){
+	       with(dat,mean.diff(y=HomRate08,z=nhTrt))})
+
+
 
 @
 
@@ -234,14 +265,32 @@ Now let's estimate an overall ATE using harmonic mean weights:
 
 << >>=
 
-num_treated <- meddat %$% {sapply(split(nhTrt, fm1), sum)}
+wrkdat <- meddat[!is.na(meddat$fm1),]
 
-num_control <- meddat %$% {sapply(split(1 - nhTrt, fm1), sum)}
+num_treated <- wrkdat %$% {sapply(split(nhTrt, fm1), sum)}
+
+num_control <- wrkdat %$% {sapply(split(1 - nhTrt, fm1), sum)}
 
 harm_mean <- 2/(1/num_treated + 1/num_control)
 
 obs_overall_ate_hat_hm <- sum(ATE_hat_by_block * (harm_mean/sum(harm_mean)))
 
+## These next three all also use harmonic mean weights, so we may have a small
+## typo somewhere to track down.
+lm2a<-lm(HomRate08~nhTrt+fm1,data=wrkdat,subset=!is.na(fm1))
+##coef(lm2a)[2]
+
+align.by.block<-function (x, set, fn = mean) {
+  unsplit(lapply(split(x, set), function(x) { x - fn(x) }), set)
+}
+
+wrkdat$HomRate08md<-with(wrkdat,align.by.block(HomRate08,fm1))
+wrkdat$nhTrtmd<-with(wrkdat,align.by.block(nhTrt,fm1))
+
+lm2<-lm(HomRate08md~nhTrtmd,data=wrkdat)
+##coef(lm2)[2]
+xb1<-xBalance(nhTrt~HomRate08,strata=list(fm1=~fm1),data=wrkdat,report="adj.mean.diffs")
+## xb1
 @
 
 What are some other weighting schemes one could use? Let's try two others.
@@ -262,10 +311,11 @@ Now let's implement this estimation strategy in \texttt{[R]}:
 <<>>=
 
 num_units_per_block <- sapply(blocks, function(x){
-  length(meddat$nhTrt[meddat$fm1 == x])
+  length(wrkdat$nhTrt[wrkdat$fm1 == x])
 })
+## alternate code: num_units_per_block <- table(wrkdat$fm1)
 
-obs_overall_ate_hat_bs <- sum(ATE_hat_by_block * (num_units_per_block/nrow(meddat)))
+obs_overall_ate_hat_bs <- sum(ATE_hat_by_block * (num_units_per_block/nrow(wrkdat)))
 
 @
 
@@ -278,10 +328,10 @@ That is, the weights associated with each block-specific $\widehat{ATE}$ are: $W
 <<>>=
 
 num_treated_units_per_block <- sapply(blocks, function(x){
-  sum(meddat$nhTrt[meddat$fm1 == x])
+  sum(wrkdat$nhTrt[wrkdat$fm1 == x])
 })
 
-obs_overall_ate_hat_ett <- sum(ATE_hat_by_block * (num_treated_units_per_block/sum(meddat$nhTrt)))
+obs_overall_ate_hat_ett <- sum(ATE_hat_by_block * (num_treated_units_per_block/sum(wrkdat$nhTrt)))
 
 @
 
@@ -323,21 +373,28 @@ where $\sigma_{y_c}^2 = \frac{\sum_{i = 1}^{n} (y_i - \bar{y})^2}{n - 1}$.
 
 Since $\sigma_{(\bar{y}_t - \bar{y}_c)}^2 = \sigma_{y_t}^2 + \sigma_{y_c}^2$, let's add equations \eqref{eq: Sample Var Treated} and \eqref{eq: Sample Var Untreated} together:
 
-\begin{center}
-\begin{align*}
-Var(\bar{y}_t - \bar{y}_c) & = \text{Var}\left(n_t^{-1} Z^{\prime} y_t \right) + \text{Var}\left(n_c^{-1} (1 - Z^{\prime}) y_c \right) \\
-\\
-& = \frac{n - n_t}{n - 1} \frac{\sigma_{y_t}^2}{n_t} + \frac{n - n_c}{n - 1} \frac{\sigma_{y_c}^2}{n_c} \\
-\\
-& = \frac{n - n_t}{n - 1} \frac{\sigma_{y_t}^2}{n_t} + \frac{n_t}{n - 1} \frac{\sigma_{y_c}^2}{n - n_t} \\
-\end{align*}
 
 By the \textit{variance sum law} we know that $\Var(X \pm Y) = \Var(X) + \Var(Y) \pm 2 \Cov(X,Y)$. Thus, 
 
+\begin{center}
 \begin{align*}
 \Cov (\bar{y}_t, \bar{y}_c) & = \Cov \left( \frac{\sum_{i = 1}^{n - n_t} y_{ci}}{n - n_t}, \frac{\sum_{j = 1}^{n_t} y_{tj}}{n_t} \right) \\
 & = \frac{1}{n_t (n - n_t)} \Cov \left(\sum \limits_{i = 1}^{n - n_t} y_{ci}, \sum \limits_{j = 1}^{n_t} y_{tj} \right) \\
 & = \frac{1}{n_t (n - n_t)} \sum \limits_{i = 1}^{n - n_t} \sum \limits_{j = 1}^{n_t} \Cov (y_{ci}, y_{ti}).
+\end{align*}
+\end{center}
+
+
+
+\begin{center}
+\begin{align*}
+Var(\bar{y}_t - \bar{y}_c) & = \text{Var}\left(n_t^{-1} Z^{\prime} y_t \right)
++ \text{Var}\left(n_c^{-1} (1 - Z^{\prime}) y_c \right) + 2 Cov(\bar{y}_t,
+\bar{y}_c))\\
+\\
+& = \frac{n - n_t}{n - 1} \frac{\sigma_{y_t}^2}{n_t} + \frac{n - n_c}{n - 1} \frac{\sigma_{y_c}^2}{n_c} \\
+\\
+& = \frac{n - n_t}{n - 1} \frac{\sigma_{y_t}^2}{n_t} + \frac{n_t}{n - 1} \frac{\sigma_{y_c}^2}{n - n_t} \\
 \end{align*}
 \end{center}
 
@@ -450,7 +507,7 @@ sample_var <- function(z, yc, yt){
 
 Now let's iterate this function $10000$ times in order to simulate the respective $\hat{\sigma}_{y_c}$ and $\hat{\sigma}_{y_t}$ values one would obtain if he or she were to perform the experiment an infinite number of times.
 
-<< >>=
+<<unbiasedSEs,cache=TRUE>>=
 
 set.seed(1:5)
 
@@ -475,7 +532,7 @@ Therefore, the conventional formula for standard errors, often referred to as ``
 
 \begin{center}
 \begin{equation} \label{eq: Neyman Standard Errors}
-\hat{\sigma}_{\hat{ate}}|\rho_{tc} = 1 = \sqrt{\frac{\sigma_{yc}^2}{n_c} + \frac{\sigma_{yt}^2}{n_t}}
+\hat{\sigma}_{\hat{ate}}|\rho_{tc} = 1 \equiv \sqrt{\frac{\sigma_{yc}^2}{n_c} + \frac{\sigma_{yt}^2}{n_t}}
 \end{equation}
 \end{center}
 
@@ -544,7 +601,7 @@ First let's estimate an average treatment effect:
 
 << >>=
 
-lm_fm_1 <- lm(HomRate08 ~ nhTrt + fm1, data = meddat)
+lm_fm_1 <- lm(HomRate08 ~ nhTrt + fm1, data = wrkdat)
 
 lm_fm_1$coefficients[2]
 
@@ -563,9 +620,9 @@ Now let's form $(1 - \alpha)100$\% confidence intervals using HC2 standard error
 
 <<>>=
 
-vcov(lm_fm_1)
+vcov(lm_fm_1)[1:10,1:10]
 
-vcovHC(lm_fm_1, type = "HC2")
+vcovHC(lm_fm_1, type = "HC2")[1:10,1:10]
 
 cbind(iidSE = sqrt(diag(vcov(lm_fm_1))),
       NeymanSE = sqrt(diag(vcovHC(lm_fm_1, type = "HC2"))))[2, ]
@@ -599,9 +656,9 @@ But how do we adjudicate between which confidence interval is better? One way is
 
 << >>=
 
-# ## Check coverage rate; hold Y fixed and permute Z which invents
-# ## unit level truth of 0, then check proportion of times 0 is
-# ## enveloped by the 10^5 confidence intervals
+## Check coverage rate; hold Y fixed and permute Z which invents
+## unit level truth of 0, then check proportion of times 0 is
+## enveloped by the 10^5 confidence intervals
 new_ci_constant_additive <- function(y, z, fm){
    
    Z = unsplit(lapply(split(z, fm), sample), fm)
@@ -624,13 +681,13 @@ new_ci_constant_additive <- function(y, z, fm){
     return(c(iid = zero_in_iid[[1]], hc2 = zero_in_hc2[[1]]))
 }
 
-new_ci_constant_additive(y = meddat$HomRate08,
-       z = meddat$nhTrt,
-       fm = meddat$fm1)
+new_ci_constant_additive(y = wrkdat$HomRate08,
+       z = wrkdat$nhTrt,
+       fm = wrkdat$fm1)
 
-ci_coverage_constant_additive <- replicate(10^4, new_ci_constant_additive(y = meddat$HomRate08,
-                                      z = meddat$nhTrt,
-                                      fm = meddat$fm1))
+ci_coverage_constant_additive <- replicate(10^4, new_ci_constant_additive(y = wrkdat$HomRate08,
+                                      z = wrkdat$nhTrt,
+                                      fm = wrkdat$fm1))
 
 apply(ci_coverage_constant_additive, 1, mean)
 
@@ -651,7 +708,7 @@ Thus far we have checked coverage rates in which there is a constant $\tau_i$ of
 
 << >>=
 
-meddat %<>% mutate(yc = ifelse(test = nhTrt == 0,
+wrkdat %<>% mutate(yc = ifelse(test = nhTrt == 0,
                                yes = HomRate08,
                                no = NA),
                    yt = ifelse(test = nhTrt == 1,
@@ -667,7 +724,7 @@ meddat %<>% mutate(yc = ifelse(test = nhTrt == 0,
                                yes = yc + tau,
                                no = yt))
 
-true_ate <- meddat %$% {mean(yt) - mean(yc)}
+true_ate <- wrkdat %$% {mean(yt) - mean(yc)}
 
 
 new_ci_non_cons_add <- function(yc, yt, z, fm){
@@ -694,15 +751,15 @@ new_ci_non_cons_add <- function(yc, yt, z, fm){
     return(c(iid = true_ate_in_iid[[1]], hc2 = true_ate_in_hc2[[1]]))
 }
 
-new_ci_non_cons_add(yc = meddat$yc,
-                          yt = meddat$yt,
-                          z = meddat$nhTrt,
-                          fm = meddat$fm1)
+new_ci_non_cons_add(yc = wrkdat$yc,
+                          yt = wrkdat$yt,
+                          z = wrkdat$nhTrt,
+                          fm = wrkdat$fm1)
 
-ci_coverage_non_cons_add <- replicate(10^4, new_ci_non_cons_add(yc = meddat$yc,
-                                                   yt = meddat$yt,
-                                                   z = meddat$nhTrt,
-                                                   fm = meddat$fm1))
+ci_coverage_non_cons_add <- replicate(10^4, new_ci_non_cons_add(yc = wrkdat$yc,
+                                                   yt = wrkdat$yt,
+                                                   z = wrkdat$nhTrt,
+                                                   fm = wrkdat$fm1))
 
 apply(ci_coverage_non_cons_add, 1, mean)
 
@@ -803,9 +860,11 @@ Is there anything we can do to lower the components in \textcolor{blue}{blue}? O
 
 << >>=
 
-lm_fm_1 <- lm(HomRate08 ~ nhTrt + fm1, data = meddat)
+lm_fm_1 <- lm(HomRate08 ~ nhTrt + fm1, data = wrkdat)
 
-lm_fm_adj <- lm(HomRate08 ~ nhTrt + fm1 + HomRate03, data = meddat)
+lm_fm_dd <- lm(I(HomRate08-HomRate03)~nhTrt+fm1,data=wrkdat)
+e1<-residuals(lm(HomRate08~HomRate03+fm1,data=wrkdat))
+lm_fm_adj <- lm(e1 ~ nhTrt + fm1, data = wrkdat)
 
 Neyman_SE <- sqrt(diag(vcovHC(lm_fm_1, type = "HC2")))[2]
 
