@@ -1,0 +1,839 @@
+\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
+\documentclass[11pt,leqno]{article}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb}          % AMS Stuff
+\usepackage[linewidth=1pt]{mdframed}
+\usepackage{mdframed}
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{afterpage}% http://ctan.org/pkg/afterpage
+\usepackage[T1]{fontenc}
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfig}
+\usepackage{titling}            % modify maketitle in latex
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage{verbatim}
+\usepackage{geometry}
+\usepackage{bigfoot}
+\usepackage[format=hang,
+            font={small},
+            labelfont=bf,
+            textfont=rm]{caption}
+
+\geometry{verbose,margin=2cm,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=page,
+            colorlinks=true,
+            hyperfootnotes=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1},
+            citecolor=blue!70!black,
+            linkcolor=red!70!black,
+            urlcolor=green!70!black]{hyperref}
+\usepackage{hypernat}
+
+\usepackage{multirow}
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+
+\parskip=12pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{12pt} %Aboveskip
+{12pt} %Below skip
+{\itshape} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+% \DeclareMathOperator{\Pr}{\rm{Pr}}
+
+% COLORS FOR GRAPHICS (3-class Set1)
+\definecolor{Blue}{RGB}{55,126,184}
+\definecolor{Red}{RGB}{228,26,28}
+\definecolor{Green}{RGB}{77,175,74}
+
+% COLORS FOR EQUATIONS (3-class Dark2)
+\definecolor{eqgreen}{RGB}{27,158,119}
+\definecolor{eqblue}{RGB}{117,112,179}
+\definecolor{eqred}{RGB}{217,95,2}
+
+
+\title{Precision of Estimators of Causal Effects}
+\author{Jake Bowers, Ben Hansen \& Tom Leavitt}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+<< setup, include = FALSE, eval = TRUE >>=
+
+if (!require("pacman")) install.packages("pacman")
+
+pacman::p_load(
+  plyr, # data wrangling
+  dplyr, # data manipulation
+  magrittr, # pipes
+  tidyr, # gather and other data reshaping
+  haven, # read_dta, _sas, _sav files
+  broom, # tidy() and glance()
+  randomizr, # performs different random assignments
+  lmtest,
+  ggplot2,
+  knitr,
+  xtable,
+  devtools, # sourcing and working with github repos
+  optmatch,
+  RItools,
+  sandwich,
+  lmtest
+)
+
+opts_chunk$set(message=FALSE,
+               warning=FALSE,
+               size = "footnotesize")
+
+@
+
+\newpage
+
+\section{Application of Unbiased Inference to Matched Designs}
+
+\subsection{Make Your Own Matched Design}
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Exercise for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Please create a matched design with a matched design with the data from the
+\citet{cerdaetal2012} paper. We made one of our own, that we call, `fm1,' but
+you should make your own.
+\end{itemize}
+\end{mdframed}
+
+<< >>=
+
+## This our data with the matched sets that you DON'T have access to
+load("matched_data.Rdata")
+
+@
+
+<< eval = FALSE >>=
+
+## To load the meddat data and then make your own matched design
+load(url("http://jakebowers.org/Matching/meddat.rda"))
+
+@
+
+\subsection{Perform Outcome Analysis After Matching}
+
+Now let's think about how we can draw upon the principles above in order to actually do outcome analysis once we have a matched design.
+
+We want to perform outcome analysis (in this case to estimate average treatment effects) as if we have a \textit{block} randomized experiment in which the matched sets are the experiment's blocks. We therefore want to estimate an average treatment effect \textit{within} each block. But then we need some scheme to weight each block-specific $\widehat{ATE}$ to yield one overall $\widehat{ATE}$. There are three different weighting possibilities below.
+
+\subsubsection{Harmonic Mean Weighting}
+
+Let's first estimate the average treatment effect \textit{within} each block:
+
+<< >>=
+
+blocks <- unique(meddat$fm1)
+
+ATE_hat_by_block <- sapply(blocks, function(x) {
+    coef(lm(HomRate08 ~ nhTrt, data = meddat, subset = fm1 == x))[["nhTrt"]]
+})
+
+ATE_hat_by_block
+
+@
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Describe what the output above is giving us . . .
+\end{itemize}
+\end{mdframed}
+
+Now let's calculate an overall $\widehat{ATE}$ that uses harmonic mean weighting. Harmonic mean weighting weights each block by $\frac{ \frac{2}{n_{st}^{-1} + n_{sc}^{-1}} }{\sum \limits_{s = 1}^{S} \frac{2}{n_{st}^{-1} + n_{sc}^{-1}} }$. 
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question and Exercise for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Why is there a $2$ in the numerator? 
+\item Pick a block with more than $2$ units and calculate its ``effective sample size'' by hand using the appropriate formula---i.e., $\frac{2}{n_{ts}^{-1} + n_{cs}^{-1}}$.
+\end{itemize}
+\end{mdframed}
+
+Now let's estimate an overall ATE using harmonic mean weights:
+
+<< >>=
+
+num_treated <- meddat %$% {sapply(split(nhTrt, fm1), sum)}
+
+num_control <- meddat %$% {sapply(split(1 - nhTrt, fm1), sum)}
+
+harm_mean <- 2/(1/num_treated + 1/num_control)
+
+obs_overall_ate_hat_hm <- sum(ATE_hat_by_block * (harm_mean/sum(harm_mean)))
+
+@
+
+What are some other weighting schemes one could use? Let's try two others.
+
+\subsubsection{Block Size Weighting}
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Exercise for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Write a mathematical expression for the weights attached to each block-specific $\widehat{ATE}$ in which each block-specific $\widehat{ATE}$ is weighted by the total number of units in each block.
+\end{itemize}
+\end{mdframed}
+
+Now let's implement this estimation strategy in \texttt{[R]}:
+
+<<>>=
+
+num_units_per_block <- sapply(blocks, function(x){
+  length(meddat$nhTrt[meddat$fm1 == x])
+})
+
+obs_overall_ate_hat_bs <- sum(ATE_hat_by_block * (num_units_per_block/nrow(meddat)))
+
+@
+
+\subsubsection{ETT Weighting}
+
+Let's try one final weighting scheme (although there are surely many other possibilities.) Let's weight each block-specific $\widehat{ATE}$ by the number of \textit{treated} units within that block. 
+
+That is, the weights associated with each block-specific $\widehat{ATE}$ are: $W_{ETT} = \frac{n_{st}}{\sum \limits_{s = 1}^S n_{st}}$.
+
+<<>>=
+
+num_treated_units_per_block <- sapply(blocks, function(x){
+  sum(meddat$nhTrt[meddat$fm1 == x])
+})
+
+obs_overall_ate_hat_ett <- sum(ATE_hat_by_block * (num_treated_units_per_block/sum(meddat$nhTrt)))
+
+@
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Questions for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Now, compare all the overall estimates of the ATE from the $3$ different weighting schemes. Are they all similar?
+\item Notice that thus far we have not talked about standard errors, confidence intervals, or hypothesis testing. We have focused on only \textit{estimating} causal effects. How would you describe difference between \textit{estimation} and \textit{testing}?
+\end{itemize}
+\end{mdframed}
+
+\section{Standard Errors}
+
+\subsection{Analytic Definition of Standard Errors}
+
+Let's recall from Assignment 1, Question 6 that the expression for calculating the sample variance of \textit{treated} potential outcomes is:
+
+\begin{center}
+\begin{equation}
+\label{eq: Sample Var Treated}
+\text{Var}\left(n_t^{-1} Z^{\prime} y_t \right) = \frac{n - n_t}{n - 1} \frac{\sigma_{y_t}^2}{n_t},
+\end{equation}
+
+where $\sigma_{y_t}^2 = \frac{\sum_{i = 1}^{n} (y_i - \bar{y})^2}{n - 1}$.
+\end{center}
+
+And the expression for calculating the sample variance of \textit{untreated} potential outcomes is:
+
+\begin{center}
+\begin{equation}
+\label{eq: Sample Var Untreated}
+\text{Var}\left(n_c^{-1} (1 - Z^{\prime}) y_c \right) = \frac{n - n_c}{n - 1} \frac{\sigma_{y_c}^2}{n_c},
+\end{equation}
+
+where $\sigma_{y_c}^2 = \frac{\sum_{i = 1}^{n} (y_i - \bar{y})^2}{n - 1}$.
+\end{center}
+
+Since $\sigma_{(\bar{y}_t - \bar{y}_c)}^2 = \sigma_{y_t}^2 + \sigma_{y_c}^2$, let's add equations \eqref{eq: Sample Var Treated} and \eqref{eq: Sample Var Untreated} together:
+
+\begin{center}
+\begin{align*}
+Var(\bar{y}_t - \bar{y}_c) & = \text{Var}\left(n_t^{-1} Z^{\prime} y_t \right) + \text{Var}\left(n_c^{-1} (1 - Z^{\prime}) y_c \right) \\
+\\
+& = \frac{n - n_t}{n - 1} \frac{\sigma_{y_t}^2}{n_t} + \frac{n - n_c}{n - 1} \frac{\sigma_{y_c}^2}{n_c} \\
+\\
+& = \frac{n - n_t}{n - 1} \frac{\sigma_{y_t}^2}{n_t} + \frac{n_t}{n - 1} \frac{\sigma_{y_c}^2}{n - n_t} \\
+\end{align*}
+
+By the \textit{variance sum law} we know that $\Var(X \pm Y) = \Var(X) + \Var(Y) \pm 2 \Cov(X,Y)$. Thus, 
+
+\begin{align*}
+\Cov (\bar{y}_t, \bar{y}_c) & = \Cov \left( \frac{\sum_{i = 1}^{n - n_t} y_{ci}}{n - n_t}, \frac{\sum_{j = 1}^{n_t} y_{tj}}{n_t} \right) \\
+& = \frac{1}{n_t (n - n_t)} \Cov \left(\sum \limits_{i = 1}^{n - n_t} y_{ci}, \sum \limits_{j = 1}^{n_t} y_{tj} \right) \\
+& = \frac{1}{n_t (n - n_t)} \sum \limits_{i = 1}^{n - n_t} \sum \limits_{j = 1}^{n_t} \Cov (y_{ci}, y_{ti}).
+\end{align*}
+\end{center}
+
+Through several more steps we arrive at the equation for $SE(\widehat{ATE})$ from \citet[p. 57]{gerbergreen2012}\footnote{For those who would like to see the full derivation, please come by office hours.}:
+
+\begin{center}
+\begin{equation}
+\label{eq: Standard Error}
+SE(\widehat{ATE}) = \sqrt{\frac{1}{n - 1} \left\{ \frac{n_t \text{Var}(y_{ic})}{n - n_t} + \frac{(n - n_t) \text{Var}(y_{it})}{n_t} + 2 \Cov(y_{ic}, y_{it}) \right\}}
+\end{equation}
+\end{center}
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Does equation \eqref{eq: Standard Error} above presume sampling from an infinite population or sampling from a finite population?
+\end{itemize}
+\end{mdframed}
+
+Now let's look at equation \eqref{eq: Standard Error} and think about which components affect its value. As the components marked in \textcolor{red}{red} \textit{increase}, while all other components are held constant, the standard error \textit{decreases}. By contrast, as the components marked in \textcolor{blue}{blue} \textit{increase}, while all other components are held constant, the standard error \textit{increases}:
+
+\begin{center}
+\begin{equation*}
+SE(\widehat{ATE}) = \sqrt{\frac{1}{\textcolor{red}{n} - 1} \left\{ \frac{n_t \textcolor{blue}{\text{Var}(y_{ic})}}{n - n_t} + \frac{(n - n_t) \textcolor{blue}{\text{Var}(y_{it})}}{n_t} + 2 \textcolor{blue}{\Cov(y_{ic}, y_{it})} \right\}}
+\end{equation*}
+\end{center}
+
+Three final implications of equation \eqref{eq: Standard Error}, as \citet[p. 58]{gerbergreen2012} state, are:
+
+\begin{itemize}
+\item If $\text{Var}(y_{it}) > \text{Var}(y_{ic})$, then adding additional units to the treatment condition lowers the standard error. 
+
+\item By contrast, if $\text{Var}(y_{it}) < \text{Var}(y_{ic})$ , then adding more units to the control condition lowers the standard error. 
+
+\item Finally, if $\text{Var}(y_{it}) \approx \text{Var}(y_{ic})$, then assigning roughly half of subjects to each condition is best for lowering the standard error.
+\end{itemize}
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Drawing on equation \eqref{eq: Standard Error}, can you explain why these three statements are true?
+\end{itemize}
+\end{mdframed}
+
+\subsection{Estimating Standard Errors} \label{Estimating Standard Errors}
+
+Now let's think about which quantities we can unbiasedly estimate from equation \eqref{eq: Standard Error} and which ones we can't. The sample variance for both $y_{ic}$ and $y_{it}$ is unbiased, meaning that the mean of all the possible sample variances is equal to the true variance of the finite population of all $y_{ic}$ and $y_{it}$ units.
+
+\subsection{Illustration of Unbiasedness of Sample Variance}
+
+In section \ref{Estimating Standard Errors} above, we claimed that the sample variance estimator is unbiased. Can we convince ourselves of this claim via a simulation study in \texttt{[R]}? Let's try . . .
+
+<< >>=
+
+## Load data set
+news_df <- read.csv("http://jakebowers.org/PS531Data/news.df.csv")
+
+## Create potential outcomes
+news_df %<>% rename(y = r) %>%
+  mutate(yc = ifelse(test = z == 0,
+                     yes = y,
+                     no = NA),
+         yt = ifelse(test = z == 1,
+                     yes = y,
+                     no = NA))
+
+news_df %<>% mutate(true_tau = c(6, 4, 19, 3, 9, 9, 13, 15),
+                    yc = ifelse(test = is.na(yc),
+                                yes = yt - true_tau,
+                                no = yc),
+                    yt = ifelse(test = is.na(yt),
+                                yes = yc + true_tau,
+                                no = yt))
+
+true_var_yc <- news_df %$% var(yc)
+
+true_var_yc
+
+true_var_yt <- news_df %$% var(yt)
+
+true_var_yt
+
+kable(news_df[, c(1, 3:4, 8:9)])
+
+@
+
+Now let's write a simple function that calculates the respective variances for \textit{observed} values of $y_c$ and $y_t$.
+
+<< >>=
+
+sample_var <- function(z, yc, yt){
+  
+  Z = sample(z)
+  
+  Y = Z * yt + (1 - Z) * yc
+  
+  var_yc_hat = var(Y[Z == 0])
+  
+  var_yt_hat = var(Y[Z == 1])
+  
+  return(c(var_yc_hat, var_yt_hat))
+  
+  }
+
+@
+
+Now let's iterate this function $10000$ times in order to simulate the respective $\hat{\sigma}_{y_c}$ and $\hat{\sigma}_{y_t}$ values one would obtain if he or she were to perform the experiment an infinite number of times.
+
+<< >>=
+
+set.seed(1:5)
+
+sampling_dist_var <- data.frame(t(replicate(10^4,
+                                   sample_var(z = news_df$z,
+                                             yc = news_df$yc,
+                                             yt = news_df$yt)))) %>%
+  rename(var_yc_hat = X1,
+         var_yt_hat = X2)
+
+colMeans(sampling_dist_var)
+
+c(true_var_yc, true_var_yt)
+
+@
+
+We know that $n$, $n_c$ and $n_t$ are all constants, and we can unbiasedly estimate $\Var(y_{c})$ and $\Var(y_{t})$, but what about the final term in \eqref{eq: Standard Error} above? We cannot actually estimate the covariance between potential outcomes for the same unit because of the ``fundamental problem of causal inference'' \citep{holland1986}---viz., the inability to observe both potential outcomes for the same unit. So what can we do?
+
+Well, notice that $\textcolor{blue}{\Cov(y_{ic}, y_{it})}$ is in \textcolor{blue}{blue}, which denotes that, all else equal, as $\textcolor{blue}{\Cov(y_{ic}, y_{it})}$ increases, so does the standard error. Therefore, we can reexpress $\Cov(y_{ic}, y_{it})$ in terms of the correlation coefficient $\rho_{ct} \in [-1, 1]$ and assume $\rho_{ct} = 1$, which in turn reduces standard errors to the conventional ``Neyman standard errors'' \citep{neyman1990}.
+
+Therefore, the conventional formula for standard errors, often referred to as ``Neyman standard errors'' \citep{neyman1990}, is:
+
+\begin{center}
+\begin{equation} \label{eq: Neyman Standard Errors}
+\hat{\sigma}_{\hat{ate}}|\rho_{tc} = 1 = \sqrt{\frac{\sigma_{yc}^2}{n_c} + \frac{\sigma_{yt}^2}{n_t}}
+\end{equation}
+\end{center}
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item What does $\rho_{tc} = 1$ refer to in equation \eqref{eq: Neyman Standard Errors} for Neyman standard errors?
+\end{itemize}
+\end{mdframed}
+
+Now, let's see how well Neyman standard errors map on to the standard deviation of the true randomization distribution via simulation:
+
+<< >>=
+
+new_experiment <- function(z, yc, yt){
+  
+  Z = sample(z)
+  
+  Y = Z * yt + (1 - Z) * yc
+  
+  ate = mean(Y[Z == 1]) - mean(Y[Z == 0])
+  
+  return(ate)
+}
+
+rand_dist <- replicate(10^4, new_experiment(z = news_df$z,
+                                            yc = news_df$yc,
+                                            yt = news_df$yt))
+
+qplot(rand_dist, geom = "histogram") + labs(title = "Randomization Distribution",
+                                            x = "Estimated ATEs",
+                                            y = "Count")
+
+true_sd <- sd(rand_dist)
+
+true_sd
+
+neyman_se <- news_df %$% {sqrt((var(yc)/sum(z == 0)) + (var(yt)/sum(z == 1)))}
+
+neyman_se
+
+@
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Are the Neyman standard errors from the \texttt{[R]} output above conservative or not? How do you know?
+\end{itemize}
+\end{mdframed}
+
+\subsection{Standard Errors from Regression}
+
+\citet{lin2013} shows that without any covariance adjustment, HC2 standard errors---i.e., the Huber-White sandwich (``robust'') SEs---are consistent or asymptotically conservative and yield the standard errors in equation \eqref{eq: Neyman Standard Errors}. By contrast, the conventional OLS standard error estimator is inconsistent unless the experiment has a balanced design. Let's now move to interval estimation using the HC2 standard errors proposed by \citet{lin2013}.
+
+\section{Confidence Interval Estimation}
+
+\subsection{How to Estimate Confidence Intervals}
+
+Now let's form confidence intervals with HC2 standard errors. Try to do the same with the matched design you created with the data from the \citet{cerdaetal2012} paper.
+
+First let's estimate an average treatment effect:
+
+<< >>=
+
+lm_fm_1 <- lm(HomRate08 ~ nhTrt + fm1, data = meddat)
+
+lm_fm_1$coefficients[2]
+
+@
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item What type of weighting are we using above?
+\end{itemize}
+\end{mdframed}
+
+Now let's form $(1 - \alpha)100$\% confidence intervals using HC2 standard errors and compare that procedure to one that forms confidence intervals via the conventional OLS regression standard errors.
+
+<<>>=
+
+vcov(lm_fm_1)
+
+vcovHC(lm_fm_1, type = "HC2")
+
+cbind(iidSE = sqrt(diag(vcov(lm_fm_1))),
+      NeymanSE = sqrt(diag(vcovHC(lm_fm_1, type = "HC2"))))[2, ]
+
+## Source this function for HC2 standard errors
+source(url("http://jakebowers.org/ICPSR/confintHC.R"))
+
+@
+
+Now let's form confidence intervals:
+
+<< >>=
+
+## Conventional iid confidence intervals
+HC2_CI <- confint.HC(object = lm_fm_1,
+           parm = "nhTrt",
+           level = 0.95,
+           thevcov = vcovHC(lm_fm_1, type = "HC2"))
+
+IID_CI <- confint(object = lm_fm_1,
+                  parm = "nhTrt",
+                  level = 0.95)
+
+rbind(HC2_CI, IID_CI)
+
+@
+
+But how do we adjudicate between which confidence interval is better? One way is to check coverage rates---that is, the proportion of confidence intervals that contain the true parameter of interest if the ``experiment'' were repeated an infinite number of times.
+
+\subsection{Coverage with Constant, Additive Effects}
+
+<< >>=
+
+# ## Check coverage rate; hold Y fixed and permute Z which invents
+# ## unit level truth of 0, then check proportion of times 0 is
+# ## enveloped by the 10^5 confidence intervals
+new_ci_constant_additive <- function(y, z, fm){
+   
+   Z = unsplit(lapply(split(z, fm), sample), fm)
+   
+   lm_fm = lm(y ~ Z + fm)
+   
+   hc2_ci = confint.HC(lm_fm,
+                       level = 0.95,
+                       parm = "Z",
+                       thevcov = vcovHC(lm_fm, type = "HC2"))[1, ]
+   
+   iid_ci <- confint(lm_fm,
+                     level = 0.95,
+                     parm = "Z")[1, ]
+   
+    zero_in_iid = 0 >= iid_ci[1] & 0 <= iid_ci[2]
+    
+    zero_in_hc2 <- 0 >= hc2_ci[1] & 0 <= hc2_ci[2]
+    
+    return(c(iid = zero_in_iid[[1]], hc2 = zero_in_hc2[[1]]))
+}
+
+new_ci_constant_additive(y = meddat$HomRate08,
+       z = meddat$nhTrt,
+       fm = meddat$fm1)
+
+ci_coverage_constant_additive <- replicate(10^4, new_ci_constant_additive(y = meddat$HomRate08,
+                                      z = meddat$nhTrt,
+                                      fm = meddat$fm1))
+
+apply(ci_coverage_constant_additive, 1, mean)
+
+@
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Our confidence interval using HC2 standard errors is $[-0.5577, 0.0561]$. If our confidence intervals have proper coverage, does that mean that $[-0.5577, 0.0561]$ should bracket the true ate $(1 - \alpha)100$\% of the time? Or does coverage mean something else?
+\end{itemize}
+\end{mdframed}
+
+\subsection{Coverage with Non Constant, Additive Effects}
+
+Thus far we have checked coverage rates in which there is a constant $\tau_i$ of 0, in which case the ``Neyman standard errors'' \eqref{eq: Neyman Standard Errors} should have proper coverage. But what if the individual causal effects were much more variable?
+
+<< >>=
+
+meddat %<>% mutate(yc = ifelse(test = nhTrt == 0,
+                               yes = HomRate08,
+                               no = NA),
+                   yt = ifelse(test = nhTrt == 1,
+                               yes = HomRate08,
+                               no = NA),
+                   tau = runif(n = 42,
+                               min = 0,
+                               max = 2),
+                   yc = ifelse(test = nhTrt == 1,
+                               yes = yt - tau,
+                               no = yc),
+                   yt = ifelse(test = nhTrt == 0,
+                               yes = yc + tau,
+                               no = yt))
+
+true_ate <- meddat %$% {mean(yt) - mean(yc)}
+
+
+new_ci_non_cons_add <- function(yc, yt, z, fm){
+   
+   Z = unsplit(lapply(split(z, fm), sample), fm)
+   
+   Y = Z * yt + (1 - Z) * yc
+   
+   lm_fm = lm(Y ~ Z + fm)
+   
+   hc2_ci = confint.HC(lm_fm,
+                       level = 0.95,
+                       parm = "Z",
+                       thevcov = vcovHC(lm_fm, type = "HC2"))[1, ]
+   
+   iid_ci <- confint(lm_fm,
+                     level = 0.95,
+                     parm = "Z")[1, ]
+   
+    true_ate_in_iid = true_ate >= iid_ci[1] & true_ate <= iid_ci[2]
+    
+    true_ate_in_hc2 <- true_ate >= hc2_ci[1] & true_ate <= hc2_ci[2]
+    
+    return(c(iid = true_ate_in_iid[[1]], hc2 = true_ate_in_hc2[[1]]))
+}
+
+new_ci_non_cons_add(yc = meddat$yc,
+                          yt = meddat$yt,
+                          z = meddat$nhTrt,
+                          fm = meddat$fm1)
+
+ci_coverage_non_cons_add <- replicate(10^4, new_ci_non_cons_add(yc = meddat$yc,
+                                                   yt = meddat$yt,
+                                                   z = meddat$nhTrt,
+                                                   fm = meddat$fm1))
+
+apply(ci_coverage_non_cons_add, 1, mean)
+
+@
+
+\subsection{Coverage with Large Unit-Level Treatment Effects but Small Average Effect}
+
+Now let's try one final simulation with fake data:
+
+<< >>=
+
+fake_experiment <- experiment <- data.frame(unit = seq(from = 1, to = 50, by = 1))
+
+fake_experiment %<>% mutate(Z = complete_ra(N = length(unit))) %>%
+  arrange(desc(Z))
+
+set.seed(1:5)
+
+fake_experiment %<>% mutate(yt = rnorm(n = 50, mean = 20, sd = 1),
+                            tau = c(rnorm(n = 25,
+                                          mean = 10,
+                                          sd = 1),
+                                    rnorm(n = 25,
+                                          mean = -10,
+                                          sd = 1)),
+                            yc = yt - tau,
+                            Y = Z * yt + (1 - Z) * yc)
+
+@
+
+There is something interesting going on in the fake experiment above. Let's look at all of the individual treatment effects:
+
+<< >>=
+
+fake_experiment$tau
+
+@
+
+There is a large treatment effect for every single unit. Yet, the average treatment effect is quite small---almost 0 in fact:
+
+<< >>=
+
+true_ate <- fake_experiment %$% {mean(yt) - mean(yc)}
+
+true_ate
+
+@
+
+What happens to our coverage in such an experiment? Let's see . . .
+
+<<>>=
+
+new_ci_non_cons_add <- function(yc, yt, z){
+   
+   Z = sample(z)
+   
+   Y = Z * yt + (1 - Z) * yc
+   
+   lm = lm(Y ~ Z)
+   
+   hc2_ci = confint.HC(lm,
+                       level = 0.95,
+                       parm = "Z",
+                       thevcov = vcovHC(lm, type = "HC2"))[1, ]
+   
+   iid_ci <- confint(lm,
+                     level = 0.95,
+                     parm = "Z")[1, ]
+   
+    true_ate_in_iid = true_ate >= iid_ci[1] & true_ate <= iid_ci[2]
+    
+    true_ate_in_hc2 <- true_ate >= hc2_ci[1] & true_ate <= hc2_ci[2]
+    
+    return(c(iid = true_ate_in_iid[[1]], hc2 = true_ate_in_hc2[[1]]))
+}
+
+ci_coverage_non_cons_add <- replicate(10^4, new_ci_non_cons_add(yc = fake_experiment$yc,
+                                                                yt = fake_experiment$yt,
+                                                                z = fake_experiment$Z))
+
+apply(ci_coverage_non_cons_add, 1, mean)
+                            
+@
+
+\section{Increasing Precision via Covariance Adjustment}
+
+\subsection{Regression Adjustment}
+
+As should now be clear, we usually want a smaller standard error (and, hence, a more precise estimator) instead of a larger one. What can we do when the size of our study's finite population, $n$, is fixed? Let's return to \eqref{eq: Standard Error}:
+
+\begin{center}
+\begin{equation*}
+SE(\widehat{ATE}) = \sqrt{\frac{1}{\textcolor{red}{n} - 1} \left\{ \frac{n_t \textcolor{blue}{\text{Var}(y_{ic})}}{n - n_t} + \frac{(n - n_t) \textcolor{blue}{\text{Var}(y_{it})}}{n_t} + 2 \textcolor{blue}{\Cov(y_{ic}, y_{it})} \right\}}
+\end{equation*}
+\end{center}
+
+Is there anything we can do to lower the components in \textcolor{blue}{blue}? One option is to rescale the potential outcomes by modeling them as a linear function of baseline covariates and ``removing'' the variance due to these covariates. Let's try it:
+
+<< >>=
+
+lm_fm_1 <- lm(HomRate08 ~ nhTrt + fm1, data = meddat)
+
+lm_fm_adj <- lm(HomRate08 ~ nhTrt + fm1 + HomRate03, data = meddat)
+
+Neyman_SE <- sqrt(diag(vcovHC(lm_fm_1, type = "HC2")))[2]
+
+Neyman_SE_adj = sqrt(diag(vcovHC(lm_fm_adj, type = "HC2")))[2]
+
+cbind(Neyman_SE, Neyman_SE_adj)
+
+@
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Exercise for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item What are some other methods through which we might increase precision? Implement these methods in \texttt{[R]}.
+\end{itemize}
+\end{mdframed}
+
+
+
+
+\newpage
+
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{master_bibliography}   % name your BibTeX data base
+\end{singlespace}
+
+\newpage
+
+\end{document}
