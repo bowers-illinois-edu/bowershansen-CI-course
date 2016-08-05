@@ -2,6 +2,8 @@
 
 # Questions from last time and before
 
+xBalance for outcome analysis versus  balance assessment?
+
 Questions about different weighting schemes to **define** average causal effects? Why weight?
 
 # Today

@@ -285,6 +285,8 @@ align.by.block<-function (x, set, fn = mean) {
 }
 
 wrkdat$HomRate08md<-with(wrkdat,align.by.block(HomRate08,fm1))
+wrkdat$HomRate03md<-with(wrkdat,align.by.block(HomRate03,fm1))
+wrkdat$HomRateDiffmd<-with(wrkdat,align.by.block(HomRate08-HomRate03,fm1))
 wrkdat$nhTrtmd<-with(wrkdat,align.by.block(nhTrt,fm1))
 
 lm2<-lm(HomRate08md~nhTrtmd,data=wrkdat)
@@ -860,17 +862,25 @@ Is there anything we can do to lower the components in \textcolor{blue}{blue}? O
 
 << >>=
 
-lm_fm_1 <- lm(HomRate08 ~ nhTrt + fm1, data = wrkdat)
 
-lm_fm_dd <- lm(I(HomRate08-HomRate03)~nhTrt+fm1,data=wrkdat)
-e1<-residuals(lm(HomRate08~HomRate03+fm1,data=wrkdat))
-lm_fm_adj <- lm(e1 ~ nhTrt + fm1, data = wrkdat)
+
+lm_fm_1 <- lm(HomRate08 ~ nhTrt + fm1, data = wrkdat)
+lm_fm_1b <- lm(HomRate08md ~ nhTrtmd, data = wrkdat)
+
+lm_fm_dd <- lm(I(HomRate08md-HomRate03md)~nhTrtmd,data=wrkdat)
+
+e1<-residuals(lm(HomRate08~HomRate03,data=wrkdat))
+
+lm_fm_adj <- lm(e1 ~ nhTrt+fm1, data = wrkdat)
 
 Neyman_SE <- sqrt(diag(vcovHC(lm_fm_1, type = "HC2")))[2]
+Neyman_SEb <- sqrt(diag(vcovHC(lm_fm_1b, type = "HC2")))[2]
 
 Neyman_SE_adj = sqrt(diag(vcovHC(lm_fm_adj, type = "HC2")))[2]
 
-cbind(Neyman_SE, Neyman_SE_adj)
+Neyman_SE_dd = sqrt(diag(vcovHC(lm_fm_dd, type = "HC2")))[2]
+
+cbind(Neyman_SE, Neyman_SEb, Neyman_SE_dd, Neyman_SE_adj)
 
 @
 
