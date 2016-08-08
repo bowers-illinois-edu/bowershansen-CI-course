@@ -1,0 +1,363 @@
+\documentclass{article}
+%\usepackage{natbib}
+
+\title{Asking and Assessing Interesting Hypothesis With Matched Designs}
+\author{ICPSR Causal Inference '16}
+\usepackage{icpsr-classwork}
+
+<<include=FALSE,cache=FALSE>>=
+opts_chunk$set(tidy=TRUE,echo=TRUE,results='markup',strip.white=TRUE,fig.path='figs/fig',cache=FALSE,highlight=TRUE,width.cutoff=132,size='footnotesize',out.width='1.2\\textwidth',message=FALSE,comment=NA)
+
+options(width=110,digits=3)
+@
+
+
+\begin{document}
+\maketitle
+
+\begin{enumerate}
+		\setcounter{enumi}{-1}
+
+	\item We will continue to work with the Medellin data.  Let's start with one matched design:
+
+<<results='hide'>>=
+library(optmatch)
+library(RItools)
+load(url("http://jakebowers.org/Matching/meddat.rda"))
+meddat<-transform(meddat, HomRate03=(HomCount2003/Pop2003)*1000)
+meddat<-transform(meddat, HomRate08=(HomCount2008/Pop2008)*1000)
+meddat$HomRate0803<-with(meddat,HomRate08-HomRate03)
+load("fm4.rda") ## I made and saved this last time.
+summary(fm4,min.controls=0,max.controls=Inf)
+meddat[names(fm4),"fm4"]<-as.factor(fm4)
+summary.factor(meddat$fm4)
+@
+
+\item First, please assess this match. What do you think? Does help make a
+	strong argument in favor of the idea that we can treat the data as an
+	"as-if randomized" block-randomized design?
+
+\item How much information do we have against the idea that the change in
+	homicide rate differed from zero for all units. (This is a
+	difference-in-differences hypothesis: we have a pre-vs-post
+	intervention difference and we are comparing this difference between
+	neighborhoods that did and did not receive the intervention.) You
+	could also have used the confidence interval approach from yesterday
+	(remember: \texttt{lm} using the aligned or centered variables and
+	then the HC2 standard error and the large-sample/Normality assumption)
+
+	Since Rosenbaum's approach involves testing and $p$-values, I thought we'd
+	start there today. How would you interpret the following results? You might
+	need to look at the data a bit to make sense of it.
+
+<<results="hide">>=
+
+wrkdat <- meddat[!is.na(meddat$fm4),]
+
+xb3<-xBalance(nhTrt~HomRate0803,
+	      strata=list(fm4=~fm4),
+	      data=wrkdat[matched(wrkdat$fm4),],
+	      report="all")
+xb3$results
+
+@
+
+\item What about these results? How do they differ from the previous ones? Which
+	might you prefer to use?
+
+<<results="hide">>=
+
+xb4<-xBalance(nhTrt~HomRate08,
+	      strata=list(fm4=~fm4),
+	      data=wrkdat[matched(wrkdat$fm4),],
+	      report="all")
+xb4$results
+
+@
+
+
+\item So, we have been using the testing approach to statistical inference about
+	causal effects. Here we spiral back on those ideas that you practiced
+	earlier. Recall that one can engage with the fundamental problem of
+	causal inference by making hypotheses about the missing individual level
+	potential outcomes and then evaluating how much information we have against
+	that hypothesis. The summary measure of information is the $p$-value.  A
+	$p$-value is a probability and thus requires a probability distribution ---
+	and specifically requires a probability distribution to characterize the
+	situation posited by the null hypothesis. Here, the null hypothesis is $H_0:
+	y_{i,1}=y_{i,0}$ for all $i$, although other null hypotheses will be useful
+	in other circumstances.  In frequentist statistics a probability
+	distribution requires that some physical act has been repeated: for example,
+	the probability that a flipped coin is heads can be defined as the long-run
+	proportion of heads across repeated flips. So, what repetition does the $p$
+	refer to in an experiment?
+
+\item  We want to generate a distribution that tells us all of the ways the
+	experiment could have turned out under the null hypothesis. We have a sense
+	that we are talking about repeating the experiment.   \citet[Chap
+	2]{rosenbaum2010design} explains that we can generate this distribution
+	because we know that $Y_i$ is a function of what we do not observe:
+
+	\begin{equation}
+		Y_i=Z_i y_{i,1} + (1-Z_i) y_{i,0} \label{eq:obsandpot}
+	\end{equation}
+
+	So, if $y_{i,1}=y_{i,0}$ (as the hypothesis specifies) then $Y_i=y_{i,0}=y_{i,1}$.
+
+	Now, what does it mean to repeat the experiment? What is happening below?
+
+<<cache=TRUE,results="hide">>=
+library(MASS)
+
+newExperimentNewStat<-function(Y,Z,thefm){
+	## We assume that Y is block-mean aligned and that Z is a binary
+	## vector and that fm is a categorical variable.
+	## Znew<-sample(Z) ## if we did not have blocking
+	Znew<-unsplit(lapply(split(Z,thefm), sample),thefm)
+	Zmd<-align.by.block(Znew,thefm)
+	thefit<-rlm(Y~Zmd)
+	return(coef(thefit)["Zmd"])
+	##mean(Y[Zmd==1])-mean(Y[Zmd==0])
+}
+
+align.by.block<-function (x, set, fn = mean) {
+	unsplit(lapply(split(x, set), function(x) { x - fn(x) }), set)
+}
+
+wrkdat$HomRate08md<-with(wrkdat,align.by.block(HomRate08,fm4))
+wrkdat$nhTrtmd<-with(wrkdat,align.by.block(nhTrt,fm4))
+wrkdat$HomRate03md<-align.by.block(wrkdat$HomRate03,wrkdat$fm4)
+
+set.seed(20150801)
+nullDist<-replicate(10000,with(wrkdat,newExperimentNewStat(Y=HomRate08md,
+							  Z=nhTrt,
+							  thefm=fm4)))
+
+obsTestStat<-coef(rlm(HomRate08md~nhTrtmd,data=wrkdat))[2]
+##obsTestStat<-with(wrkdat,mean(HomRate08[nhTrt==1])-mean(HomRate08[nhTrt==0]))
+
+oneSidedP<-mean(nullDist<=obsTestStat)
+
+oneSidedP
+
+newExperimentNewStatRank<-function(rankY,Z,thefm){
+	Znew<-unsplit(lapply(split(Z,thefm), sample),thefm)
+	mean(rankY[Znew==1])-mean(rankY[Znew==0])
+}
+
+nullDistRank<-replicate(10000,with(wrkdat,newExperimentNewStatRank(rankY=rank(HomRate08md),
+								   Z=nhTrt,
+								   thefm=fm4)))
+
+obsTestStatRank<-with(wrkdat,{ rankHomRate08<-rank(HomRate08md)
+		      mean(rankHomRate08[nhTrt==1])-mean(rankHomRate08[nhTrt==0])})
+
+oneSidedPRank<-mean(nullDistRank<=obsTestStatRank)
+
+oneSidedPRank
+
+@
+
+
+
+We can report a two-sided $p$-value like so:
+
+<<results='hide'>>=
+
+twoSidedPRank<-2*min(c(mean(nullDistRank<=obsTestStatRank),
+		       mean(nullDistRank>obsTestStatRank)))
+
+twoSidedPMMeanDiff<-2*min(c(mean(nullDist<=obsTestStat),
+			   mean(nullDist>obsTestStat)
+			   ))
+
+twoSidedPRank
+twoSidedPMMeanDiff
+
+@
+
+Recall that if you wanted to use a large sample approximation, you could use
+xBalance for either of these test statistics (see the previous assignments
+involving the post.alignment.transform argument to xBalance).
+
+\item What if we had a binary outcome? We create one here to enable you to
+	practice with it.
+
+<<>>=
+
+wrkdat$AboveMedHR08 <- as.numeric(wrkdat$HomRate08 > median(wrkdat$HomRate08))
+
+@
+
+One obvious test would be the Cochran-Mantel-Haensel test (which is Fisher's
+exact test but for stratified / block-randomized data --- data where the
+blocks are fixed and randomization happens within the block):
+
+<<>>=
+library(coin) ## you may need to install this
+
+wrkdat$AboveMedHR08F <- factor(wrkdat$AboveMedHR08)
+wrkdat$nhTrtF <- factor(wrkdat$nhTrt)
+
+cmh1approx<-cmh_test(AboveMedHR08F~nhTrtF|fm4,data=wrkdat,distribution=approximate(B=1000))
+cmh1largeN<-cmh_test(AboveMedHR08F~nhTrtF|fm4,data=wrkdat,distribution=asymptotic())
+
+@
+
+Alternatively, you can focus on differences of proportion:
+
+<<>>=
+
+xb5<-xBalance(nhTrt~AboveMedHR08,strata=list(fm4=~fm4),data=wrkdat,report="all")
+xb5$results
+
+## Compare the Z stat and p-value with above
+diffprop <- oneway_test(AboveMedHR08~nhTrtF|fm4,data=wrkdat)
+
+@
+
+\item How might we know whether or not to use a large sample approximation?
+	(Hint: we want our tests to be good, but the characteristics of a good
+	test may differ from the characteristics of a good estimator.) What is
+	going on here? What would we expect from a test that is operating
+	correctly? Why might we call this an assessment of "coverage"?
+
+<<cache=TRUE>>=
+
+cmhtestp<-function(Y,Z,thefm){
+	Znew<-unsplit(lapply(split(Z,thefm), sample),thefm)
+	ZnewF <- factor(Znew)
+	thetest<-cmh_test(Y~ZnewF|thefm,distribution=asymptotic())
+	pvalue(thetest)
+}
+
+cmhtestp(wrkdat$AboveMedHR08F,wrkdat$nhTrt,wrkdat$fm4)
+
+xbtestp<-function(Y,Z,thefm){
+	Znew<-unsplit(lapply(split(Z,thefm), sample),thefm)
+	thetest<-xBalance(Znew~Y,strata=list(thefm=~thefm),data=data.frame(Znew=Znew,Y=Y,thefm=thefm))
+	thetest$results[,"p",]
+}
+
+xbtestp(wrkdat$AboveMedHR08,wrkdat$nhTrt,wrkdat$fm4)
+
+set.seed(12345)
+xbpdist<-replicate(1000,xbtestp(wrkdat$AboveMedHR08,wrkdat$nhTrt,wrkdat$fm4))
+
+set.seed(12345)
+cmhpdist<-replicate(1000,cmhtestp(wrkdat$AboveMedHR08F,wrkdat$nhTrt,wrkdat$fm4))
+
+table(xbpdist)
+table(cmhpdist)
+mean(xbpdist<=.05)
+mean(cmhpdist<=.05)
+@
+
+<<out.width=".7\\textwidth">>=
+par(mfrow=c(1,2),oma=rep(0,4),mgp=c(1.5,.5,0))
+plot(ecdf(xbpdist))
+abline(0,1)
+
+plot(ecdf(cmhpdist))
+abline(0,1)
+@
+
+<<cache=TRUE>>=
+
+cmhAtestp<-function(Y,Z,thefm,thedistribution){
+	Znew<-unsplit(lapply(split(Z,thefm), sample),thefm)
+	ZnewF <- factor(Znew)
+	thetest<-cmh_test(Y~ZnewF|thefm,distribution=thedistribution)
+	pvalue(thetest)
+}
+
+
+set.seed(12345)
+cmhApdistApprox<-replicate(1000,cmhAtestp(wrkdat$AboveMedHR08F,wrkdat$nhTrt,wrkdat$fm4,thedistribution=approximate(B=1000)))
+mean(cmhApdistApprox<=.05)
+
+set.seed(12345)
+cmhApdistExact<-replicate(1000,cmhAtestp(wrkdat$AboveMedHR08F,wrkdat$nhTrt,wrkdat$fm4,thedistribution=exact()))
+mean(cmhApdistExact<=.05)
+
+
+
+@
+
+
+\item What if we had another kind of question? Say, for example, we
+	hypothesized that no neighborhood had a positive effect of the
+	treatment? If we rejected that hypothesis, it would mean that at least
+	one neighborhood had a negative effect. The following plot gives one
+	view at the neighborhood level outcomes and the differences in
+	distribution between treated and control observations. We have seen
+	that different test statistics may have different power, and, in fact,
+	this power depends on the alternative hypotheses being tested (recall
+	that we operationalize power as proportion of rejections of a given
+	null hypothesis, like the sharp null hypothesis of no effects, when an
+	alternative hypothesis is true). Another class of test statistics
+	first introduced by \citet{stephenson1981general} and
+	\citet{conover1988locally} build tests that focus on the extent to
+	which a few observations experience the experimental intervention
+	differently from the rest. \citet[Chap 2]{rosenbaum2010design}
+	modifies Stephenson's test for for use with paired research designs.
+	\citet[Chap 16]{rosenbaum2010design} and
+	\cite{rosenbaum2007confidence} uses this test statistic to assess what
+	he calls "uncommon but dramatic responses to treatment".  In an
+	excellent introduction to these ideas to social scientists,
+	\citet{caughey2016beyond} show, for example, a case in which an
+	average treatment effect is negative, but that a test statistic that
+	is particularly sensitive to singularly positive effects of treatment
+	allows them to reject the hypothesis that all villages had a negative
+	effect. That is, they were able to show the the unbiased average
+	effect was truly negative but that this negative average effect was
+	consistent with at least one unit having a positive effeect.
+
+
+Here is a plot with match-set aligned outcomes using  large dark dots for
+means: notice that the treated observations tend to be lower than the control
+observations within matched set. 
+
+<<eval=FALSE>>=
+par(mfrow=c(1,1))
+boxplot(HomRate08md~nhTrt,data=meddat)
+stripchart(HomRate08md~nhTrt,data=meddat,add=TRUE,vertical=TRUE)
+points(c(1,2),with(wrkdat,tapply(HomRate08md,nhTrt,mean)),pch=19,cex=1.5)
+abline(h=0,lty=2)
+@
+
+How would you interpret the following test of the sharp null of no effects
+against the alternative of at least one positive effect using a test statistic
+that have power to detect rare positive effects.
+
+<<>>=
+## Code from Devin Caughey
+## Define score function for Stephenson ranks
+StephensonRanks <- function (y, subset.size) {
+	r <- rank(y)
+	q.tilde <- ifelse(r < subset.size, 0, choose(r - 1, subset.size - 1))
+	return(q.tilde)
+}
+
+length(unique(wrkdat$fm4)) ## how many blocks
+
+## Stephenson rank test with subset size of 5
+test1<-independence_test(HomRate08 ~ nhTrtF|fm4 , data=wrkdat, alternative = "greater",
+			 distribution = exact(),
+			 ytrafo = function(data) {
+				 trafo(data, numeric_trafo = function (y) {
+					       StephensonRanks(y = y, subset.size = 3)
+})
+			 })
+test1
+
+
+@
+
+\end{enumerate}
+
+\bibliographystyle{apalike}
+\bibliography{Master_Bibliography}
+% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+
+\end{document}
