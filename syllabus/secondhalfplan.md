@@ -23,7 +23,7 @@ Plus perhaps:
  — And coverage.
  — maybe covariance adjustment.
 
-# Aug 8 i
+# Aug 8
  - Using xBalance and CMH (in coin allows approximative inference) to test hypotheses about outcomes in matched designs.
  - check coverage by simulations
           -  Stephenson’s ranks and Attrib Effects?
