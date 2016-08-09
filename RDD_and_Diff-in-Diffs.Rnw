@@ -393,6 +393,9 @@ xBalance(fmla = bal_fmla,
          data = rdd_dataA,
          report = "chisquare.test")
 
+xBalance(fmla = bal_fmla,
+         data = rdd_dataA,
+         report = "all")
 @
 
 \vspace{5mm}
