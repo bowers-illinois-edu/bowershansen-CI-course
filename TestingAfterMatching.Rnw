@@ -124,6 +124,9 @@ align.by.block<-function (x, set, fn = mean) {
 	unsplit(lapply(split(x, set), function(x) { x - fn(x) }), set)
 }
 
+lm1<-lm(HomRate08~nhTrt+fm4,data=wrkdat)
+lm2<-lm(HomRate08md~nhTrtmd,data=wrkdat)
+
 wrkdat$HomRate08md<-with(wrkdat,align.by.block(HomRate08,fm4))
 wrkdat$nhTrtmd<-with(wrkdat,align.by.block(nhTrt,fm4))
 wrkdat$HomRate03md<-align.by.block(wrkdat$HomRate03,wrkdat$fm4)
@@ -320,8 +323,8 @@ observations within matched set.
 
 <<eval=FALSE>>=
 par(mfrow=c(1,1))
-boxplot(HomRate08md~nhTrt,data=meddat)
-stripchart(HomRate08md~nhTrt,data=meddat,add=TRUE,vertical=TRUE)
+boxplot(HomRate08md~nhTrt,data=wrkdat)
+stripchart(HomRate08md~nhTrt,data=wrkdat,add=TRUE,vertical=TRUE)
 points(c(1,2),with(wrkdat,tapply(HomRate08md,nhTrt,mean)),pch=19,cex=1.5)
 abline(h=0,lty=2)
 @
