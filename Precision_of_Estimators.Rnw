@@ -249,14 +249,14 @@ ATEb2<-sapply(split(meddat[!is.na(meddat$fm1),],meddat$fm1[!is.na(meddat$fm1)]),
 \end{itemize}
 \end{mdframed}
 
-Now let's calculate an overall $\widehat{ATE}$ that uses harmonic mean weighting. Harmonic mean weighting weights each block by $\frac{ \frac{2}{n_{st}^{-1} + n_{sc}^{-1}} }{\sum \limits_{s = 1}^{S} \frac{2}{n_{st}^{-1} + n_{sc}^{-1}} }$. 
+Now let's calculate an overall $\widehat{ATE}$ that uses harmonic mean weighting. Harmonic mean weighting weights each block by $\frac{ \frac{2}{n_{st}^{-1} + n_{sc}^{-1}} }{\sum \limits_{s = 1}^{S} \frac{2}{n_{st}^{-1} + n_{sc}^{-1}} }$.
 
 \vspace{5mm}
 \begin{mdframed}
 \textbf{Question and Exercise for Students:}
 \vspace{-5mm}
 \begin{itemize}\itemsep1pt
-\item Why is there a $2$ in the numerator? 
+\item Why is there a $2$ in the numerator?
 \item Pick a block with more than $2$ units and calculate its ``effective sample size'' by hand using the appropriate formula---i.e., $\frac{2}{n_{ts}^{-1} + n_{cs}^{-1}}$.
 \end{itemize}
 \end{mdframed}
@@ -273,12 +273,13 @@ num_control <- wrkdat %$% {sapply(split(1 - nhTrt, fm1), sum)}
 
 harm_mean <- 2/(1/num_treated + 1/num_control)
 
-obs_overall_ate_hat_hm <- sum(ATE_hat_by_block * (harm_mean/sum(harm_mean)))
+obs_overall_ate_hat_hm <- sum(ATE_hat_by_block[as.character(blocks)] *
+			      (harm_mean[as.character(blocks)]/sum(harm_mean[as.character(blocks)])))
 
 ## These next three all also use harmonic mean weights, so we may have a small
 ## typo somewhere to track down.
 lm2a<-lm(HomRate08~nhTrt+fm1,data=wrkdat,subset=!is.na(fm1))
-##coef(lm2a)[2]
+coef(lm2a)[2]
 
 align.by.block<-function (x, set, fn = mean) {
   unsplit(lapply(split(x, set), function(x) { x - fn(x) }), set)
@@ -290,9 +291,9 @@ wrkdat$HomRateDiffmd<-with(wrkdat,align.by.block(HomRate08-HomRate03,fm1))
 wrkdat$nhTrtmd<-with(wrkdat,align.by.block(nhTrt,fm1))
 
 lm2<-lm(HomRate08md~nhTrtmd,data=wrkdat)
-##coef(lm2)[2]
+coef(lm2)[2]
 xb1<-xBalance(nhTrt~HomRate08,strata=list(fm1=~fm1),data=wrkdat,report="adj.mean.diffs")
-## xb1
+xb1
 @
 
 What are some other weighting schemes one could use? Let's try two others.
@@ -323,7 +324,7 @@ obs_overall_ate_hat_bs <- sum(ATE_hat_by_block * (num_units_per_block/nrow(wrkda
 
 \subsubsection{ETT Weighting}
 
-Let's try one final weighting scheme (although there are surely many other possibilities.) Let's weight each block-specific $\widehat{ATE}$ by the number of \textit{treated} units within that block. 
+Let's try one final weighting scheme (although there are surely many other possibilities.) Let's weight each block-specific $\widehat{ATE}$ by the number of \textit{treated} units within that block.
 
 That is, the weights associated with each block-specific $\widehat{ATE}$ are: $W_{ETT} = \frac{n_{st}}{\sum \limits_{s = 1}^S n_{st}}$.
 
@@ -376,7 +377,7 @@ where $\sigma_{y_c}^2 = \frac{\sum_{i = 1}^{n} (y_i - \bar{y})^2}{n - 1}$.
 Since $\sigma_{(\bar{y}_t - \bar{y}_c)}^2 = \sigma_{y_t}^2 + \sigma_{y_c}^2$, let's add equations \eqref{eq: Sample Var Treated} and \eqref{eq: Sample Var Untreated} together:
 
 
-By the \textit{variance sum law} we know that $\Var(X \pm Y) = \Var(X) + \Var(Y) \pm 2 \Cov(X,Y)$. Thus, 
+By the \textit{variance sum law} we know that $\Var(X \pm Y) = \Var(X) + \Var(Y) \pm 2 \Cov(X,Y)$. Thus,
 
 \begin{center}
 \begin{align*}
@@ -429,9 +430,9 @@ SE(\widehat{ATE}) = \sqrt{\frac{1}{\textcolor{red}{n} - 1} \left\{ \frac{n_t \te
 Three final implications of equation \eqref{eq: Standard Error}, as \citet[p. 58]{gerbergreen2012} state, are:
 
 \begin{itemize}
-\item If $\text{Var}(y_{it}) > \text{Var}(y_{ic})$, then adding additional units to the treatment condition lowers the standard error. 
+\item If $\text{Var}(y_{it}) > \text{Var}(y_{ic})$, then adding additional units to the treatment condition lowers the standard error.
 
-\item By contrast, if $\text{Var}(y_{it}) < \text{Var}(y_{ic})$ , then adding more units to the control condition lowers the standard error. 
+\item By contrast, if $\text{Var}(y_{it}) < \text{Var}(y_{ic})$ , then adding more units to the control condition lowers the standard error.
 
 \item Finally, if $\text{Var}(y_{it}) \approx \text{Var}(y_{ic})$, then assigning roughly half of subjects to each condition is best for lowering the standard error.
 \end{itemize}
@@ -492,17 +493,17 @@ Now let's write a simple function that calculates the respective variances for \
 << >>=
 
 sample_var <- function(z, yc, yt){
-  
+
   Z = sample(z)
-  
+
   Y = Z * yt + (1 - Z) * yc
-  
+
   var_yc_hat = var(Y[Z == 0])
-  
+
   var_yt_hat = var(Y[Z == 1])
-  
+
   return(c(var_yc_hat, var_yt_hat))
-  
+
   }
 
 @
@@ -523,6 +524,21 @@ sampling_dist_var <- data.frame(t(replicate(10^4,
 colMeans(sampling_dist_var)
 
 c(true_var_yc, true_var_yt)
+
+
+sampling_dist_var2 <- data.frame(t(replicate(10^4,
+                                   sample_var(z = news_df$z,
+                                             yc = news_df$yc,
+                                             yt = news_df$yt)))) %>%
+  rename(var_yc_hat = X1,
+         var_yt_hat = X2)
+
+colMeans(sampling_dist_var2)
+
+## An Estimate of the simulation to simulation variability or simulation error
+sqrt(var(sampling_dist_var[,"var_yc_hat"])/10000)*2 ## Try to verify this.
+
+
 
 @
 
@@ -552,13 +568,13 @@ Now, let's see how well Neyman standard errors map on to the standard deviation 
 << >>=
 
 new_experiment <- function(z, yc, yt){
-  
+
   Z = sample(z)
-  
+
   Y = Z * yt + (1 - Z) * yc
-  
+
   ate = mean(Y[Z == 1]) - mean(Y[Z == 0])
-  
+
   return(ate)
 }
 
@@ -662,24 +678,24 @@ But how do we adjudicate between which confidence interval is better? One way is
 ## unit level truth of 0, then check proportion of times 0 is
 ## enveloped by the 10^5 confidence intervals
 new_ci_constant_additive <- function(y, z, fm){
-   
+
    Z = unsplit(lapply(split(z, fm), sample), fm)
-   
+
    lm_fm = lm(y ~ Z + fm)
-   
+
    hc2_ci = confint.HC(lm_fm,
                        level = 0.95,
                        parm = "Z",
                        thevcov = vcovHC(lm_fm, type = "HC2"))[1, ]
-   
+
    iid_ci <- confint(lm_fm,
                      level = 0.95,
                      parm = "Z")[1, ]
-   
+
     zero_in_iid = 0 >= iid_ci[1] & 0 <= iid_ci[2]
-    
+
     zero_in_hc2 <- 0 >= hc2_ci[1] & 0 <= hc2_ci[2]
-    
+
     return(c(iid = zero_in_iid[[1]], hc2 = zero_in_hc2[[1]]))
 }
 
@@ -730,26 +746,26 @@ true_ate <- wrkdat %$% {mean(yt) - mean(yc)}
 
 
 new_ci_non_cons_add <- function(yc, yt, z, fm){
-   
+
    Z = unsplit(lapply(split(z, fm), sample), fm)
-   
+
    Y = Z * yt + (1 - Z) * yc
-   
+
    lm_fm = lm(Y ~ Z + fm)
-   
+
    hc2_ci = confint.HC(lm_fm,
                        level = 0.95,
                        parm = "Z",
                        thevcov = vcovHC(lm_fm, type = "HC2"))[1, ]
-   
+
    iid_ci <- confint(lm_fm,
                      level = 0.95,
                      parm = "Z")[1, ]
-   
+
     true_ate_in_iid = true_ate >= iid_ci[1] & true_ate <= iid_ci[2]
-    
+
     true_ate_in_hc2 <- true_ate >= hc2_ci[1] & true_ate <= hc2_ci[2]
-    
+
     return(c(iid = true_ate_in_iid[[1]], hc2 = true_ate_in_hc2[[1]]))
 }
 
@@ -815,26 +831,26 @@ What happens to our coverage in such an experiment? Let's see . . .
 <<>>=
 
 new_ci_non_cons_add <- function(yc, yt, z){
-   
+
    Z = sample(z)
-   
+
    Y = Z * yt + (1 - Z) * yc
-   
+
    lm = lm(Y ~ Z)
-   
+
    hc2_ci = confint.HC(lm,
                        level = 0.95,
                        parm = "Z",
                        thevcov = vcovHC(lm, type = "HC2"))[1, ]
-   
+
    iid_ci <- confint(lm,
                      level = 0.95,
                      parm = "Z")[1, ]
-   
+
     true_ate_in_iid = true_ate >= iid_ci[1] & true_ate <= iid_ci[2]
-    
+
     true_ate_in_hc2 <- true_ate >= hc2_ci[1] & true_ate <= hc2_ci[2]
-    
+
     return(c(iid = true_ate_in_iid[[1]], hc2 = true_ate_in_hc2[[1]]))
 }
 
@@ -843,7 +859,7 @@ ci_coverage_non_cons_add <- replicate(10^4, new_ci_non_cons_add(yc = fake_experi
                                                                 z = fake_experiment$Z))
 
 apply(ci_coverage_non_cons_add, 1, mean)
-                            
+
 @
 
 \section{Increasing Precision via Covariance Adjustment}
