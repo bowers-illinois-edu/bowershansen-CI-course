@@ -1,4 +1,4 @@
-\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
+%\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
 \documentclass[11pt,leqno]{article}
 \usepackage{microtype} %
 \usepackage{setspace}
@@ -127,7 +127,7 @@
 
 \tableofcontents
 
-<< setup, include = TRUE, eval = TRUE >>=
+<< setup, echo=FALSE, results='hide',include = FALSE, eval = TRUE >>=
 
 if (!require("pacman")) {install.packages("pacman")}
 
@@ -151,9 +151,23 @@ pacman::p_load(
   doParallel
 )
 
-opts_chunk$set(message = FALSE,
-               warning = FALSE,
-               size = "footnotesize")
+
+opts_chunk$set(tidy = TRUE,
+	       echo = TRUE,
+	       results = 'markup',
+	       strip.white = TRUE,
+	       fig.path = 'figs/fig',
+	       cache = FALSE,
+	       highlight = TRUE,
+	       width.cutoff = 100,
+	       size = 'footnotesize',
+	       out.width = '.9\\textwidth',
+	       message = FALSE,
+	       warning = FALSE,
+	       comment = NA)
+
+options(width = 100,
+	digits = 3)
 
 @
 
@@ -161,7 +175,15 @@ opts_chunk$set(message = FALSE,
 
 \subsection{General Setup}
 
-Today we are going to use the data from \citet{caugheysekhon2011}, which is available for download \href{http://sekhon.berkeley.edu/rep/RDReplication.zip}{here}. \citet{caugheysekhon2011} engage in a debate whose participants seek to identify the causal effect of the so-called ``incumbency advantage.'' That is, what effect does a candidate's status as an incumbent have on whether or not that candidate wins an election? Obviously, whether or not a candidate is an incumbent is \textit{not} randomly assigned.
+Today we are going to use the data on close US House of Representatives races
+1942--2008 used in  \citet{caugheysekhon2011}.\footnote{The full replication
+	data is available for download
+	\href{http://sekhon.berkeley.edu/rep/RDReplication.zip}{here}. But we
+	read it directly below.} \citet{caugheysekhon2011} engage in a debate
+whose participants seek to identify the causal effect of the so-called
+``incumbency advantage.'' That is, what effect does a candidate's status as an
+incumbent have on whether or not that candidate wins an election? Obviously,
+whether or not a candidate is an incumbent is \textit{not} randomly assigned.
 
 Let's first load the data:
 
@@ -169,8 +191,8 @@ Let's first load the data:
 
 rm(list=ls())
 
-rdd_data <- read_dta("RDReplication.dta") %>%
-  filter(Use == 1) ## Use is indicator for whether unit is included in RD incumbency advantage sample
+rdd_data <- read_dta("http://jakebowers.org/Matching/RDReplication.dta") %>%
+	filter(Use == 1) ## Use is indicator for whether unit is included in RD incumbency advantage sample
 
 rdd_data[] <- lapply(rdd_data[], unclass)
 
@@ -217,20 +239,24 @@ table(rdd_data$DemWin)
 @
 
 \begin{table}[ht]
-\centering
-\begin{tabular}{rr}
-  \hline
- & Democrat Wins Election \\ 
-  \hline
-0 & 4507 \\ 
-  1 & 5677 \\ 
-   \hline
-\end{tabular}
+	\centering
+	\begin{tabular}{rr}
+		\hline
+		& Democrat Wins Election \\
+		\hline
+		0 & 4507 \\
+		1 & 5677 \\
+		\hline
+	\end{tabular}
+	\caption{The Treatment Variable}
 \end{table}
 
 \subsubsection{Outcome Variables}
 
-In \citet{caugheysekhon2011}, the primary outcome variables of interest are as follows:
+In \citet{caugheysekhon2011}, the primary outcome variables of interest are as
+follows: whether a democrat wins the next election, the proportion voting for
+a democrat in the next election, and the democratic vote margin in the next
+election.
 
 << >>=
 
@@ -251,9 +277,9 @@ kable(dvs)
 
 \subsubsection{Baseline Covariates}
 
-The relevant baseline (i.e., pre-treatment) covariates are:
+The relevant baseline (i.e., pre-treatment) covariates about the races are:
 
-<< >>=
+<< echo=FALSE >>=
 
 covs <- matrix(c('DWinPrv', 'Dem Win t - 1',
                  'DPctPrv', 'Dem % t - 1',
@@ -262,7 +288,7 @@ covs <- matrix(c('DWinPrv', 'Dem Win t - 1',
                  'DemInc', 'Dem Inc in Race',
                  'NonDInc', 'Rep Inc in Race',
                  'PrvTrmsD', 'Dem\'s # Prev Terms',
-                 'PrvTrmsO', 'Rep\'s # Prev Terms', 
+                 'PrvTrmsO', 'Rep\'s # Prev Terms',
                  'RExpAdv', 'Rep Experience Adv',
                  'DExpAdv', 'Dem Experience Adv',
                  'ElcSwing', 'Partisan Swing',
@@ -332,12 +358,12 @@ As applied to bandwidth selection in the RDD context, the SIUP implies that one 
 \textbf{Questions for Students:}
 \vspace{-5mm}
 \begin{itemize}\itemsep1pt
-\item Give one reason why we might want to begin testing from the \textit{largest} candidate bandwidth? 
+\item Give one reason why we might want to begin testing from the \textit{largest} candidate bandwidth?
 \item Give one reason why we might want to begin testing from the \textit{smallest} candidate bandwidth?
 \end{itemize}
 \end{mdframed}
 
-Let's specify a set of candidate bandwidths and then sequentially test covariate balance. Before actually testing, though, we want to specify a balance criterion and then maximize effective sample size subject to that criterion. 
+Let's specify a set of candidate bandwidths and then sequentially test covariate balance. Before actually testing, though, we want to specify a balance criterion and then maximize effective sample size subject to that criterion.
 
 << >>=
 
@@ -354,16 +380,17 @@ Now let's first filter our dataset and check for balance in the largest candidat
 << >>=
 
 lower_bound <- seq(from = -5, to = -0.1, by = 0.1)
-  
+
 upper_bound <- seq(from = 0.1, to = 5, by = 0.1) %>%
   sort(decreasing = TRUE)
-  
-rdd_data %<>% filter(DifDPct > lower_bound[1] & DifDPct < upper_bound[1])
-   
-rdd_data %$% summary(DifDPct)
+
+rdd_dataA <-rdd_data
+rdd_dataA %<>% filter(DifDPct > lower_bound[1] & DifDPct < upper_bound[1])
+
+rdd_dataA %$% summary(DifDPct)
 
 xBalance(fmla = bal_fmla,
-         data = rdd_data,
+         data = rdd_dataA,
          report = "chisquare.test")
 
 @
@@ -385,30 +412,30 @@ chi_squared_balance <- function(i,
                                 running_var,
                                 bal_fmla,
                                 data){
-  
+
   # Preliminaries
   suppressMessages(stopifnot(require(dplyr, quietly = TRUE)))
   suppressMessages(stopifnot(require(magrittr, quietly = TRUE)))
   suppressMessages(stopifnot(require(RItools, quietly = TRUE)))
-  
+
   lower_bound <- seq(from = -5, to = -0.1, by = 0.1)
-  
+
   upper_bound <- seq(from = 0.1, to = 5, by = 0.1) %>%
   sort(decreasing = TRUE)
-  
+
   data %<>% filter(running_var > lower_bound[i] & running_var < upper_bound[i])
-   
+
   # Effective Sample Size
   ess <- nrow(data)
-  
+
   p_value <- xBalance(fmla = bal_fmla,
                       data = data,
                       report = "chisquare.test")$overall[[3]]
-  
+
   bands <- cbind(ess, p_value)
-  
+
   return(bands)
-  
+
   }
 
 is <- seq(from = 1,
@@ -438,7 +465,7 @@ kable(band_df)
 \textbf{Questions for Students:}
 \vspace{-5mm}
 \begin{itemize}\itemsep1pt
-\item There's something interesting going on as we make the window around the cut point smaller and smaller. What is it? 
+\item There's something interesting going on as we make the window around the cut point smaller and smaller. What is it?
 \item And what are its implications, which are also mentioned by \citet{caugheysekhon2011}?
 \end{itemize}
 \end{mdframed}
@@ -463,11 +490,13 @@ What can we do if the exclusion restriction is violated? One approach is to mode
 << >>=
 
 rdd_data %<>% filter(DifDPct > lower_bound[47] & DifDPct < upper_bound[47])
-   
+
 rdd_data %>% nrow
 
-rdd_data %<>% mutate(resid_DPctNxt = resid(lm(DPctNxt ~ DifDPct, data = rdd_data)))
-     
+tmplm<-lm(DPctNxt ~ DifDPct, data = rdd_data)
+
+rdd_data %<>% mutate(resid_DPctNxt = resid(tmplm))
+
 @
 
 \vspace{5mm}
@@ -483,7 +512,7 @@ rdd_data %<>% mutate(resid_DPctNxt = resid(lm(DPctNxt ~ DifDPct, data = rdd_data
 
 <<>>=
 
-ggplot(rdd_data, aes(DifDPct, DPctNxt)) + geom_point() + 
+ggplot(rdd_data, aes(DifDPct, DPctNxt)) + geom_point() +
   geom_smooth(method = lm, se = FALSE) + geom_smooth(se = FALSE, colour= "red") +
   xlab("Democratic Margin of Victory (Running Variable)") +
   ylab("Democratic Vote Percentage in Next Election (Outcome Variable)") +
@@ -501,13 +530,9 @@ Consider modeling the relationship between the running variable and the outcome 
 est_ate <- coef(lm(resid_DPctNxt ~ DemWin, data = rdd_data))[["DemWin"]]
 
 permute_sharp_null <- function(z, y){
-  
   Z = sample(z)
-  
   est_ate_null = coef(lm(y ~ Z))[["Z"]]
-  
   return(est_ate_null)
-  
   }
 
 rand_dist <- replicate(10^4, permute_sharp_null(z = rdd_data$DemWin,
@@ -524,7 +549,7 @@ qplot(rand_dist, geom = "histogram") +
 
 p_value_one_sided <- mean(rand_dist >= est_ate)
 
-p_value_two_sided <- mean(abs(rand_dist) >= abs(est_ate))
+p_value_two_sided <- 2* min(mean(rand_dist >= est_ate), mean(rand_dist <= est_ate))
 
 @
 
@@ -542,14 +567,14 @@ Notice that in the outcome analysis above we only tested one null hypothesis, wh
 
 << >>=
 
-ggplot(rdd_data, aes(factor(DemWin), resid_DPctNxt)) + 
+ggplot(rdd_data, aes(factor(DemWin), resid_DPctNxt)) +
   geom_boxplot() + xlab("Democrat Wins Election (Treatment)") +
   ylab("Residualized Dem Vote Percentage in Next Election")
 
 @
 
 
-For now, let's stick to the constant, additive effect model. Looking only at units within the window, $W_0$, we will 
+For now, let's stick to the constant, additive effect model. Looking only at units within the window, $W_0$, we will
 
 \begin{center}
 \begin{enumerate}
@@ -580,10 +605,10 @@ HL_CS <- Confidence_Set_and_HL_Est_RDD(.Y = rdd_data$DPctNxt,
                               .R = rdd_data$DifDPct,
                               .block = NULL,
                               ## Max:
-                              #rdd_data %$% {max(DPctNxt[DemWin==1]) - 
+                              #rdd_data %$% {max(DPctNxt[DemWin==1]) -
                               #min(rdd_data$DPctNxt[rdd_data$DemWin==0])}
                               ## Min:
-                              #rdd_data %$% {min(DPctNxt[DemWin==1]) - 
+                              #rdd_data %$% {min(DPctNxt[DemWin==1]) -
                               #max(rdd_data$DPctNxt[rdd_data$DemWin==0])}
                               .tau_range = c(-55, 100),
                               .tau_length = length(seq(from = -15,
@@ -616,7 +641,7 @@ HL_CS[c(1:3)]
 
 \section{Difference-in-Differences}
 
-Now let's see if we can perform the same analysis using a difference-in-differences approach. Difference-in-differences entails constructing the ``gain score''---in this case, the change in the percentage of votes before the treatment relative to after the treatment---and performing outcome analysis on the ``gain score.'' 
+Now let's see if we can perform the same analysis using a difference-in-differences approach. Difference-in-differences entails constructing the ``gain score''---in this case, the change in the percentage of votes before the treatment relative to after the treatment---and performing outcome analysis on the ``gain score.''
 
 This method should increase precision. But, also, insofar as there are no time-varying covariates, then the difference-in-differences approach can also serve as an identification strategy.
 
@@ -624,7 +649,8 @@ This method should increase precision. But, also, insofar as there are no time-v
 
 rdd_data %<>% mutate(gain_pct = DPctNxt - DPctPrv)
 
-rdd_data %<>% mutate(gain_pct_resid = resid(lm(gain_pct ~ DifDPct, data = rdd_data)))
+tmplm <- lm(gain_pct ~ DifDPct, data = rdd_data)
+rdd_data %<>% mutate(gain_pct_resid = resid(tmplm))
 
 est_gain_score_ate <- coef(lm(gain_pct_resid ~ DemWin, data = rdd_data))[["DemWin"]]
 
@@ -656,7 +682,7 @@ qplot(rand_dist, geom = "histogram") +
 
 p_value_one_sided <- mean(rand_dist >= est_ate)
 
-p_value_two_sided <- mean(abs(rand_dist) >= abs(est_ate))
+p_value_two_sided <- 2* min(mean(rand_dist >= est_ate), mean(rand_dist <= est_ate))
 
 c(p_value_one_sided, p_value_two_sided)
 
