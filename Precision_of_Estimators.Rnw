@@ -324,7 +324,11 @@ obs_overall_ate_hat_bs <- sum(ATE_hat_by_block * (num_units_per_block/nrow(wrkda
 
 \subsubsection{ETT Weighting}
 
-Let's try one final weighting scheme (although there are surely many other possibilities.) Let's weight each block-specific $\widehat{ATE}$ by the number of \textit{treated} units within that block.
+Let's try one final weighting scheme (although there are surely many other
+possibilities.) Let's weight each block-specific $\widehat{ATE}$ by the number
+of \textit{treated} units within that block.\footnote{Rosenbaum calls this
+	method of weighting, "direct adjustment", following a tradition in
+	biostatistics.}
 
 That is, the weights associated with each block-specific $\widehat{ATE}$ are: $W_{ETT} = \frac{n_{st}}{\sum \limits_{s = 1}^S n_{st}}$.
 
