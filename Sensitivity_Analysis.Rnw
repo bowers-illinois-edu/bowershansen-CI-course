@@ -1,0 +1,542 @@
+\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
+\documentclass[11pt,leqno]{article}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb}          % AMS Stuff
+\usepackage[linewidth=1pt]{mdframed}
+\usepackage{mdframed}
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{afterpage}% http://ctan.org/pkg/afterpage
+\usepackage[T1]{fontenc}
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfig}
+\usepackage{titling}            % modify maketitle in latex
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage{verbatim}
+\usepackage{geometry}
+\usepackage{bigfoot}
+\usepackage[format=hang,
+            font={small},
+            labelfont=bf,
+            textfont=rm]{caption}
+
+\geometry{verbose,margin=2cm,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=page,
+            colorlinks=true,
+            hyperfootnotes=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1},
+            citecolor=blue!70!black,
+            linkcolor=red!70!black,
+            urlcolor=green!70!black]{hyperref}
+\usepackage{hypernat}
+
+\usepackage{multirow}
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+
+\parskip=12pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{12pt} %Aboveskip
+{12pt} %Below skip
+{\itshape} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+% \DeclareMathOperator{\Pr}{\rm{Pr}}
+
+% COLORS FOR GRAPHICS (3-class Set1)
+\definecolor{Blue}{RGB}{55,126,184}
+\definecolor{Red}{RGB}{228,26,28}
+\definecolor{Green}{RGB}{77,175,74}
+
+% COLORS FOR EQUATIONS (3-class Dark2)
+\definecolor{eqgreen}{RGB}{27,158,119}
+\definecolor{eqblue}{RGB}{117,112,179}
+\definecolor{eqred}{RGB}{217,95,2}
+
+
+\title{Sensitivity Analysis}
+\author{Jake Bowers, Ben Hansen \& Tom Leavitt}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+<< setup, include = FALSE, eval = TRUE >>=
+
+if (!require("pacman")) install.packages("pacman")
+
+pacman::p_load(
+  plyr,
+  dplyr,
+  magrittr,
+  reshape2,
+  tidyr,
+  haven,
+  broom,
+  randomizr,
+  lmtest,
+  ggplot2,
+  knitr,
+  xtable,
+  devtools,
+  optmatch,
+  RItools,
+  sandwich,
+  parallel,
+  doParallel,
+  sensitivitymv,
+  sensitivitymw
+)
+
+opts_chunk$set(message=FALSE,
+               warning=FALSE,
+               size = "footnotesize")
+
+@
+
+\newpage
+
+\section{Introduction}
+
+Thus far this course has considered how to make \textit{valid} inferences conditional on the premise of no imbalances on unobserved covariates of which treatment assignment is a function. But what about the soundness of such inferences? Is the premise of no imbalances on unobserved covariates true? Ultimately, that is a question we cannot answer since it requires data that is not available; however, we can consider \textit{hypothetical} scenarios of confounding and then assess the extent to which such scenarios would alter our inferences.
+
+When considering overt bias, \citet{rosenbaum2002observational} remains agnostic about the functional form, $\lambda(\cdot)$, that links $\mathbf{x}_i$ to $\pi_i$. After all, if $\mathbf{x}_i = \mathbf{x}_j$, then, irrespective of the functional form of $\lambda(\cdot)$, $\lambda(\mathbf{x}_i) = \lambda(\mathbf{x}_j) = \pi_i = \pi_j$. 
+
+In order to avoid making any functional form assumptions about how baseline covariates relate to treatment assignment probabilities, then one must \textit{exactly} match treated and control units on baseline covariates. Therefore, the sensitivity analyses today consider \textit{hidden bias} due to an unobserved confounder and due to residual imbalances on unobserved covariates.
+
+\subsection{Hidden Bias Due to an Unobserved Confounder}
+
+Let's define the \textit{treatment odds ratio} as:
+
+\begin{center}
+\begin{align} \label{eq: treatment odds ratio}
+\frac{\left(\frac{\pi_i}{1 - \pi_i} \right)}{\left(\frac{\pi_j}{1 - \pi_j} \right)} \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j \notag \\
+\implies \notag \\
+& \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j. 
+\end{align}
+\end{center}
+
+\citet{rosenbaum2002observational} proves that the treatment odds ratio defined in \eqref{eq: treatment odds ratio} for units $i$ and $j$ implies the following model, which consists of (1) a logistic functional form that links treatment odds, $\frac{\pi_i}{(1 - \pi_i)}$, to the covariates $(\mathbf{x}_i, u_i)$; and (2) a constraint on $u_i$:
+
+\begin{center}
+\begin{equation}
+\label{eq: unobserved confounding}
+\text{log} \left(\frac{\pi_i}{1 - \pi_i} \right) = \kappa(\mathbf{x}_i) + \gamma u_i,
+\end{equation}
+\end{center}
+
+where $\kappa(\cdot)$ is an unknown function and $\gamma$ is an unknown parameter. 
+
+\begin{center}
+\textbf{Remember}:
+\end{center}
+A logarithm is simply the power to which a number must be raised in order to get some other number. In this case we're dealing with natural logarithms. Thus, we can read $\text{log} \left(\frac{\pi_i}{1 - \pi_i} \right)$ as asking: $\mathrm{e}$ to the power of what gives us $\left(\frac{\pi_i}{1 - \pi_i} \right)$? And the answer is $\mathrm{e}$ to the power of $\kappa(\mathbf{x}_i) + \gamma u_i$. If $\mathbf{x}_i = \mathbf{x}_j$, then $\text{log} \left(\frac{\pi_i}{1 - \pi_i} \right) = \gamma u_i$, which means that $\mathrm{e}^{\gamma u_i} = \left(\frac{\pi_i}{1 - \pi_i} \right)$.
+
+\citet{rosenbaum2002observational} further shows that if there is indeed a logistic functional form that links $u \in [0, 1]$ to $\Gamma$, such that $\mathrm{e}^{\gamma} = \Gamma$, then 
+
+\begin{center}
+\begin{equation}
+\frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} = \mathrm{e}^{\gamma(u_i - u_j)} \ \text{if} \ \mathbf{x}_i = \mathbf{x}_j.
+\end{equation}
+\end{center}
+
+The minimum and maximum possible value for $u_i - u_j$ are $-1$ and $1$, respectively, which implies that, if the functional form that links an unobserved covariate, $u_i$, to the treatment odds, $\frac{\pi_i}{1 - \pi_i}$, is indeed logistic, then for any fixed $\gamma$ the upper and lower bounds on \ref{eq: treatment odds ratio} are:
+
+\begin{center}
+\begin{equation}
+\label{eq: treatment odds ratio bounds gamma}
+\frac{1}{\mathrm{e}^{\gamma}} \leq \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \leq \mathrm{e}^{\gamma}.
+\end{equation}
+\end{center}
+
+Since $\mathrm{e}^{\gamma} = \Gamma$, then we can express \ref{eq: treatment odds ratio bounds gamma} as \ref{eq: treatment odds ratio} by substituting $\frac{1}{\Gamma}$ for $\mathrm{e}^{-\gamma}$ and $\Gamma$ for $\mathrm{e}^{\gamma}$.
+
+Thus, in conclusion we're left with:
+
+\begin{center}
+\begin{equation}
+\frac{1}{\Gamma} \leq \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \leq \Gamma \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j 
+\end{equation}
+\end{center}
+
+For any specific $(\gamma, \mathbf{u})$, there is a distribution of treatment assignments $\mathbf{Z}$ on $\Omega$. If $(\gamma, \mathbf{u})$ were known, then $Pr\left(\mathbf{Z} = \mathbf{z} \in \Omega \right)$ would also be known and one could perform permutation inference. But, since $(\gamma, \mathbf{u})$ is \textit{not} known, a sensitivity analysis illustrates the sensitivity of inferences to a range of assumptions about $(\gamma, \mathbf{u})$. 
+
+\subsection{Sensitivity Analysis with Matched Sets Design}
+
+\citet{rosenbaum2015} offers an \texttt{[R]} package for the implementation of sensitivity analyses.
+
+<< >>=
+
+load(url("http://jakebowers.org/Matching/meddat.rda"))
+
+meddat$HomRate03 <- with(meddat, (HomCount2003/Pop2003) * 1000)
+meddat$HomRate08 <- with(meddat, (HomCount2008/Pop2008) * 1000)
+
+load("fm4.RData")
+
+meddat %<>% mutate(fm4 = fm4,
+                   HomRate0803 = HomRate08 - HomRate03) %>%
+  filter(!is.na(fm4))
+
+meddat %<>% mutate(probs = unsplit(value = lapply(split(x = nhTrt,
+                                                     f = fm4),
+                                               function(x) {sum(x)/length(x)}),
+                                f = fm4))
+
+obs_ate <- coef(lm(HomRate0803 ~ nhTrt + fm4,
+           data = meddat))[["nhTrt"]]
+
+obs_ate
+
+new_block_experiment <- function(z,
+                                 y,
+                                 s){
+  
+  Z <- unsplit(lapply(split(z, s), sample), s)
+  
+  obs_ATE <- coef(lm(y ~ Z + s))[["Z"]]
+  
+  return(obs_ATE)
+  
+}
+
+null_dist <- replicate(1000, new_block_experiment(z = meddat$nhTrt,
+                                                  y = meddat$HomRate0803,
+                                                  s = meddat$fm4))
+
+p_value_lower <- mean(null_dist <= obs_ate)
+
+p_value_lower
+
+p_value_two_sided <- mean(abs(null_dist) >= abs(obs_ate))
+
+p_value_two_sided
+
+@
+
+
+\textbf{Question for Students:}
+\begin{itemize}\itemsep1pt
+\item Interpret the two p-values above.
+\end{itemize}
+
+
+Now let's perform a sensitivity analysis using the package developed by \citet{rosenbaum2015}.
+
+<< >>=
+
+meddat %<>% select(nhTrt,
+                   HomRate0803,
+                   fm4,
+                   probs) %>%
+  arrange(fm4,
+          nhTrt)
+
+reshape_sensitivity <- function(.data,
+                                .z,
+                                .y,
+                                .fm){
+  
+  suppressMessages(stopifnot(require(dplyr, quietly = TRUE)))
+  suppressMessages(stopifnot(require(magrittr, quietly = TRUE)))
+  
+  num_cols <- max(table(meddat$fm4))
+  
+  reshaped <- lapply(X = split(.y, .fm),
+                     FUN = function(x){
+                       
+                       return(c(x,
+                                rep(x = NA,
+                                    times = max(num_cols - length(x),
+                                                0))))
+                       
+                       })
+  
+  reshaped_df <- data.frame(t(simplify2array(reshaped)))
+  
+  return(reshaped_df)
+  
+  }
+
+meddat_reshaped <- reshape_sensitivity(.data = meddat,
+                    .z = meddat$nhTrt,
+                    .y = meddat$HomRate0803,
+                    .fm = meddat$fm4) %>%
+  rename(yt = X1,
+         yc1 = X2,
+         yc2 = X3,
+         yc3 = X4,
+         yc4 = X5,
+         yc5 = X6)
+
+gammas <- seq(from = 1,
+              to = 6,
+              by = 0.1)
+
+sens_results <- sapply(X = gammas,
+                       FUN = function(g) {
+                         
+                         c(gamma = g,
+                           senmv(meddat_reshaped,
+                                 method = "t",
+                                 gamma = g))
+                         })
+
+sens_results
+
+plot(x = sens_results['gamma',],
+     y = sens_results['pval',],
+     xlab = "Gamma",
+     ylab = "P-Value",
+     main = "Sensitivity Analysis"); abline(h = 0.05)
+
+@
+
+
+
+\textbf{Question for Students:}
+\begin{itemize}\itemsep1pt
+\item Interpret the plot above.
+\end{itemize}
+
+<< >>=
+
+find_Sens_G <- function(gamma,
+                        alpha){
+  
+  senmv(meddat_reshaped,
+        gamma = gamma)$pval - alpha
+} 
+
+## Find x value at which the function above == 0
+
+uniroot(f = find_Sens_G,
+                lower = 1,
+                upper = 6,
+                a = 0.05)$root
+
+@
+
+\textbf{Question for Students:}
+\begin{itemize}\itemsep1pt
+\item Explain what the \texttt{[R]} uniroot function above is doing.
+\end{itemize}
+
+\subsection{General Sensitivity Analysis}
+
+Now to gain some intuition about what exactly a sensitivity analysis is doing, let's consider this very general sensitivity analysis below.
+
+<<>>=
+
+rm(list=ls())
+
+gen_sensitivity_analysis <- function(.Y,
+                                     .n,
+                                     .nt,
+                                     .pi,
+                                     .gamma){
+  
+  if(.gamma == 1)
+    
+    prob_treated_u <- prob_treated_l <- .pi # If Gamma = 1, treatment assignment probability stays same
+  
+  else {
+    
+    odds_u <- .gamma * .pi / (1 - .pi) # Get upper hypothetical odds
+    
+    odds_l <- .pi / (.gamma * (1 - .pi) ) # Get lower hypothetical odds
+    
+    prob_treated_u <- odds_u / (1 + odds_u) # Convert upper odds back to probabilities
+    
+    prob_treated_l <- odds_l / (1 + odds_l) # Convert lower odds back to probabilities
+    
+  }
+  
+  treated_sample <- sort(sample(x = .Y, ## This corresponds to sharp null
+                                size = .nt,
+                                replace = FALSE,
+                                prob = c(rep(x = prob_treated_u,
+                                             times = .nt),
+                                         rep(x = .pi,
+                                             times = .n - .nt))))
+  
+  Y <- c(treated_sample,
+         base::setdiff(.Y,
+                       treated_sample))
+  
+  ATE_under_sharp_null <- mean(Y[1 : .nt]) - mean(Y[(.nt + 1) : .n])
+  
+  return(ATE_under_sharp_null)
+  
+}
+
+@
+
+<< >>=
+
+## Generate fake data
+fake_data <- data.frame(unit = seq(from = 1, to = 100, by = 1),
+                        z = c(rep(1, 50), rep(0, 50)),
+                        yc = rnorm(n = 100, mean = 10, sd = 8),
+                        tau = rnorm(n = 100, mean = 5, sd = 6.5)) %>%
+  mutate(yt = yc + tau,
+         y = z * yt + (1 - z) * yc)
+
+## Calculate observed ATE
+obs_ATE <- fake_data %$%{ mean(y[z == 1]) - mean(y[z == 0]) }
+
+## Test sharp null hypothesis of no effect and calculate p-value according to Gamma = 1
+
+new_ra_under_null <- function(z, y){
+  
+  Z = sample(z)
+  
+  ate = coef(lm(y ~ Z))[["Z"]]
+  
+  return(ate)
+}
+
+null_dist_gamma_1 <- replicate(1000, new_ra_under_null(z = fake_data$z,
+                                                       y = fake_data$y))
+
+## p value
+mean(abs(null_dist_gamma_1) >= abs(obs_ATE))
+
+gammas <- (seq(from = 1, to = 3, by = 1))
+
+set.seed(1:5)
+
+n_sims <- 10^3
+
+null_dists <- data.frame(t(replicate(n_sims,
+                                     sapply(gammas, gen_sensitivity_analysis,
+                                            .Y = fake_data$y,
+                                            .n = nrow(fake_data),
+                                            .nt = sum(fake_data$z),
+                                            .pi = sum(fake_data$z)/ nrow(fake_data))))) %>%
+  dplyr::mutate(sim = seq(from = 1,
+                          to = n_sims,
+                          by = 1)) %>%
+  dplyr::rename(gamma_1 = X1,
+                gamma_2 = X2,
+                gamma_3 = X3)
+
+
+## Changing dataframe from wide to long format using reshape2 package
+null_dists_long <- reshape2::melt(data = null_dists,
+                        id.vars = "sim") %>%
+  mutate(variable = as.factor(variable)) %>%
+  rename(Gamma = variable)
+
+ggplot(data = null_dists_long,
+       aes(x = value, fill = Gamma)) +
+  geom_histogram() +
+  facet_wrap(~ Gamma,
+             ncol = 1) + 
+  geom_vline(xintercept = 0,
+             colour = "black",
+             linetype = "longdash") +
+  geom_vline(xintercept = obs_ATE,
+             colour = "red",
+             linetype = "longdash")
+
+@
+
+\textbf{Questions for Students:}
+\begin{itemize}\itemsep1pt
+\item Describe how the three null randomization distributions change under different values of $\Gamma$.
+\item Why is the p-value with a $\Gamma = 3$ smaller even though the mean of its null distribution is higher?
+\end{itemize}
+
+<<>>=
+
+apply(null_dists[,1:3], 2, mean)
+
+apply(null_dists[,1:3], 2, var)
+
+apply(null_dists[,1:3], 2, function(x) mean(abs(x) >= abs(obs_ATE)))
+
+@
+
+\textbf{Questions for Students:}
+\begin{itemize}\itemsep1pt
+\item How does the mean of the null randomization distribution change across different values of $\Gamma$?
+\item How does the variance of the null randomization distribution change across different values of $\Gamma$?
+\item How does the p-value change across different values of $\Gamma$?
+\end{itemize}
+
+
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{master_bibliography}   % name your BibTeX data base
+\end{singlespace}
+
+\newpage
+
+\end{document}
