@@ -74,6 +74,19 @@ algorithm to search fairly hard for the best solution.
 
 <<results='hide'>>=
 
+## Propensity score match
+fm1 <- fullmatch(psDist2,data=meddat,min.controls=1) ## no more than 1 treated per set
+
+## Rank-Based Mahalanobis Match restricted to not contain crazy propensity
+## distances
+fm2 <- fullmatch(mahalDist+caliper(psDist2,4),data=meddat,min.controls=1) ## no more than 1 treated per set
+
+## Matching just on similarity in baseline homicides 
+fm0 <- fullmatch(absDist,data=meddat,min.controls=1)
+
+
+## PS matching restricting match to within 4sds on propensity scores, 2
+## homicides, and 40 units on the mahalanobis distance
 fm3<-fullmatch(psDist2+caliper(psDist2,4)
 	       +caliper(absDist,2)
 	       +caliper(mahalDist,40),data=meddat,tol=.00001,min.controls=1)
