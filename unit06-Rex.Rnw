@@ -23,7 +23,7 @@ options(width=110,digits=3)
 library(MASS)
 library(RItools)
 library(optmatch)
-load(url("http://jakebowers.org/Matching/meddat.rda"))
+load(url("http://jakebowers.org/Data/meddat.rda"))
 @
 
 Here are a couple of recodes to turn raw homicide counts into homicide rates
