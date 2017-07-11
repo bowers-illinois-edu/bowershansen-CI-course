@@ -100,28 +100,40 @@ If you use propensity scores, you may find \texttt{brglm} to work better than
 Here is one approach, but I encourage you to make your own.
 
 <<>>=
+## Some commands like a formula object:
+balfmla<-reformulate(c(names(meddat)[c(5:7,9:24)],"HomRate03"),response="nhTrt")
+
 
 ## Scalar distance on baseline outcome
 tmp <- meddat$HomRate03
 names(tmp) <- rownames(meddat)
 absdist <- match_on(tmp, z = meddat$nhTrt)
 
-## Propensity score using "bias-reduced" logistic regression (i.e. another
-## form of penalized logistic regression.
-## install.packages("brglm",dependencies=TRUE)
-library(brglm)
-balfmla<-reformulate(c(names(meddat)[c(5:7,9:24)],"HomRate03"),response="nhTrt")
-brglm1<-brglm(balfmla,data=meddat,family=binomial)
-pScore2<-predict(brglm1)
-meddat$pScore2<-pScore2
-psDist2<-match_on(nhTrt~pScore2,data=meddat)
+## Ordinary Propensity score
+glm1<-glm(balfmla,data=meddat,family=binomial)
+
+## Propensity score using elastic net
+library(glmnet)
+X <- model.matrix(update(balfmla,~ -1+.),data=meddat)
+cv.glmnet1<-cv.glmnet(x=X[,-1],y=meddat$nhTrt,family="binomial",alpha=.5)
+
+## Add back to data
+meddat$pscore<-predict(glm1) ## linear.predictors not probs
+meddat$penpscore<-predict(cv.glmnet1$glmnet.fit,newx=X[,-1],s=cv.glmnet1$lambda.min)
+
+## Make distance matrices
+psdist<-match_on(nhTrt~pscore,data=meddat)
+penpsdist<-match_on(nhTrt~penpscore,data=meddat)
+
+as.matrix(psdist)[1:5,1:5]
+as.matrix(penpsdist)[1:5,1:5]
 
 ## Overlapping propensity score plot
-## par(mfrow=c(1,2))
-## with(meddat,boxplot(split(pScore2,nhTrt)))
-## with(meddat,boxplot(split(pScore,nhTrt)))
+par(mfrow=c(1,2))
+with(meddat,boxplot(split(pscore,nhTrt)))
+with(meddat,boxplot(split(penpscore,nhTrt)))
 
-## Mahalanobis distance
+## Rank-Based Mahalanobis distance (Rosenbaum, Chap 8)
 mahalDist<-match_on(balfmla,data=meddat,method="rank_mahalanobis")
 
 fm3<-fullmatch(psDist2+caliper(psDist2,4)
