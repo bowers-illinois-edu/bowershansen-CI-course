@@ -4,7 +4,7 @@
 
 N/A, but course prereqs:
 
-- formal logic, enough to identify valid/not valid math proofs/deductive arguments 
+- formal logic, enough to identify valid/not valid math proofs/deductive arguments
 -  Conditional probability and conditional expectation (you can fill this in, but it'll take additional self-study)
 - experience using a command-based computer program (as opposed to a menu-driven one)
 - willingness to learn R  (if it's new to you, consider taking the course)
@@ -16,14 +16,14 @@ N/A, but course prereqs:
 
 
 - Salk vaccine trials
-- dolphins
-- Fisher tea-tasting
+- Coffee tasting/Fisher tea-tasting
+- Fri the 13th
 
 #### assumptions
 
-- The assignment of units of study to treatment conditions is (considered to be) a random process
+- Assignment of units of study to treatment conditions is (considered to be) performed by simple randomization or paired randomization
 
-#### techniques 
+#### techniques
 
 - permutation-based p-values
      - what are they?
@@ -35,23 +35,19 @@ N/A, but course prereqs:
 #### technical concepts
 
 - Random assignment
-- Comparative studies timeline
 - Hypothesis of absolutely no effect
  - timeline of comparative studies & associated distinctions (covariates vs "baseline" vs outcomes variables)
  - rerandomization test of a strict null hypothesis
- - $\mu$ vs $\mu_{t}/\mu_{c}$ vs $\mu_{t}(x)/\mu_{c}(x)$
+ - $\mu$ vs $\mu_{t}/\mu_{c}$ vs $y_{ti}/y_{ci}$
  
 
 #### broader concepts
 
-- Causal relativity: Documenting causation calls for comparison.  Whether the comparison of two groups is legitimate, apples-to-apples, is only partly a function of how similar the two groups are; it's also contextual:
-- 	- random assignment 
-	- how much is known about baseline characteristics
-	- sample size
-	- ...
- - In statistical computations, expect to err.  Trust but validate.
- - ACEs vs FACEs
-- Widely agreed that RCTs suffice to establish causation in social and medical science.  Less agreement re whether an RCT is necessary, importance of merely establishing causation.
+- Causal relativity: Statistical arguments for causation call for comparison.  Whether the comparison of two groups is legitimate is **not** essentially a function of how similar the two groups are; rather it's contextual:
+  - random assignment certainly sets the stage (there may be other ways)
+  - proper calibration of how large a difference has to be to be "real" vs "chance"
+  - one does need a "large sample" -- but check your intuition about "large".
+
 
 
  
@@ -76,7 +72,7 @@ N/A, but course prereqs:
 
 salk trial NFIP study (CACE estimation)
 
-expected value/$\mu$ vs $\mu_{t}/\mu_{c}$ 
+expected value/$\mu$ vs $\mu_{t}/\mu_{c}$
 
 random assignment
 
@@ -103,9 +99,9 @@ baseline vs tx assmt vs outcome distinction
 - ~~calculate variances from a response schedule~~
 
 ### technical concepts
-- structural characteristics of experiments & random assignment: 
+- structural characteristics of experiments & random assignment:
     - common properties of randomized designs: complete, simple, balanced
-    - paired comparisons 
+    - paired comparisons
     - clusters vs elements
  -   potential outcomes schedules
  - SE as a generic estimate for SD_0
@@ -156,7 +152,7 @@ Statistical assumptions made throughout this unit:
 
 ## Unit 04, baseline comparability and blocking
 
-**shove into here**:  
+**shove into here**:
 - $\mu$ vs $\mu(x)$ (ie cond'l expectation in general);  $\mu_{t}(x)/\mu_{c}(x)$ (postponed from ch 2)
 -  SATEs vs PATEs
 

@@ -5,7 +5,7 @@
 %\input{handout}
 
 %For handout + mynotes
-%\input{handout+mynotes}
+\input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -17,26 +17,28 @@
 \begin{document}
 
 
-  \begin{frame}
+  \begin{frame}[shrink]
     \frametitle{Outline \& Readings}
 
 \tableofcontents[subsectionstyle=show/hide/hide]
+
+{\usebeamercolor[fg]{titlelike} Announcements:}\\
 
 \input{announcement-of-the-day}  % announcement-of-the-day.tex not
                                 % part of repo
 \end{frame}
 
 \itnote{
-\item 
+\item
 % Re emails: (1) UM address, if you have it and you use it for UM
 %   resources; (2) address you gave the s.p., provided that you use it;
 %   (3) another address if you prefer to receive email there (clearly
-%   mark!). 
+%   mark!).
 }
 
 \section{Overview}
 
-\begin{frame}{``Causal Inference''}
+\begin{frame}[label=CIFr]{``Causal Inference''}
 
  \textit{Causal inference} is about design and analysis of experiments
  and observational studies so as to create fair comparisons that
@@ -45,12 +47,28 @@
 
 \end{frame}
 
+% old (2015-) version of above frame:
+% \begin{frame}[label=CIFr]{``Causal inference'' again}
+
+% `Causal inference'' is about design and analysis of randomized and
+% nonrandomized studies with goals:
+% \begin{enumerate}
+% \item Meaningful comparisons, ie comparisons that reveal causation (if present) simply and w/ minimal overhead;
+% \item On scrutiny, EITHER indicated causation occurred OR \ldots
+% \end{enumerate}
+
+
+% (where a short, circumscribed list follows the ``OR'')
+
+% \end{frame}
+
+
 \begin{frame}[label=whatWeWillCoverFr]{Methods we'll study in the course}
   \begin{itemize}
   \item Randomization-based analysis for experiments
   \item Natural experiments, quasi-experiments,
     difference-in-differences
-  \item Effect estimation \& inference in the presence of interference 
+  \item Effect estimation \& inference in the presence of interference
   \item Propensity scores, propensity score matching
 %  \item Regression discontinuity
   \item Omitted variable sensitivity analysis
@@ -84,10 +102,13 @@ analysis in social science, by century:
   \begin{itemize}
   \item Experiments are conceptually and practically central
   \item Not just any experiments, particular types, featuring
-    \textit{control groups} and \textit{random assignment}
+    \textit{control groups} and \textit{random assignment}\footnote{In
+    this regard statisticians' concept of ``experiment'' is slightly
+    idiosyncratic.  Compare Kinder \& Palfrey's (1993) definition to that of
+    Rosenbaum (2010, ch 2.)}
   \item Central characteristics of an ideal situation
   \item The ideal reveals its merits in a variety of disciplines over
-    the 20th c.  
+    the 20th c.
   \end{itemize}
 \end{frame}
 
@@ -123,7 +144,7 @@ analysis in social science, by century:
 \item large size, presence of these controls lends legitimacy to both
 \item In this case I maintain that markers of good design are an
   illusion, it's an overtly unfair comparison.  Why isn't this
-  apples-to-apples?  
+  apples-to-apples?
 \item Exercises: abstract $2\times 2$ table. \textrm{Think-pair-share}
 \item Demonstration of advantage of random assigment per se
 \item We'll see how to get the ``right answer'', despite shortcomings.  The move is
@@ -171,8 +192,8 @@ treatment delivered & outcomes  measured\\ \hline
  &                            &            &                 & \fbox{C} & \\
  & \fbox{Rich}         &            &    \fbox{C} &  & \\
  & \fbox{Poor}        &  \selpt      &             &  & \\
- &   (etc)                        &            &                &  \\ 
-\biasrow% T unlike C at beginning of study, 
+ &   (etc)                        &            &                &  \\
+\biasrow% T unlike C at beginning of study,
                         %sample not rep of pop,
                         % differential uptake, placebo effects,
                         % differential attrition
@@ -181,8 +202,8 @@ treatment delivered & outcomes  measured\\ \hline
 \end{frame}
 \itnote{
 % \item[W2016]  Having assigned the coffee/mortality study, assess it
-% against this timeline.  
-\item How sharply defined are the 3 epochs?  
+% against this timeline.
+\item How sharply defined are the 3 epochs?
 \item what about comparability of groups?
 \item Potential for unmeasured variables, in light of the Lawlor et al
 findings as summarized by Rosenbaum, \textit{DOS} ch1?}
@@ -211,46 +232,6 @@ findings as summarized by Rosenbaum, \textit{DOS} ch1?}
   \end{itemize}
 \end{frame}
 
-\section{Preview (of selected course material)}
-\againframe<\nottheirhandout>{whatWeWillCoverFr}
-
-\againframe<4\mynoteonly>{quasivstrueFr}
-
-\begin{frame}{Balance after random assignment}
-  \begin{center}
-    \igrphx[height=.8\textheight]{rb2010tab21}
-  \end{center}
-\end{frame}
-
-\begin{frame}{Checking/displaying balance after a PS matching}
-  \begin{center}
-  \igrphx[height=.8\textheight]{tomlovepic-lb-flat}    
-  \end{center}
-\end{frame}
-
-
-\againframe<5\mynoteonly>{quasivstrueFr}
-
-\begin{frame}<\nottheirhandout>{Validating an RCT via balance checking}
-  \begin{center}
-    \igrphx[height=.8\textheight]{hb09jasa-fig3}
-  \end{center}
-\end{frame}
-
-\begin{frame}{Course prerequisites}
-  \begin{enumerate}
-\item experience using a command-based computer program (as opposed to a menu-driven one)
-\item willingness to try on attitudes suitable to
-  non-commercial software: expect to err; trust but validate. 
-\item willingness to learn R  (if it's new to you, consider taking the course)
-\item willingness to learn markdown (you can do this on your own)
-\item Conditional probability and conditional expectation: prior
-  exposure, or openness to self-study
-  \item mathematical proofs, enough to distinguish correct from incorrect 
-
-
-  \end{enumerate}
-\end{frame}
 
 
 
@@ -264,11 +245,12 @@ findings as summarized by Rosenbaum, \textit{DOS} ch1?}
     \vfill
   \end{frame}
 
-\note{
-Then break to discuss testing of hypotheses of no effect, i.e. start worksheet.
+\itnote{
+
+\item Then break to discuss testing of hypotheses of no effect, i.e. start worksheet.
 \medskip
 
-2016-07: didn't ever get to talking about this; instead, at the
+\item 2016-07: didn't ever get to talking about Fri 13th; instead, at the
 blackboard I walked them through strict null for the Salk trial,
 tested it approximately using N-approx, $\mathrm{sd}_{0}(\hat p)
 \approx \sqrt{p_{0}q_{0}/n_{1}}$.  This seemed to work well.
@@ -277,5 +259,22 @@ tested it approximately using N-approx, $\mathrm{sd}_{0}(\hat p)
 \section*{recap}
 
 \againframe{CIFr}
+ 
+\begin{frame}{Course prerequisites}
+  \begin{enumerate}
+\item experience using a command-based computer program (as opposed to a menu-driven one)
+\item willingness to try on attitudes suitable to
+  non-commercial software: expect to err; trust but validate.
+\item willingness to learn R  (if it's new to you, consider taking the course)
+\item willingness to learn markdown (you can do this on your own)
+\item Conditional probability and conditional expectation: prior
+  exposure, or openness to self-study
+  \item mathematical proofs, enough to distinguish correct from incorrect
+
+
+  \end{enumerate}
+\end{frame}
+
+
 
 \end{document}
