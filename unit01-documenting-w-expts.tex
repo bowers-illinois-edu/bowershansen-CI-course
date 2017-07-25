@@ -1,11 +1,11 @@
 %  For slides only
-%\input{slidesonly}
+\input{slidesonly}
 
 % % For handout
 %\input{handout}
 
 %For handout + mynotes
-\input{handout+mynotes}
+%\input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -27,13 +27,10 @@
 \input{announcement-of-the-day}  % announcement-of-the-day.tex not
                                 % part of repo
 \end{frame}
-
 \itnote{
-\item
-% Re emails: (1) UM address, if you have it and you use it for UM
-%   resources; (2) address you gave the s.p., provided that you use it;
-%   (3) another address if you prefer to receive email there (clearly
-%   mark!).
+\item Day 2: Starting in part 2, I'll demo use of R to do some Fisher test calcs for the Salk polio trial. 
+\item Then transition into them trying out some of these calculations in R
+\item Then we'll look at observational studies
 }
 
 \section{Overview}
@@ -112,7 +109,7 @@ analysis in social science, by century:
   \end{itemize}
 \end{frame}
 
-\subsection{Two influential examples}
+\subsection{Testing hypotheses of no effect in randomized experiments}
 \begin{frame}{Example 1a: Salk vaccine trial}
 \framesubtitle{
    The version that is remembered \footnote{E.g.
@@ -133,24 +130,38 @@ analysis in social science, by century:
 \item Exercise: Abstract a relevant 2x2 table
 }
 
-\begin{frame}{Example 1b: Salk vaccine trial (the other one)}
+\begin{frame}{The hypothesis of absolutely no effect}
 
-\igrphx{SalkVtable-full}
-\end{frame}
+    \vfill
+  \end{frame}
+
 \itnote{
-\item Explain differences
-\item both versions are experiments in the everyday sense
-\item both control for age and physical locale
-\item large size, presence of these controls lends legitimacy to both
-\item In this case I maintain that markers of good design are an
-  illusion, it's an overtly unfair comparison.  Why isn't this
-  apples-to-apples?
-\item Exercises: abstract $2\times 2$ table. \textrm{Think-pair-share}
-\item Demonstration of advantage of random assigment per se
-\item We'll see how to get the ``right answer'', despite shortcomings.  The move is
-  primarily conceptual, not technical, having to do w/ IVs.
+
+\item Then break to discuss testing of hypotheses of no effect, i.e. start worksheet.
+\medskip
+
+\item 2016-07: at the
+blackboard I walked them through strict null for the Salk trial,
+tested it approximately using N-approx, $\mathrm{sd}_{0}(\hat p)
+\approx \sqrt{p_{0}q_{0}/n_{1}}$.  This seemed to work well.
 }
 
+\begin{frame}{Potential outcomes}
+  
+  \begin{itemize}[<+->]
+  \item Distributions of response under treatment and control: $\mu_{t},
+    \mu_{c}$; $\mu_{t}(x), \mu_{c}(x)$.
+  \item Counterfactual conditional.
+  \item $x$ or $\mathbf{x}$?\ldots
+  \item Unit-level potential outcomes (Rubin, 1970s): $y_{t}, y_{c}$.
+  \end{itemize}
+
+\uncover<+->{Rosenbaum's \textit{DOS} covers this material in detail (Ch.2, ``Causal inference in randomized experiments'').}
+\end{frame}
+\itnote{
+\item[2017] (Skipped dispensible material about
+  $x$/$\mathbf{x}$/$\mu_{\cdot}(\mathbf{x})$.) 
+}
 \subsection{Conceptual framework}
 \begin{frame}{Goals of experimental design}
 
@@ -208,18 +219,29 @@ treatment delivered & outcomes  measured\\ \hline
 \item Potential for unmeasured variables, in light of the Lawlor et al
 findings as summarized by Rosenbaum, \textit{DOS} ch1?}
 
-\begin{frame}{Potential outcomes}
-  
-  \begin{itemize}[<+->]
-  \item Distributions of response under treatment and control: $\mu_{t},
-    \mu_{c}$; $\mu_{t}(x), \mu_{c}(x)$.
-  \item Counterfactual conditional.
-  \item $x$ or $\mathbf{x}$?\ldots
-  \item Unit-level potential outcomes (Rubin, 1970s): $y_{t}, y_{c}$.
-  \end{itemize}
 
-\uncover<+->{Rosenbaum's \textit{DOS} covers this material in detail (Ch.2, ``Causal inference in randomized experiments'').}
+\section{Observational studies}
+
+
+\begin{frame}{Example 1b: Salk vaccine trial (the other one)}
+
+\igrphx{SalkVtable-full}
 \end{frame}
+\itnote{
+\item Explain differences
+\item both versions are experiments in the everyday sense
+\item both control for age and physical locale
+\item large size, presence of these controls lends legitimacy to both
+\item In this case I maintain that markers of good design are an
+  illusion, it's an overtly unfair comparison.  Why isn't this
+  apples-to-apples?
+\item Exercises: abstract $2\times 2$ table. \textrm{Think-pair-share}
+\item Demonstration of advantage of random assigment per se
+\item We'll see how to get the ``right answer'', despite shortcomings.  The move is
+  primarily conceptual, not technical, having to do w/ IVs.
+}
+
+
 
 \begin{frame}<1-3>[label=quasivstrueFr]{Quasi-experiments as
     experiments?}
@@ -234,31 +256,34 @@ findings as summarized by Rosenbaum, \textit{DOS} ch1?}
 
 
 
+\begin{frame}{Paired comparisons}
+  
+  \begin{columns}
+    \begin{Column}
+  \begin{itemize}
+  \item Example: Vehicular accidents on Friday the
+      13ths\footnotemark
+  \item An \textit{observational} paired comparison.  (Rosenbaum's
+    \texttt{Design of Observational Studies} w/
+    a randomized paired study.)
+  \item This study design is sometimes called ``fixed effects.''
+  \end{itemize}      
+    \end{Column}
+    \begin{Column}
+      \igrphx{scalonetal93-tab3}
+    \end{Column}
+  \end{columns}
+\footnotetext{T.J. Scanlon et al. (1993), ``Is Friday the 13th
+        Bad For Your Health?'', BMJ 307 1584--86.}
+\end{frame}
 
 
-\begin{frame}{The hypothesis of absolutely no effect}
+\begin{frame}{The hypothesis of no effect (again)}
+  
+\end{frame}
+\section*{Closing remarks}
 
-  \framesubtitle{Example: Vehicular accidents on Friday the
-      13ths\footnote{T.J. Scanlon et al. (1993), ``Is Friday the 13th
-        Bad For Your Health?'', BMJ 307 1584--86.}}
-\pause
-    \vfill
-  \end{frame}
-
-\itnote{
-
-\item Then break to discuss testing of hypotheses of no effect, i.e. start worksheet.
-\medskip
-
-\item 2016-07: didn't ever get to talking about Fri 13th; instead, at the
-blackboard I walked them through strict null for the Salk trial,
-tested it approximately using N-approx, $\mathrm{sd}_{0}(\hat p)
-\approx \sqrt{p_{0}q_{0}/n_{1}}$.  This seemed to work well.
-}
-
-\section*{recap}
-
-\againframe{CIFr}
+%\againframe{CIFr}
  
 \begin{frame}{Course prerequisites}
   \begin{enumerate}
