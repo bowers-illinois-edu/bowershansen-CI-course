@@ -178,7 +178,7 @@ present one, let $n$ be the number of pebbles in the
 entire urn, and let   ${Z} = (Z_{1}, Z_{2}, \ldots, Z_{N})$ be
 a random vector distributed uniformly on sequences of exactly $n_{1}$ ones
 and $n_{0}$ zeroes, $n = n_{1} + n_{0}$.  The sample mean can be
-written $n_{1}^{-1} {Z}'f{y} $.
+written $n_{1}^{-1} {Z}'{y} $.
 
 
 Even though our ``urn'' has only $2n$ pebbles, there's a
