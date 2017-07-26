@@ -51,12 +51,12 @@ acorn = read.csv("data/acorn03.csv")
 \section{Test statistics for the coffee experiment}
 
 Fisher's test statistic, the number of focal-group cups that were
-correctly identified as belong to the focal group, is $Z'y = \sum_{i}
-Z_{i} y_{i}$.  Under the null hypothesis, $y$ is a vector of
-constants.  Due to the random assigment, $Z$ is a random vector,
+correctly identified as belong to the focal group, is $\mathbf{Z}'\mathbf{y} = \sum_{i}
+Z_{i} y_{i}$.  Under the null hypothesis, $\mathbf{y} = (y_{1}, y_{2}, \ldots, y_{n})$ is a vector of
+constants.  Due to the random assignment, $\mathbf{Z} = (Z_{1}, Z_{2}, \ldots, Z_{n})$ is a random vector,
 equally likely come out as any length-8 binary sequence containing 4 ones.   The
 realization of $Z$ that was obtained in the experiment is denoted $z$,
-and the sampled test statistic is $z'y$.  It is computed as
+and the realized value of Fisher's test statistic is $\mathbf{z}'\mathbf{y}$.  It is computed as
 <<>>=
 with(coffee, sum(z*y))
 @
@@ -68,7 +68,7 @@ with(coffee, crossprod(z, y)[1,1]) #to return a length-1 vector instead
 
 Other test statistics are also possible.  For example, the proportion
 of the focal-group cups that were correctly identified is
-$Z'y/n_1$, where $n_{1}$ is the design constant $\sum_{i} Z_{i}$, here
+$\mathbf{Z}'\mathbf{y}/n_1$, where $n_{1}$ is the design constant $\sum_{i} Z_{i}$, here
 4.  In our experiment it took
 the value
 <<>>=
@@ -77,7 +77,7 @@ with(coffee, sum(z*y)/sum(z))
 
 Yet another possibility would be the difference in proportions of
 focal and non-focal group cups that were identified as being in the
-focal group, $Z'y/n_{1} - Z'y/n_{0}$, where $n_{0}= \sum_{i} 1- Z_{i} =4$:
+focal group, $\mathbf{Z}'\mathbf{y}/n_{1} - \mathbf{Z}'\mathbf{y}/n_{0}$, where $n_{0}= \sum_{i} 1- Z_{i} =4$:
 <<>>=
 with(coffee, sum(z*y)/sum(z) - sum((1-z)*y)/sum(1-z))
 @
@@ -109,7 +109,7 @@ simT = with(coffee, replicate(1000, sum(sample(z)*y)))
 
 @
 
-This says that the null distribution of $T = Z'y$ can be approximated as
+This says that the null distribution of $T = \mathbf{Z}'\mathbf{y}$ can be approximated as
 <<>>=
 round(table(simT)/1000, 2)
 @
@@ -175,15 +175,15 @@ pebble-number in your sample, $\bar{Y}
 = \frac{1}{|s|} \sum_{i \in \mathbf{s}} Y_{i}$, is approximately Normal in
 shape.  To express this sample mean in a notation mirroring the
 present one, let $n$ be the number of pebbles in the
-entire urn, and let   ${Z} = (Z_{1}, Z_{2}, \ldots, Z_{N})$ be
+entire urn, and let   $\mathbf{Z} = (Z_{1}, Z_{2}, \ldots, Z_{N})$ be
 a random vector distributed uniformly on sequences of exactly $n_{1}$ ones
 and $n_{0}$ zeroes, $n = n_{1} + n_{0}$.  The sample mean can be
-written $n_{1}^{-1} {Z}'{y} $.
+written $n_{1}^{-1} \mathbf{Z}'\mathbf{y} $.
 
 
 Even though our ``urn'' has only $2n$ pebbles, there's a
 version of the central limit theorem that applies to it,  i.e. to
-$\frac{1}{4} Z'y$.  On the other
+$\frac{1}{4} \mathbf{Z}'\mathbf{y}$ \citep{li+Deng17CLTsforCI}.  On the other
 hand our $n$ is fairly small.  Let's investigate the quality of the
 Normal approximation.
 
@@ -193,27 +193,31 @@ deviations, i.e. square-rooted variances).
 \texttt{More exercises.} In each of the below, assume the hypothesis
 of strictly no effect to be true. \\
 \begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
-\item Use your simulation to approximate $\mathrm{E} n_{1}^{-1}Z'y $ and
-  $\mathrm{Var}(n_{1}^{-1}Z'y) $. 
-\item Calculate $\mathrm{E}  n_{1}^{-1}Z'y $, the exact expected value of the
+\item Use your simulation to approximate $\mathrm{E} n_{1}^{-1}\mathbf{Z}'\mathbf{y} $ and
+  $\mathrm{Var}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}) $. 
+\item Calculate $\mathrm{E}  n_{1}^{-1}\mathbf{Z}'\mathbf{y} $, the exact expected value of the
   sample mean, from first principles.  
-\item In this setup, $\mathrm{Var}\, n_{1}^{-1}Z'y  = n_{1}^{-1}
-  \frac{n_{0}}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n-1} $.
-  If you've seen formulas for the sample variance in earlier stats
-  courses, you probably saw
+\item In this setup, $\mathrm{Var}\, n_{1}^{-1}\mathbf{Z}'\mathbf{y}  = n_{1}^{-1}
+  \frac{n_{0}}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n-1}$.
+  If you've studied sampling theory, you may previously have seen this formula, perhaps in a different notation.  In any other statistics course you may have taken, however, the sampling
+ variance of the sample mean would have been presented as
   $$
   \mathrm{Var} \bar{y} = \frac{\sigma_{y}^{2}}{n_{1}} = \frac{1}{n_{1}}
-  \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n} .
+  \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n} 
   $$
+--- a formula that's similar but not equivalent to ours. In those other courses
+it would also have been assumed that 
+$\{i: Z_i =1\}$ was sampled from an ``infinite superpopulation,'' as opposed
+to from the finite ``population'' $\{1,2, \ldots, n \}$.   
 Which of the two formulas gives a larger value?  Explain why it makes
 sense that the formula we've given would differ the direction it does
 from this other formula, in terms of the difference between this
 sampling situation and the sampling model that more commonly
 accompanies the Central Limit Theorem.
-\item Calculate $ \mathrm{Var}\, n_{1}^{-1}Z'y $ using the appropriate
+\item Calculate $ \mathrm{Var}\, n_{1}^{-1}\mathbf{Z}'\mathbf{y} $ using the appropriate
   formula. 
 \item Determine the normal theory approximation to
-  $\mathrm{Pr}_{0}(n_{1}^{-1}Z'y =1 ) $.  (To do this in R, use
+  $\mathrm{Pr}_{0}(n_{1}^{-1}\mathbf{Z}'\mathbf{y} =1 ) $.  (To do this in R, use
   \texttt{pnorm()}; type \texttt{?pnorm} for help. It's a good idea to
   check your answer against some 
   more user-friendly Normal table; you'll find one of these quickly
@@ -309,7 +313,7 @@ coef(rlm(vote03~z, weights=size, data=acorn))[2]
 \item Use this new and improved test statistic to test the hypothesis of no effect. Comment briefly on the differences, if any, between this p-value and the one you obtained earlier.
 \end{enumerate}
 \bibliographystyle{plain}
-%% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+%\bibliography{./BIB/master,./BIB/abbrev_long,./BIB/causalinference,./BIB/biomedicalapplications,./BIB/misc}
 \begin{thebibliography}{1}
 
 \bibitem{arceneaux:2005}
@@ -318,8 +322,16 @@ Kevin Arceneaux.
 \newblock {\em Annals of the Americal Academy of Political and Social Science},
   601:169--179, September 2005.
 
+\bibitem{li+Deng17CLTsforCI}
+Xinran Li and Peng Ding.
+\newblock General forms of finite population central limit theorems with
+  applications to causal inference.
+\newblock {\em Journal of the American Statistical Association}, 2017.
+
 \end{thebibliography}
+
 % "master" is Ryan Moore's file (as of summer 2012).
 %"causalinference" is Ben's, and lives (as of summer 2013) in
 % http://dept.stat.lsa.umich.edu/~bbh/texmf/bibtex/bib/
 \end{document}
+
