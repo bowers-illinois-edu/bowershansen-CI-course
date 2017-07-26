@@ -278,7 +278,7 @@ Our test statistic doesn't take into account the different sizes of the precinct
 coef(lm(vote03~z, weights=size, data=acorn))[2]
 @
 
-The coefficient reported is equivalent to the difference between overall voting rates in treatment and control precincts.  (How is this different from what we got without weighting?)  So maybe it's preferable to the unweighted version in terms of interpretability.  For now, however, we're considering this as a test statistic only, so the reason to prefer it is if we think it'll give us more power to reject a null that happens to be false..
+The coefficient reported is equivalent to the difference between overall voting rates in treatment and control precincts.  (How is this different from what we got without weighting?)  So maybe it's preferable to the unweighted version in terms of interpretability.  For now, however, we're considering this as a test statistic only, so the reason to prefer it is if we think it has more power, i.e. it increases the probabilities of rejecting those null hypotheses that happen to be false.
 
 Outliers can cut into the power%
 \footnote{They don't undercut its assumptions, as they would the assumption of Normally distributed errors; only power is affected. See \textit{Design of Observational Studies}, \S 2.3.} 
