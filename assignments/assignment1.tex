@@ -18,16 +18,17 @@
   both admissible? (Hint: read R's warnings and documentation.  Can
   you remember the conditions for the chi-square test for two-way
   tables, from a previous stats class?)
-\item Use your simulation to approximate $\mathrm{E} n_{1}^{-1}\mathbf{Z}'\mathbf{y} $ and
-  $\mathrm{Var}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}) $. 
-\item Calculate $\mathrm{E}  n_{1}^{-1}\mathbf{Z}'\mathbf{y} $, the exact expected value of the
+\item Use your simulation to approximate $\mathrm{E} \left[n_{1}^{-1}\mathbf{Z}'\mathbf{y}\right] $ and
+  $\mathrm{Var}\left[n_{1}^{-1}\mathbf{Z}'\mathbf{y}\right] $. 
+\item Calculate $\mathrm{E}  \left[n_{1}^{-1}\mathbf{Z}'\mathbf{y}\right] $, the exact expected value of the
   sample mean, from first principles.  
-\item In this setup, $\mathrm{Var}\, n_{1}^{-1}\mathbf{Z}'\mathbf{y}  = n_{1}^{-1}
+ %% Should one state, ``calculate ... , the expected value of the sample mean under the strict null hypothesis of no effect, from first principles''? Or do you want students to reason that, since the y vector is lowercase (and hence fixed), we are implictly invoking Fisher's null?
+\item In this setup, $\mathrm{Var}\, \left[n_{1}^{-1}\mathbf{Z}'\mathbf{y}\right]  = n_{1}^{-1}
   \frac{n_{0}}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n-1} $.
   If you've seen formulas for the sample variance in earlier stats
   courses, you probably saw
   $$
-  \mathrm{Var} \bar{y} = \frac{\sigma_{y}^{2}}{n_{1}} = \frac{1}{n_{1}}
+  \mathrm{Var} \left[\bar{y}\right] = \frac{\sigma_{y}^{2}}{n_{1}} = \frac{1}{n_{1}}
   \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n} .
   $$
 Which of the two formulas gives a larger value?  Explain why it makes
@@ -35,7 +36,7 @@ sense that the formula we've given would differ the direction it does
 from this other formula, in terms of the difference between this
 sampling situation and the sampling model that more commonly
 accompanies the Central Limit Theorem.
-\item Calculate $ \mathrm{Var}\, n_{1}^{-1}\mathbf{Z}'\mathbf{y} $ using the appropriate
+\item Calculate $ \mathrm{Var}\, \left[n_{1}^{-1}\mathbf{Z}'\mathbf{y}\right] $ using the appropriate
   formula. 
 \item Determine the normal theory approximation to
   $\mathrm{Pr}_{0}(n_{1}^{-1}\mathbf{Z}'\mathbf{y} =1 ) $.  (To do this in R, use
