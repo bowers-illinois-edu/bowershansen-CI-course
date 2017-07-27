@@ -11,17 +11,38 @@
 \maketitle
 
 \begin{enumerate}
-\item Confirm to your own satisfaction that for analysis of the coffee experiment, the simulation method can approximate the exact, permutation-based calculation to as much accuracy as is practically meaningful.
-\item Does the chi-square procedure report a similar p-value?  (In R,
+\item Can the simulation method approximate exact, permutation-based
+  calculation to as much accuracy as is practically meaningful?
+  State a limit on the absolute error of a p-value,
+  $|p_{\text{approx}} - p_{\text{exact}}|$, that seems reasonable to
+  you to tolerate; then use the formula presented in
+  \texttt{unit01-Rex.pdf} to determine how many simulation replicates
+  are need to obtain simulation $p$-values deviating from their exact
+  counterparts by no more than this amount.
+\item For the coffee experiment, does the chi-square procedure report
+  a similar p-value as the fisher test?  (In R,
   it's \texttt{chisq.test()}. For documentation, enter \texttt{?chisq.test}.)
 \item For this data set, are the chi-square test and the fisher test
-  both admissible? (Hint: read R's warnings and documentation.  Can
-  you remember the conditions for the chi-square test for two-way
-  tables, from a previous stats class?)
-\item Use your simulation to approximate $\mathrm{E} n_{1}^{-1}\mathbf{Z}'\mathbf{y} $ and
-  $\mathrm{Var}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}) $. 
+  both admissible? (Hint: what are the sample size requirements of the
+  chi-square procedure? As review, read R's warnings and documentation.)
+\item Refer to the analysis of the \texttt{acorn} data set, in
+  \texttt{unit01-Rex}.  Using the mean of turnout proportions in
+  treatment group precincts, $n_{1}^{-1}\mathbf{Z}'\mathbf{y}$, as
+  test statistic, simulate its rerandomization distribution under the
+  null hypothesis of strictly no effect, reporting: \label{q:simmoments}
+  \begin{enumerate}
+  \item your simulation $p$-value; 
+  \item the accuracy of your simulation $p$-value; 
+  \item your simulation approximation of $\mathrm{E}_{0}
+    n_{1}^{-1}\mathbf{Z}'\mathbf{y}$, the null expected value of the test
+    statistic; 
+  \item your simulation approximation of
+    $\mathrm{Var}_{0}(n_{1}^{-1}\mathbf{Z}'\mathbf{y})$, this test
+    statistic's variance under the null.
+  \end{enumerate}
 \item Calculate $\mathrm{E}  n_{1}^{-1}\mathbf{Z}'\mathbf{y} $, the exact expected value of the
-  sample mean, from first principles.  
+  sample mean, from first principles --- i.e., without simulations ---
+  using data in $\mathbf{y}$.  \label{q:exactEV}
 \item In this setup, $\mathrm{Var}\, n_{1}^{-1}\mathbf{Z}'\mathbf{y}  = n_{1}^{-1}
   \frac{n_{0}}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n-1} $.
   If you've seen formulas for the sample variance in earlier stats
@@ -35,18 +56,53 @@ sense that the formula we've given would differ the direction it does
 from this other formula, in terms of the difference between this
 sampling situation and the sampling model that more commonly
 accompanies the Central Limit Theorem.
-\item Calculate $ \mathrm{Var}\, n_{1}^{-1}\mathbf{Z}'\mathbf{y} $ using the appropriate
-  formula. 
+\item Calculate $\mathrm{Var}\, n_{1}^{-1}\mathbf{Z}'\mathbf{y}$ using the appropriate
+  formula.   Determine the error of the simulation-based
+  approximation to this quantity that you reported in question~\ref{q:simmoments},
+  expressing it as a percentage of $\mathrm{Var}\, n_{1}^{-1}\mathbf{Z}'\mathbf{y}$. \label{q:exactvar}
 \item Determine the normal theory approximation to
-  $\mathrm{Pr}_{0}(n_{1}^{-1}\mathbf{Z}'\mathbf{y} =1 ) $.  (To do this in R, use
-  \texttt{pnorm()}; type \texttt{?pnorm} for help. It's a good idea to
-  check your answer against some 
-  more user-friendly Normal table; you'll find one of these quickly
-  using any search engine.)
-\item
-\input{gg15i}
-\item
-\input{gg15ii}
+  $\mathrm{Pr}_{0}(n_{1}^{-1}\mathbf{Z}'\mathbf{y} \geq
+  n_{1}^{-1}\mathbf{z}'\mathbf{y} ) $.  (Hints: Use the variance and
+  expected values calculated in~\ref{q:exactvar} and \ref{q:exactEV} to transform your
+  observed treatment group mean into a corresponding ``$z$-score.'' 
+  To to determine Normal quantiles corresponding to z-scores in R, use
+  \texttt{pnorm()}; type \texttt{?pnorm} for help.)
+\item %\input{gg15i}
+A researcher plans to ask six subjects to donate time to an adult
+literacy program. Each subject will be asked to donate either 30
+($Z=0$) or 60 ($Z=1$)
+minutes. The researcher is considering three methods for randomizing
+the treatment. Method I is to make independent decisions for each
+subject, tossing a coin each time. Method C is to
+write ``30'' and ``60'' on three playing cards each, and then shuffle
+the six cards. Method P tosses one coin for each of the 3 pairs
+$(1,2)$, $(3,4)$, $(5,6)$, asking for 30 (60) minutes from exactly one
+member of each pair. 
+  \begin{minipage}{.45\linewidth}
+\begin{itemize}
+\item[a] Discuss strengths \& weaknesses of each method.
+\item[b] How would your answers to (a) change if $n: 6 \mapsto 600$?
+\item[c] Determine $\EE(  Z_{1} )$  under each method.
+\item[d] Determine $\EE\big(  Z_{1} + Z_{2} + \cdots + Z_{6} \big)$ under each method.
+\item[e] Calculate $\EE(\mathbf{Z}'\mathbf{Z})$ under each of the three methods.
+\end{itemize}
+\end{minipage}
+% \input{gg15ii}
+\begin{minipage}{.45\linewidth}
+  \begin{itemize}
+ \item[f] For which of the methods does $\EE
+  \big[\mathbf{Z}'\mathbf{Z} -\EE (\mathbf{Z}'\mathbf{Z})\big]^{2} =
+  0$?\footnote{I.e., for which does
+    $\mathrm{Var}(\mathbf{Z}'\mathbf{Z}) = 0$?  (In general,
+    $\mathrm{Var}(V) = \EE \big[V - \EE(V) \big]^{2} $.)}
+\item[h] For two of the three methods, algebraic principles we've seen
+  let you reduce
+  $\EE \frac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{Z}}$ to a
+  familiar function of $(x_{1}, x_{2}, \ldots, x_{6}) $.  Which 2 are
+  these, and why doesn't the same thing work for the third?
+
+  \end{itemize}
+\end{minipage}
 \end{enumerate}
 
 \end{document}
