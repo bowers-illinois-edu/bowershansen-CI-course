@@ -5,7 +5,7 @@
 %\input{handout}
 
 %For handout + mynotes
-%\input{handout+mynotes}
+\input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -17,21 +17,16 @@
 \begin{document}
 
 
-  \begin{frame}
-    \frametitle{Outline \& Readings}
-
-\tableofcontents[subsectionstyle=show/hide/hide]
-
-\input{announcement-of-the-day}  % announcement-of-the-day.tex not
-                                % part of repo
-\end{frame}
+% putting `\begin{frame}`/ `\end{frame}` in announcement-of-the-day.tex lets us 
+% put frame notes into that file
+\input{announcement-of-the-day}  % announcement-of-the-day.tex not part of repo
 
 
 
 
 
 
-\begin{frame}{Overview of Unit 2, estimating causal parameters}
+\begin{frame}<\nottheirhandout>{Overview of Unit 2, estimating causal parameters}
   \begin{itemize}
   \item In coffee/tea tasting examples, easier to think about whether causation occurred than how one might measure it.
   \item Now, examples that lend themselves to talk of ``average causal effects,'' etc.
@@ -106,7 +101,7 @@ $$\EE\left(\frac{1}{n} \sum_{i=1}^n V_i\right) = \frac{1}{n}
 
 \end{frame}
 
-\againframe<2>{EEreviewFr}
+\againframe<2\mynoteonly>{EEreviewFr}
 
 
 
@@ -196,9 +191,6 @@ Yr & Month &	6th &	13th \\ \hline
   
 \end{frame}
 
-\itnote{
-\item Muddy point (2016): pairs vs clusters
-}
 
 \begin{frame}{Potential outcomes for the village heads study}
 \framesubtitle{under     the hypothesis of     strictly no effect}
@@ -371,6 +363,7 @@ $z_8$ & $z_8$  \\ \hline
 \begin{frame}<\nottheirhandout>{Aside: Test statistics \& response schedules}
   
 \begin{itemize}
+\item Recall our convention: ``$v$'' and ``$\mathbf{v}$'' are fixed; ``$V$''/''$\mathbf{V}$'' random. 
 \item One \textit{test statistic} we discussed for the tea experiment
   is the number of milk-first cups ($z=1$) among the cups identified as
   milk-first ($y=1$). I.e., $\mathbf{Z}'\mathbf{Y}$. \pause
@@ -382,11 +375,11 @@ $z_8$ & $z_8$  \\ \hline
 \item We also entertained the treatment-group mean of $y$s as a test
   statistic. To emphasize dependence on $Z$, write this as $\mathbf{Z}'\mathbf{y}/n_{1}$
   ($\mathbf{Z}'\mathbf{Y}/n_{1}$). Or, if size of treatment group might be a random
-  variable, $\mathbf{Z}'\mathbf{y}/\mathbf{Z}'\mathbf{Z}$  ($\mathbf{Z}'\mathbf{Y}/\mathbf{Z}'\mathbf{Z}$).
+  variable, write $\mathbf{1} = (1, 1, \ldots, 1)$ and $\mathbf{Z}'\mathbf{y}/\mathbf{Z}'\mathbf{1}$  ($\mathbf{Z}'\mathbf{Y}/\mathbf{Z}'\mathbf{1}$).
 \end{itemize}
 \end{frame}
 
-\note{Now start the part of unit01-Rex that looks at the acorn study}
+
 \begin{frame}{Potential outcomes}
   
 A much more common way of specifying potential outcome schedules is to
@@ -414,7 +407,7 @@ Notes:\\
 \item<2-> Assumes each subject $i$'s response depends only on $z_{i}$, not
   other $z$s.
 \item<2-> not appropriate for coffee experiment
-\item<2-> not necessarily appropriate for Salk trial
+\item<2-> Approp. for Salk trial?
 \item<2-> \textit{non-interference} has been assumed
 \item<3-> \ldots often unwittingly! 
 \end{itemize}
@@ -430,7 +423,7 @@ Notes:\\
 
 \againframe<3>{EEreviewFr}
 \begin{frame}{Expected values of ''$\bar{y}_{0}$'' \& ''$\bar{y}_{1}$''}
-\framesubtitle{in completely randomized designs}
+\framesubtitle{in completely randomized designs, under non-interference}
   
 \end{frame}
 \itnote{
@@ -489,10 +482,15 @@ Assuming $\EE Z_{ij} \equiv .5 $:\\
     \end{align*}
 \item<4-> \textit{Ex.} $\mathbf{Z} = (Z_{1}, \ldots, Z_{10}) $ records
   10 indep tosses of a fair coin.\\ (a) $\EE (Z_{1}) = $
-  \underline{\hspace{2em}}. (b) $\EE (Z_{1} | \mathbf{Z}'\mathbf{Z}=4)
+  \underline{\hspace{2em}}. (b) $\EE (Z_{1} | \mathbf{Z}'\mathbf{1}=4)
   =$ \underline{\hspace{2em}}.
 
   \end{itemize}
+\end{frame}
+
+\begin{frame}{Using conditional probability to turn simply randomized
+    designs} \framesubtitle{Into completely randomized designs}
+  
 \end{frame}
 
 \begin{frame}[t]{Potential outcomes for the village heads study}
@@ -515,30 +513,30 @@ avg & $\bar{y}_{0} $ & $\bar{y}_{1}$ &  & $\mu_{C} $ & $\mu_{T}$ & $\mu_{\tau}$ 
 \end{tabular}
     
 \column{.5\textwidth}
-$\EE \big( \frac{\mathbf{Z}'\mathbf{Y}}{\mathbf{Z}'\mathbf{Z}}\big|  \mathbf{Z}'\mathbf{Z} \big) =$\\[.5\textheight] 
+$\EE \big( \frac{\mathbf{Z}'\mathbf{Y}}{\mathbf{Z}'\mathbf{1}}\big|  \mathbf{Z}'\mathbf{1} \big) =$\\[.5\textheight] 
 
 \mbox{ }
 \end{columns}
 \vfill
 
 Likewise $\EE \big(
-\frac{(1-\mathbf{Z})'\mathbf{Y}}{ (1-\mathbf{Z})'(1-\mathbf{Z})}\big|
-\mathbf{Z}'\mathbf{Z} \big) =$ \hfill 
+\frac{(1-\mathbf{Z})'\mathbf{Y}}{ (1-\mathbf{Z})'\mathbf{1}}\big|
+\mathbf{Z}'\mathbf{1} \big) =$ \hfill 
 \hfill \mbox{} \\
 \end{frame}
 
 \itnote{
 \item $\mathbf{Z}'\mathbf{Y} = \mathbf{Z}'\mathbf{y}_{T}$
 \item $\EE  \big(
-  \frac{\mathbf{Z}'\mathbf{y}_{T}}{\mathbf{Z}'\mathbf{Z}}\big|
-  \mathbf{Z}'\mathbf{Z} \big) = \sum_{i} \EE
-  \big(\frac{Z_{i}y_{Ti}}{\mathbf{Z}'\mathbf{Z}} \big|
-  \mathbf{Z}'\mathbf{Z} \big)$
-\item $ \EE \big(\frac{Z_{i}}{\mathbf{Z}'\mathbf{Z}} \big|
-  \mathbf{Z}'\mathbf{Z} \big)$
+  \frac{\mathbf{Z}'\mathbf{y}_{T}}{\mathbf{Z}'\mathbf{1}}\big|
+  \mathbf{Z}'\mathbf{1} \big) = \sum_{i} \EE
+  \big(\frac{Z_{i}y_{Ti}}{\mathbf{Z}'\mathbf{1}} \big|
+  \mathbf{Z}'\mathbf{1} \big)$
+\item $ \EE \big(\frac{Z_{i}}{\mathbf{Z}'\mathbf{1}} \big|
+  \mathbf{Z}'\mathbf{1} \big)$
 }
 
-\begin{frame}{The ACE ; unbiased estimation}
+\begin{frame}<\nottheirhandout>{The ACE ; unbiased estimation}
   
 \end{frame}
 \itnote{
@@ -583,7 +581,7 @@ avg & 16 & 22.5 & ? & 17.9 & 17.9 & 0 & $\mu_{C} $ & $\mu_{T}$ & $\mu_{\tau}$\\ 
 \item Start by going over variance problems
 }
 
-\begin{frame}{The Neyman justification for the 2-sample t-statistic} \pause
+\begin{frame}{Neyman's argument for the unpooled 2-sample t-statistic} \pause
  \framesubtitle{I.e., estimating treatment effect as %
 $\bar{y}_{1} - \bar{y}_0   \pm \sqrt{\mathrm{SE}(\bar{y}_{1})^{2} +
   \mathrm{SE}(\bar{y}_{0}) ^{2}}$ ($\mathrm{SE}(\bar{y}_{j})^{2} = \sigma_{j}^{2}/n_{j} $) }
