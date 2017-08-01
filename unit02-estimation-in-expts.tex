@@ -2,10 +2,10 @@
 %\input{slidesonly}
 
 % % For handout
-%\input{handout}
+\input{handout}
 
 %For handout + mynotes
-\input{handout+mynotes}
+%\input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -424,7 +424,22 @@ Notes:\\
 \againframe<3>{EEreviewFr}
 \begin{frame}{Expected values of ''$\bar{y}_{0}$'' \& ''$\bar{y}_{1}$''}
 \framesubtitle{in completely randomized designs, under non-interference}
-  
+
+Expressed as r.v.s, the  treatment and control group means are 
+
+$$\mathbf{Z}'\mathbf{y}/n_{1} =  \mathbf{Z}'\mathbf{y}_{T}/n_{1};\,
+\quad (\mathbf{1} - \mathbf{Z})'\mathbf{y}/n_{0} =  (\mathbf{1} -\mathbf{Z})'\mathbf{y}_{C}/n_{0} .$$   
+
+They satisfy 
+
+$$\EE [\mathbf{Z}'\mathbf{y}/n_{1} ] = \mu_{T},  \quad \EE[
+(\mathbf{1} - \mathbf{Z})'\mathbf{y}/n_{0} ] = \mu_{C}; $$
+and 
+$$\EE[
+\mathbf{Z}'\mathbf{y}/n_{1} - (\mathbf{1} - \mathbf{Z})'\mathbf{y}/n_{0}] = \mathrm{ACE}. $$
+
+The basic form of the argument (e.g. G.\& G., ch.2) applies to
+\textit{completely randomized designs}. But the principle generalizes\ldots
 \end{frame}
 \itnote{
 \item Rewrite w/ $Z$, $y$
@@ -488,9 +503,37 @@ Assuming $\EE Z_{ij} \equiv .5 $:\\
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Using conditional probability to turn simply randomized
-    designs} \framesubtitle{Into completely randomized designs}
-  
+\itnote{
+\item (Walk them through this, rather than asking them to do it.
+  They'd need a worked example first.)
+}
+
+\begin{frame}{In simply randomized designs, ``$\bar{y}_{0}$'' and 
+    ``$\bar{y}_{1}$'' are \emph{conditionally} unbiased} 
+
+Under simple randomization, $Z_{1}, Z_{2}, \ldots, Z_{n}$ satisfy
+$\PP(Z_{i} =1) = \PP(Z_{j} = 1)$, but are \textit{independent}.  So
+$\mathbf{Z}'\mathbf{1}$ can vary. In consequence, in general
+$$ \EE\left[\frac{\mathbf{Z}'\mathbf{y}}{\mathbf{Z}'\mathbf{1}} \right] \neq
+\frac{\EE[ \mathbf{Z}'\mathbf{y} ]}{\EE[ \mathbf{Z}'\mathbf{1} ]} .$$
+ So principle that ``$\bar{y}_1$'' is unbiased for $\mu_{T}$ does not
+ immediately carry over from completely randomized designs.
+\pause
+
+However:
+  \begin{itemize}
+  \item $\mathbf{Z}'\mathbf{Y} = \mathbf{Z}'\mathbf{y}_{T}$;
+\item $\EE  \big(
+  \frac{\mathbf{Z}'\mathbf{y}_{T}}{\mathbf{Z}'\mathbf{1}}\big|
+  \mathbf{Z}'\mathbf{1} =n_{1}\big) = \sum_{i} \EE
+  \big[\frac{Z_{i}}{n_{1}} \big|
+  \mathbf{Z}'\mathbf{1} = n_{1} \big] y_{Ti} $. 
+\item But since $ \EE \big(\frac{Z_{i}}{n_{1}} \big|
+  \mathbf{Z}'\mathbf{1} =n_{1}\big)=$\hspace{5em},
+\item $\EE  \big(
+  \frac{\mathbf{Z}'\mathbf{y}_{T}}{\mathbf{Z}'\mathbf{1}}\big|
+  \mathbf{Z}'\mathbf{1} =n_{1}\big) = \hspace{1em} \sum_{i=1}^{n} \hspace{2em}$, for any $n_{1}$. 
+  \end{itemize}
 \end{frame}
 
 \begin{frame}[t]{Potential outcomes for the village heads study}
@@ -525,19 +568,12 @@ Likewise $\EE \big(
 \hfill \mbox{} \\
 \end{frame}
 
-\itnote{
-\item $\mathbf{Z}'\mathbf{Y} = \mathbf{Z}'\mathbf{y}_{T}$
-\item $\EE  \big(
-  \frac{\mathbf{Z}'\mathbf{y}_{T}}{\mathbf{Z}'\mathbf{1}}\big|
-  \mathbf{Z}'\mathbf{1} \big) = \sum_{i} \EE
-  \big(\frac{Z_{i}y_{Ti}}{\mathbf{Z}'\mathbf{1}} \big|
-  \mathbf{Z}'\mathbf{1} \big)$
-\item $ \EE \big(\frac{Z_{i}}{\mathbf{Z}'\mathbf{1}} \big|
-  \mathbf{Z}'\mathbf{1} \big)$
-}
+
 
 \begin{frame}<\nottheirhandout>{The ACE ; unbiased estimation}
-  
+  \begin{center}
+    \igrphx[height=.8\textheight]{ggbox2-7}
+  \end{center}
 \end{frame}
 \itnote{
 \item Relate to examples. villages, 
@@ -546,6 +582,13 @@ Likewise $\EE \big(
   unbiased for the ACE whatever the (non-interfering) potential
   outcome schedule.
 }
+
+
+\subsection{Standard Errors}
+
+\begin{frame}[shrink]{Example: paired t-test calculations}
+  \input{unit02-pairedttest}
+\end{frame}
 
 \begin{frame}{Variances \& estimated variances  }
 
@@ -556,26 +599,31 @@ Likewise $\EE \big(
  \item Fact: if \texttt{spl}= $(x_{i}: Z_{i}=1) $ in a completely
    randomized design, then $\EE s_{\mathtt{spl}}^{2} = s_{x}^{2} $. 
   \item Confusing distinction we will need: \texttt{var(y)} vs \texttt{var(simT)}.
-  \item More necessary confusion: $\mathrm{Var}_{0}$ vs $\mathrm{Var}$ vs $\widehat{\mathrm{Var}} $\ldots
+  \item More necessary confusion: $\mathrm{Var}_{0}$ vs $\mathrm{Var}$
+    vs $\widehat{\mathrm{Var}}$.
+  \item Square roots of $\widehat{\mathrm{Var}}$'s are called
+    \textit{standard errors}.
+  \item Common standard errors assume the data to be a sample from a
+    population --- a poor fit, conceptually.  At least at first blush. 
   \end{itemize}
 
-  \begin{center}
-    {\small
-\begin{tabular}{l|rrr|rrr|rrr} \hline
-& \multicolumn{9}{c}{Budget share (\%)} \\
-& \multicolumn{3}{c}{Observed} & \multicolumn{3}{c}{No effect} &\multicolumn{3}{c}{all}\\
-Village &$Y_{C}$& $Y_{T}$& $\tau$  &$Y_{C}$& $Y_{T}$& $\tau$  &$Y_{C}$& $Y_{T}$& $\tau$ \\ \hline
-1    &  ? & 15 & ?  & 15 & 15  & 0 & $y_{C1}$ & $y_{T1}$  & $\tau_{1}$ \\
-2    & 15 & ? &   ?  & 15 & 15 & 0 & $y_{C2}$ & $y_{T2}$ & $\tau_{2}$ \\ 
-3    & 20 & ? &   ?  & 20 & 20 & 0 & $y_{C3}$ & $y_{T3}$ & $\tau_{3}$ \\
-4    & 20 & ? &   ?  & 20 & 20 & 0 & $y_{C4}$ & $y_{T4}$ & $\tau_{4}$ \\
-5    & 10 & ? &   ?  & 10 & 10 & 0 & $y_{C5}$ & $y_{T5}$ & $\tau_{5}$ \\
-6    & 15 & ? &   ?  & 15 & 15 & 0 & $y_{C6}$ & $y_{T6}$ & $\tau_{6}$ \\
-7    & ?   &30&?  & 30 & 30   & 0 & $y_{C7}$ &$y_{T7}$ & $\tau_{7}$ \\ \hline
-avg & 16 & 22.5 & ? & 17.9 & 17.9 & 0 & $\mu_{C} $ & $\mu_{T}$ & $\mu_{\tau}$\\ \hline
-\end{tabular}
-}
-  \end{center}
+%   \begin{center}
+%     {\small
+% \begin{tabular}{l|rrr|rrr|rrr} \hline
+% & \multicolumn{9}{c}{Budget share (\%)} \\
+% & \multicolumn{3}{c}{Observed} & \multicolumn{3}{c}{No effect} &\multicolumn{3}{c}{all}\\
+% Village &$Y_{C}$& $Y_{T}$& $\tau$  &$Y_{C}$& $Y_{T}$& $\tau$  &$Y_{C}$& $Y_{T}$& $\tau$ \\ \hline
+% 1    &  ? & 15 & ?  & 15 & 15  & 0 & $y_{C1}$ & $y_{T1}$  & $\tau_{1}$ \\
+% 2    & 15 & ? &   ?  & 15 & 15 & 0 & $y_{C2}$ & $y_{T2}$ & $\tau_{2}$ \\ 
+% 3    & 20 & ? &   ?  & 20 & 20 & 0 & $y_{C3}$ & $y_{T3}$ & $\tau_{3}$ \\
+% 4    & 20 & ? &   ?  & 20 & 20 & 0 & $y_{C4}$ & $y_{T4}$ & $\tau_{4}$ \\
+% 5    & 10 & ? &   ?  & 10 & 10 & 0 & $y_{C5}$ & $y_{T5}$ & $\tau_{5}$ \\
+% 6    & 15 & ? &   ?  & 15 & 15 & 0 & $y_{C6}$ & $y_{T6}$ & $\tau_{6}$ \\
+% 7    & ?   &30&?  & 30 & 30   & 0 & $y_{C7}$ &$y_{T7}$ & $\tau_{7}$ \\ \hline
+% avg & 16 & 22.5 & ? & 17.9 & 17.9 & 0 & $\mu_{C} $ & $\mu_{T}$ & $\mu_{\tau}$\\ \hline
+% \end{tabular}
+% }
+%   \end{center}
 \end{frame}
 \itnote{
 \item Start by going over variance problems
@@ -585,7 +633,19 @@ avg & 16 & 22.5 & ? & 17.9 & 17.9 & 0 & $\mu_{C} $ & $\mu_{T}$ & $\mu_{\tau}$\\ 
  \framesubtitle{I.e., estimating treatment effect as %
 $\bar{y}_{1} - \bar{y}_0   \pm \sqrt{\mathrm{SE}(\bar{y}_{1})^{2} +
   \mathrm{SE}(\bar{y}_{0}) ^{2}}$ ($\mathrm{SE}(\bar{y}_{j})^{2} = \sigma_{j}^{2}/n_{j} $) }
-\pause
+
+\begin{itemize}[<+->]
+\item ``pooled'' vs ``unpooled'' SEs. 
+\item Neyman's lemma, 1: $\hat{V}_{u}[ \bar{y}_{1} - \bar{y}_0  ]$ under model that $y_{Ti} \equiv
+  y_{Ci} +\tau$.
+\item Neyman's lemma, 2: $V[\bar{y}_{1} - \bar{y}_0 ]$ under $y_{Ti} \equiv
+  y_{Ci} +\tau$ vs just  $\bar{y}_{T} - \bar{y}_{C} =\tau$. 
+\item $\hat{V}_{u}[ \bar{y}_{1} - \bar{y}_0  ]$ as an ``unbiased
+  overestimate.''
+\item Because $\hat{V}_{u}[ \bar{y}_{1} - \bar{y}_0  ]$ can itself
+  vary, not quite a substitute for ${V}[ \bar{y}_{1} - \bar{y}_0  ]$.
+  But useful.
+\end{itemize}
 
 % \begin{columns}
 %   \begin{Column}
@@ -629,74 +689,61 @@ $\bar{y}_{1} - \bar{y}_0   \pm \sqrt{\mathrm{SE}(\bar{y}_{1})^{2} +
 \item (go over this)
 }
 
-\begin{frame}{A Neyman-compatible justification for the paired t-statistic}
- \framesubtitle{i.e., $\widehat{\mathrm{ACE}} = \bar{d} \pm s_{d}/\sqrt{n}$} 
+\begin{frame}{Generalizations of Neyman's result}
 
-\end{frame}
-
-\itnote{
-\item If $d$'s aren't too crazy then $\hat{\mu}$ is consistent, in triangular array sense
-\item Estimating equation formulation
-\item The form of the ``robust standard error''
-\item Easy to add in weights
-\item See also Imai et al 2009 Prop 1 ff
-\item (ran out of time for tex-ing)
-}
-\section{Caveats and extensions}
-
-
-
-\begin{frame}{Average causal effects for samples of populations}
-  
   \begin{itemize}
-  \item Many writers assume 1,\ldots, n to be a sample from a
-  broader population. Then notation $(Y_{T}, Y_{C})$ is appropriate
-  (vs $(y_{T}, y_{C})$). 
-  \item Random assignment ensures that $Z$ is independent of $Y_0$, $Y_1$.
-  \item So under random assignment, $\mathrm{E}(Y_C|Z=0) =
-  \mathrm{E}(Y_C)$;  $\mathrm{E}(Y_T|Z=1) = \mathrm{E}(Y_T)$.
-  \item W/ simple, complete or paired rand. assmt, $\EE( \bar{Y}_{1}
-  - \bar{Y}_{2}) = $ ACE. 
-  \item Note that $Z$ is not generally independent of $Y=ZY_1 +
-  (1-Z)Y_0$!
-  \item Without random assignment, $\EE( \bar{Y}_{1}
-  - \bar{Y}_{2}) = $ ACE may fail, even if the sample is perfectly
-  representative of the population.
-\item This framing is also invoked for ``samples'' from
-  ``populations,'' in order to apply apparati of conventional
-  frequentist \& Bayesian inference.
+  \item A similar principle applies to the mean of paired differences
+  \item A somewhat similar principle (not quite as strong) applies to
+    regression coefficients with sandwich SEs (aka robust SEs,
+    Huber-White SEs). 
   \end{itemize}
+  
 \end{frame}
-
-\begin{frame}{FACEs and ACEs (Holland, 1988, \textit{Soc Meth}) }
-
-Example: a university operates 2 oversubscribed charter schools
-serving a nearby high-poverty neighborhood. Admission to both is by
-lottery; the 2 schools' lotteries are separate, and some families
-choose to enter their children in 
-both. Let $Z=$ offered admission to at least one.
-
-  \begin{enumerate}[<+->]
-  \item   Compare $\EE(Y | Z=1)$ to $\EE(Y_{T})$.  
-\item Likewise  $\EE(Y | Z=0)$ vs $\EE(Y_{c})$.
-\item ``ACE'' = $\EE(Y_t - Y_c) = \EE(Y_{t}) - \EE(Y_{c})$
-\item ``FACE'' = $\EE(Y | Z=1) - \EE(Y | Z=0)$
-\item If $\mathrm{Pr}(Z_{i}=1 | (Y_{T}, Y_{C})=(y_{T}, y_{C})) = \pi$
-  irrespective of $(y_{T}, y_{C}) $ --- as in simply randomized
-  experiments --- then the two coincide.  
-Not ordinarily otherwise.
+\section{Caveats and extensions}
+\begin{frame}
+  
+\end{frame}
+\begin{frame}{Cluster-level assignment}
+\framesubtitle{Slippery distinctions among estimators}
+  \begin{enumerate}
+  \item Simple solution: remove clustering by aggregation
+\item<2-> In effect estimation, be aware of distinctions among
+  \begin{enumerate}
+    \item \texttt{sum(z*y)/sum(z)} = $\mathbf{z}'\mathbf{y}/\mathbf{z}'\mathbf{1}$  where observations/index range over individuals, $y$= voted (1/0), versus
+  \item \texttt{sum(z*y)/sum(z)} = $\mathbf{z}'\mathbf{y}/\mathbf{z}'\mathbf{1}$ w/ clusters,  $y$= precinct turnout rate (1.00--0.00); and 
+  \item \texttt{sum(z*y*pop)/sum(z*pop)} w/ clusters, $y$= precinct turnout rate, versus \label{it:1}
+  \item \texttt{(sum(z*y*pop)/sum(z))/mean(pop)} \label{it:2}
+  \end{enumerate}
+\item<3-> Exercises. let $i \sim $ cluster, $w_i =$ cluster pop., $t_i = w_iy_i = $ cluster turnout.
+\begin{enumerate}
+\item   Then \texttt{sum(z*y*pop)/sum(z*pop)}= $\mathbf{z}'\mathbf{t}/\hspace{3em}$; \texttt{(sum(z*y*pop)/sum(z))/mean(pop)} = $\left(\mathbf{z}'\mathbf{t}/\hspace{3em}\right)/\left(\mathbf{w}'\mathbf{1}/\mathbf{1}'\mathbf{1}\right)$.
+  \item Which of \ref{it:1} and \ref{it:2} above is being calculated when we do \texttt{lm(y \textasciitilde\ z, weights=pop)}?
+  \item Which of \ref{it:1} and \ref{it:2} estimates the ATE without bias? 
+  \end{enumerate}
   \end{enumerate}
 
-\pause
-
-(Holland  had nonrandomized studies in mind.  FACEs differ from ACEs
-in most observational studies.)
-
 \end{frame}
 
-\itnote{
-\item Refer to sec 2.6 of G\&G 
-}
+\begin{frame}[shrink]{Cluster-level assignment}
+\framesubtitle{Finite vs. infinite sample guarantees of estimator performance}
+
+\begin{itemize}
+\item In completely randomized trials (CRTs) w/o clustering, difference of means was always unbiased.
+\item In CRTs with clustering, this depends on interpretation of ``difference of means.''
+\item If not unbiased, \textit{consistent} --- a large-sample property.\footnote{This requires mild additional technical conditions that we won't discuss here.}
+\item Associated unpooled t-statistic/sandwich SEs have the not-downwardly-biased property only for the same ``difference of means'' estimator that's unbiased.  Otherwise, merely consistent.
+
+\item In practice:
+  \begin{enumerate}
+  \item we usually settle for consistency
+  \item in CRTs and other common designs, you can get consistent ATE estimates while ignoring cluster structure
+  \item For SEs, relevant $n$ is the $n$ of clusters, not of elements
+  \item Any software routine that uses element data can't be giving
+    you the right SE unless it makes you identify clusters
+  \item For a recommended $\mathrm{SE}^2$ in R, install the clubSandwich package and try \texttt{vcovCR(model\_fitted\_to\_elements, cluster\_variable)}.
+  \end{enumerate}
+\end{itemize}
+\end{frame}
 
 \begin{frame}{$Z$s/$z$s vs $D$s/$d$s}
   
@@ -764,11 +811,18 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
 \visible<2->{\igrphx{SalkVtable-full}}
 \end{frame}
 
-\begin{frame}<\nottheirhandout>{Exercises}
-  \begin{enumerate}
-  \item Re potential outcomes notation {}(G.\&G. ex.1, ch 1):
+\begin{frame}{Exercises}
+
+Consider these examples as you answer the below: A university operates 2 oversubscribed charter schools
+serving a nearby high-poverty neighborhood.  One is admission by
+lottery only, while the other has open enrollment.  Their effects on
+graduation rates are studied separately, with the first study using
+all lottery entrants as its sample and the second all eligible
+students living in the neighborhood. 
+
     \begin{enumerate}
-    \item Explain the notation $Y_{i}(0)$ (as appears in G\&G 2012).
+    \item Explain the notation $Y_{i}(0)$ (as appears in G\&G
+      2012)\footnote{I.e., $y_{ti}$ in our notation.}.
     \item Contrast the meaning of ``$Y(0) | Z=1$'' w/ that of ``$Y(0) | Z=0$''.
     \item How does $\EE(Y(1) | Z=1)$ differ in meaning from $\EE(Y(1))$?
     \item Give an example in which you believe that $\EE(Y(1) | Z=1) =
@@ -781,36 +835,66 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
       = \EE(Y(1))$?  (What's the difference between this q and
       the last one?)
     \end{enumerate}
-\item (G.\&G. ex.4, ch 1) Suppose $z_{i} \in \{0,1\}$, all $i$; assume non-interference. Define the ATT as $\mathbf{z}'(\mathbf{y}_{T}-\mathbf{y}_{C})/\mathbf{z}'\mathbf{z}$.  Prove that if treatments are allocated using complete random assignment, then the ATT is equal in expectation to the average treatment effect.
-  \end{enumerate}
+(Based on G.\&G. ex.1, ch 1.)
 
 \end{frame}
 
 \note{Rewrite me in our notation?  (trim down? Skip?)}
 
 
-\begin{frame}{Cluster-level assignment}
 
-  \begin{enumerate}
-  \item Simple solution: remove clustering by aggregation
-\item In effect estimation, be aware of distinctions among\ldots
-  \begin{enumerate}
-    \item \texttt{sum(z*y)/sum(z)} w/ individual data, $y$= voted?
-  \item \texttt{sum(z*y)/sum(z)} w/ clusters,  $y$= precinct turnout rate
-  \item \texttt{sum(z*y*pop)/sum(z*pop)} w/ clusters, $y$= precinct turnout rate
-  \end{enumerate}
-and similarly w \texttt{lm(\ldots)} vs \texttt{lm(\ldots,
-  weights=pop)}
-\item In estimation of standard errors/calculation of p-values:
-  \begin{enumerate}
-  \item relevant $n$ is the $n$ of clusters, not of elements
-  \item Any software routine that uses element data can't be giving
-    you the right answer unless it makes you identify clusters
+\begin{frame}{Average causal effects for samples of populations}
+  
+  \begin{itemize}
+  \item Many writers assume 1,\ldots, n to be a sample from a
+  broader population. Then notation $(Y_{T}, Y_{C})$ is appropriate
+  (vs $(y_{T}, y_{C})$). 
+  \item Random assignment ensures that $Z$ is independent of $Y_0$, $Y_1$.
+  \item So under random assignment, $\mathrm{E}(Y_C|Z=0) =
+  \mathrm{E}(Y_C)$;  $\mathrm{E}(Y_T|Z=1) = \mathrm{E}(Y_T)$.
+  \item W/ simple, complete or paired rand. assmt, $\EE( \bar{Y}_{1}
+  - \bar{Y}_{2}) = $ ACE. 
+  \item Note that $Z$ is not generally independent of $Y=ZY_1 +
+  (1-Z)Y_0$!
+  \item Without random assignment, $\EE( \bar{Y}_{1}
+  - \bar{Y}_{2}) = $ ACE may fail, even if the sample is perfectly
+  representative of the population.
+\item The ``samples'' from
+  ``populations'' framing is sometimes invoked in order to apply apparati of conventional
+  frequentist \& Bayesian inference.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{FACEs and ACEs (Holland, 1988, \textit{Soc Meth}) }
+
+Example: a university operates 2 oversubscribed charter schools
+serving a nearby high-poverty neighborhood. Admission to both is by
+lottery; the 2 schools' lotteries are separate, and some families
+choose to enter their children in 
+both. Let $Z=$ offered admission to at least one.
+
+  \begin{enumerate}[<+->]
+  \item   Compare $\EE(Y | Z=1)$ to $\EE(Y_{T})$.  
+\item Likewise  $\EE(Y | Z=0)$ vs $\EE(Y_{c})$.
+\item ``ACE'' = $\EE(Y_t - Y_c) = \EE(Y_{t}) - \EE(Y_{c})$
+\item ``FACE'' = $\EE(Y | Z=1) - \EE(Y | Z=0)$
+\item If $\mathrm{Pr}(Z_{i}=1 | (Y_{T}, Y_{C})=(y_{T}, y_{C})) = \pi$
+  irrespective of $(y_{T}, y_{C}) $ --- as in simply randomized
+  experiments --- then the two coincide.  
+Not ordinarily otherwise.
   \end{enumerate}
 
-  \end{enumerate}
+\pause
+
+(Holland  had nonrandomized studies in mind.  FACEs differ from ACEs
+in most observational studies.)
 
 \end{frame}
+
+\itnote{
+\item Refer to sec 2.6 of G\&G 
+}
+
 
 
 \end{document}

@@ -1,0 +1,48 @@
+For the five pairs from the NSW experiment discussed in ch.2 of
+\texttt{DOS},  paired treatment-control differences $y_{i} = (z_{i1} -
+z_{i2})(r_{i1} - r_{i2})$ in the outcome were
+
+\begin{Schunk}
+\begin{Sinput}
+> ys <- c(1456, 3988, -45, -2147, 3173) 
+\end{Sinput}
+\end{Schunk}
+ 
+The unbiased estimate $\bar Y = \frac{1}{5}\sum_{i=1}^{5}  (Z_{i1} -
+Z_{i2})(r_{i1} - r_{i2})$ of the average causal effect, $\frac{1}{5\cdot
+  2} \sum_{i=1}^{5}\sum_{j=1}^{2} (r_{Tij} - r_{Cij})$, equals
+
+\begin{Schunk}
+\begin{Sinput}
+> mean(ys)
+\end{Sinput}
+\begin{Soutput}
+[1] 1285
+\end{Soutput}
+\end{Schunk}
+
+The associated standard error, according to the conventional formula 
+$$(\mathrm{s.e.}[\bar Y])^{2} = \frac{1}{5}  \frac{\sum_{i=1}^{5} \{Y_{i}  - \bar Y\} }{5-1},$$
+ is  
+\begin{Schunk}
+\begin{Sinput}
+> sd(ys)/sqrt(5)
+\end{Sinput}
+\begin{Soutput}
+[1] 1106
+\end{Soutput}
+\end{Schunk}
+
+
+In contrast, based on 
+$V_{0}[\bar Y] = \frac{1}{5^{2}} \sum_{i=1}^{5} (r_{i1} - r_{i2})^{2}$
+its null standard deviation, $\sqrt{V_{0}[\bar Y]}$, is 
+\begin{Schunk}
+\begin{Sinput}
+> sqrt(sum(ys^2))/5
+\end{Sinput}
+\begin{Soutput}
+[1] 1144
+\end{Soutput}
+\end{Schunk}
+
