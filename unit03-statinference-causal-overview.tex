@@ -1,0 +1,87 @@
+%  For slides only
+\input{slidesonly}
+
+% % For handout
+%\input{handout}
+
+%For handout + mynotes
+%\input{handout+mynotes}
+
+\input{beamer-preamble-bbh-all}
+\input{defs-all}
+\input{courseedition}
+
+\title[Recap/Overview]{Statistical Inference for Counterfactual Causal Quantities}
+
+\begin{document}
+
+
+% putting `\begin{frame}`/ `\end{frame}` in announcement-of-the-day.tex lets us 
+% put frame notes into that file
+% announcement-of-the-day.tex not part of repo
+\InputIfFileExists{announcement-of-the-day.tex}{% from https://tex.stackexchange.com/questions/100663/if-the-remote-file-exists-then-include-it-else-include-the-local-one
+  % File personal/bar.tex exists and is read
+  \input{announcement-of-the-day}
+}{%
+  % File personal/bar.tex is not found, try bar.tex
+}
+
+
+
+\begin{frame}{Approach 1: Test Hypotheses}
+
+
+  \smallskip
+  \centering
+  \includegraphics[width=.9\textwidth]{images/cartoonFisher.pdf}
+
+
+\end{frame}
+
+
+\begin{frame}{Approach 2: Estimate Averages}
+
+  \smallskip
+  \centering
+  \includegraphics[width=.9\textwidth]{images/cartoonNeyman.pdf}
+
+
+\end{frame}
+
+
+\begin{frame}{Approach 3: Predict Outcomes}
+
+  \smallskip
+  \centering
+  \includegraphics[width=.9\textwidth]{images/cartoonBayes.pdf}
+
+
+\end{frame}
+
+\begin{frame}[]{How do we learn about counterfactual causal quantities?}
+
+  If we observed everything we we would be doing causal description, not
+  causal inference. 
+
+  \medskip
+
+  How can we infer about counterfactuals given observation? Under
+  randomization and SUTVA \ldots
+
+  \begin{enumerate}
+    \item we can learn about how much information the design provides about
+      hypotheses about the individual causal effects. (Fisher 1935)
+    \item we can make good guesses about averages of causal effects. (Neyman
+      1935)
+    \item we can predict the posterior distribution for each individual
+      potential outcome (and thus of any function of them, such as averages or
+      sums, etc..) (Rubin 1974, Imbens and Rubin 2015, Chap 8 and 20, using Bayes).
+  \end{enumerate}
+
+  \emph{New developments:} extend each of these approaches (beyond the average for
+  Neyman, beyond simple sharp nulls for Fisher, relaxing functional form
+  assumptions for Bayes/Rubin.)
+\end{frame}
+
+
+\end{document}
