@@ -1,0 +1,246 @@
+\documentclass{article}
+\usepackage{natbib}
+
+\title{Lab on Bias and Consistency}
+\input{courseedition}
+\usepackage{icpsr-classwork}
+
+\begin{document}
+\maketitle
+
+\section{Preliminaries}
+\subsection{Setup}
+Here is the Acorn GOTV experiment data described in Arceneaux (2005),
+after aggregation to the precinct level.
+<<>>=
+acorn <- read.csv("data/acorn03.csv")
+@
+
+And here we load libraries containing some functions we'll be using later on:
+<<results='hide'>>=
+library('MASS')
+library('clubSandwich')
+@
+
+NOTE: If running any of the above commands gives you an error like
+the below, you'll need to install\footnote{%
+To install, first make sure you have an active internet connection.  Next, if you're using RStudio, you might use the interactive dialog that pops up when you select ``Install Packages\ldots'' from the Tools menu.  (Leave the ``Install dependencies'' option checked.)  Otherwise, enter
+\texttt{
+install.packages('optmatch', dep=T)
+}
+into R.  You'll be prompted to select a CRAN mirror; choose one that's
+nearby.  You'll also be asked about the directory to install the
+package to. The default selection should be fine. The installation
+process may take a few seconds to a few minutes, depending on your
+internet connection and on how many dependencies need installation.
+Once it's finished, you should be able to load the package.
+} the package before loading it:\\
+\begin{verbatim}
+Error in library(optmatch) : there is no package called 'optmatch'
+\end{verbatim}
+Each package can be installed via the ``Install Packages'' Tool in the RStudio
+menu.  Make sure to install package dependencies.
+
+Sigfigs in display:
+<<>>=
+options(digits=3)
+@
+
+Last time we learned that some reasonable methods of estimating an average
+causal effect with cluster-randomization were biased but consistent. What does
+consistency mean in general? In this case, we claimed that some of the
+estimators were consistent \emph{as the number of clusters got large}. And we
+suggested that the property of consistency is not something to justify choice
+of an estimator when you have a small number of clusters. Today we ask,
+\textbf{How can we know if we have too few clusters?}. And we use simulation
+to assess the relationship between estimates and truth.
+
+We will use the acorn study as an example.
+
+First, make a big version, the kind of dataset that the PIs of the acorn study
+saw first:
+
+<<>>=
+library(dplyr)
+library(tidyr)
+
+acornbig <- acorn[,c("unit","size","vote03","z","contact","v_g2002")] %>% group_by(pnum=unit) %>% complete(
+size = 1:size) %>% mutate_all( funs(last(.)))
+
+## A version using base R
+## tmp <- lapply(split(acornbig,acornbig$pnum),function(dat){
+## 		      ny1 <- with(dat,unique(vote03*size))
+## 		      ny0 <- unique(dat$size) - ny1
+## 		      ## Because of rounding sometimes the lengths dont add up
+## 		      adjfactor <- nrow(dat) - ( ny1 + ny0 )
+## 		      ny1 <- ny1 + adjfactor
+## 		      y <- rep(c(0,1),round(c(ny0,ny1)))
+## 		      return(y)
+## })
+## 
+## stopifnot( all( sapply(tmp,length) - table(acornbig$pnum) == 0 ))
+
+acornbig <- acornbig %>% group_by(pnum) %>% mutate(ny1=round(vote03*size),
+					       ny0=round(size - ny1),
+					       y =
+						       rep(c(0,1),c(unique(ny0),unique(ny1)))
+					       )
+
+
+stopifnot(sum(acorn$size)==nrow(acornbig))
+votepcts <- acornbig %>% group_by(pnum) %>% summarise(mny=mean(y))
+votepcts$orig <- acorn$vote03
+summary(votepcts$mny - votepcts$orig)
+all.equal(votepcts$mny , votepcts$orig)
+
+## Inspect the resulting data
+with(acornbig,table(z,unit))
+@
+
+Now define the estimators:
+
+\begin{enumerate}
+	\item \texttt{sum(z*y)/sum(z)} w/ individual data, $y$= voted?
+	\item \texttt{sum(z*y)/sum(z)} w/ clusters,  $y$= precinct turnout rate
+	\item \texttt{sum(z*y*pop)/sum(z*pop)} w/ clusters, $y$= precinct turnout rate
+	\item \texttt{sum(z*y*pop)/sum(z*pop)/mean(pop)} w/ clusters, $y$= precinct turnout rate
+\end{enumerate}
+
+<<>>=
+
+est1or2 <- function(y,z){
+	## for either the individual level or the cluster level estimators 1
+	## and 2
+	sum(z*y)/sum(z)
+}
+
+est3 <- function(y,z,pop){
+	stopifnot(length(z)==28) ## only for cluster level data
+	sum(z*y*pop)/sum(z*pop)
+}
+
+est4 <- function(y,z,pop){
+	stopifnot(length(z)==28) ## only for cluster level data
+	(sum(z*y*pop)/sum(z))/mean(pop)
+}
+
+@
+
+Use them once and compare to \texttt{lm}:
+
+<<>>=
+aceclus1 <- with(acornbig,est1or2(y=y,z=z)) ## same as sum(coef(lm(y~z,data=acornbig)))
+aceclus2 <- with(acorn,est1or2(y=vote03,z=z))
+aceclus3 <- with(acorn,est3(y=vote03,z=z,pop=size))
+aceclus4 <- with(acorn,est4(y=vote03,z=z,pop=size))
+aceclusbiglm <- sum(coef(lm(y~z,data=acornbig,weights=size)))
+acecluslm <- sum(coef(lm(vote03~z,data=acorn,weights=size)))
+
+c(v1=aceclus1,
+  v2=aceclus2,
+  v3=aceclus3,
+  v4=aceclus4,
+  v3lmbig=aceclusbiglm,
+  v3lm=acecluslm)
+
+@
+
+Now, to assess claims about "closeness to truth given enough information"
+(consistency) or "no systematic error" (unbiasedness) we need to create a
+truth and repeat the experiment --- each time using our estimators. And to
+create a true effect, we need to create some potential outcomes.
+
+<<>>=
+
+acorn$y0 <- acorn$v_g2002 ## using past turnout
+acorn$y1 <- acorn$y0 + .1 ## positing a constant additive effect
+## Is this the right way to think about what we are estimating??
+aceSmallTrue <- mean(acorn$y1)
+
+## Expand proportion voting in past into 1 and 0s
+acornbig <- acornbig %>% group_by(pnum) %>% mutate(ny1past=round(v_g2002*size),
+					       ny0past=round(size - ny1past),
+					       ypast =
+						       rep(c(0,1),c(unique(ny0past),unique(ny1past)))
+					       )
+
+nbig <- nrow(acornbig)
+acornbig$y0 <- acornbig$ypast ## using past turnout
+acornbig$y1 <- pmin(1,acornbig$y0 + rep(c(0,1), round( c( nbig -.1*nbig , .1*nbig))))
+## Is this the right way to think about what we are estimating??
+aceBigTrue <- mean(acornbig$y1)
+with(acornbig,weighted.mean( y1 , weight=size))
+@
+
+Now, we need to repeat the experiment, and each time use the different
+estimators and record their answers. We should see them clustered around .1 if
+they are working well (i.e. unbiased and/or consistent with 28 clusters close
+enough to asymptopia).
+
+<<>>=
+library(randomizr)
+newSmallExperiment <- function(N,m){ complete_ra(N=N,m=m) }
+getestsSmall <- function(y0,y1,newz,pop){
+	## assumes binary z
+	newY <- newz*y1 + (1-newz)*y0
+	est2 <- est1or2(y=newY,z=newz)
+	est3 <- est3(y=newY,z=newz,pop=pop)
+	est4 <- est4(y=newY,z=newz,pop=pop)
+	est3lm <- sum(coef(lm(newY~newz,weights=pop)))
+	return(c(v2=est2,
+	       v3=est3,
+	       v4=est4,
+	       v3lm=est3lm))
+}
+
+## Test it out
+getestsSmall(y0=acorn$y0,y1=acorn$y1,newz=acorn$z,pop=acorn$size)
+getestsSmall(y0=acorn$y0,y1=acorn$y1,newz=newSmallExperiment(N=28,m=14),pop=acorn$size)
+
+newBigExperiment <- function(theclus){ cluster_ra(theclus) }
+getestsBig<-function(y0,y1,z,pop){
+	newY <- z*y1 + (1-z)*y0
+	est1 <- est1or2(y=newY,z=z)
+	est1lm <-  sum(coef(lm(newY~z)))
+	estbiglm <- sum(coef(lm(newY~z,weights=pop)))
+	return(c(v1=est1,
+	       v1lm=est1lm,
+	       biglm=estbiglm))
+}
+
+##test it out
+getestsBig(y0=acornbig$y0,y1=acornbig$y1,z=acornbig$z,pop=acornbig$size)
+getestsBig(y0=acornbig$y0,y1=acornbig$y1,z=newBigExperiment(acornbig$pnum),pop=acornbig$size)
+
+@
+
+Now look at how these work across many experiments:
+
+<<dosims cache=TRUE>>=
+set.seed(12345)
+smallres <- replicate(1000,getestsSmall(y0=acorn$y0,y1=acorn$y1,
+					newz=newSmallExperiment(N=28,m=14),pop=acorn$size)
+)
+set.seed(12345)
+bigres <-
+	replicate(1000,getestsBig(y0=acornbig$y0,y1=acornbig$y1,
+				  z=newBigExperiment(acornbig$pnum),pop=acornbig$size))
+
+
+apply(smallres,1,mean)
+apply(bigres,1,mean)
+
+@
+
+How would we assess whether the downward or upward bias of the standard errors
+in these cases?
+
+\section{Additional}
+R and R package versions used in this demo:
+
+<<>>=
+sessionInfo()
+@
+
+
+\end{document}
