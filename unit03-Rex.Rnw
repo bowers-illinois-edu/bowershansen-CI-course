@@ -4,6 +4,7 @@
 \title{Lab on Fisherian randomization inference and models of effects}
 \input{courseedition}
 \usepackage{icpsr-classwork}
+\usepackage{alltt}
 
 \begin{document}
 \maketitle
@@ -19,7 +20,7 @@ acorn <- read.csv("data/acorn03.csv")
 @
 
 And here we load libraries containing some functions we'll be using later on:
-<<results='hide'>>=
+<<results=hide>>=
 library('MASS')
 library('sandwich')
 library('optmatch')
@@ -58,7 +59,7 @@ install the \texttt{devtools} and \texttt{withr} packages from CRAN
 \begin{alltt}
 > library('devtools')
 > library('withr')
-with\_libpaths('./lib', install\_github("markmfredrickson/RItools"), 'pre')
+> with\_libpaths('./lib', install\_github("markmfredrickson/RItools"), 'pre')
 \end{alltt}
 After this you'll be able to load this version of the RItools package using
 \begin{alltt}
@@ -72,7 +73,7 @@ If \texttt{optmatch} had been loaded, reload it as follows:
 \end{alltt}
 } )
 
-<<echo=FALSE,message=FALSE,results='hide'>>=
+<<echo=FALSE,message=FALSE,results=hide>>=
 detach("package:optmatch", unload=T) # as optmatch may have implicitly 
 unloadNamespace('RItools') #loaded the other version
 library('RItools', lib.loc='./lib')
@@ -106,21 +107,22 @@ which you can directly reference \texttt{acorn} variables --- i.e.,
 what we've otherwise used the \texttt{with()} command to do.}
 to create a copy of \texttt{acorn} containing additional columns to
 represent $\mathbf{y}_{c}$ as it would be under each of our models
-of effect.  I call it \texttt{acorn.e}, short for ``acorn extended.''
+of effect.  I call it \texttt{acorn\_e}, short for ``acorn extended.''
 <<>>=
-acorn.e <- transform(acorn, 
-                     yc.moe0 =  vote03,
-                     yc.moe1 = vote03 - contact/10,
-                     yc.moe2 = vote03 -contact/5
+acorn_e <- transform(acorn, 
+                     yc_moe0 =  vote03,
+                     yc_moe1 = vote03 - contact/10,
+                     yc_moe2 = vote03 -contact/5
                      )
 @ 
+
 
 \texttt{Exercise.}\\  \newcounter{saveenumi}
 \begin{enumerate}
 \item Specify a fourth model-of-effect for the acorn data, something
   non-identical to the three above, and use it to construct a
-  \texttt{yc.moe3}, to live alongside \texttt{yc.moe0}, \ldots,
-  \texttt{yc.moe2} inside of \texttt{acorn.e}.  It might or might not specify
+  \texttt{yc\_moe3}, to live alongside \texttt{yc\_moe0}, \ldots,
+  \texttt{yc\_moe2} inside of \texttt{acorn\_e}.  It might or might not specify
   that unit-level treatment effects depend on compliance; up to you.
   \setcounter{saveenumi}{\value{enumi}}
 \end{enumerate}
@@ -142,19 +144,21 @@ $t(\mathbf{z}, \mathbf{y}, \mathbf{x}) =
 
 First, cross-check the new column against old  and extract just the difference of means from a linear regression object:
 <<>>=
-lm(vote03~z, data=acorn.e)
-lm(yc.moe0~z, data=acorn.e) # same answer as w/ last calc?
-coef(lm(yc.moe0~z, data=acorn.e))[2] # are we extracting the right coeff?
+lm(vote03~z, data=acorn_e)
+lm(yc_moe0~z, data=acorn_e) # same answer as w/ last calc?
+coef(lm(yc_moe0~z, data=acorn_e))[2] # are we extracting the right coeff?
 @ 
 Store $t(\mathbf{z}, \mathbf{y}, \mathbf{x})$:
 <<>>=
-actualD = coef(lm(yc.moe0~z, data=acorn.e))[2]
+actualD = coef(lm(yc_moe0~z, data=acorn_e))[2]
 @ 
-This verifies that the response schedule is consistent w/ what was observed after the experiment.  Going on to simulate repeated trials of the experiment:
+This verifies that the response schedule is consistent w/ what was
+observed after the experiment.  Going on to simulate repeated trials
+of the experiment: 
 <<>>=
 simD = replicate(1000, 
-    coef(lm(yc.moe0~z, 
-            data=transform(acorn.e, z=sample(z))) # temporarily replaces z w/ permuted z
+    coef(lm(yc_moe0~sample(z), 
+            data=acorn_e) # temporarily replaces z w/ permuted z
          )[2])
 
 @ 
@@ -176,38 +180,34 @@ follows the interpretation $2\min\big( \mathrm{Pr}(T\leq t),
   \setcounter{saveenumi}{\value{enumi}}
 \end{enumerate}
 
-This uses as a test statistic the simple difference of means between
-the groups.  As discussed in this unit, this choice often fails to maximize power. To focus ideas, however, we'll continue with it, for the moment.
 
 \subsection{Modifications of the test statistic}
+
+We've been using as our test statistic the simple difference of means between
+the groups.  There's no reason to limit ourselves to this option;
+others typically offer more power. 
 
 \paragraph{Modifications for robustness to non-Normality}
 It's very simple to adapt this procedure by applying the rank
 transformations to the outcomes prior to making comparisons between
 the two groups. For example, 
 <<eval=FALSE>>=
-actualD = coef(lm(rank(yc.moe0)~z, data=acorn.e))[2]
-simD = replicate(1000, coef(lm(rank(yc.moe0)~z, 
-    data=transform(acorn.e, z=sample(z))))[2])
+actualD = coef(lm(rank(yc_moe0)~z, data=acorn_e))[2]
+simD = replicate(1000, coef(lm(rank(yc_moe0)~sample(z), 
+    data=acorn_e))[2])
 @ 
 Under complete random assignment, this give a test equivalent to the  \textit{Wilcoxon rank-sum test}. 
 
 Robustification via robust regression is also pretty easy, at least
 with small data sets for which things run quickly.  (The
 \texttt{rlm()} function lives in the MASS package.)
-<<eval=FALSE>>=
-actualD = coef(rlm(yc.moe0~z, data=acorn.e))[2]
-simD = replicate(1000, coef(rlm(yc.moe0~z, data=transform(acorn.e, z=sample(z))))[2])
+<<eval=TRUE>>=
+actualD = coef(rlm(yc_moe0~z, data=acorn_e))[2]
+simD = replicate(1000, coef(rlm(yc_moe0~sample(z), data=acorn_e))[2])
 @ 
 
-\textbf{Exercise.}
-\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
-\item Figure one- and two-sided p-values for your four 
-  models of effect, using one of the test statistics just mentioned. 
-  \setcounter{saveenumi}{\value{enumi}}
-\end{enumerate}
 
-
+\begin{comment}
 \textit{Aside comment.} The version using \texttt{rlm} is a little bit slower because robust regression is marginally
 slower than ordinary least squares regression, since it has to
 determine a data-dependent threshold using iterative least squares.
@@ -219,29 +219,32 @@ simulations and then that  threshold repeatedly, rather than having
 \texttt{rlm()} calculate  a different threshold each time it's called.
 (This gives a slightly different test, probably no better or worse
 powered than the first.)
-<<>>=
-(rlm0 <- rlm(yc.moe0~1, data=acorn.e))
+\end{comment}
+<<eval=FALSE,echo=FALSE>>=
+(rlm0 <- rlm(yc_moe0~1, data=acorn_e))
 @
+\begin{comment}
 The ``\texttt{1}''  on the right hand side stands for ``Intercept''. Note that this time we've omitted the ``z'';
 see exercises below.
 
 With basic Huber M-estimation (\texttt{rlm()} with default settings),
 the threshold is 1.345 times the scale estimate:
-<<>>=
+\end{comment}
+<<eval=FALSE,echo=FALSE>>=
 rlm0$s
 thresh.moe0 <- 1.345 * rlm0$s
-acorn.e <- transform(acorn.e, yc.t.moe0 = sign(yc.moe0)*min(thresh.moe0, abs(yc.moe0)))
-actualD <- coef(lm(yc.t.moe0 ~z, data=acorn.e))[2]
-simD <-  replicate(1000, coef(lm(yc.t.moe0~z, data=transform(acorn.e, z=sample(z))))[2])
+acorn_e <- transform(acorn_e, yc_moe0 = sign(yc_moe0)*min(thresh.moe0, abs(yc_moe0)))
+actualD <- coef(lm(yc_moe0 ~ sample(z), data=acorn_e))[2]
+simD <-  replicate(1000, coef(lm(yc_moe0~z, data=acorn_e))[2])
 @ 
 
-
+\begin{comment}
 \textbf{Exercise.}
 \begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
 \item For the version of the test with a single threshold, that
-  threshold was taken from a fit of \texttt{rlm(yc.moe0
+  threshold was taken from a fit of \texttt{rlm(yc_moe0
     \textasciitilde\ 1)}.  It would have been a mistake to instead
-  extract it from a fit of \texttt{rlm(yc.moe0
+  extract it from a fit of \texttt{rlm(yc_moe0
     \textasciitilde\ z)}, as we did in (each iteration of) the slower
   test that the single-threshold test was intended to improve on --- had we
   done that, our test would not have been a legitimate permutation
@@ -259,16 +262,29 @@ simD <-  replicate(1000, coef(lm(yc.t.moe0~z, data=transform(acorn.e, z=sample(z
 \end{enumerate}
 
 \textit{End of aside comment.}
+\end{comment}
 
 \paragraph{Modifications to take account of differences in size
   between units}
 
-One of the advantages of ``rolling our own'' Wilcoxon test, using \texttt{lm} and \texttt{rank} instead of R's \texttt{wilcox.test} function, as that our procedure is much easier to adapt so that it addresses differences in precinct size.  e.g.,
+When we use \texttt{lm()}, \textrm{rlm()} or a similar function to
+produce a test statistic, we can readily fold in an adjustment for
+differences in size between units of assignment. 
 
-<<eval=FALSE>>=
-actualD = coef(lm(rank(yc.moe0)~z, weights=size, data=acorn.e))[2]
-simD = replicate(1000, coef(lm(rank(yc.moe0)~z, weights=size, 
-    data=transform(acorn.e, z=sample(z))))[2])
+<<>>=
+actualD <- coef(lm(yc_moe0 ~z, weights=size, data=acorn_e))[2]
+simD <-  replicate(1000, coef(lm(yc_moe0~sample(z), 
+                                 weights=size, data=acorn_e))[2])
+
+@ 
+
+Although the pre-set \texttt{wilcox.test} function won't accept a
+\texttt{weights} argument, we can fold weights into our homemade
+Wilcoxon test as follows. 
+<<eval=TRUE>>=
+actualD = coef(lm(rank(yc_moe0)~z, weights=size, data=acorn_e))[2]
+simD = replicate(1000, coef(lm(rank(yc_moe0)~sample(z), weights=size, 
+    data=acorn_e))[2])
 @ 
 
 An adjustment like this is likely to improve power.
@@ -276,7 +292,7 @@ An adjustment like this is likely to improve power.
 \paragraph{Modifications to take advantage of informative $x$es}
 
 
-Now we'll covariate-adjust for the 2 most recent election results,  to beef up a test of the hypothesis of no effect. A reference for what we're doing here is \cite[\S2.3]{rosenbaum:2002a}.  
+Now we'll covariate-adjust for the 2 most recent election results,  to beef up a test of the hypothesis of no effect. A reference for what we're doing here is \citet[\S2.3]{rosenbaum:2002a}.  
 %Since \texttt{v\_g2002} is one of these, we'll use the original outcome rather than the gain scores; the results will be identical (if we use OLS for the covariate adjustments) or similar (if we use robust regression).
 
 The first step is to residualize.  One can do this using OLS, via R's \texttt{lm} function, but often robust regression is better for these purposes.  I use \texttt{rlm} from the \texttt{MASS} package, with default options.
@@ -284,7 +300,7 @@ The first step is to residualize.  One can do this using OLS, via R's \texttt{lm
 library(MASS) #Just a reminder; the script actually loaded MASS already
 @ 
 <<>>=
-rlm0 = rlm(yc.moe0 ~ v_g2002 + v_p2003, data=acorn.e)
+rlm0 = rlm(yc_moe0 ~ v_g2002 + v_p2003, weights=size, data=acorn_e)
 @ 
 Internally, \texttt{rlm()} has top- and bottom-coded the residuals in order to fit its regression coefficients.  But I couldn't find a convenience function for extracting these Winsorized (top- and bottom-coded) residuals, so I wrote one myself.
 <<>>=
@@ -302,12 +318,11 @@ To see the difference between trimming or no,
 Now we can take the difference in means in \texttt{r0} as our test statistic, whithout fear of an outlier or two's sapping away our power.
 
 <<>>=
-lm(r0~z, data=acorn.e)
-actualD = coef(lm(r0~z, data=acorn.e))["z"]
-coef(lm(r0~z, data=transform(acorn.e, z=sample(z))))["z"]
-simD = replicate(1000, coef(lm(r0~z, 
-    data=transform(acorn.e, z=sample(z))))["z"])
-table(simD>= actualD)/length(simD)
+lm(r0~z, data=acorn_e)
+actualD = coef(lm(r0~z, weights=size, data=acorn_e))["z"]
+coef(lm(r0~sample(z), weights=size, data=acorn_e))[2]
+simD = replicate(1000, coef(lm(r0~sample(z), weights=size, data=acorn_e))[2])
+mean(simD>= actualD)
 @ 
 
 giving a one-sided p-value for the hypothesis of no effect. Since
@@ -319,13 +334,19 @@ One can also combine these two approaches to limiting the play of
 outliers, i.e. robust regression and rank-based methods.  For example,
 one can use robust regression to fit the coefficients of the covariate
 adjustment, then go on to apply the rank transformation to the
-covariate adjusted residuals.  In the examples below, this is done
-without need for special coding, such as \texttt{trimmed\_resid} above.
-
-Covariate adjustment followed by a test based on rank transformed-residuals:
+covariate adjusted residuals:
 <<>>=
 wilcox.test(e0~z, data=transform(acorn, e0=resid(rlm0)))
 @ 
+
+
+
+\textbf{Exercise.}
+\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
+\item Figure one- and two-sided p-values for your four 
+  models of effect, using one of the test statistics just mentioned. 
+  \setcounter{saveenumi}{\value{enumi}}
+\end{enumerate}
 
 \section{Testing without simulations}
 The function \texttt{xBalance}, pre-defined in the \texttt{RItools}
@@ -335,7 +356,7 @@ approximation to its p-value.   Here's the procedure for the
 difference of means statistic. 
 
 <<>>=
-xBalance(z ~ yc.moe0, data=acorn.e, report="all")
+xBalance(z ~ yc_moe0, data=acorn_e, report="all")
 @ 
 (Observe that the formula I use at the beginning, \texttt{z \textasciitilde\  vote03}, is the mirror image of the formula I would have given to \texttt{lm}, \texttt{vote03 \textasciitilde\ z}.  The reasons for this will come into focus when we use \texttt{xBalance} with observational studies, later.)
 
@@ -355,7 +376,7 @@ the observations, after subtracting off within-group means.  (This is
 done as part of computation of the test statistic; it doesn't affect
 the summary statistics that \texttt{xBalance} also provides.)
 <<>>=
-xBalance(z ~ yc.moe0, data=acorn.e, 
+xBalance(z ~ yc_moe0, data=acorn_e, 
          report=c("adj.means", "std.diffs", "z.scores"), 
          post.alignment.transform=rank)
 
@@ -364,8 +385,8 @@ xBalance(z ~ yc.moe0, data=acorn.e,
  \texttt{xBalance} is using a Normal approximation, so the p-values are determined by the z-statistic.  We'd have rejection at level $\alpha$ if the absolute value of that statistic exeeded the $1-\alpha/2$ quantile of the Normal distribution.    If we have preselected an $\alpha$, \texttt{xBalance} permits us to test a bunch of these hypotheses at once. 
 
 <<>>=
-xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2, 
-         data=acorn.e,
+xBalance(z ~ yc_moe0 + yc_moe1 + yc_moe2, 
+         data=acorn_e,
          report=c("adj.means", "std.diffs", "z.scores"))
 @ 
 
@@ -376,9 +397,9 @@ tests, as opposed to tests based on the difference of means
 statistic, use
 
 <<>>=
-xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2, 
+xBalance(z ~ yc_moe0 + yc_moe1 + yc_moe2, 
          report=c("adj.means", "std.diffs", "z.scores"), 
-         data=acorn.e, post.alignment.transform=rank)
+         data=acorn_e, post.alignment.transform=rank)
 @ 
 Some p-values go up, others down. Again, this assumes version 0.1-13 or later of RItools.
 
@@ -387,13 +408,16 @@ Using \texttt{xBalance} to conduct several of covariate-adjusted randomization t
 xBalance(z ~ e0 + e1 + e2, 
          report=c("adj.means", "z.scores", "p.values"), 
          post.alignment.transform=rank,
-         data=transform(acorn.e, e0=resid(rlm(yc.moe0~v_g2002 + v_p2003)),
-                        e1=resid(rlm(yc.moe1~v_g2002 + v_p2003)),
-                        e2=resid(rlm(yc.moe2~v_g2002 + v_p2003)))
+         data=transform(acorn_e, e0=resid(rlm(yc_moe0~v_g2002 + v_p2003, weights=size)),
+                        e1=resid(rlm(yc_moe1~v_g2002 + v_p2003, weights=size)),
+                        e2=resid(rlm(yc_moe2~v_g2002 + v_p2003, weights=size)))
          )
 
 @ 
 
+The corresponding 95\% and 99\% confidence intervals contain .1, but
+have lower and
+upper endpoints strictly between 0 and 0.2. 
 
 
 \section{Paired random assignment and post-stratified designs}
@@ -403,23 +427,23 @@ experiment into pairs, on the basis of turnout rates in the last few
 prior elections.
 
 <<>>=
-acorn.e <- transform(acorn.e, pairs=pairmatch(z~size+v_p2003+v_m2003, data=acorn))
+acorn_e <- transform(acorn_e, pairs=pairmatch(z~size+v_p2003+v_m2003, data=acorn))
 @ 
 
 The test statistic itself doesn't necessarily have to be modified to
 reflect stratification.
 <<>>=
-actualD = coef(lm(rank(yc.moe0)~z, data=acorn.e))[2]
+actualD = coef(lm(rank(yc_moe0)~z, data=acorn_e))[2]
 @ 
 Its reference distribution does, however.  Here's how you'd do it
 using the \texttt{permute} package's \texttt{shuffle()} function instead of base
 R's \texttt{sample()}:
 <<eval=FALSE>>=
 library(permute)
-n = nrow(acorn.e)
-h1 <- how(blocks=acorn.e$pairs)
-simD = replicate(1000, coef(lm(rank(yc.moe0)~z), 
-    data=transform(acorn.e, z=z[shuffle(n, how=h1)]))[2])
+n = nrow(acorn_e)
+h1 <- how(blocks=acorn_e$pairs)
+simD = replicate(1000, coef(lm(rank(yc_moe0)~z), 
+    data=transform(acorn_e, z=z[shuffle(n, how=h1)]))[2])
 @ 
 Without a \texttt{how}
 argument, \texttt{shuffle()} would have done the same as
@@ -427,34 +451,34 @@ argument, \texttt{shuffle()} would have done the same as
 <<eval=FALSE>>=
 shuffle(n)
 shuffle(n, how=h1)
-with(acorn.e, cbind(pairs, z, z[shuffle(n, how=h1)]))
+with(acorn_e, cbind(pairs, z, z[shuffle(n, how=h1)]))
 @ 
 
 To achieve the same effect without simulating, 
 <<>>=
-xBalance(z ~ yc.moe0 + yc.moe1 + yc.moe2, strata=acorn.e$pairs,
+xBalance(z ~ yc_moe0 + yc_moe1 + yc_moe2, strata=acorn_e$pairs,
          report=c("adj.means", "std.diffs", "z.scores"), 
-         data=acorn.e, post.alignment.transform=rank)
+         data=acorn_e, post.alignment.transform=rank)
 
 @ 
 
 In the development version of RItools you can get the same effect via
 <<eval=FALSE>>=
-balanceTest(z ~ yc.moe0 + yc.moe1 + yc.moe2 + strata(pairs) -1, 
+balanceTest(z ~ yc_moe0 + yc_moe1 + yc_moe2 + strata(pairs) -1, 
          report=c("adj.means", "std.diffs", "z.scores"), 
-         data=acorn.e, post.alignment.transform=rank)
+         data=acorn_e, post.alignment.transform=rank)
 @ 
 The \texttt{strata(pairs)} tells it to include stratification on
 \texttt{pairs}, and the \texttt{-1} signals that we don't also need
 the unstratified comparison.
 
 
-\section{Testing the hypothesis of no effect after adjustment for covariates}
+\section{Differences in differences/gain score analysis}
 
 When there is  a lagged measure of the outcome, one can compare pre-post differences on that measure between treatment and control.  
 
 <<>>=
-acorn.e <- transform(acorn, pre.post.diff = vote03 - v_g2002)
+acorn_e <- transform(acorn_e, pre_post_diff = vote03 - v_g2002)
 @ 
 
 Analyzing these differences, as opposed to the outcome itself, is sometimes called \textit{gain score analysis}.
@@ -462,22 +486,22 @@ Analyzing these differences, as opposed to the outcome itself, is sometimes call
 Unbiased estimation of the average treatment effect is the same as if you were comparing the outcome itself, rather than pre-post differences:
 
 <<>>=
-lm2 <- lm(pre.post.diff ~ z, data=acorn.e)
+lm2 <- lm(pre_post_diff ~ z, data=acorn_e)
 coef(lm2)[2]
 vcovHC(lm2, type="HC2")
 @ 
 
 Likewise for setting up models of effects, and for permutation testing of them.
 <<>>=
-acorn.e <- transform(acorn.e, 
-                     dc.moe0 =  pre.post.diff,
-                     dc.moe1 = pre.post.diff - contact/10,
-                     dc.moe2 = pre.post.diff -contact/5
+acorn_e <- transform(acorn_e, 
+                     dc_moe0 =  pre_post_diff,
+                     dc_moe1 = pre_post_diff - contact/10,
+                     dc_moe2 = pre_post_diff -contact/5
                      )
 
-xBalance(z ~ dc.moe0 + dc.moe1 + dc.moe2, 
+xBalance(z ~ dc_moe0 + dc_moe1 + dc_moe2, 
          report=c("adj.means", "std.diffs", "z.scores"), 
-         data=acorn.e, post.alignment.transform=rank)
+         data=acorn_e, post.alignment.transform=rank)
 
 @ 
 
@@ -510,7 +534,7 @@ R and R package versions used in this demo:
 sessionInfo()
 @ 
 
-\bibliographystyle{plain}
+\bibliographystyle{apalike}
 % \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
 \begin{thebibliography}{1}
 
