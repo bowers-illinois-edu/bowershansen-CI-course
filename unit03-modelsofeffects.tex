@@ -172,12 +172,15 @@ Note that these models don't specify $y_{t}$ for precincts we only got to observ
 \end{frame}
 
 \begin{frame}<\nottheirhandout>{You can test a hypothesis specifying
-    all of $\mathbf{y}_{t}$} \framesubtitle{even if it leaves blanks
-    in $\mathbf{y}_{c}$}
+    all of $\mathbf{y}_{c}$} \framesubtitle{even if it leaves blanks
+    in $\mathbf{y}_{t}$}
+
+   \textit{Uniformity trial}:  Measure covariates, ``assign'' treatments $\mathbf{Z}$; but then don't administer any ($\mathbf{d}\equiv 0$).    But measure outcomes anyway.  (Nowadays, a concept rather than a practice.)
+
+ 
    An incomplete response schedule can still give us enough to do
-   statistical testing. For example, if the schedule specifies $y_c$
-   for all subjects --- more generally, if hypothesis +
-   $\mathbf{y}_{\mathrm{obs}}$ together determine $\mathbf{y}_{U}$,
+   statistical testing. For example, if  \{hypothesis,
+   $\mathbf{y}_{\mathrm{obs}}$\} together determine $\mathbf{y}_{U}$,
    the vector of responses that would have been obtained in the
    \textit{uniformity trial}   then for any test statistic $t $ we can
    test by comparing $t(\mathbf{z}, \mathbf{y}_{U})$ to the permutation distribution of $t(\mathbf{Z}, \mathbf{y}_{U}) $ .
