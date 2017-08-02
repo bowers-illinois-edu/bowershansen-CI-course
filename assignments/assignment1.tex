@@ -59,13 +59,14 @@ accompanies the Central Limit Theorem.
   formula.   Determine the error of the simulation-based
   approximation to this quantity that you reported in question~\ref{q:simmoments},
   expressing it as a percentage of $\mathrm{Var}_{0}\,[ n_{1}^{-1}\mathbf{Z}'\mathbf{y}]$. \label{q:exactvar}
-\item Determine the normal theory approximation to
+\item Determine the Normal theory approximation to
   $\mathrm{Pr}_{0}(n_{1}^{-1}\mathbf{Z}'\mathbf{y} \geq
   n_{1}^{-1}\mathbf{z}'\mathbf{y} ) $.  (Hints: Use the variance and
   expected values calculated in~\ref{q:exactvar} and \ref{q:exactEV} to transform your
   observed treatment group mean into a corresponding ``$z$-score.'' 
   To to determine Normal quantiles corresponding to z-scores in R, use
-  \texttt{pnorm()}; type \texttt{?pnorm} for help.)
+  \texttt{pnorm()}; type \texttt{?pnorm} for help. And $\mathbf{z}'$ refers to
+  the observed Acorn data treatment assignment.)
 \item %\input{gg15i}
 A researcher plans to ask six subjects to donate time to an adult
 literacy program. Each subject will be asked to donate either 30

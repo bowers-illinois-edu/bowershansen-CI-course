@@ -24,8 +24,13 @@
 
 {\usebeamercolor[fg]{titlelike} Announcements:}\\
 
-\input{announcement-of-the-day}  % announcement-of-the-day.tex not
-                                % part of repo
+\InputIfFileExists{announcement-of-the-day.tex}{% from https://tex.stackexchange.com/questions/100663/if-the-remote-file-exists-then-include-it-else-include-the-local-one
+  % File personal/bar.tex exists and is read
+  \input{announcement-of-the-day}  % announcement-of-the-day.tex not
+}{%
+  % File personal/bar.tex is not found, try bar.tex
+}
+                                % announcement-of-the-day.tex not part of repo
 \end{frame}
 \itnote{
 \item Day 2: Starting in part 2, I'll demo use of R to do some Fisher test calcs for the Salk polio trial. 

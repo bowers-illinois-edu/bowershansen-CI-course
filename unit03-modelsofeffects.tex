@@ -1,11 +1,11 @@
 %  For slides only
-%\input{slidesonly}
+\input{slidesonly}
 
 % % For handout
 %\input{handout}
 
 %For handout + mynotes
-\input{handout+mynotes}
+% \input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -17,9 +17,15 @@
 \begin{document}
 
 
-
-\input{announcement-of-the-day}  % announcement-of-the-day.tex not
-                                % part of repo
+% putting `\begin{frame}`/ `\end{frame}` in announcement-of-the-day.tex lets us 
+% put frame notes into that file
+% announcement-of-the-day.tex not part of repo
+\InputIfFileExists{announcement-of-the-day.tex}{% from https://tex.stackexchange.com/questions/100663/if-the-remote-file-exists-then-include-it-else-include-the-local-one
+  % File personal/bar.tex exists and is read
+  \input{announcement-of-the-day}
+}{%
+  % File personal/bar.tex is not found, try bar.tex
+}
 
 
 \begin{frame}[<+->]{Background: permutation tests vs parametric tests}

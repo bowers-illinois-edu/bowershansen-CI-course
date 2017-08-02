@@ -1,0 +1,293 @@
+---
+title: "Estimating Average Treatment Effects, Standard Errors, and Unbiasedness"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r opts, include=FALSE, cache=FALSE}
+rm(list=ls()) ## remove anything previously in memory
+library(knitr)
+
+opts_chunk$set( width.cutoff=132, size='footnotesize')
+```
+
+
+
+# Describing data
+
+Today we are using a field experiment in which 8 cities were placed into pairs and one city in each pair was randomly assigned to get a newspaper advertisement encouraging people to vote.
+
+```{r}
+rm(list=ls()) ## delete all previous stuff from memory
+## Load the data from the web
+newsdf<-read.csv("http://jakebowers.org/Data/news.df.csv")
+```
+
+What does the data frame look like? I know that 
+
+```{r}
+class(newsdf)
+head(newsdf)
+str(newsdf)
+```
+
+It is not too big. Looks like it is `r nrow(newsdf)` cases or rows by `r ncol(newsdf)` columns or variables. Let's look at one part.
+
+```{r}
+## Print just the first 4 rows and the columns named r,s,city, and z
+newsdf[1:4,c("r","s","city","z")]
+```
+
+Or all of the rows but just some of the columns:
+```{r}
+newsdf[,c("r","s","city","z")]
+```
+
+What is the mean outcome among those cities treated? What is the mean among those cities in control?
+
+```{r}
+## Mean outcome overall
+### These next two are the same. The second one is nicer if you are referring to more than one variable within a data frame
+mean(newsdf$r)
+with(newsdf,mean(r))
+
+## Mean among the treated
+with(newsdf,mean(r[z==1]))
+
+## Mean among the controls
+with(newsdf,mean(r[z==0]))
+```
+
+# The average treatment effect 
+
+Let's estimate the Average Treatment Effect (for now, pretending that the experiment was not randomized by blocking or stratifying into pairs).
+
+```{r}
+haty1 <- with(newsdf,mean(r[z==1]))
+haty0 <- with(newsdf,mean(r[z==0]))
+hatATE <- haty1 - haty0
+hatATE
+```
+# What about Bias?
+
+Why should we believe that the difference in observed means is a good estimator of the unobserved difference in  mean potential outcomes?
+
+You can see the derivation in the Gerber and Green book.
+
+Here is a simulation to show that, when we repeat the experiment many times, the average of the average treatment effects is the truth (or as close as simulation error allows.)
+
+```{r}
+## Bias refers to a relationship between the repeated operation of a procedure and a truth. So we have to invent a truth.
+
+## Here I am using baseline turnout data as the potential outcome to control (y0)
+y0 <- newsdf$rpre
+## And I'm specifying a constant additive treatment effect to turn y0 into the potential outcome to treatment y1
+y1 <- y0 + 1.5
+
+## So the truth is 1.5
+ate <- mean(y1) - mean(y0)
+print(ate)
+
+## The treatment allows us to observe one of y0 or y1 for each person.
+## Using the same treatment from the existing experiment
+Z <- newsdf$z
+
+Yobs <- Z*y1 + (1-Z)*y0
+estATE <- mean(Yobs[Z==1]) - mean(Yobs[Z==0])
+
+## The claim is that this is a good estimate of the ATE.
+print(estATE)
+```
+
+Now let's see if the unbiasedness claim makes sense. Here we are pretending that the experiment was not randomized by pairs we will do the version with pairs after this.
+
+```{r}
+
+library(randomizr)
+
+estATEfn <- function(y,z){
+    hatATE <- mean(y[z==1]) - mean(y[z==0])
+    return(hatATE)
+}
+
+newexperiment <- function(z){
+    sample(z) ## could also have used complete_ra() from randomizr
+}
+
+newATEfromTruth<-function(y0,y1,newz){
+    Yobs <- newz*y1 + (1-newz)*y0
+    estATE <- mean(Yobs[newz==1]) - mean(Yobs[newz==0])
+    return(estATE)
+}
+
+## Testing the function
+newATEfromTruth(y0,y1,newz=newexperiment(Z))
+
+set.seed(1234)
+manyATEs <- replicate(10000,newATEfromTruth(y0,y1,newz=newexperiment(Z)))
+summary(manyATEs)
+## Notice simulation error
+manyATEs2 <- replicate(10000,newATEfromTruth(y0,y1,newz=newexperiment(Z)))
+summary(manyATEs2)
+
+
+
+```
+
+The same holds when we do the right thing and take the pairing into account:
+
+```{r}
+newexperimentPair <- function(b){
+    block_ra(block_var=b)
+}
+
+estATEfnPair<-function(y,b,z){
+    require(dplyr)
+    newdat <- data.frame(y,b,z)
+    pairdat <- group_by(newdat,b) %>% summarise( y=y[z==1] - y[z==0])
+    estATEpair <- mean(pairdat$y)
+    return(estATEpair)
+}
+
+estATEPaired <- estATEfnPair(Yobs,newsdf$s,Z)
+print(estATEPaired)
+
+newATEfromTruthPaired<-function(y0,y1,newz,b){
+    Yobs <- newz*y1 + (1-newz)*y0
+    estATE <- estATEfnPair(Yobs,b,newz)
+    return(estATE)
+}
+## Testing the function
+newATEfromTruthPaired(y0,y1,newz=newexperimentPair(newsdf$s),b=newsdf$s)
+
+set.seed(1234)
+manyATEsPair <- replicate(1000,newATEfromTruthPaired(y0,y1,newz=newexperimentPair(newsdf$s),b=newsdf$s))
+summary(manyATEsPair)
+## Notice simulation error
+manyATEsPair2 <- replicate(1000,newATEfromTruthPaired(y0,y1,newz=newexperimentPair(newsdf$s),b=newsdf$s))
+summary(manyATEsPair2)
+```
+
+Notice the difference between the distributions of estimated ATEs for paired and unpaired designs? 
+
+```{r}
+## Note also that the randomization breaks the relationship between treatment and covariates.
+
+## The observed relationship (difference of means)
+with(newsdf, estATEfnPair(medhhi,s,z) )
+
+medhhidiffs <- replicate(10000, with(newsdf,estATEfnPair(medhhi,s,newexperimentPair(s))))
+summary(medhhidiffs)
+
+canddiffs <- replicate(10000, with(newsdf,estATEfnPair(cands,s,newexperimentPair(s))))
+summary(canddiffs)
+
+library(RItools)
+
+xb1<-xBalance(z~medhhi+rpre+blkpct+medage+cands,strata = list(pair=~s),
+              data=newsdf,
+              report="all")
+
+xb1$overall
+xb1$results
+ 
+```
+
+
+
+
+# The standard error
+
+What is a standard error for an estimated average treatment effect? It tells us the typical amount that we would expect our estimated ATE to vary from one replication of our experiment to another.
+
+The standard error of this (ignoring pairs for now) would follow from the formula 
+
+$$\widehat{Var}(\hat{\tau}) = s^2(Y_{i,i \in T})/m+s^2(Y_{i,i \in C}/(n−m))$$
+
+where $m$ is the number assigned to treatment and, the notation $i \in T$ means "the units in the treatment group" or "the units in the set of those treated" and $s^2(x)=(1/n−1) \sum ^n_{i=1}(x_i–\bar{x})^2$.
+
+```{r}
+
+thesefn <- function(y,z){
+    ## we assume that:
+    ##  (1) z contains only 1s and 0s and 
+    ##  (2) there are no missing values.
+    ## make an error if y and z are not the same length
+    stopifnot(length(y)==length(z)) 
+    n <- length(y)
+    m <- sum(z)
+    s2T <- (1/ (n-1)) * sum( ( y[z==1] - mean(y[z==1]) )^2  )
+    s2C <- (1/ (n-1)) * sum( ( y[z==0] - mean(y[z==0]) )^2  )
+    varhatATE <- ( s2T/m ) + ( s2C/(n-m) )
+    sehatATE <- sqrt(varhatATE)
+    return(sehatATE)
+}
+
+with(newsdf,thesefn(y=r,z=z))
+```
+
+Why should we believe this formula? (1) You can see the derivation in Gerber and Green Chapter 3, (2) See below for a simulation in which we repeat the experiment, calculate the estimated ATE, and then calculate the standard deviation of all of those ATEs. 
+
+## Calculating standard errors by simulation
+
+Since our experiment is small, we the two numbers may not match exactly, but they should not be very far apart.
+
+```{r}
+
+set.seed(12345)
+lotsofestATEs <- replicate(10000, with( newsdf,estATEfn( y=r, z=newexperiment(z) ) ) )
+sd(lotsofestATEs)
+
+```
+
+Now, this experiment was actually paired. So the standard errors will differ.
+
+First using the formula for pair-randomized standard errors:
+
+```{r}
+
+
+```
+
+Then using a simulation to check. In a pair-randomized experiment, we estimate the ATE within each pair and take the simple average of those pairwise ATEs. The standard error is thus calculated using the pairwise ATEs as well.
+
+```{r}
+## Paired data
+library(dplyr)
+
+pairdat <- group_by(newsdf,s) %>% summarise( r=r[z==1] - r[z==0])
+
+estATEpair <- mean(pairdat$r)
+estATEpair
+```
+
+Now for the SE
+```{r}
+pairSEfn <- function(ypair){
+    J <- length(ypair)
+    sqrt(  
+        ( 1 / ( J*(J-1) ) ) * 
+               sum( ( ypair - mean(ypair))^2 ) 
+    )
+}
+pairSEfn(ypair=pairdat$r)
+
+```
+
+```{r}
+with(newsdf, estATEfnPair(y=r,z=z,b=s))
+with(newsdf, estATEfnPair(y=r,z=newexperimentPair(s),b=s))
+
+set.seed(12345)
+lotsofestATEsPair<- replicate(1000, with( newsdf,estATEfnPair(y=r, z=newexperimentPair(s),b=s ) ) )
+
+sd(lotsofestATEsPair)
+
+## Notice that there is some simulation error:
+lotsofestATEsPair2<- replicate(1000, with( newsdf,estATEfnPair(y=r, z=newexperimentPair(s),b=s ) ) )
+sd(lotsofestATEsPair2)
+
+```
+
