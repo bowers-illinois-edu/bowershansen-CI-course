@@ -24,8 +24,7 @@ And here we load libraries containing some functions we'll be using later on:
 <<results=hide>>=
 library('MASS')
 library('sandwich')
-library('optmatch')
-library('RItools')
+library('lmtest')
 @ 
 
 NOTE: If running any of the above commands gives you an error like
@@ -42,7 +41,7 @@ internet connection and on how many dependencies need installation.
 Once it's finished, you should be able to load the package.  
 } the package before loading it:\\
 \begin{verbatim}
-Error in library(optmatch) : there is no package called 'optmatch'
+Error in library(lmtest) : there is no package called 'lmtest'
 \end{verbatim}
 Each package can be installed via the ``Install Packages'' Tool in the RStudio
 menu.  Make sure to install package dependencies. 
@@ -78,7 +77,7 @@ acorn_e <- transform(acorn,
 @ 
 
 
-\texttt{Exercise.}\\  \newcounter{saveenumi}
+\texttt{Exercise.}\\  \newcounter{saveenumi} 
 \begin{enumerate}
 \item Specify a fourth model-of-effect for the acorn data, something
   non-identical to the three above, and use it to construct a
@@ -206,6 +205,7 @@ also be spoiled.)
 \item Figure two-sided p-values corresponding to the
   remaining 3 hypotheses, two different ways.  (Any two of the three
   above will do.)
+      \setcounter{saveenumi}{\value{enumi}}
 \end{enumerate}
 
 
@@ -224,7 +224,7 @@ Unbiased estimation of the average treatment effect is the same as if you were c
 
 <<>>=
 lm0_ppd <- lm(pre_post_diff ~ z, data=acorn_e)
-coeftest(lm0_ppd, sandwich::vcovHC, type="HC2")
+lmtest::coeftest(lm0_ppd, sandwich::vcovHC, type="HC2")
 @ 
 
 Likewise for setting up models of effects, and for permutation testing of them.
@@ -248,9 +248,6 @@ coeftest(lm2_ppd, sandwich::vcovHC, type="HC2")
 \item Using gain scores to adjust for the result of the last general election, test another model of effects (of your own chosing).
     \setcounter{saveenumi}{\value{enumi}}
 \end{enumerate}
-Gain score analysis is easier to understand than comparisons involving regression (covariance) adjustment, and in some cases there's not much benefit to more complex regression-based methods.  
-
-I don't know that this is one of those cases, however.  It seems desirable also to include covariate adjustments for the results of the last election prior to the intervention.
 
 
 <<eval=FALSE,echo=FALSE>>=
