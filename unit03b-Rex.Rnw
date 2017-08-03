@@ -5,7 +5,7 @@
 \input{courseedition}
 \usepackage{icpsr-classwork}
 \usepackage{alltt}
-
+ \newcounter{saveenumi}
 \begin{document}
 \maketitle
 
@@ -72,9 +72,22 @@ Sigfigs in display:
 options(digits=3)
 @ 
 
+Reconstruct models of effects from lab 3a:
+
+<<>>=
+acorn_e <- transform(acorn, 
+                     yc_moe0 =  vote03,
+                     yc_moe1 = vote03 - contact/10,
+                     yc_moe2 = vote03 -contact/5
+                     )
+@ 
+
+
+
+\section{Variations on test statistics used in Lab 3a}
 
   
-\paragraph{Modifications for robustness to non-Normality}
+\subsection{Modifications for robustness to non-Normality}
 It's very simple to adapt this procedure by applying the rank
 transformations to the outcomes prior to making comparisons between
 the two groups. For example, 
@@ -127,7 +140,7 @@ simD <-  replicate(1000, coef(lm(yc_moe0~z, data=acorn_e))[2])
 
 \begin{comment}
 \textbf{Exercise.}
-\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
+\begin{enumerate} 
 \item For the version of the test with a single threshold, that
   threshold was taken from a fit of \texttt{rlm(yc_moe0
     \textasciitilde\ 1)}.  It would have been a mistake to instead
