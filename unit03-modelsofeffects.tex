@@ -5,7 +5,7 @@
 %\input{handout}
 
 %For handout + mynotes
-% \input{handout+mynotes}
+%\input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -20,12 +20,12 @@
 % putting `\begin{frame}`/ `\end{frame}` in announcement-of-the-day.tex lets us 
 % put frame notes into that file
 % announcement-of-the-day.tex not part of repo
-\InputIfFileExists{announcement-of-the-day.tex}{% from https://tex.stackexchange.com/questions/100663/if-the-remote-file-exists-then-include-it-else-include-the-local-one
-  % File personal/bar.tex exists and is read
+% \InputIfFileExists{announcement-of-the-day.tex}{% from https://tex.stackexchange.com/questions/100663/if-the-remote-file-exists-then-include-it-else-include-the-local-one
+%   % File personal/bar.tex exists and is read
   \input{announcement-of-the-day}
-}{%
-  % File personal/bar.tex is not found, try bar.tex
-}
+% }{%
+%   % File personal/bar.tex is not found, try bar.tex
+% }
 
 
 \begin{frame}[<+->]{Background: permutation tests vs parametric tests}
@@ -37,11 +37,10 @@ permutation and parametric tests. E.g., Fisher vs. $\chi^{2}$ tests.
 \item they differ in terms of what they compare the statistic to in order to get a p-value
 \item parametric tests posit a model for $Y| \mathrm{group}$
 \item W/ random assignment, permutation tests don't have to
-  assume any model for $Y| \mathrm{group}$\ldots
-\item but a provisionally entertained model can suggest a test
-  statistic.  E.g., $Y| G=g \sim \mathcal{N}(\mu_{g}, \sigma^{2})
-  \Rightarrow $ $t(\mathbf{z}, \mathbf{y}) =$ difference of means statistic; $Y| G=g \sim \mathrm{Logistic}(\mu_{g}, s)
-  \Rightarrow $ $t(\mathbf{z}, \mathbf{y}) =$  rank sum statistic.
+  assume any model for $Y| \mathrm{group}$.
+\item (However, hunches about $Y| \mathrm{group}$ are sometimes used
+  to select the test
+  statistic.)
 \item likewise, the permutational approach circumvents sample-size requirements for p-values' validity.
 \end{itemize}
 
@@ -54,6 +53,11 @@ Software notes:
 
 \end{frame}
 
+\itnote{
+\item   Example for test statistic point: $Y| G=g \sim \mathcal{N}(\mu_{g}, \sigma^{2})
+  \Rightarrow $ $t(\mathbf{z}, \mathbf{y}) =$ difference of means statistic; $Y| G=g \sim \mathrm{Logistic}(\mu_{g}, s)
+  \Rightarrow $ $t(\mathbf{z}, \mathbf{y}) =$  rank sum statistic.
+}
 
 \begin{frame}<1-4\mynoteonly>[label=testStats4MeanComparison1Fr]{Background:
     non-Normality robustness; choice of $t(\mathbf{z}, \mathbf{y})$}
@@ -69,11 +73,11 @@ Suppose the goal is to test the hypothesis that $\tau = 0$.
 \item If $\epsilon \sim \mathcal{N}(0, \sigma^{2})$, some $\sigma >0$, regardless of whether $Z=1$ or 0, the difference of means is optimal, in various senses, as an estimator of $\tau$. By extension, using it as a test statistic gives favorable power.
 \item True both for parametric tests (t-test) and permutation tests.
 \item If $\epsilon$ follows some other distribution, parametric
-  $t$-test's $\alpha$ level is only approximate, depending on CLT. (To
+  $t$-test's $\alpha$ level is only approximate.  (To
   fix, use permutation $t$-test.)
-\item For both versions, \textit{power} suffers: the means reacts so
-  strongly to outliers unrelated to treatment that  the ACE becomes
-  hard to see.
+\item For \textit{both} versions, {power} suffers. ($\bar{Y}$ reacts so
+  strongly to outliers unrelated to treatment that  $\mu$ becomes
+  hard to see.)
 \item To fix, select a test statistic with built-in outlier
   protection.
 \end{itemize}
