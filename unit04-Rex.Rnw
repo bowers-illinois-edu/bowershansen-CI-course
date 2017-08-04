@@ -5,7 +5,7 @@
 %\author{ICPSR Causal Inference '15}
 \usepackage{icpsr-classwork}
 \usepackage{natbib}
-
+\usepackage{alltt}
 \begin{document}
 \maketitle
 
@@ -51,7 +51,7 @@ library(RItools)
 (If you do this, you won't be able run any of the commands below that
 involve \texttt{balanceTest()}.)  Continuing, 
 
-<<results='hide'>>=
+<<results=hide>>=
 library(optmatch)
 acorn <- read.csv("data/acorn03.csv", row.names=1)
 meddat <- read.csv('data/meddat.csv', row.names=1,
