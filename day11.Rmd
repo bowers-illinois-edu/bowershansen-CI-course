@@ -1,21 +1,25 @@
 ---
-title: Randomization Testing
+title: Instruments, Randomization Assessment (Balance), Adjustment for Interpretable Comparisons
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 bibliography: main.bib
 fontsize: 10pt
 geometry: margin=1in
-mainfont: "Crimson Text"
 graphics: yes
+biblio-style: authoryear-comp
 output:
   beamer_presentation:
     slide_level: 2
     keep_tex: true
     latex_engine: xelatex
+    citation_package: biblatex
+    includes:
+        in_header:
+           - defs-all.sty
 ---
 
 
 <!-- Make this document using library(rmarkdown); render("exploration1.Rmd") -->
-\input{mytexsymbols}
+<!--- \input{defs-all} --->
 
 
 ```{r include=FALSE, cache=FALSE}
@@ -30,7 +34,6 @@ output:
 require(knitr)
 opts_chunk$set(
   tidy=FALSE,     # display code as typed
-  size="small",    # slightly smaller font for code
   echo=TRUE,
   results='markup',
   strip.white=TRUE,
@@ -43,11 +46,7 @@ opts_chunk$set(
   fig.retina=FALSE,
   message=FALSE,
   comment=NA)
-```
 
-
-```{r initialize,echo=FALSE}
-##First, just setup the R environment for today:
 if(!file.exists('figs')) dir.create('figs')
 
 options(SweaveHooks=list(fig=function(){
@@ -62,24 +61,64 @@ options(SweaveHooks=list(fig=function(){
 	scipen=8,
 	width=132
 	)
-options(error=function(){options(prompt="> ",continue="+ ");NULL})
 ```
 
-# The benefits of a baseline outcome in an experiment
+## Today
+
+\begin{enumerate}
+  \item Agenda: Introductions; Where are we going?; Weak Instruments (Imbens and Rosenbaum 2005); Randomization
+    assessment (Were the covariates balanced? Standards for balance?); Methods
+    of adjustment / making the case for interpretability of comparisons /
+    ignorability for observational studies.
+\item Reading for tomorrow: DOS 8--9, 13.
+\item Blalock Lecture tonight on academic publishing -- from editors of
+  journals!
+\item Questions arising from assignment 2: Benefits of gain scores?; 2SLS
+  Intuition?; "Figure 2 sided..." is "Produce 2 sided..."
+\end{enumerate}
+
+<!-- \input{announcement-of-the-day.tex} -->
+
+# Strategies for randomized studies
+
+## Make the case that randomization worked.
+## Increase precision with design and test statistics (and even models of effects)
+## Make sure that your estimator is estimating the right thing (i.e. is not biased or at least is consistent)
+
+# Strategies for Adjustment of Observational Studies
+
+## If you have randomized $Z$ but not $D$, then IV. (Not really an observational study.)
+## "Controlling For"
+## Matched Stratification
+## Find a discontinuity/A Natural Experiment
+
+
+
+# The precision benefits of a baseline outcome in an experiment
 
 ## See Example from the Newspapers Experiment
 
-```{r}
-newsdf<-read.csv("http://jakebowers.org/Data/news.df.csv")
+I expect that the reference distribution for $H_0: y_{iT}=y_{iC}$ will be
+narrower with (1) the gain score and (2) using pair-randomized treatment
+assignment.
 
+```{r loaddata}
+## newsdf<-read.csv("http://jakebowers.org/Data/news.df.csv")
+newsdf<-read.csv("data/news.df.csv")
+```
+
+
+## Define functions
+
+```{r results="hide",tidy=TRUE, size='tiny'}
 meanDiffTZ <- function(y,z){
     mndiff <- mean(y[z==1]) - mean(y[z==0])
     return(mndiff)
 }
 
 pairMeanDiffTZ <- function(y,z,b){
-  z <- z[order(b)] ## sort by pair
-  y <- y[order(b)] ## sort by pair
+  z <- z[order(b)]
+  y <- y[order(b)]
   ydiff <- y[z==1] - y[z==0]
   mean(ydiff)
 }
@@ -95,12 +134,15 @@ newExperimentPair2 <- function(z,b){
   z[shuffle(length(z),control=how1)]
 }
 
+## could also have used complete_ra() from randomizr or shuffle() from permute
 newExperiment <- function(z){
-  ## could also have used complete_ra() from randomizr or shuffle() from permute
-    sample(z) 
+    sample(z)
 }
+```
 
-## The sharp null dist
+## The reference dists
+
+```{r cache=TRUE}
 set.seed(12345)
 res1 <- replicate(1000,meanDiffTZ(y=newsdf$r,z=newExperiment(newsdf$z)))
 res2 <- replicate(1000,meanDiffTZ(y=newsdf$r - newsdf$rpre,z=newExperiment(newsdf$z)))
@@ -108,6 +150,15 @@ res3 <- replicate(1000,pairMeanDiffTZ(y=newsdf$r,z=newExperimentPair(newsdf$s),b
 res4 <- replicate(1000,pairMeanDiffTZ(y=newsdf$r - newsdf$rpre,z=newExperimentPair(newsdf$s),b=newsdf$s))
 res5 <- replicate(1000,pairMeanDiffTZ(y=newsdf$r,z=newExperimentPair2(newsdf$z,newsdf$s),b=newsdf$s))
 res6 <- replicate(1000,pairMeanDiffTZ(y=newsdf$r - newsdf$rpre,z=newExperimentPair2(newsdf$z,newsdf$s),b=newsdf$s))
+```
+
+## The reference dists
+
+```{r}
+summary(res1)
+summary(res2)
+summary(res3)
+summary(res4)
 ```
 
 # Weak Instruments and 2SLS
@@ -119,10 +170,56 @@ res6 <- replicate(1000,pairMeanDiffTZ(y=newsdf$r - newsdf$rpre,z=newExperimentPa
 education, Outcome is wages
 
 What is the intuition about how 2SLS focuses attention on the effect of
-education **only related to quarter of birth**?
+education **only related to quarter of birth**? [ Z $\rightarrow$ D
+$\rightarrow$ Y]
 
-# Randomization Assessment in Experiments
+# Balance in controlled and natural experiments
 
-# Strategies for Adjustment of Observational Studies
+\begin{frame}
+\frametitle{The Neyman-Rubin Model for (simple) experiments}
+\vfill
+This is what randomization ensures:
+$$ (\alert<4>{Y_t, Y_c},\alert<2>{X}) \perp \alert<3>{Z} $$
+\vfill
+
+I.e., each of $X$, $Y_{c}$ and $Y_{t}$ is balanced (in expectation; modulo sampling variability).
+
+\begin{itemize}
+\item In controlled experiments, random assignment warrants this.
+\item In natural experiments, justified otherwise, or an article of faith.
+\item In an experiment, the $x$es aren't necessary for inference.
+\item However, the part with the $x$es has testable consequences.
+\end{itemize}
+
+\end{frame}
+
+ \begin{frame}%<1>[label=covbalexptsFr]
+ \frametitle{Covariate balance in experiments}
+ %\only<2>{\framesubtitle{The importance of comparing it to balance in other experiments}}
+
+\begin{columns}
+\begin{column}{.4\linewidth}
+\begin{itemize}
+\item<1-> \cite{arceneaux:2005}
+\item<1-> Kansas City, November 2003
+\item<1-> Completely randomized design: 14 precincts $\rightarrow$ Tx; 14 $\rightarrow $ Control.
+
+    \item<1-> Substantively large baseline differences
+    \item<2-> Differences not large compared to other assignments from same design.
+    \item<2-> $\PP(\chi^{2} > x) = .94$ \cite{hansenbowers2008}.
+    \end{itemize}
+    \end{column}
+
+\begin{column}{.6\linewidth}
+\only<1>{\igrphx{KC-baseline}}
+\only<2>{\igrphx{KC-bal+SDs}}
+\end{column}
+\end{columns}
+
+\end{frame}
 
 
+
+# Anything Else?
+
+## References
