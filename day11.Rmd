@@ -1,0 +1,128 @@
+---
+title: Randomization Testing
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+bibliography: main.bib
+fontsize: 10pt
+geometry: margin=1in
+mainfont: "Crimson Text"
+graphics: yes
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+---
+
+
+<!-- Make this document using library(rmarkdown); render("exploration1.Rmd") -->
+\input{mytexsymbols}
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+
+## To make the html file do
+## render("exploration1.Rmd",output_format=html_document(fig_retina=FALSE))
+## To make the pdf file do
+## render("exploration1.Rmd",output_format=pdf_document())
+
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small",    # slightly smaller font for code
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='footnotesize',
+  out.width='.9\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA)
+```
+
+
+```{r initialize,echo=FALSE}
+##First, just setup the R environment for today:
+if(!file.exists('figs')) dir.create('figs')
+
+options(SweaveHooks=list(fig=function(){
+			   par(mar=c(3.5, 3, 1.1, 0),
+			       pty="s",
+			       mgp=c(1.5,0.5,0),
+			       oma=c(0,0,0,0))},
+			 echo=function(){options(continue=" ") ##Don't show "+" prompts,
+			 options(prompt=" ")
+			 }),
+	digits=4,
+	scipen=8,
+	width=132
+	)
+options(error=function(){options(prompt="> ",continue="+ ");NULL})
+```
+
+# The benefits of a baseline outcome in an experiment
+
+## See Example from the Newspapers Experiment
+
+```{r}
+newsdf<-read.csv("http://jakebowers.org/Data/news.df.csv")
+
+meanDiffTZ <- function(y,z){
+    mndiff <- mean(y[z==1]) - mean(y[z==0])
+    return(mndiff)
+}
+
+pairMeanDiffTZ <- function(y,z,b){
+  z <- z[order(b)] ## sort by pair
+  y <- y[order(b)] ## sort by pair
+  ydiff <- y[z==1] - y[z==0]
+  mean(ydiff)
+}
+
+library(randomizr)
+newExperimentPair <- function(b){
+    block_ra(block_var=b)
+}
+
+library(permute)
+newExperimentPair2 <- function(z,b){
+  how1 <- how(blocks=b)
+  z[shuffle(length(z),control=how1)]
+}
+
+newExperiment <- function(z){
+  ## could also have used complete_ra() from randomizr or shuffle() from permute
+    sample(z) 
+}
+
+## The sharp null dist
+set.seed(12345)
+res1 <- replicate(1000,meanDiffTZ(y=newsdf$r,z=newExperiment(newsdf$z)))
+res2 <- replicate(1000,meanDiffTZ(y=newsdf$r - newsdf$rpre,z=newExperiment(newsdf$z)))
+res3 <- replicate(1000,pairMeanDiffTZ(y=newsdf$r,z=newExperimentPair(newsdf$s),b=newsdf$s))
+res4 <- replicate(1000,pairMeanDiffTZ(y=newsdf$r - newsdf$rpre,z=newExperimentPair(newsdf$s),b=newsdf$s))
+res5 <- replicate(1000,pairMeanDiffTZ(y=newsdf$r,z=newExperimentPair2(newsdf$z,newsdf$s),b=newsdf$s))
+res6 <- replicate(1000,pairMeanDiffTZ(y=newsdf$r - newsdf$rpre,z=newExperimentPair2(newsdf$z,newsdf$s),b=newsdf$s))
+```
+
+# Weak Instruments and 2SLS
+
+## See Imbens and Rosenbaum 2005 Table
+
+*Example:* Effect of education on wages ( Angrist and Krueger 1991)
+*Design:* Instrument/Treatment is quarter of birth, Actual Treatment/Dose is additional year of
+education, Outcome is wages
+
+What is the intuition about how 2SLS focuses attention on the effect of
+education **only related to quarter of birth**?
+
+# Randomization Assessment in Experiments
+
+# Strategies for Adjustment of Observational Studies
+
+
