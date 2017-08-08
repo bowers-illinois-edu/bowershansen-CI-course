@@ -1,7 +1,7 @@
 ---
 title: Instruments, Randomization Assessment (Balance), Adjustment for Interpretable Comparisons
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-bibliography: main.bib
+bibliography: refs.bib
 fontsize: 10pt
 geometry: margin=1in
 graphics: yes
@@ -78,20 +78,44 @@ options(SweaveHooks=list(fig=function(){
 \end{enumerate}
 
 <!-- \input{announcement-of-the-day.tex} -->
+# Strategies for Causal Inference
 
-# Strategies for randomized studies
+## Why Causal Inference?
 
-## Make the case that randomization worked.
-## Increase precision with design and test statistics (and even models of effects)
-## Make sure that your estimator is estimating the right thing (i.e. is not biased or at least is consistent)
+For policy evaluation to answer questions like: "Did this intervention / change / policy work here and
+now?"
 
-# Strategies for Adjustment of Observational Studies
+To assess theoretical claims / explanations: "There are competing
+explanations, they have different implications for observation, is there
+evidence in favor of these implications? Or against them?" (Explanations can
+be about mechanism or laws, and a well-designed observational study or
+randomized experiment can help engage with claims made by alternative
+explanations, can help isolate the mechanisms behind different explanations
+for the same phenomena.)
 
-## If you have randomized $Z$ but not $D$, then IV. (Not really an observational study.)
-## "Controlling For"
-## Matched Stratification
-## Find a discontinuity/A Natural Experiment
 
+## Strategies for randomized studies
+
+ - Make the case that randomization worked.
+ -  Increase precision with design and test statistics (and even models of effects)
+ - Make sure that your estimator is estimating the right thing (i.e. is not biased or at least is consistent)
+
+## Strategies for Adjustment of Observational Studies
+
+ - If you have randomized $Z$ but not $D$, then IV. (Not really an observational study.)
+ - Find a discontinuity/A Natural Experiment (RDD: either natural experiment
+   or continuous forcing function)
+ - Multiple controls (i.e. "Choice as an alternative to control"
+   \cite{rosenbaum:1999})
+ - "Controlling For"
+ - Difference in Differences
+ - Matched Stratification (approximating a block-randomized experiment)
+ - Matching for pruning (using matching to common support)
+ - Best matched subset selection (approximating a completely or simply
+   randomized experiment)
+ - Weighting
+ - Direct theoretical modeling / Directed Acyclic Graphs (DAGS) to guide other
+   data modeling choices.
 
 
 # The precision benefits of a baseline outcome in an experiment
@@ -173,6 +197,8 @@ What is the intuition about how 2SLS focuses attention on the effect of
 education **only related to quarter of birth**? [ Z $\rightarrow$ D
 $\rightarrow$ Y]
 
+\igrphx{imbensRosenbaum2005table3}
+
 # Balance in controlled and natural experiments
 
 \begin{frame}
@@ -219,7 +245,109 @@ I.e., each of $X$, $Y_{c}$ and $Y_{t}$ is balanced (in expectation; modulo sampl
 \end{frame}
 
 
+```{r}
+acorn <- read.csv("data/acorn03.csv", row.names=1)
+library(RItools)
+
+xb1 <- xBalance(z ~ v_p2003 + v_m2003 + v_g2002 + v_p2002 + v_m2002 + v_s2001 + 
+         v_g2000 + v_p2000 + v_m2000 + v_s1999 + v_m1999 + v_g1998 + 
+         v_m1998 + v_s1998 + v_m1997 + v_s1997 + v_g1996 + v_p1996 + 
+         v_m1996 + v_s1996 + size, data=acorn, 
+         report = 'all')
+
+acorncovs<-c("v_p2003","v_m2003","v_g2002","v_p2002","v_m2002","v_s2001","v_g2000","v_p2000","v_m2000","v_s1999","v_m1999","v_g1998","v_m1998","v_s1998","v_m1997","v_s1997","v_g1996","v_p1996","v_m1996","v_s1996","size")
+
+xb1ds <- xb1$results[,"adj.diff",]
+xb1ps <- xb1$results[,"p",]
+```
+
+## DeMystifying xBalance
+
+```{r}
+d.stat<-function(zz, mm, ss){
+  ## this is the d statistic (harmonic mean weighted diff of means statistic) from Hansen and Bowers 2008
+  h.fn<-function(n, m){(m*(n-m))/n}
+  myssn<-apply(mm, 2, function(x){sum((zz-unsplit(tapply(zz, ss, mean), ss))*x)})
+  hs<-tapply(zz, ss, function(z){h.fn(m=sum(z), n=length(z))})
+  mywtsum<-sum(hs)
+  myadjdiff<-myssn/mywtsum
+  return(myadjdiff)
+}
+```
+
+## Calculate the reference distribution of the d-stat and the $d^2$ stat
+
+```{r nullddist, cache=TRUE}
+## For all vectors z \in \Omega get adj.diffs. This is the distribution of the d statistic
+d.dist<-replicate(10000, d.stat(sample(acorn$z), acorn[,acorncovs], ss=rep(1,nrow(acorn))))
+```
+
+```{r}
+obs.d<-d.stat(acorn$z, acorn[, acorncovs], rep(1,nrow(acorn)))
+dps <- matrix(NA,nrow=length(obs.d),ncol=1)
+for(i in 1:length(obs.d)){
+  dps[i,] <- 2*min( mean(d.dist[i,] >= obs.d[i]),mean(d.dist[i,] <= obs.d[i]))
+}
+## You can compare this to the results from xBalance
+round(cbind(dps,xb1ps,obs.d,xb1ds),3)
+```
+
+## Calculate the reference distribution of the d-stat and the $d^2$ stat
+
+```{r}
+d2.stat <- function(dstats,ddist=NULL,theinvcov=NULL){
+  ## d is the vector of d statistics
+  ## ddist is the matrix of the null reference distributions of the d statistics
+  if(is.null(theinvcov) & !is.null(ddist)){
+    as.numeric( t(dstats) %*% solve(cov(t(ddist))) %*% dstats)
+  } else {
+    as.numeric( t(dstats) %*% theinvcov %*% dstats)
+  }
+}
+```
+
+## Calculate the reference distribution of the d-stat and the $d^2$ stat
+
+```{r}
+## The distribution of the d2 statistic arises from the distribution of the d statistics
+## Here we have the inverse of the covariance/variance matrix of the d statistics
+invCovDDist <- solve(cov(t(d.dist)))
+obs.d2<- d2.stat(obs.d,d.dist,invCovDDist)
+
+d2.dist<-apply(d.dist, 2, function(thed){
+                 d2.stat(thed,theinvcov=invCovDDist)
+         })
+## The chi-squared reference distribution only uses a one-sided p-value going in the positive direction
+d2p<-mean(d2.dist>=obs.d2)
+cbind(obs.d2,d2p)
+xb1$overall
+```
+## Why differences between xBalance and d2?
+
+I suspect that $N=28$ is too small in this case.
+
+```{r out.width=".6\\textwidth"}
+## Notice that the distribution of d2.dist is not that close to the
+## chi-squared distribution in this case with N=28
+par(mfrow=c(1,2))
+qqplot(rchisq(10000,df=21),d2.dist)
+abline(0,1)
+
+plot(density(d2.dist))
+rug(d2.dist)
+curve(dchisq(x,df=21),from=0,to=40,add=TRUE,col="grey")
+```
+
 
 # Anything Else?
+
+## Methods for Covariance Adjustment in Experiments
+
+ - See \cite{rosenbaum2002} for the residualization method.
+
+ - See \cite{hansenbowers2009att} for the Peters-Belson method fitting the
+covariance adjustment model to the control group.
+
+ - See \cite{lin2013agnostic} for the interaction effect method.
 
 ## References
