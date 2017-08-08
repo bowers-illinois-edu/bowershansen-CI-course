@@ -203,14 +203,10 @@ Statistical assumptions made throughout this unit:
 ## Unit 15: Interference
 
 ## **Unit Template**
-
 ### To build on/extend from prior units
-
 ### To be introduced in this unit
-
 #### examples
 #### assumptions
 #### techniques
 #### broader concepts
-
 ### If it fits in
