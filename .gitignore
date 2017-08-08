@@ -1,3 +1,4 @@
+*.Rhistory
 *.Rout
 .local
 lib
@@ -20,10 +21,15 @@ lib
 *.fls
 *.bak
 *-wmn.pdf
+*.rda
+*.run.xml
+*cache/
+*figure/
 
 # biblatex stuff
 *.bbl
 *.blg
+*.brf
 
 # specific files and directories
 .Rproj.user
@@ -34,5 +40,5 @@ BIB
 units  #use this as a link to current-year directory's subfolder for slides, handouts etc
 data/lawnsigns
 # tex files derived from tracked Rnw sources
-unit01-Rex.tex
+*-Rex.tex
 unit01-fishercombs.tex
