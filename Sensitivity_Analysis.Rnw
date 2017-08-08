@@ -534,7 +534,7 @@ apply(null_dists[,1:3], 2, function(x) mean(abs(x) >= abs(obs_ATE)))
 
 \bibliographystyle{chicago}
 \begin{singlespace}
-\bibliography{master_bibliography}   % name your BibTeX data base
+\bibliography{refs}   % name your BibTeX data base
 \end{singlespace}
 
 \newpage

@@ -920,7 +920,7 @@ cbind(Neyman_SE, Neyman_SEb, Neyman_SE_dd, Neyman_SE_adj)
 
 \bibliographystyle{chicago}
 \begin{singlespace}
-\bibliography{master_bibliography}   % name your BibTeX data base
+\bibliography{refs}   % name your BibTeX data base
 \end{singlespace}
 
 \newpage

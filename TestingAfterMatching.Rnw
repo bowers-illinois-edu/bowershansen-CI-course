@@ -360,7 +360,7 @@ test1
 \end{enumerate}
 
 \bibliographystyle{apalike}
-\bibliography{Master_Bibliography}
+\bibliography{main}
 % \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
 
 \end{document}
