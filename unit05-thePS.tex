@@ -21,10 +21,7 @@
 
 
 
-  \begin{frame}
-    \frametitle{Outline \& Readings}
 
-\tableofcontents[subsectionstyle=show/hide/hide]
 
   % \alert{Readings for this Unit:}\\
   % \begin{itemize}
@@ -34,7 +31,6 @@
 \input{announcement-of-the-day}  % announcement-of-the-day.tex not
                                 % part of repo
 
-\end{frame}
 
 
 \section[Extrapolation \& overlap]{Pitfalls of multiple covariates:
@@ -132,7 +128,7 @@ $$ (\alert<4>{Y_t, Y_c},\alert<2>{X}) \perp \alert<3>{Z} $$
   
 \begin{column}{.6\linewidth}
 \only<1>{\igrphx{KC-baseline}}
-%\only<2>{\igrphx{KC-bal+SDs}}
+\only<2>{\igrphx{KC-bal+SDs}}
 \end{column}
 \end{columns}
 
@@ -395,7 +391,7 @@ AdmitTRUE          3.2e-01  3.3e-01  1.8e-02
   \end{column}
   
 \begin{column}{.6\linewidth}
-%\only<1| handout:0>{\igrphx{KC-baseline}}
+\only<1| handout:0>{\igrphx{KC-baseline}}
 \only<2>{\igrphx{KC-bal+SDs}}
 \end{column}
 \end{columns}
@@ -655,7 +651,7 @@ Rejected &Male   & 1500    &520 & 340 & 630 \\
    \end{itemize}
   \end{column}
   \begin{column}{.5\linewidth}
-\only<1| handout:0>{\igrphx{KC-bal+SDs}}
+    \only<1| handout:0>{\igrphx{KC-bal+SDs}}
     \only<2->{\igrphx{KC-balwithPS}}
   \end{column}
 \end{columns}
@@ -767,7 +763,7 @@ DeptF        4.7e-02  ***      1.8e-03
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]
+\begin{frame}[fragile, shrink]
   \frametitle{If $x$ were the outcome, how biased would my treatment effect estimate be?}
 
   It's natural to look to effect sizes, between-group differences
@@ -844,85 +840,87 @@ This gives a different picture.
 \section*{References}
 
 %\mbox{}
+
 \begin{frame}[allowframebreaks]
-\nocite{hansen:2004,hansen:klopfer:2006}
-{\scriptsize
-% \bibliographystyle{asa}
-% \bibliography{abbrev_long,causalinference,misc,computing,biomedicalapplications}
-\begin{thebibliography}{14}
-\newcommand{\enquote}[1]{``#1''}
-\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+  \nocite{hansen:2004,hansen:klopfer:2006}
+%%   {\scriptsize
+%%     % \bibliographystyle{asa}
+%%     % \bibliography{abbrev_long,causalinference,misc,computing,biomedicalapplications}
+%%     \begin{thebibliography}{14}
+%%       \newcommand{\enquote}[1]{``#1''}
+%%       \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+%% 
+%%       \bibitem[{Abadie and Imbens(2006)}]{abadie2006lsp}
+%%       Abadie, A. and Imbens, G.~W. (2006), \enquote{{Large Sample Properties of
+%%       Matching Estimators for Average Treatment Effects},} \textit{Econometrica},
+%%       74, 235--267.
+%% 
+%%       \bibitem[{Arceneaux(2005)}]{arceneaux:2005}
+%%       Arceneaux, K. (2005), \enquote{Using cluster randomized field experiments to
+%%         study voting behavior,} \textit{Annals of the Americal Academy of Political
+%%       and Social Science}, 601, 169--179.
+%% 
+%%       \bibitem[{Austin(2008)}]{austin2008critical}
+%%       Austin, P.~C. (2008), \enquote{{A critical appraisal of propensity-score
+%%       matching in the medical literature between 1996 and 2003},}
+%%       \textit{Statistics in Medicine}, 27, 2037--2049.
+%% 
+%%       \bibitem[{Bickel et~al.(1975)Bickel, Hammel, and O'Connell}]{Bickel:etal:1975}
+%%       Bickel, P.~J., Hammel, E.~A., and O'Connell, J.~W. (1975), \enquote{Sex bias in
+%%       graduate admissions: Data from Berkeley,} \textit{Science}, 187, 398--403.
+%% 
+%%       \bibitem[{Cochran(1972)}]{cochran:1972}
+%%       Cochran, W.~G. (1972), \enquote{Observational Studies,} in \textit{Statistical
+%%       Papers in Honor of George Snedecor}, Iowa State University Press, pp. 77--90.
+%% 
+%%       \bibitem[{Hansen(2004)}]{hansen:2004}
+%%       Hansen, B.~B. (2004), \enquote{Full matching in an observational study of
+%%         coaching for the {SAT},} \textit{Journal of the American Statistical
+%%       Association}, 99, 609--618.
+%% 
+%%       \bibitem[{Hansen(2008)}]{hansen:statmed:2008}
+%%       --- (2008), \enquote{The essential role of balance tests in propensity-matched
+%%         observational studies: Comments on ``A critical appraisal of propensity-score
+%%         matching in the medical literature between 1996 and 2003'' by Peter Austin,
+%%       Statistics in Medicine.} \textit{Statistics in Medicine}, 27, 2050--2054.
+%% 
+%%       \bibitem[{Hansen and Bowers(2008)}]{hansen:bowers:2008}
+%%       Hansen, B.~B. and Bowers, J. (2008), \enquote{Covariate balance in simple,
+%%       stratified and clustered comparative studies,} \textit{Statistical Science},
+%%       23, 219--236.
+%% 
+%%       \bibitem[{Hansen and Klopfer(2006)}]{hansen:klopfer:2006}
+%%       Hansen, B.~B. and Klopfer, S.~O. (2006), \enquote{Optimal full matching and
+%%         related designs via network flows,} \textit{Journal of Computational and
+%%       Graphical Statistics}, 15, 609--627.
+%% 
+%%       \bibitem[{Hill et~al.(2000)Hill, Rubin, and Thomas}]{hill:etal:2000}
+%%       Hill, J., Rubin, D.~B., and Thomas, N. (2000), \enquote{The Design of the New
+%%         York School Choice Scholarship Program Evaluation,} in \textit{Research
+%%       Design: Donald Campbell's Legacy}, ed. Bickman, L., Sage Publications.
+%% 
+%%       \bibitem[{Imai et~al.(2008)Imai, King, and Stuart}]{imaiKingStuart:2007}
+%%       Imai, K., King, G., and Stuart, E. (2008), \enquote{Misunderstandings among
+%%         Experimentalists and Observationalists: Balance Test Fallacies in Causal
+%%       Inference,} \textit{Journal of the Royal Statistical Society}, 171, 481--502.
+%% 
+%%       \bibitem[{Rosenbaum(2002)}]{rosenbaum:2002}
+%%       Rosenbaum, P.~R. (2002), \textit{Observational Studies}, Springer-Verlag, 2nd
+%%       ed.
+%% 
+%%       \bibitem[{Rubin(1997)}]{rubin:1997}
+%%       Rubin, D.~B. (1997), \enquote{Estimating Causal Effects from Large Data Sets
+%%       Using Propensity Scores,} \textit{Annals of Internal Medicine}, 127,
+%%       757--763.
+%% 
+%%       \bibitem[{Stuart(2010)}]{stuart2010matching}
+%%       Stuart, E.~A. (2010), \enquote{{Matching methods for causal inference: A review
+%%       and a look forward},} \textit{Statistical Science}, 25, 1.
+%% 
+%%   \end{thebibliography}
+%% 
+%% }
 
-\bibitem[{Abadie and Imbens(2006)}]{abadie2006lsp}
-Abadie, A. and Imbens, G.~W. (2006), \enquote{{Large Sample Properties of
-  Matching Estimators for Average Treatment Effects},} \textit{Econometrica},
-  74, 235--267.
-
-\bibitem[{Arceneaux(2005)}]{arceneaux:2005}
-Arceneaux, K. (2005), \enquote{Using cluster randomized field experiments to
-  study voting behavior,} \textit{Annals of the Americal Academy of Political
-  and Social Science}, 601, 169--179.
-
-\bibitem[{Austin(2008)}]{austin2008critical}
-Austin, P.~C. (2008), \enquote{{A critical appraisal of propensity-score
-  matching in the medical literature between 1996 and 2003},}
-  \textit{Statistics in Medicine}, 27, 2037--2049.
-
-\bibitem[{Bickel et~al.(1975)Bickel, Hammel, and O'Connell}]{Bickel:etal:1975}
-Bickel, P.~J., Hammel, E.~A., and O'Connell, J.~W. (1975), \enquote{Sex bias in
-  graduate admissions: Data from Berkeley,} \textit{Science}, 187, 398--403.
-
-\bibitem[{Cochran(1972)}]{cochran:1972}
-Cochran, W.~G. (1972), \enquote{Observational Studies,} in \textit{Statistical
-  Papers in Honor of George Snedecor}, Iowa State University Press, pp. 77--90.
-
-\bibitem[{Hansen(2004)}]{hansen:2004}
-Hansen, B.~B. (2004), \enquote{Full matching in an observational study of
-  coaching for the {SAT},} \textit{Journal of the American Statistical
-  Association}, 99, 609--618.
-
-\bibitem[{Hansen(2008)}]{hansen:statmed:2008}
---- (2008), \enquote{The essential role of balance tests in propensity-matched
-  observational studies: Comments on ``A critical appraisal of propensity-score
-  matching in the medical literature between 1996 and 2003'' by Peter Austin,
-  Statistics in Medicine.} \textit{Statistics in Medicine}, 27, 2050--2054.
-
-\bibitem[{Hansen and Bowers(2008)}]{hansen:bowers:2008}
-Hansen, B.~B. and Bowers, J. (2008), \enquote{Covariate balance in simple,
-  stratified and clustered comparative studies,} \textit{Statistical Science},
-  23, 219--236.
-
-\bibitem[{Hansen and Klopfer(2006)}]{hansen:klopfer:2006}
-Hansen, B.~B. and Klopfer, S.~O. (2006), \enquote{Optimal full matching and
-  related designs via network flows,} \textit{Journal of Computational and
-  Graphical Statistics}, 15, 609--627.
-
-\bibitem[{Hill et~al.(2000)Hill, Rubin, and Thomas}]{hill:etal:2000}
-Hill, J., Rubin, D.~B., and Thomas, N. (2000), \enquote{The Design of the New
-  York School Choice Scholarship Program Evaluation,} in \textit{Research
-  Design: Donald Campbell's Legacy}, ed. Bickman, L., Sage Publications.
-
-\bibitem[{Imai et~al.(2008)Imai, King, and Stuart}]{imaiKingStuart:2007}
-Imai, K., King, G., and Stuart, E. (2008), \enquote{Misunderstandings among
-  Experimentalists and Observationalists: Balance Test Fallacies in Causal
-  Inference,} \textit{Journal of the Royal Statistical Society}, 171, 481--502.
-
-\bibitem[{Rosenbaum(2002)}]{rosenbaum:2002}
-Rosenbaum, P.~R. (2002), \textit{Observational Studies}, Springer-Verlag, 2nd
-  ed.
-
-\bibitem[{Rubin(1997)}]{rubin:1997}
-Rubin, D.~B. (1997), \enquote{Estimating Causal Effects from Large Data Sets
-  Using Propensity Scores,} \textit{Annals of Internal Medicine}, 127,
-  757--763.
-
-\bibitem[{Stuart(2010)}]{stuart2010matching}
-Stuart, E.~A. (2010), \enquote{{Matching methods for causal inference: A review
-  and a look forward},} \textit{Statistical Science}, 25, 1.
-
-\end{thebibliography}
-
-}
 \end{frame}
 
 \end{document}
