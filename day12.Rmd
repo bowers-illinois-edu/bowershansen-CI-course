@@ -1,0 +1,218 @@
+---
+title: The problems of covariance adjustment for bias; Simple stratification based approaches
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+bibliography:
+ - refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='scriptsize',
+  out.width='.9\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA)
+
+
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(SweaveHooks=list(fig=function(){
+			   par(mar=c(3.5, 3, 1.1, 0),
+			       pty="s",
+			       mgp=c(1.5,0.5,0),
+			       oma=c(0,0,0,0))},
+			 echo=function(){options(continue=" ") ##Don't show "+" prompts,
+			 options(prompt=" ")
+			 }),
+	digits=4,
+	scipen=8,
+	width=132
+	)
+
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+library(RItools,lib.loc="./lib")
+```
+
+## Today
+
+\begin{enumerate}
+  \item Agenda:
+The problem of covariance adjustment to reduce "bias"/ confounding. How can we answer the question about whether we have adjusted enough. A simple approach: stratification on one categorical variable (and interaction effects). A more complex approach: find sets that are as similar as possible in terms of a continuous variable (bipartite matching). Balance assessment after stratification.
+\item Reading for tomorrow: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{ho:etal:07}
+\item Questions arising from the reading or assignments or life?
+\end{enumerate}
+
+# Did we control for enough?
+
+##  Introducing the Medellin Data
+
+```{r}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+```
+
+The data Cerd\'{a} collected tell us about the roughly `r nrow(meddat)`
+neighborhoods in the study, `r signif(sum(meddat$nhTrt),2)` of which had
+access to the Metrocable line and `r signif(sum(1-meddat$nhTrt),2)` did not.
+
+We don't have a formal codebook. Here are some guesses about the meanings of
+some of the variables. There are more variables in the data file than those
+listed here.
+
+```
+## The Intervention
+nhTrt        Intervention neighborhood (0=no Metrocable station, 1=Metrocable station)
+
+## Some Covariates (there are others, see the paper itself)
+nh03         Neighborhood id
+nhGroup      Treatment (T) or Control (C)
+nhTrt        Treatment (1) or Control (0)
+nhHom        Mean homicide rate per 100,000 population in 2003
+nhDistCenter Distance to city center (km)
+nhLogHom     Log Homicide (i.e. log(nhHom))
+
+## Outcomes (BE03,CE03,PV03,QP03,TP03 are baseline versions)
+BE      Neighborhood amenities Score 2008
+CE      Collective Efficacy Score 2008
+PV      Perceived Violence Score 2008
+QP      Trust in local agencies Score 2008
+TP      Reliance on police Score 2008
+hom     Homicide rate per 100,000 population Score 2008-2003 (in log odds)
+
+HomCount2003 Number of homicides in 2003
+Pop2003      Population in 2003
+HomCount2008 Number of homicides in 2008
+Pop2008      Population in 2008
+```
+
+Get rates from counts:
+
+```{r}
+meddat<-transform(meddat, HomRate03=(HomCount2003/Pop2003)*1000,
+                  HomRate08=(HomCount2008/Pop2008)*1000)
+```
+
+## What is the effect of the Metrocable on Homicides?
+
+How should we use the estimation approach to take a first stab at this question?
+
+```{r}
+## code here
+```
+
+How should we use the testing approach to take a first stab at this question?
+
+```{r}
+## code here
+```
+
+## What are alternative explanations?
+
+We claim that the policy intervention had some effect. What are alternative explanations?
+
+## Do we have any a priori concerns about confounding?
+
+Sometimes people ask about "bias from observed confounding" or "bias from selection on observables". How does this display help us answer questions about this?
+
+
+```{r}
+options(show.signif.stars=FALSE)
+thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+balfmla<-reformulate(thecovs,response="nhTrt")
+
+xb1<-xBalance(balfmla,
+	      data=meddat,
+	      report=c("all"))
+xb1$overall
+xb1$results["HomRate03",,]
+```
+
+
+## Simple covariance adjustment to engage with alternative explanations.
+
+How should we interpret this adjustment? How should we judge the improvement that we made over what we found in xb1?
+
+```{r}
+outcomefmla <- reformulate(c("nhTrt",thecovs),response="HomRate08")
+lmbig <- lm(outcomefmla,data=meddat)
+```
+
+## Assessing extrapolation/interpolation problems.
+
+Why would we care about extrapolation / interpolation? Let's try to just control for one covariate.
+
+```{r echo=FALSE}
+lm1 <- lm(HomRate08~nhTrt+nhAboveHS,data=meddat)
+preddat <- expand.grid(nhTrt=c(0,1),nhAboveHS=range(meddat$nhAboveHS))
+preddat$fit <- predict(lm1,newdata=preddat)
+```
+
+\centering
+```{r, out.width=".9\\textwidth", echo=FALSE}
+par(oma=rep(0,4),mgp=c(1.5,.5,0),mar=c(3,3,0,0))
+with(meddat, plot(nhAboveHS,HomRate08,pch=c(1,2)[nhTrt+1]))
+with(subset(preddat,subset=nhTrt==0),lines(nhAboveHS,fit,lty=1))
+with(subset(preddat,subset=nhTrt==1),lines(nhAboveHS,fit,lty=2))
+## locator()
+text(c(0.111807,0.001629), c(1.871,2.204), labels=c("Treat","Control"),pos=1)
+text(c(.3,.5),c( coef(lm1)[1]+coef(lm1)[3]*.3 , coef(lm1)[1]+coef(lm1)[2]+coef(lm1)[3]*.5),
+     labels=c("Control","Treat"))
+```
+
+## Assessing extrapolation/interpolation problems.
+
+\centering
+```{r, out.width=".9\\textwidth", echo=FALSE, warning=FALSE, message=FALSE}
+par(oma=rep(0,4),mgp=c(1.5,.5,0),mar=c(3,3,0,0))
+with(meddat, plot(nhAboveHS,HomRate08,pch=c(1,2)[nhTrt+1]))
+with(subset(preddat,subset=nhTrt==0), lines(nhAboveHS,fit,lty=1))
+with(subset(preddat,subset=nhTrt==1),lines(nhAboveHS,fit,lty=2))
+with(subset(meddat,subset=nhTrt==0),lines(loess.smooth(nhAboveHS,HomRate08,deg=1,span=2/3),lty=1))
+with(subset(meddat,subset=nhTrt==1),lines(loess.smooth(nhAboveHS,HomRate08,deg=1,span=2/3),lty=2))
+## locator()
+text(c(0.111807,0.001629), c(1.871,2.204), labels=c("Treat","Control"),pos=1)
+text(c(.3,.5),c( coef(lm1)[1]+coef(lm1)[3]*.3 , coef(lm1)[1]+coef(lm1)[2]+coef(lm1)[3]*.5),
+     labels=c("Control","Treat"))
+with(subset(meddat,subset=nhTrt==0),rug(nhAboveHS))
+with(subset(meddat,subset=nhTrt==1),rug(nhAboveHS,line=-.5))
+```
+
+
+
+<!-- \input{announcement-of-the-day.tex} -->
+# Anything Else?
+
+## References
