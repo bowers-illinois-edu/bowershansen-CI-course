@@ -1,0 +1,100 @@
+\documentclass[11pt,]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+    \usepackage{xltxtra,xunicode}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Mapping=tex-text,Scale=MatchLowercase}
+  \newcommand{\euro}{€}
+\fi
+% use microtype if available
+\IfFileExists{microtype.sty}{\usepackage{microtype}}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{natbib}
+\bibliographystyle{plainnat}
+\ifxetex
+  \usepackage[setpagesize=false, % page size defined by xetex
+              unicode=false, % unicode breaks when used with xetex
+              xetex]{hyperref}
+\else
+  \usepackage[unicode=true]{hyperref}
+\fi
+\hypersetup{breaklinks=true,
+            bookmarks=true,
+            pdfauthor={Jake Bowers, Ben Hansen, Tom Leavitt},
+            pdftitle={Assignment 2},
+            colorlinks=true,
+            citecolor=blue,
+            urlcolor=blue,
+            linkcolor=magenta,
+            pdfborder={0 0 0}}
+\urlstyle{same}  % don't use monospace font for urls
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\setcounter{secnumdepth}{0}
+
+\title{Assignment 2}
+\author{Jake Bowers, Ben Hansen, Tom Leavitt}
+\date{2 August 2017}
+
+\begin{document}
+\maketitle
+
+For Tuesday August 8, please submit answers to the following questions:
+
+\begin{itemize}
+\item
+  \begin{enumerate}
+  \def\labelenumi{(\Alph{enumi})}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    From \texttt{unit02-Ex.pdf}, questions 1,2, either of 3 \& 4 (your
+    choice), and 5a-5c.
+  \end{enumerate}
+\item
+  \begin{enumerate}
+  \def\labelenumi{(\Alph{enumi})}
+  \setcounter{enumi}{1}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    From \texttt{unit03a-Rex.pdf}, do questions 3 and 4.
+  \end{enumerate}
+\item
+  \begin{enumerate}
+  \def\labelenumi{(\Alph{enumi})}
+  \setcounter{enumi}{2}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    For the Arceneaux (2005), or Acorn, study, estimate (a) the
+    intention to treat effect and (b) the complier average causal effect
+    of the treatment. For (b), use (some version of) Bloom's estimator.
+    (``Some version of'' leaves it to you as to whether you'll estimate
+    the intention-to-treat effect using gain scores or not.)\\
+  \end{enumerate}
+\item
+  \begin{enumerate}
+  \def\labelenumi{(\Alph{enumi})}
+  \setcounter{enumi}{3}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    Which study's instrument is weakest, the Arceneaux 2005 (Acorn)
+    study, Albertson and Lawrence's (2009) Study 1 (PBS program) or A.
+    \& L.'s (2009) Study 2 (Fox News program)? Briefly justify your
+    answer. (In addition to the discussion in lecture, weak instruments
+    are discussed in chapter 5 of \emph{DOS}, among other places.)
+  \end{enumerate}
+\end{itemize}
+
+\end{document}
