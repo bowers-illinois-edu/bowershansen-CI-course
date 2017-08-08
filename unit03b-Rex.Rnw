@@ -20,11 +20,11 @@ acorn <- read.csv("data/acorn03.csv")
 @
 
 And here we load libraries containing some functions we'll be using later on:
-<<results=hide>>=
+<<results="hide">>=
 library('MASS')
 library('sandwich')
 library('optmatch')
-@ 
+@
 
 We encourage you to use the development version of our
 \texttt{RItools} package, installing it to a local directory that you
@@ -44,59 +44,59 @@ install the \texttt{devtools} and \texttt{withr} packages from CRAN
 \end{alltt}
 After this you'll be able to load this version of the RItools package using
 \begin{alltt}
-> detach("package:optmatch", unload=T) \# as optmatch may have implicitly 
+> detach("package:optmatch", unload=T) \# as optmatch may have implicitly
 > unloadNamespace('RItools') \# loaded the other version
 > library('RItools', lib.loc='./lib')
 \end{alltt}
 If \texttt{optmatch} had been loaded, reload it as follows:
 \begin{alltt}
-> library('optmatch')  
+> library('optmatch')
 \end{alltt}
 } )
 
-<<echo=FALSE,message=FALSE,results=hide>>=
-detach("package:optmatch", unload=T) # as optmatch may have implicitly 
+<<echo=FALSE,message=FALSE,results="hide">>=
+detach("package:optmatch", unload=T) # as optmatch may have implicitly
 unloadNamespace('RItools') #loaded the other version
 library('RItools', lib.loc='./lib')
 library('optmatch')
-@ 
+@
 
 If you're instead working with an RItools that you installed the same
 way you installed the other packages we've mentioned, just do
 <<eval=FALSE>>=
 library('RItools')
-@ 
+@
 
 Sigfigs in display:
 <<>>=
 options(digits=3)
-@ 
+@
 
 Reconstruct models of effects from lab 3a:
 
 <<>>=
-acorn_e <- transform(acorn, 
+acorn_e <- transform(acorn,
                      yc_moe0 =  vote03,
                      yc_moe1 = vote03 - contact/10,
                      yc_moe2 = vote03 -contact/5
                      )
-@ 
+@
 
 
 
 \section{Variations on test statistics used in Lab 3a}
 
-  
+
 \subsection{Modifications for robustness to non-Normality}
 It's very simple to adapt this procedure by applying the rank
 transformations to the outcomes prior to making comparisons between
-the two groups. For example, 
+the two groups. For example,
 <<eval=FALSE>>=
 actualD = coef(lm(rank(yc_moe0)~z, data=acorn_e))[2]
-simD = replicate(1000, coef(lm(rank(yc_moe0)~sample(z), 
+simD = replicate(1000, coef(lm(rank(yc_moe0)~sample(z),
     data=acorn_e))[2])
-@ 
-Under complete random assignment, this give a test equivalent to the  \textit{Wilcoxon rank-sum test}. 
+@
+Under complete random assignment, this give a test equivalent to the  \textit{Wilcoxon rank-sum test}.
 
 Robustification via robust regression is also pretty easy, at least
 with small data sets for which things run quickly.  (The
@@ -104,7 +104,7 @@ with small data sets for which things run quickly.  (The
 <<eval=TRUE>>=
 actualD = coef(rlm(yc_moe0~z, data=acorn_e))[2]
 simD = replicate(1000, coef(rlm(yc_moe0~sample(z), data=acorn_e))[2])
-@ 
+@
 
 
 \begin{comment}
@@ -136,11 +136,11 @@ thresh.moe0 <- 1.345 * rlm0$s
 acorn_e <- transform(acorn_e, yc_moe0 = sign(yc_moe0)*min(thresh.moe0, abs(yc_moe0)))
 actualD <- coef(lm(yc_moe0 ~ sample(z), data=acorn_e))[2]
 simD <-  replicate(1000, coef(lm(yc_moe0~z, data=acorn_e))[2])
-@ 
+@
 
 \begin{comment}
 \textbf{Exercise.}
-\begin{enumerate} 
+\begin{enumerate}
 \item For the version of the test with a single threshold, that
   threshold was taken from a fit of \texttt{rlm(yc_moe0
     \textasciitilde\ 1)}.  It would have been a mistake to instead
@@ -148,7 +148,7 @@ simD <-  replicate(1000, coef(lm(yc_moe0~z, data=acorn_e))[2])
     \textasciitilde\ z)}, as we did in (each iteration of) the slower
   test that the single-threshold test was intended to improve on --- had we
   done that, our test would not have been a legitimate permutation
-  test.  How come?  
+  test.  How come?
  %%  \item If a test involving thresholding of $y$s is to be accurately
  %%  described as a permutation test, then the threshold shouldn't depend
  %%  on the realized value of $\mathbf{Z}$ --- any other $\mathbf{z}$
@@ -157,7 +157,7 @@ simD <-  replicate(1000, coef(lm(yc_moe0~z, data=acorn_e))[2])
  %%   is correct, \textit{then} any other value of $ \mathbf{Z}$ that's
  %%   consistent with the design should give rise to the same
  %%   threshold. Why is it OK for this not to be true of the
- %%   model-of-effect is untrue? 
+ %%   model-of-effect is untrue?
   \setcounter{saveenumi}{\value{enumi}}
 \end{enumerate}
 
@@ -169,39 +169,39 @@ simD <-  replicate(1000, coef(lm(yc_moe0~z, data=acorn_e))[2])
 
 When we use \texttt{lm()}, \textrm{rlm()} or a similar function to
 produce a test statistic, we can readily fold in an adjustment for
-differences in size between units of assignment. 
+differences in size between units of assignment.
 
 <<>>=
 actualD <- coef(lm(yc_moe0 ~z, weights=size, data=acorn_e))[2]
-simD <-  replicate(1000, coef(lm(yc_moe0~sample(z), 
+simD <-  replicate(1000, coef(lm(yc_moe0~sample(z),
                                  weights=size, data=acorn_e))[2])
 
-@ 
+@
 
 Although the pre-set \texttt{wilcox.test} function won't accept a
 \texttt{weights} argument, we can fold weights into our homemade
-Wilcoxon test as follows. 
+Wilcoxon test as follows.
 <<eval=TRUE>>=
 actualD = coef(lm(rank(yc_moe0)~z, weights=size, data=acorn_e))[2]
-simD = replicate(1000, coef(lm(rank(yc_moe0)~sample(z), weights=size, 
+simD = replicate(1000, coef(lm(rank(yc_moe0)~sample(z), weights=size,
     data=acorn_e))[2])
-@ 
+@
 
 An adjustment like this is likely to improve power.
 
 \paragraph{Modifications to take advantage of informative $x$es}
 
 
-Now we'll covariate-adjust for the 2 most recent election results,  to beef up a test of the hypothesis of no effect. A reference for what we're doing here is \citet[\S2.3]{rosenbaum:2002a}.  
+Now we'll covariate-adjust for the 2 most recent election results,  to beef up a test of the hypothesis of no effect. A reference for what we're doing here is \citet[\S2.3]{rosenbaum:2002a}.
 %Since \texttt{v\_g2002} is one of these, we'll use the original outcome rather than the gain scores; the results will be identical (if we use OLS for the covariate adjustments) or similar (if we use robust regression).
 
 The first step is to residualize.  One can do this using OLS, via R's \texttt{lm} function, but often robust regression is better for these purposes.  I use \texttt{rlm} from the \texttt{MASS} package, with default options.
 <<eval=FALSE>>=
 library(MASS) #Just a reminder; the script actually loaded MASS already
-@ 
+@
 <<>>=
 rlm0 = rlm(yc_moe0 ~ v_g2002 + v_p2003, weights=size, data=acorn_e)
-@ 
+@
 Internally, \texttt{rlm()} has top- and bottom-coded the residuals in order to fit its regression coefficients.  But I couldn't find a convenience function for extracting these Winsorized (top- and bottom-coded) residuals, so I wrote one myself.
 <<>>=
 trimmed_resid <- function(arlm)
@@ -210,9 +210,9 @@ trimmed_resid <- function(arlm)
    with(arlm, residuals * psi(residuals/s))
   }
 r0 = trimmed_resid(rlm0)
-@ 
+@
 
-To see the difference between trimming or no, 
+To see the difference between trimming or no,
  run \texttt{stem(resid(rlm0))} vs \texttt{trimmed\_resid(rlm0))} and compare the results.
 
 Now we can take the difference in means in \texttt{r0} as our test statistic, whithout fear of an outlier or two's sapping away our power.
@@ -223,7 +223,7 @@ actualD = coef(lm(r0~z, weights=size, data=acorn_e))["z"]
 coef(lm(r0~sample(z), weights=size, data=acorn_e))[2]
 simD = replicate(1000, coef(lm(r0~sample(z), weights=size, data=acorn_e))[2])
 mean(simD>= actualD)
-@ 
+@
 
 giving a one-sided p-value for the hypothesis of no effect. Since
 residualization was done without attention to the distinction between
@@ -237,14 +237,14 @@ adjustment, then go on to apply the rank transformation to the
 covariate adjusted residuals:
 <<>>=
 wilcox.test(e0~z, data=transform(acorn, e0=resid(rlm0)))
-@ 
+@
 
 
 
 \textbf{Exercise.}
 \begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
-\item Figure one- and two-sided p-values for your four 
-  models of effect, using one of the test statistics just mentioned. 
+\item Figure one- and two-sided p-values for your four
+  models of effect, using one of the test statistics just mentioned.
   \setcounter{saveenumi}{\value{enumi}}
 \end{enumerate}
 
@@ -254,18 +254,18 @@ The function \texttt{xBalance}, pre-defined in the \texttt{RItools}
 library, can be used to calculate the difference of means or
 Wilcoxon rank sum test statistic and immediately obtain a large-sample
 approximation to its p-value.   Here's the procedure for the
-difference of means statistic. 
+difference of means statistic.
 
 <<>>=
 xBalance(z ~ yc_moe0, data=acorn_e, report="all")
-@ 
+@
 (Observe that the formula I use at the beginning, \texttt{z \textasciitilde\  vote03}, is the mirror image of the formula I would have given to \texttt{lm}, \texttt{vote03 \textasciitilde\ z}.  The reasons for this will come into focus when we use \texttt{xBalance} with observational studies, later.)
 
 
-This test is based on the difference of means.  
+This test is based on the difference of means.
 RItools%
 \footnote{%
-  in earlier RItools versions, 0.1-13 and previous, use of the 
+  in earlier RItools versions, 0.1-13 and previous, use of the
   \texttt{post.alignment.transform} argument may be affected by a bug.
 } lets you ask the funtion to
 report the ordinary difference of means while using a transformed
@@ -277,19 +277,19 @@ the observations, after subtracting off within-group means.  (This is
 done as part of computation of the test statistic; it doesn't affect
 the summary statistics that \texttt{xBalance} also provides.)
 <<>>=
-xBalance(z ~ yc_moe0, data=acorn_e, 
-         report=c("adj.means", "std.diffs", "z.scores"), 
+xBalance(z ~ yc_moe0, data=acorn_e,
+         report=c("adj.means", "std.diffs", "z.scores"),
          post.alignment.transform=rank)
 
-@ 
+@
 
- \texttt{xBalance} is using a Normal approximation, so the p-values are determined by the z-statistic.  We'd have rejection at level $\alpha$ if the absolute value of that statistic exeeded the $1-\alpha/2$ quantile of the Normal distribution.    If we have preselected an $\alpha$, \texttt{xBalance} permits us to test a bunch of these hypotheses at once. 
+ \texttt{xBalance} is using a Normal approximation, so the p-values are determined by the z-statistic.  We'd have rejection at level $\alpha$ if the absolute value of that statistic exeeded the $1-\alpha/2$ quantile of the Normal distribution.    If we have preselected an $\alpha$, \texttt{xBalance} permits us to test a bunch of these hypotheses at once.
 
 <<>>=
-xBalance(z ~ yc_moe0 + yc_moe1 + yc_moe2, 
+xBalance(z ~ yc_moe0 + yc_moe1 + yc_moe2,
          data=acorn_e,
          report=c("adj.means", "std.diffs", "z.scores"))
-@ 
+@
 
 So the hypothesis associated with \texttt{moe2} is rejected at level .05, although the other two are not. At the 2/3 level ($z_{5/6}=$\Sexpr{round(qnorm(5/6) ,2)}) the hypothesis of no effect would be rejected also, although the one-in-ten hypothesis would be sustained.
 
@@ -298,27 +298,27 @@ tests, as opposed to tests based on the difference of means
 statistic, use
 
 <<>>=
-xBalance(z ~ yc_moe0 + yc_moe1 + yc_moe2, 
-         report=c("adj.means", "std.diffs", "z.scores"), 
+xBalance(z ~ yc_moe0 + yc_moe1 + yc_moe2,
+         report=c("adj.means", "std.diffs", "z.scores"),
          data=acorn_e, post.alignment.transform=rank)
-@ 
+@
 Some p-values go up, others down. Again, this assumes version 0.1-13 or later of RItools.
 
 Using \texttt{xBalance} to conduct several of covariate-adjusted randomization tests at once:
 <<>>=
-xBalance(z ~ e0 + e1 + e2, 
-         report=c("adj.means", "z.scores", "p.values"), 
+xBalance(z ~ e0 + e1 + e2,
+         report=c("adj.means", "z.scores", "p.values"),
          post.alignment.transform=rank,
          data=transform(acorn_e, e0=resid(rlm(yc_moe0~v_g2002 + v_p2003, weights=size)),
                         e1=resid(rlm(yc_moe1~v_g2002 + v_p2003, weights=size)),
                         e2=resid(rlm(yc_moe2~v_g2002 + v_p2003, weights=size)))
          )
 
-@ 
+@
 
 The corresponding 95\% and 99\% confidence intervals contain .1, but
 have lower and
-upper endpoints strictly between 0 and 0.2. 
+upper endpoints strictly between 0 and 0.2.
 
 
 \section{Paired random assignment and post-stratified designs}
@@ -329,13 +329,13 @@ prior elections.
 
 <<>>=
 acorn_e <- transform(acorn_e, pairs=pairmatch(z~size+v_p2003+v_m2003, data=acorn))
-@ 
+@
 
 The test statistic itself doesn't necessarily have to be modified to
 reflect stratification.
 <<>>=
 actualD = coef(lm(rank(yc_moe0)~z, data=acorn_e))[2]
-@ 
+@
 Its reference distribution does, however.  Here's how you'd do it
 using the \texttt{permute} package's \texttt{shuffle()} function instead of base
 R's \texttt{sample()}:
@@ -343,9 +343,9 @@ R's \texttt{sample()}:
 library(permute)
 n = nrow(acorn_e)
 h1 <- how(blocks=acorn_e$pairs)
-simD = replicate(1000, coef(lm(rank(yc_moe0)~z), 
+simD = replicate(1000, coef(lm(rank(yc_moe0)~z),
     data=transform(acorn_e, z=z[shuffle(n, how=h1)]))[2])
-@ 
+@
 Without a \texttt{how}
 argument, \texttt{shuffle()} would have done the same as
 \texttt{sample()}.  Try it yourself at the command line:
@@ -353,22 +353,22 @@ argument, \texttt{shuffle()} would have done the same as
 shuffle(n)
 shuffle(n, how=h1)
 with(acorn_e, cbind(pairs, z, z[shuffle(n, how=h1)]))
-@ 
+@
 
-To achieve the same effect without simulating, 
+To achieve the same effect without simulating,
 <<>>=
 xBalance(z ~ yc_moe0 + yc_moe1 + yc_moe2, strata=acorn_e$pairs,
-         report=c("adj.means", "std.diffs", "z.scores"), 
+         report=c("adj.means", "std.diffs", "z.scores"),
          data=acorn_e, post.alignment.transform=rank)
 
-@ 
+@
 
 In the development version of RItools you can get the same effect via
 <<eval=FALSE>>=
-balanceTest(z ~ yc_moe0 + yc_moe1 + yc_moe2 + strata(pairs) -1, 
-         report=c("adj.means", "std.diffs", "z.scores"), 
+balanceTest(z ~ yc_moe0 + yc_moe1 + yc_moe2 + strata(pairs) -1,
+         report=c("adj.means", "std.diffs", "z.scores"),
          data=acorn_e, post.alignment.transform=rank)
-@ 
+@
 The \texttt{strata(pairs)} tells it to include stratification on
 \texttt{pairs}, and the \texttt{-1} signals that we don't also need
 the unstratified comparison.
@@ -379,7 +379,7 @@ the unstratified comparison.
 R and R package versions used in this demo:
 <<>>=
 sessionInfo()
-@ 
+@
 
 \bibliographystyle{apalike}
 % \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
