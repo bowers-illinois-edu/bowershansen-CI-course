@@ -21,7 +21,7 @@ acorn <- read.csv("data/acorn03.csv")
 @
 
 And here we load libraries containing some functions we'll be using later on:
-<<results=hide>>=
+<<results="hide">>=
 library('MASS')
 library('sandwich')
 library('lmtest')
@@ -135,7 +135,7 @@ follows the interpretation $2\min\big( \mathrm{Pr}(T\leq t),
 
 \textbf{Exercise.}
 \begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
-\item Figure one- and two-sided p-values corresponding to the
+\item Produce one- and two-sided p-values corresponding to the
   remaining 3 hypotheses, using the difference-of-means test statistic.
   \setcounter{saveenumi}{\value{enumi}}
 \end{enumerate}
@@ -202,7 +202,7 @@ also be spoiled.)
 
 \textbf{Exercise.}
 \begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
-\item Figure two-sided p-values corresponding to the
+\item Produce two-sided p-values corresponding to the
   remaining 3 hypotheses, two different ways.  (Any two of the three
   above will do.)
       \setcounter{saveenumi}{\value{enumi}}
