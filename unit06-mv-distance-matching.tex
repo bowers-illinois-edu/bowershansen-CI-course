@@ -1,5 +1,5 @@
 %  For slides only
-%\input{slidesonly}
+\input{slidesonly}
 
 % % For handout
 %\input{handout}
@@ -10,26 +10,17 @@
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
 \input{courseedition}
-
-\usepackage{tikz} 
+\usepackage{natbib}
+\newcounter{saveenumi}
+\usepackage{tikz}
 \usetikzlibrary{arrows} % also see \tikzstyle spec below after \begin{doc}
 
-\usepackage{xspace}
-\usepackage[round]{natbib}
 
-\usepackage{versions}
-\includeversion{pedantic} % \excludeversion
-
-\usepackage{./mytexdefs2}
-\usepackage{./mytexdefs}
-\newcounter{saveenum}
-
-\title{Unit 5: Multivariate distance matching}
+\title{Unit 6: Multivariate distance matching}
 % \author, date moved to beamer-preamble-*-all.tex
 
 \begin{document}
 
-\newcounter{saveenumi}
 \tikzstyle{every picture}+=[remember picture]
 
   \begin{frame}
@@ -45,8 +36,8 @@
 \newlength{\boywidth} 
 \newlength{\girlwidth} 
 
-\newcommand{\igrphxG}[1]{\includegraphics[width=\girlwidth]{../2014/lectures/images/#1}}
-\newcommand{\igrphxB}[1]{\includegraphics[width=\boywidth]{../2014/lectures/images/#1}}
+\newcommand{\igrphxG}[1]{\includegraphics[width=\girlwidth]{images/#1}}
+\newcommand{\igrphxB}[1]{\includegraphics[width=\boywidth]{images/#1}}
 
 
 \begin{frame}
