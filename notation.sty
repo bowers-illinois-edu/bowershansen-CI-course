@@ -1,0 +1,62 @@
+%%% Functions
+\newcommand{\given}{\, | \,}
+\newcommand{\pos}{\text{Pos}}
+\newcommand{\I}{\text{I}} % indicator function
+
+%%% Vectors 
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bd}{\mathbf{d}}
+\newcommand{\bY}{\mathbf{Y}}
+\newcommand{\br}{\mathbf{r}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bw}{\mathbf{w}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bX}{\mathbf{X}}
+\newcommand{\bS}{\mathbf{S}}
+\newcommand{\bZ}{\mathbf{Z}}
+\newcommand{\bR}{\mathbf{R}}
+\newcommand{\bz}{\mathbf{z}}
+\newcommand{\be}{\mathbf{e}}
+\newcommand{\bE}{\mathbf{E}}
+\newcommand{\bM}{\mathbf{M}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bV}{\mathbf{V}}
+
+\newcommand{\bzero}{\mathbf{0}}
+\newcommand{\bOne}{\mathbf{1}}
+
+%%% RI/potential outcomes specific notation
+\newcommand{\yu}{\by_\bzero}
+\newcommand{\yz}{\by_\bz}
+
+% Models
+\newcommand{\HH}{\mathcal{H}} % "Causal model"
+\newcommand{\M}{\mathcal{M}} % "Adjustment model"
+\newcommand{\defmodel}{\yu = \M(\by,\bz)}
+\newcommand{\sharpnull}{\yu = \by}
+\newcommand{\addmodel}{\yu = \by - \tau \cdot \z}
+\newcommand{\multmodel}{\yu = \beta^{-\bZ} \bY}
+\newcommand{\sharpnulli}{\y_\unif = \y}
+\newcommand{\addtwomodeli}{\y_\unif = \y - 2 \cdot \z}
+\newcommand{\nullmodel}{\M_{\emptyset}}
+
+% Test Statistics
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\defstat}{\T(\y, \z) = t \in \mathbb{R}}
+\newcommand{\pval}{\Pr(\T(\M(\y, \z), \Z) > \T(\M(\y, \z), \z))}
+
+%%% Bold Symbols
+\newcommand{\bOmega}{\boldsymbol{\Omega}}
+\newcommand{\brho}{\boldsymbol{\rho}}
+\newcommand{\bKZ}{\boldsymbol{\mathcal{Z}}}
+\newcommand{\bzeta}{\boldsymbol{\zeta}}
+\newcommand{\btheta}{\boldsymbol{\theta}}
+\newcommand{\bbeta}{\boldsymbol{\beta}}
+\newcommand{\blambda}{\boldsymbol{\lambda}}
+\newcommand{\btau}{\boldsymbol{\tau}}
+
+%%% Treatment Effect Summaries
+\newcommand{\ETT}{\textbf{ETT}}
+\newcommand{\ETC}{\textbf{ETC}}
+
+

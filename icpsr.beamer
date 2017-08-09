@@ -1,0 +1,315 @@
+\documentclass[$if(fontsize)$$fontsize$,$endif$$if(lang)$$babel-lang$,$endif$$if(handout)$handout,$endif$$if(colorlinks)$dvipsnames,$endif$$if(beamer)$ignorenonframetext,$endif$$for(classoption)$$classoption$$sep$,$endfor$]{$documentclass$}
+
+% built from https://github.com/jgm/pandoc-templates/blob/master/default.beamer
+
+%\documentclass[11pt,ignorenonframetext,xcolor={svgnames}]{beamer}
+%\setbeameroption{hide notes}
+
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbols$if(navigation)$$navigation$$else$empty$endif$
+$if(fontfamily)$
+\usepackage[$for(fontfamilyoptions)$$fontfamilyoptions$$sep$,$endfor$]{$fontfamily$}
+$else$
+\usepackage{lmodern}
+$endif$
+
+\usepackage{etex}
+\reserveinserts{28}
+\usepackage{presentation}
+\usepackage{notation}
+\usepackage{caption}
+\usepackage{amssymb,amsmath}
+\usepackage{tikz}
+\usepackage{textpos}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[$if(fontenc)$$fontenc$$else$T1$endif$]{fontenc}
+  \usepackage[utf8]{inputenc}
+$if(euro)$
+  \usepackage{eurosym}
+$endif$
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+$for(fontfamilies)$
+  \newfontfamily{$fontfamilies.name$}[$fontfamilies.options$]{$fontfamilies.font$}
+$endfor$
+%\usepackage{fontspec,xltxtra,xunicode}
+\defaultfontfeatures{Mapping=tex-text,Scale=MatchLowercase}
+%\setmainfont{Lato}
+%\setmonofont[Scale=MatchLowercase]{Source Code Pro Light}
+%\let\sfdefault\rmdefault
+\newcommand{\euro}{€}
+\captionsetup{labelformat=empty,labelsep=none,font=small,skip=.25ex} %No "Figure" labels
+\usecolortheme{default}
+\useinnertheme{default}
+\usefonttheme{default}
+%\useoutertheme{progressbar}
+\usepackage{beamerouterthemeprogressbar}
+\progressbaroptions{titlepage=normal,headline=normal,frametitle=normal}
+
+
+% Define Colors
+%% Dark Yellow: 102, 83, 30
+%% Dark Orange: 104, 55, 34
+%% Dark Red: 107, 36, 31
+%% Dark Blue: 19, 64, 80
+%% Dark Green: 0, 86, 79
+%% yellow:  R=242 G=196 B=70 F2C446
+%% orange:  R=249 G=131 B=74 F9834A
+%% blue:  R=46 G=154 B=196   2E9AC4
+%% red:  R=250 G=86 B=70 FA5646
+%% green:  R=3 G=202 B=185 03CAB9
+%% grey:  R=153 G=153 B=153 999999
+%% Dark Yellow: 102, 83, 30
+%% https://standards.usa.gov/components/colors/
+
+\definecolor{darkyellow}{rgb}{102,83,30}
+\definecolor{orange}{HTML}{F9834A}
+\definecolor{yellow}{HTML}{F2C446}
+\definecolor{blue}{HTML}{0071bc}
+\definecolor{medblue}{HTML}{205493}
+\definecolor{darkblue}{HTML}{112e51}
+\definecolor{green}{HTML}{03CAB9}
+\definecolor{grey}{HTML}{999999}
+%\definecolor{progressbar@bgblue}{rgb}{0.92, 0.93, 0.95}
+
+%\setbeamerfont*{frametitle}{size=\small,series=\bfseries,bg=white,fg=black}
+%\setbeamerfont*{frametitle}{size=\small,series=\bfseries,bg=white,fg=progressbar@bgblue!90!progressbar@fgblue}
+\setbeamerfont*{note page}{size=\scriptsize}%%footnotesize}
+\setbeamertemplate{note page}[compress]
+\setbeamercovered{transparent}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{items}[circle]
+\setbeamertemplate{sections/subsections in toc}[circle]
+\setbeamersize{description width=2ex}
+% \setbeamersize{text margin left=1ex,text margin right=1ex}
+\setbeamersize{text margin left=2ex,text margin right=1ex}
+%%\setbeamersize{ParSkip 1ex plus 1pt minus 1pt}
+%% %% %% \setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{:}
+\setbeamercolor{title}{fg=blue}
+\setbeamercolor{author}{fg=grey}
+\setbeamercolor{date}{fg=grey}
+\setbeamerfont{author}{shape=\itshape}
+\setbeamercolor{frametitle}{fg=blue}
+\setbeamercolor{caption name}{fg=normal text.fg}
+
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{\usepackage{microtype}}{}
+\setbeamerfont{quote}{shape=\upshape}
+
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\setcounter{secnumdepth}{0}
+
+\newif\ifbibliography
+$if(natbib)$
+\usepackage{natbib}
+\bibliographystyle{$if(biblio-style)$$biblio-style$$else$plainnat$endif$}
+$endif$
+$if(biblatex)$
+\usepackage[$if(biblio-style)$style=$biblio-style$,$endif$$for(biblatexoptions)$$biblatexoptions$$sep$,$endfor$]{biblatex}
+$for(bibliography)$
+\addbibresource{$bibliography$}
+$endfor$
+$endif$
+
+$if(verbatim-in-note)$
+\usepackage{fancyvrb}
+$endif$
+\hypersetup{
+$if(title-meta)$
+            pdftitle={$title-meta$},
+$endif$
+$if(author-meta)$
+            pdfauthor={$author-meta$},
+$endif$
+$if(keywords)$
+            pdfkeywords={$for(keywords)$$keywords$$sep$, $endfor$},
+$endif$
+$if(colorlinks)$
+            colorlinks=true,
+            linkcolor=$if(linkcolor)$$linkcolor$$else$Maroon$endif$,
+            citecolor=$if(citecolor)$$citecolor$$else$Blue$endif$,
+            urlcolor=$if(urlcolor)$$urlcolor$$else$Blue$endif$,
+$else$
+            pdfborder={0 0 0},
+$endif$
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+$if(verbatim-in-note)$
+\VerbatimFootnotes % allows verbatim text in footnotes
+$endif$
+
+$if(listings)$
+\usepackage{listings}
+$endif$
+$if(lhs)$
+\lstnewenvironment{code}{\lstset{language=R,basicstyle=\small\ttfamily}}{}
+$endif$
+$if(highlighting-macros)$
+$highlighting-macros$
+$endif$
+$if(verbatim-in-note)$
+\usepackage{fancyvrb}
+$endif$
+$if(tables)$
+\usepackage{longtable,booktabs}
+\usepackage{caption}
+% These lines are needed to make table captions work with longtable:
+\makeatletter
+\def\fnum@table{\tablename~\thetable}
+\makeatother
+$endif$
+$if(url)$
+\usepackage{url}
+$endif$
+$if(graphics)$
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight0.8\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+$endif$
+
+% Comment these out if you don't want a slide with just the
+% part/section/subsection/subsubsection title:
+%% \AtBeginPart{
+%%   \let\insertpartnumber\relax
+%%     \let\partname\relax
+%%     \frame{\partpage}
+%% }
+
+\AtBeginSection{
+   \let\insertsectionnumber\relax
+      \let\sectionname\relax
+  {
+    \setbeamercolor{background canvas}{bg=blue}
+    %\setbeamercolor{frametitle}{fg=white,bg=darkblue}
+    %\setbeamercolor{normal text}{fg=white,bg=darkblue}
+    %\setbeamercolor{structure}{fg=white}
+       \begin{frame}
+    %\frametitle{\sectionpage}
+    \tableofcontents[currentsection]
+      \end{frame}
+  }
+}
+
+%%% \AtBeginSubsection{
+%%%   \let\insertsubsectionnumber\relax
+%%%     \let\subsectionname\relax
+%%%     \frame{\subsectionpage}
+%%% }
+%%%
+$if(strikeout)$
+\usepackage[normalem]{ulem}
+% avoid problems with \sout in headers with hyperref:
+\pdfstringdefDisableCommands{\renewcommand{\sout}{}}
+$endif$
+
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+
+$if(numbersections)$
+$else$
+\setcounter{secnumdepth}{0}
+$endif$
+
+$if(verbatim-in-note)$
+\VerbatimFootnotes % allows verbatim text in footnotes
+$endif$
+
+$if(lang)$
+\usepackage[$lang$]{babel}
+$endif$
+
+$for(header-includes)$
+$header-includes$
+$endfor$
+
+$if(title)$
+\title[]{$title$}
+$endif$
+$if(subtitle)$
+\subtitle{$subtitle$}
+$endif$
+$if(author)$
+\author{$for(author)$$author$$sep$ \and $endfor$}
+$endif$
+\date{$date$}
+
+\graphicspath{{.}{./images/}} % make it easier to find the logos
+
+%% \addtobeamertemplate{frametitle}{}{%
+%% \begin{tikzpicture}[remember picture,overlay]
+%% \node[anchor=south east,yshift=6pt,xshift=-3pt] at (current page.south east) {\includegraphics[height=0.5cm]{SBSTLightBulb}};
+%% \end{tikzpicture}}
+%% 
+%% \addtobeamertemplate{title page}{}{%
+%% \begin{tikzpicture}[remember picture,overlay]
+%% \node[anchor=south east,yshift=5pt] at (current page.south east) {\includegraphics[height=2cm]{SBSTLogo}};
+%% \end{tikzpicture}}
+
+\begin{document}
+$if(title)$
+\begin{frame}[plain,label=intro,noframenumbering]
+\titlepage
+\end{frame}
+$endif$
+
+$for(include-before)$
+$include-before$
+$endfor$
+
+%% $if(toc)$
+%% \begin{frame}
+%% \tableofcontents[hideallsubsections]
+%% \end{frame}
+%% $endif$
+
+$body$
+
+
+$if(natbib)$
+$if(bibliography)$
+$if(biblio-title)$
+$if(book-class)$
+\renewcommand\bibname{$biblio-title$}
+$else$
+\renewcommand\refname{$biblio-title$}
+$endif$
+$endif$
+\begin{frame}[allowframebreaks]{$biblio-title$}
+\bibliographytrue
+\bibliography{$for(bibliography)$$bibliography$$sep$,$endfor$}
+\end{frame}
+
+$endif$
+$endif$
+$if(biblatex)$
+\begin{frame}[allowframebreaks]{$biblio-title$}
+\bibliographytrue
+\printbibliography[heading=none]
+\end{frame}
+
+$endif$
+$for(include-after)$
+$include-after$
+
+$endfor$
+
+\end{document}
