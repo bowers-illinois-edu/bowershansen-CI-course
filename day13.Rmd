@@ -1,0 +1,185 @@
+---
+title: Matching on more than one covariate
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2017 Session 2
+bibliography:
+ - refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before)
+    return(options$size)
+})
+
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='\\scriptsize',
+  out.width='.9\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA,
+  mysize=TRUE)
+
+
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(SweaveHooks=list(fig=function(){
+			   par(mar=c(3.5, 3, 1.1, 0),
+			       pty="s",
+			       mgp=c(1.5,0.5,0),
+			       oma=c(0,0,0,0))},
+			 echo=function(){options(continue=" ") ##Don't show "+" prompts,
+			 options(prompt=" ")
+			 }),
+	digits=4,
+	scipen=8,
+	width=132
+	)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+```
+
+
+```{r eval=FALSE, echo=FALSE,include=FALSE}
+## Having downloaded optmatch from box install either for mac (tar.gz) or windows (zip)
+## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.tar.gz', repos=NULL),'pre')
+
+## Or if you have all of the required libraries for compilation use
+with_libpaths('./lib', install_github("markmfredrickson/optmatch"), 'pre')
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(RItools,lib.loc="./lib")
+library(optmatch,lib.loc="./lib")
+```
+
+## Today
+
+\begin{enumerate}
+  \item Agenda: Matching on one covariate using optmatch; Matching on more than one covariate: mahalnobis distances, propensity scores.
+\item Reading for tomorrow: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{ho:etal:07}
+\item Questions arising from the reading or assignments or life?
+\end{enumerate}
+
+
+```{r}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat$id <- row.names(meddat)
+meddat<- mutate(meddat, HomRate03=(HomCount2003/Pop2003)*1000,
+                HomRate08=(HomCount2008/Pop2008)*1000)
+## mutate strips off row names
+row.names(meddat) <- meddat$id
+```
+
+# Matching on one covariate using optmatch
+
+## Introduction to `optmatch`.
+
+```{r}
+options(show.signif.stars=FALSE)
+thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+balfmla<-reformulate(thecovs,response="nhTrt")
+
+xb1<-balanceTest(balfmla,
+	      data=meddat,
+	      report=c("all"),
+        p.adjust.method="none")
+xb1$overall[1,]
+xb1$results["nhPopD",,]
+```
+
+
+
+```{r}
+tmp <- meddat$nhPopD
+names(tmp) <- rownames(meddat)
+absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
+absdist[1:4,1:4]
+```
+
+```{r}
+fm1 <- fullmatch(absdist,data=meddat)
+summary(fm1)
+table(meddat$nhTrt,fm1)
+```
+
+## Evaluate the matched design
+
+```{r}
+xb2 <- balanceTest(nhTrt~nhPopD+strata(fm1),
+                  data=meddat,report="all",p.adjust.method="none")
+xb2
+```
+## Improve the matched design
+
+First, decrease the tolerance at which the algorithm declares that it is done:
+
+```{r}
+fm2 <- fullmatch(absdist,data=meddat,tol=.000001)
+summary(fm2)
+table(meddat$nhTrt,fm2)
+
+```
+
+
+```{r}
+xb3 <- balanceTest(nhTrt~nhPopD+strata(fm1)+strata(fm2),
+                  data=meddat,report="all",p.adjust.method="none")
+xb3
+```
+
+
+## Summary:
+
+What do you think?
+
+ - Covariance adjustment to reduce confounding on observed covariates works when \ldots? What do we mean by "works"?
+ - It doesn't work when \ldots? (hint: The Curse of Dimensionality)
+ - How can we evaluate whether an approach to adjustment is working well or not?
+
+
+# Anything Else?
+
+## References
