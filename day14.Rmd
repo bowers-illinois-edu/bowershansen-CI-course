@@ -1,0 +1,271 @@
+---
+title: Strategies for making matched designs
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2017 Session 2
+bibliography:
+ - refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before)
+    return(options$size)
+})
+
+knit_hooks$set(plotdefault = function(before, options, envir) {
+    if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
+})
+
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='\\scriptsize',
+  out.width='.8\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA,
+  mysize=TRUE,
+  plotdefault=TRUE)
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(digits=4,
+	scipen=8,
+	width=132
+	)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+```
+
+
+```{r eval=FALSE, echo=FALSE,include=FALSE}
+## Having downloaded optmatch from box install either for mac (tar.gz) or windows (zip)
+## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.tar.gz', repos=NULL),'pre')
+
+## Or if you have all of the required libraries for compilation use
+with_libpaths('./lib', install_github("markmfredrickson/optmatch"), 'pre')
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(chemometrics)
+library(RItools,lib.loc="./lib")
+library(optmatch,lib.loc="./lib")
+```
+
+## Today
+
+\begin{enumerate}
+  \item Agenda: Exact matching; Calipers; Combining matrices; Discussion of fullmatching vs fixed ratio matching (like pairs), and optimal vs greedy.
+\item Reading for this week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{ho:etal:07}
+\item Questions arising from the reading or assignments or life?
+\end{enumerate}
+
+
+```{r loaddat, echo=FALSE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat$id <- row.names(meddat)
+meddat<- mutate(meddat, HomRate03=(HomCount2003/Pop2003)*1000,
+                HomRate08=(HomCount2008/Pop2008)*1000)
+## mutate strips off row names
+row.names(meddat) <- meddat$id
+options(show.signif.stars=FALSE)
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(chemometrics)
+library(RItools,lib.loc="./lib")
+library(optmatch,lib.loc="./lib")
+```
+
+# Your reports
+
+## Your reports?
+
+What did you do? What kind of overall balance did you achieve?
+
+# The Propensity Scores
+
+## The propensity score
+
+Given covariates $\mathbf{X} (=(X_1, \ldots, X_k))$, and a
+treatment variable $Z$, $Z(u) \in \{0, 1\}$,  $\PP (Z \vert \mathbf{X})$ is known as the (true) \alert<1>{propensity score} (PS).  
+$$ \phi( \mathbf{X} ) \equiv \log\left( \PP (Z=1 \vert \mathbf{X})/\PP (Z=0 \vert \mathbf{X}) \right)$$
+is also known as the PS.  In practice, one works
+with an estimated PS, $\hat{\PP} (Z \vert \mathbf{X})$ or
+$\hat{\phi}(\mathbf{X})$.
+
+Theoretically, propensity-score strata or matched sets both
+\begin{enumerate}
+\item reduce extrapolation; and
+\item balance each of $X_1, \ldots, X_k$.
+\end{enumerate}
+They do this by making the comparison more "experiment-like", at least in terms of $X_1, \ldots, X_k$.
+
+Theory also tells us that in the absence of hidden bias, such a stratification
+\begin{enumerate}
+\addtocounter{enumi}{2}
+\item supports unbiased estimation of treatment effects.
+\end{enumerate}
+
+
+## Propensity scoring in practice
+\begin{columns}
+\column{.65\linewidth}
+\begin{enumerate}
+\item Fitted propensity scores help identify extrapolation.
+\item In practice, stratification on $\hat{\phi}(\mathbf{X})$
+helps balance each of $X_1, \ldots, X_k$.
+% \item Adjustment based on the
+% propensity score is arguably more transparent and more stable
+% that adjustment based on multiple regression.
+\item There are \emph{lots of cases} in which adjustment with the propensity
+score fails to generate estimates that square with those of
+randomized studies. 
+\end{enumerate}
+\column{.35\linewidth} \igrphx{meddatpsplot}
+\end{columns}
+
+\begin{enumerate}
+\item There are various reasons for this, starting with: lots of observational studies that
+don't measure quite enough $x$es.
+\item (Propensity scores address bias on measured variables, not
+unmeasured ones.)  \textit{hidden bias}.
+\end{enumerate}
+
+
+## The separation problem in logistic regression and the benefits of shrinkage/penalization
+
+```{r echo=FALSE}
+thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+balfmla<-reformulate(thecovs,response="nhTrt")
+library(splines)
+psfmla <- update(balfmla,.~.+ns(HomRate03,2)+ns(nhPopD,2)+ns(nhHS,2))
+glm0 <- glm(balfmla,data=meddat,family=binomial(link="logit"))
+glm1 <- glm(psfmla,data=meddat,family=binomial(link="logit"))
+
+install.packages("arm")
+library(arm)
+
+bayesglm0 <- bayesglm(balfmla,data=meddat,family=binomial(link="logit"))
+bayesglm1 <- bayesglm(psfmla,data=meddat,family=binomial(link="logit"))
+
+psg1 <- predict(glm1,type="response")
+psg0 <- predict(glm0,type="response")
+psb1 <- predict(bayesglm1,type="response")
+psb0 <- predict(bayesglm0,type="response")
+```
+
+Logistic regression is excellent at discriminating between groups \ldots often too excellent for us \autocite{gelman2008weakly}. First evidence of this is big and/or missing coefficients in the propensity score model.
+
+```{r}
+coef(glm0)
+coef(glm1)
+coef(bayesglm0)
+coef(bayesglm1)
+```
+
+## The separation problem in logistic regression
+
+```{r}
+par(mfrow=c(2,2))
+boxplot(psg0~meddat$nhTrt,main=paste("Logit",length(coef(glm0))," parms",sep=" "))
+stripchart(psg0~meddat$nhTrt,vertical=TRUE,add=TRUE)
+boxplot(psg1~meddat$nhTrt,main=paste("Logit",length(coef(glm1))," parms",sep=" "))
+stripchart(psg1~meddat$nhTrt,vertical=TRUE,add=TRUE)
+boxplot(psb0~meddat$nhTrt,main=paste("Shrinkage Logit",length(coef(bayesglm0))," parms",sep=" "))
+stripchart(psb0~meddat$nhTrt,vertical=TRUE,add=TRUE)
+boxplot(psb1~meddat$nhTrt,main=paste("Shrinkage Logit",length(coef(bayesglm1))," parms",sep=" "))
+stripchart(psb1~meddat$nhTrt,vertical=TRUE,add=TRUE)
+```
+
+# Matching Tricks of the Trade
+
+## Exact Matching
+
+## Calipers
+
+The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we disallow comparisons which differ by more than 3 standard deviations on the propensity score.
+
+```{r}
+psdist <- match_on(bayesglm1,data=meddat)
+psdist[1:3,1:3]
+quantile(as.vector(psdist),seq(0,1,.1))
+psdistCal <- psdist + caliper(psdist,3)
+as.matrix(psdistCal)[1:3,1:3]
+fmCal1 <- fullmatch(psdist+caliper(psdist,3),data=meddat,tol=.00001)
+summary(fmCal1,min.controls=0,max.controls=Inf)
+```
+
+## Calipers
+
+Another example: We may want to primarily match on mahalanobis distance but disallow any pairs with extreme propensity distance and/or extreme differences in baseline homicide rates. Is this "propensity score matching"? Not really. It highlights the idea that one creates a matched design using different tools and inputs, just like you would in any other research design task.
+
+```{r}
+mhdist <- match_on(balfmla,data=meddat,method="rank_mahalanobis")
+tmp <- meddat$HomRate03
+names(tmp) <- rownames(meddat)
+absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
+absdist[1:3,1:3]
+quantile(as.vector(absdist),seq(0,1,.1))
+distCal <- mhdist + caliper(psdist,3) + caliper(absdist,2)
+as.matrix(distCal)[1:3,1:3]
+fmCal2 <- fullmatch(distCal,data=meddat,tol=.00001)
+summary(fmCal2,min.controls=0,max.controls=Inf)
+```
+
+
+
+```
+
+## Precision and matched set configurations.
+
+Certain configurations of matched sets provide more statistical power (for testing) / more precision (for estimation) than others. The `min.controls` and `max.controls` and/or the command `pairmatch` control the sizes of the sets.
+
+## Summary:
+
+What do you think?
+
+
+# Anything Else?
+
+## References

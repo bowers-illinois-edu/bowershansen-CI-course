@@ -1,7 +1,7 @@
 ---
 title: "Assignment 3 --- Investigation of an Existing Study --- ICPSR Causal Inference 2017"
 author: "Jake Bowers, Ben Hansen, Tom Leavitt"
-date: "8 August 2017"
+date: "Due 16 August 2017"
 output:
   pdf_document: default
   html_document: default
