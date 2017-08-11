@@ -77,10 +77,15 @@ with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
 
 
 ```{r eval=FALSE, echo=FALSE,include=FALSE}
-## Having downloaded optmatch from box install either for mac (tar.gz) or windows (zip)
-## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.tar.gz', repos=NULL),'pre')
+## Having downloaded optmatch from Box OR http://jakebowers.org/ICPSR for mac (tgz) or windows (zip)
+## For Mac
+## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.tgz', repos=NULL),'pre')
+## For Windows
+## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.zip', repos=NULL),'pre')
+```
 
-## Or if you have all of the required libraries for compilation use
+```{r eval=FALSE, echo=FALSE}
+## Or if you have all of the required libraries (like fortran and c++) for compilation use
 with_libpaths('./lib', install_github("markmfredrickson/optmatch"), 'pre')
 ```
 
@@ -94,9 +99,10 @@ library(optmatch,lib.loc="./lib")
 ## Today
 
 \begin{enumerate}
-  \item Agenda: Exact matching; Calipers; Combining matrices; Discussion of fullmatching vs fixed ratio matching (like pairs), and optimal vs greedy.
+  \item Agenda: Exact matching; Calipers; Combining matrices; Discussion of with and without-replacement matching and optimal vs greedy matching; Maybe use those tools to improve your best matched design.
 \item Reading for this week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{ho:etal:07}
 \item Questions arising from the reading or assignments or life?
+\item Tomorrow: Estimation and Testing after matching; Information and blocked designs (some blockings have more information about treatment effects than others); Balance tests and the Sequential Intersection Union Principle
 \end{enumerate}
 
 
@@ -183,7 +189,7 @@ psfmla <- update(balfmla,.~.+ns(HomRate03,2)+ns(nhPopD,2)+ns(nhHS,2))
 glm0 <- glm(balfmla,data=meddat,family=binomial(link="logit"))
 glm1 <- glm(psfmla,data=meddat,family=binomial(link="logit"))
 
-install.packages("arm")
+# install.packages("arm")
 library(arm)
 
 bayesglm0 <- bayesglm(balfmla,data=meddat,family=binomial(link="logit"))
@@ -195,19 +201,20 @@ psb1 <- predict(bayesglm1,type="response")
 psb0 <- predict(bayesglm0,type="response")
 ```
 
-Logistic regression is excellent at discriminating between groups \ldots often too excellent for us \autocite{gelman2008weakly}. First evidence of this is big and/or missing coefficients in the propensity score model.
+Logistic regression is excellent at discriminating between groups \ldots often too excellent for us \autocite{gelman2008weakly}. First evidence of this is big and/or missing coefficients in the propensity score model. See the coefficients below:
 
-```{r}
-coef(glm0)
-coef(glm1)
-coef(bayesglm0)
-coef(bayesglm1)
+```{r echo=FALSE}
+rbind(glm0=coef(glm0)[1:5],
+glm1=coef(glm1)[1:5],
+bayesglm0=coef(bayesglm0)[1:5],
+bayesglm1=coef(bayesglm1)[1:5]
+)
 ```
 
 ## The separation problem in logistic regression
 
-```{r}
-par(mfrow=c(2,2))
+```{r out.width=".8\\textwidth", echo=FALSE}
+par(mfrow=c(2,2),mar=c(3,3,2,.1))
 boxplot(psg0~meddat$nhTrt,main=paste("Logit",length(coef(glm0))," parms",sep=" "))
 stripchart(psg0~meddat$nhTrt,vertical=TRUE,add=TRUE)
 boxplot(psg1~meddat$nhTrt,main=paste("Logit",length(coef(glm1))," parms",sep=" "))
@@ -220,8 +227,6 @@ stripchart(psb1~meddat$nhTrt,vertical=TRUE,add=TRUE)
 
 # Matching Tricks of the Trade
 
-## Exact Matching
-
 ## Calipers
 
 The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we disallow comparisons which differ by more than 3 standard deviations on the propensity score.
@@ -232,14 +237,20 @@ psdist[1:3,1:3]
 quantile(as.vector(psdist),seq(0,1,.1))
 psdistCal <- psdist + caliper(psdist,3)
 as.matrix(psdistCal)[1:3,1:3]
-fmCal1 <- fullmatch(psdist+caliper(psdist,3),data=meddat,tol=.00001)
+```
+## Calipers
+
+The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we disallow comparisons which differ by more than 3 standard deviations on the propensity score.
+
+```{r}
+fmCal1 <- fullmatch(psdist+caliper(psdist,5),data=meddat,tol=.00001)
 summary(fmCal1,min.controls=0,max.controls=Inf)
+pmCal1 <- pairmatch(psdist+caliper(psdist,5),data=meddat, remove.unmatchables=TRUE)
 ```
 
 ## Calipers
 
-Another example: We may want to primarily match on mahalanobis distance but disallow any pairs with extreme propensity distance and/or extreme differences in baseline homicide rates. Is this "propensity score matching"? Not really. It highlights the idea that one creates a matched design using different tools and inputs, just like you would in any other research design task.
-
+Another example: We may want to primarily match on mahalanobis distance but disallow any pairs with extreme propensity distance and/or extreme differences in baseline homicide rates.
 ```{r}
 mhdist <- match_on(balfmla,data=meddat,method="rank_mahalanobis")
 tmp <- meddat$HomRate03
@@ -249,23 +260,368 @@ absdist[1:3,1:3]
 quantile(as.vector(absdist),seq(0,1,.1))
 distCal <- mhdist + caliper(psdist,3) + caliper(absdist,2)
 as.matrix(distCal)[1:3,1:3]
+```
+
+## Calipers
+
+```{r}
 fmCal2 <- fullmatch(distCal,data=meddat,tol=.00001)
 summary(fmCal2,min.controls=0,max.controls=Inf)
 ```
 
 
+## Exact Matching
 
+We often have covariates that are categorical/nominal and on which we really care about strong balance. One approach to solve this problem is match **exactly** on one or more of such covariates. If `fullmatch` or `match_on` is going slow, this is also an approach to speed things up.
+
+```{r echo=FALSE}
+meddat$classLowHi <- ifelse(meddat$nhClass %in% c(2,3),"hi","lo")
 ```
 
-## Precision and matched set configurations.
+```{r}
+dist2 <- mhdist + exactMatch(nhTrt~classLowHi,data=meddat)
+## or mhdist <- match_on(balfmla,within=exactMatch(nhTrt~classLowHi,data=meddat),data=meddat,method="rank_mahalanobis")
+## or fmEx1 <- fullmatch(update(balfmla,.~.+strata(classLowHi)),data=meddat,method="rank_mahalanobis")
+fmEx1 <- fullmatch(dist2,data=meddat,tol=.00001)
+summary(fmEx1,min.controls=0,max.controls=Inf)
+print(fmEx1,grouped=T)
+```
+## Exact Matching
 
-Certain configurations of matched sets provide more statistical power (for testing) / more precision (for estimation) than others. The `min.controls` and `max.controls` and/or the command `pairmatch` control the sizes of the sets.
+\scriptsize
+```{r}
+ftable(Class=meddat$classLowHi,Trt=meddat$nhTrt,fmEx1,col.vars=c("Class","Trt"))
+```
+
+# Matching modes
+
+##  Optimal (communitarian) vs greedy (individualistic) matching
+
+\begin{center}
+    \begin{tabular}{l|cccc}
+      & \multicolumn{4}{c}{Illustrator} \\
+Writer & Mo& John & Terry  & Pat \\ \hline
+Ben    & 0 & 1 & 1 & 10 \\
+Jake   & 10& 0 & 10 & 10 \\
+Tom    &  1& 1 & $\infty$ & $\infty$ \\ \hline
+    \end{tabular}
+  \end{center}
+
+```{r}
+bookmat <- matrix(c(0,1,1,10,10,0,10,10,1,1,Inf,Inf),nrow=3,byrow=TRUE)
+dimnames(bookmat) <- list(c("Ben","Jake","Tom"),c("Mo","John","Terry","Pat"))
+## fullmatch(bookmat)
+```
+\note{
+*Greedy:* Ben-Mo (0) , Jake-John (0), Tom-?
+*Optimal:* Ben-Terry (1), Jake-John (0), Tom-Mo (1)
+}
+
+## Matching with and without replacement
+*Example*: Costs of nuclear plants. When expanding, is it cheaper to build on the site of an existing plant?
+
+\begin{columns}
+\column{.5\textwidth}
+\begin{center}
+  \igrphx[width=.5\textwidth]{coxSnell}
+\end{center}
+
+\column{.5\textwidth}
+  \igrphx[width=\textwidth]{Nuclear_plant_at_Grafenrheinfeld}
+\end{columns}
+
+\note{This is a \textit{prospective} design.  Explain.
+
+(Presentation version has Nuclear plant image on 2nd overlay)
+}
+
+
+## New vs refurbished nuclear plants
+\note{
+  \begin{itemize}
+  \item This is what many understand by matching.  [Greedy pair match follows.]
+  \item Sometimes matching means  ``with-replacement'' matching. We'll permit that too, but in a structured way, and keeping track of how many replacements. 
+  \item Why keep track of the replacements?  --B/c they affect standard errors of the matched comparison.  (``Effective sample size'' to be introduced a few slides later.)
+  \end{itemize}
+}
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:53 2013
+\begin{tabular}{lr}
+  \hline
+ & capacity \\ 
+  \hline
+A & {660} {\mlpnode{NA}} \\ 
+  B & {660} {\mlpnode{NB}} \\ 
+  C & {420} {\mlpnode{NC}} \\ 
+  D & {130} {\mlpnode{ND}} \\ 
+  E & {650} {\mlpnode{NE}} \\ 
+  F & {430} {\mlpnode{NF}} \\ 
+  G & {420} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+{\footnotesize  "capacity" is net capacity of the power plant, in MWe above
+400.
+
+\only<9->{\alert{This is matching "without replacement."}}
+\only<10->{\alert{Contrast with matching "with replacement."}}
+}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:53 2013
+\begin{tabular}{lr}
+  \hline
+ & capacity \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & 290 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & 660 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & 660 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & 110 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & 420 \\ 
+  {\mlpnode{NM}\mbox{}} {M} &  60 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & 390 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & 160 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & 390 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & 130 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 650 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 450 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & 380 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 440 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 690 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & 510 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 390 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 140 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 730 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+
+
+\begin{tikzpicture}[overlay]
+  \path[draw,gray]<2-> (NA) edge (NI);
+ \path[draw,gray]<3-> (NB) edge (NJ);
+ \path[draw,gray]<4-> (NC) edge (NL);
+ \path[draw,gray]<5-> (ND) edge (NQ);
+ \path[draw,gray]<6-> (NE) edge (NR);
+ \path[draw,gray]<7-> (NF) edge (NU);
+ \path[draw,gray]<8-> (NG) edge (NN);
+ \end{tikzpicture}\only<10>{
+\begin{tikzpicture}[overlay]
+  \path[draw,red] (NA) edge [out=0, in=-180] (NI);
+ \path[draw,red] (NB) edge [out=0, in=-180] (NJ);
+ \path[draw,red] (NC) edge [out=0, in=-180] (NL);
+ \path[draw,red] (NF) edge [out=0, in=-180] (NL);
+ \path[draw,red] (NG) edge [out=0, in=-180] (NL);
+ \path[draw,red] (ND) edge [out=0, in=-180] (NQ);
+ \path[draw,red] (NE) edge [out=0, in=-180] (NR);
+ \end{tikzpicture}}
+
+
+
+## Role of the matching algorithm: greedy matching
+
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:57 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\ 
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\ 
+  C & -0.4 & {0} {\mlpnode{NC}} \\ 
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\ 
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\ 
+  F & 2.2 & {0} {\mlpnode{NF}} \\ 
+  G & 1.3 & {0} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+\bigskip
+{\footnotesize Here, ``date'' is \emph{rank of} date of
+construction, in years after 1965, and  ``capacity'' is
+\emph{rank of} net capacity of the power plant, in MWe
+above 400.}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:57 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+
+\begin{tikzpicture}[overlay]
+  \path[draw,red]<2-> (NA) edge (NI);
+ \path[draw,red]<3-> (NA) edge (NJ);
+ \path[draw,red]<4-> (NB) edge (NR);
+ \path[draw,red]<5-> (NB) edge (NW);
+ \path[draw,red]<6-> (NC) edge (NN);
+ \path[draw,red]<7-> (NC) edge (NT);
+ \path[draw,red]<8-> (ND) edge (NO);
+ \path[draw,red]<9-> (ND) edge (NQ);
+ \path[draw,red]<10-> (NE) edge (NS);
+ \path[draw,red]<11-> (NE) edge (NV);
+ \path[draw,red]<12-> (NF) edge (NU);
+ \path[draw,red]<13-> (NF) edge (NX);
+ \path[draw,red]<14-> (NG) edge (NM);
+ \path[draw,red]<15-> (NG) edge (NZ);
+ \end{tikzpicture}
+
+## Optimal Matching
+
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:57 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\ 
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\ 
+  C & -0.4 & {0} {\mlpnode{NC}} \\ 
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\ 
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\ 
+  F & 2.2 & {0} {\mlpnode{NF}} \\ 
+  G & 1.3 & {0} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+
+\textcolor{blue}{Optimal vs. Greedy matching}
+\bigskip
+
+{\footnotesize By evaluating potential matches all together rather than
+  sequentially, optimal matching (\textcolor{blue}{blue lines}) reduces
+  the mean matched distance from 1.17 to
+ 0.56.}
+
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:57 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+
+\begin{tikzpicture}[overlay]
+  \path[draw,red] (NA) edge (NI);
+ \path[draw,red] (NA) edge (NJ);
+ \path[draw,red] (NB) edge (NR);
+ \path[draw,red] (NB) edge (NW);
+ \path[draw,red] (NC) edge (NN);
+ \path[draw,red] (NC) edge (NT);
+ \path[draw,red] (ND) edge (NO);
+ \path[draw,red] (ND) edge (NQ);
+ \path[draw,red] (NE) edge (NS);
+ \path[draw,red] (NE) edge (NV);
+ \path[draw,red] (NF) edge (NU);
+ \path[draw,red] (NF) edge (NX);
+ \path[draw,red] (NG) edge (NM);
+ \path[draw,red] (NG) edge (NZ);
+ \end{tikzpicture}\begin{tikzpicture}[overlay]
+  \path[draw,blue] (NA) edge [out=0, in=-180] (NI);
+ \path[draw,blue] (NA) edge [out=0, in=-180] (NJ);
+ \path[draw,blue] (NB) edge [out=0, in=-180] (NL);
+ \path[draw,blue] (NB) edge [out=0, in=-180] (NW);
+ \path[draw,blue] (NC) edge [out=0, in=-180] (NN);
+ \path[draw,blue] (NC) edge [out=0, in=-180] (NT);
+ \path[draw,blue] (ND) edge [out=0, in=-180] (NO);
+ \path[draw,blue] (ND) edge [out=0, in=-180] (NQ);
+ \path[draw,blue] (NE) edge [out=0, in=-180] (NR);
+ \path[draw,blue] (NE) edge [out=0, in=-180] (NV);
+ \path[draw,blue] (NF) edge [out=0, in=-180] (NY);
+ \path[draw,blue] (NF) edge [out=0, in=-180] (NZ);
+ \path[draw,blue] (NG) edge [out=0, in=-180] (NU);
+ \path[draw,blue] (NG) edge [out=0, in=-180] (NX);
+ \end{tikzpicture}
+
+## Estimation and Testing after Matching.
 
 ## Summary:
 
-What do you think?
+Next:
+ - Estimation and Testing after Matching (and then Sensitivity Analysis)
+ - When to stop matching? (When is balance good enough?)
+ - How to think about information and effective sample size.
+
+Summary:
+ - Greedy matching can either leave out potentially matchable units and/or produce worse overall matched set configurations \autocite{hans:04,rose:char:1991}.
 
 
-# Anything Else?
+## Anything Else?
 
 ## References
