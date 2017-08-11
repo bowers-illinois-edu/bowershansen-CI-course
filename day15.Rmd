@@ -489,12 +489,16 @@ matchAndBalance<-function(x,balfmla,distmat,thedata){
 ## Balance Search using SIUP
 
 
-```{r cache=TRUE}
+```{r cache=FALSE}
 ## Start with the the largest distance between a treated and control unit.
 maxpsdist<-max(as.vector(psdist))
 minpsdist<-min(as.vector(psdist))
+psdistsum <- summary(psdist)
+quantile(as.vector(psdist),seq(0,1,.1))
+```
 
-results1<-sapply(seq(maxpsdist,minpsdist,length=100),function(thecal){
+```{r cache=TRUE}
+results1<-sapply(seq(3,minpsdist,length=100),function(thecal){
                    matchAndBalance(thecal,balfmla,distmat=psdist,thedata=meddat)})
 
 apply(results1,1,summary)
@@ -505,7 +509,7 @@ apply(results1[,results1["d2p",]>.8],1,summary)
 ```{r echo=FALSE}
 ## Reorder the data from low to high to make cummax work better
 results1 <- data.frame(t(results1))
-results1o <- results1[order(results1$x),]
+results1o <- results1[order(results1$x,decreasing=TRUE),]
 results1o$maxp <- cummax(results1o$d2p)
 ```
 
@@ -520,7 +524,7 @@ study).
 
 ```{r echo=FALSE, out.width=".8\\textwidth"}
 with(results1o,{
-       plot(x,d2p,xlab="PS Caliper",ylab="d2 p")
+       plot(x,d2p,xlab="PS Caliper",ylab="d2 p",cex=.6)
        points(x,maxp,col="blue")
 })
 ```
@@ -543,16 +547,16 @@ with(results1o,{
 
 ## Design Search for both precision and balance
 
-Here I demonstrate searching for two calipers, and requiring no more than 1 treated unit per set (to maximize effective sample size).
+Here I demonstrate searching for two calipers.
 
-```{r gridsearch, cache=TRUE}
+```{r gridsearch, cache=FALSE}
 
 findbalance<-function(x){
 	##message(paste(x,collapse=" "))
-	thefm<-try(fullmatch(psdist+caliper(mhdist,x[2])+caliper(psdist,x[1]),data=meddat,tol=.00001,min.controls=1))
+	thefm<-try(fullmatch(psdist+caliper(mhdist,x[2])+caliper(psdist,x[1]),data=meddat,tol=.00001))
 
 	if(inherits(thefm,"try-error")){
-		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
+		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA,effn=NA))
 	}
 
 	thexb<-try(balanceTest(update(balfmla,.~.+strata(thefm)),
@@ -560,7 +564,7 @@ findbalance<-function(x){
 			    report=c("chisquare.test","p.values")),silent=TRUE)
 
 	if(inherits(thexb,"try-error")){
-		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
+		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA,effn=NA))
 	}
 
 	maxHomRate03diff<-max(unlist(matched.distances(thefm,distance=absdist)))
@@ -604,18 +608,26 @@ system.time({
 
 ```
 
+
+## Which matched design might we prefer?
+
 Now, how might we interpret the results of this search for matched designs?
 Here are a few ideas.
 
 ```{r }
+if(class(results)=="list"){
 resAnyNA<-sapply(results,function(x){ any(is.na(x)) })
 resNoNA<-simplify2array(results[!resAnyNA])
+} else {
+resAnyNA<-apply(results,2,function(x){ any(is.na(x)) })
+resNoNA<-simplify2array(results[,!resAnyNA])
+}
 apply(resNoNA,1,summary)
-
-highbalres<-resNoNA[,resNoNA["d2p",]>.3]
-
+highbalres<-resNoNA[,resNoNA["d2p",]>.5]
 apply(highbalres,1,summary)
 ```
+
+## Which matched design might we prefer?
 
 ```{r eval=TRUE, echo=FALSE}
 # color points more dark for smaller differences
@@ -627,34 +639,20 @@ plot(resNoNA["d2p",],resNoNA["n",],
 ## identify(resNoNA["d2p",],resNoNA["n",],labels=round(resNoNA["maxHR03diff",],3),cex=.7)
 ```
 
-## Which matched design might we prefer?
-
-```{r eval=TRUE,echo=FALSE}
-interestingDesigns<- (resNoNA["d2p",]>.1 & resNoNA["n",]>=10 &
-		      resNoNA["maxHR03diff",]<=2 & resNoNA["effn",] > 6)
+```{r eval=TRUE,echo=TRUE}
+interestingDesigns<- (resNoNA["d2p",]>.5 & resNoNA["n",]>=10 &
+		      resNoNA["maxHR03diff",]<=1 & resNoNA["effn",] > 6)
 candDesigns <- resNoNA[,interestingDesigns]
 str(candDesigns)
 apply(candDesigns,1,summary)
 candDesigns<-candDesigns[,order(candDesigns["d2p",],decreasing=TRUE)]
-## plot(candDesigns["d2p",],candDesigns["n",],
-##      col=gray(1- ( candDesigns["maxHR03diff",]/max(candDesigns["maxHR03diff",]))),
-##      pch=19)
-##
-## ##identify(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7)
-## text(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7,
-##      pos=1)
-##
-##
-## mymatchSol<-candDesigns[,candDesigns["maxHR03diff",]<1 & candDesigns["n",]==43]
-## mymatchSol[,order(mymatchSol["d2p",])]
-##
 ```
 
 ## How would we use this information in \texttt{fullmatch}?
 
 ```{r }
 fm4<-fullmatch(psdist+caliper(psdist,candDesigns["x1",2])
-	       +caliper(mhdist,candDesigns["x2",2]),data=meddat,tol=.00001,min.controls=1)
+	       +caliper(mhdist,candDesigns["x2",2]),data=meddat,tol=.00001)
 
 summary(fm4,min.controls=0,max.controls=Inf)
 
@@ -662,30 +660,22 @@ meddat$fm4<-NULL ## this line exists to prevent confusion with new fm4 objects
 meddat[names(fm4),"fm4"]<-fm4
 
 xb3<-balanceTest(update(balfmla,.~.+strata(fm4)),
-	      data=meddat,
-	      report=c("std.diffs","z.scores","adj.means",
-		       "adj.mean.diffs", "chisquare.test","p.values"))
+	      data=meddat, report=c("all"))
 xb3$overall[,1:3]
 zapsmall(xb3$results["HomRate03",,])
-
-## save(fm4,file="fm4.rda")
 ```
 
 ## Another approach: more fine tuned optimization
 
-```{r eval=TRUE,cache=TRUE}
-
+```{r eval=TRUE,cache=FALSE}
 matchAndBalance2<-function(x,distmat,alpha){
 	#x is a caliper widths
 	if(x>max(as.vector(distmat)) | x<min(as.vector(distmat))){ return(99999) }
-
 	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
-
 	thexb<-xBalance(balfmla,
 			strata=data.frame(thefm=thefm),
 			data=meddat,
 			report=c("chisquare.test"))
-
 	return(thexb$overall[,"p.value"])
 }
 
@@ -697,13 +687,15 @@ maxpfn<-function(x,distmat,alpha){
 	return(abs( max(p1,p2) - alpha) )
 }
 
-library(Rsolnp)
-
 maxpfn(c(minpsdist,minpsdist+1),distmat=psdist,alpha=.25)
-
 quantile(as.vector(psdist),seq(0,1,.1))
 sort(as.vector(psdist))[1:10]
+```
 
+## Another approach: more fine tuned optimization
+
+```{r solnp, cache=TRUE}
+library(Rsolnp)
 ### This takes a long time
 results3<-gosolnp(fun=maxpfn,
 		ineqfun=function(x,distmat,alpha){ x[2] - x[1] },
@@ -717,13 +709,15 @@ results3<-gosolnp(fun=maxpfn,
 		rseed=12345,
 		control=list(trace=1)
 		)
-
-maxpfn(results3$pars,distmat=psdist,alpha=.25)
-matchAndBalance2(results3$pars[1],distmat=psdist,alpha=.25)
-matchAndBalance(results3$par[1],balfmla=balfmla,distmat=psdist)
 ```
 
+## Another approach: more fine tuned optimization
 
+```{r}
+maxpfn(results3$pars,distmat=psdist,alpha=.25)
+matchAndBalance2(results3$pars[1],distmat=psdist,alpha=.25)
+matchAndBalance(results3$par[1],balfmla=balfmla,distmat=psdist,thedata=meddat)
+```
 
 # Estimation and Testing
 
