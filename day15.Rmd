@@ -895,7 +895,11 @@ coef(lm0)["nhTrt"]
 ## But, in this case, the HC2 Standard Error is undefined because some of our blocks have too few observations.
 coeftest(lm0,vcov=vcovHC(lm0,type="HC2"))[1:2,]
 
-meddat <- meddat %>% group_by(fmMh) %>% mutate(trtprob=mean(nhTrt))
+## See Gerber and Green 4.5
+meddat <- meddat %>% group_by(fmMh) %>% mutate(trtprob=mean(nhTrt),
+                                               nbwt=nhTrt/trtprob + (1-nhTrt)/(1-trtprob),
+                                               hbwt= ( n()/nrow(meddat) )*(trtprob*(1-trtprob))
+                                               )
 meddat$Zf <- factor(meddat$trtprob)
 Z <- model.matrix(~Zf-1,data=meddat)
 ZminusZbar <- apply(Z,2,function(z){ z - mean(z) })
@@ -906,6 +910,10 @@ lm0a <- lm(lmfmlaZ,data=wrkdat)
 coef(lm0a)["nhTrt"]
 coeftest(lm0a,vcov=vcovHC(lm0a,type="HC2"))[1:2,]
 
+lm0b<-lm(HomRate08~nhTrt,data=meddat,weight=nbwt)
+coef(lm0b)["nhTrt"]
+
+coeftest(lm0b,vcov=vcovHC(lm0b,type="HC2"))[1:2,]
 
 ## The mean diff used as the observed value in the testing
 ## or from lm
@@ -921,7 +929,7 @@ In the design based framework, using the experiment as our analogy, we can use t
 library(lmtest)
 library(sandwich)
 source("http://jakebowers.org/ICPSR/confintHC.R")
-theci0 <- confint.HC(lm0,parm="nhTrt",thevcov=vcovHC(lm0,type="HC2"))
+theci0 <- confint.HC(lm0b,parm="nhTrt",thevcov=vcovHC(lm0b,type="HC2"))
 theci1 <- confint.HC(lm1,parm="nhTrt",thevcov=vcovHC(lm1,type="HC2"))
 
 ```
