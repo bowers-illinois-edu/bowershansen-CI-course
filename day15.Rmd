@@ -119,7 +119,7 @@ row.names(meddat) <- meddat$id
 options(show.signif.stars=FALSE)
 ```
 
-# Information
+# Matching structure and effective sample size
 
 ## Matching with a varying number of controls and full matching
 
@@ -160,8 +160,6 @@ A & -1.6 & {1.2} {\mlpnode{NA}} \\
 \bigskip
 \bigskip
 \bigskip
-{R code:
-}
 \end{minipage}
 \begin{minipage}[t]{2in}
 \begin{center}
@@ -217,8 +215,11 @@ New site\\
  \path[draw,gray] (NG) edge (NX);
  \path[draw,gray] (NG) edge (NY);
  \end{tikzpicture}
-\texttt{fullmatch(pr \textasciitilde\ date+cap, data=nuke.nopt, min.c=1)}\\
-\textit{or,} \texttt{full(pr \textasciitilde\ date+cap, data=nuke.nopt, min=1)}\\
+
+```{r}
+nuke.nopt <- subset(nuclearplants, pt == 0)
+fmnukeMC1<-fullmatch(pr~date+cap,data=nuke.nopt,min.controls=1)
+```
 
 
 \note{
@@ -228,22 +229,8 @@ Discuss effective sample size.
 }
 
 
+
 ## Matching so as to maximize effective sample size
-
-\note{
-\begin{semiverbatim}
-stratumStructure( fullmatch(..., min=2, max=3) )
-
-stratum treatment:control ratios
-
-1:2 1:3
-
-2   5
-\end{semiverbatim}
-
-So effective s.s. for this match = $2 * 4/3 + 5* 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples. Mean of matched distances is 0.785. -- compare to 0.29 for pairs, 0.57 for triples.
-
-Note variance/bias tradeoff.  }
 
 \begin{minipage}[t]{2in}
 \begin{center}
@@ -269,8 +256,6 @@ A & -1.6 & {1.2} {\mlpnode{NA}} \\
 \bigskip
 \bigskip
 \bigskip
-{R code:
-}
 \end{minipage}
 \begin{minipage}[t]{2in}
 \begin{center}
@@ -325,89 +310,57 @@ New site\\
  \path[draw,gray] (NG) edge (NP);
  \path[draw,gray] (NG) edge (NU);
  \path[draw,gray] (NG) edge (NX);
- \end{tikzpicture}\begin{semiverbatim}
-fullmatch(pr \textasciitilde\ date+cap, min=2, max=3, data=nuke.nopt)
-\end{semiverbatim}
+ \end{tikzpicture}
+```{r}
+fmnuke<-fullmatch(pr~date+cap, min=2, max=3, data=nuke.nopt)
+summary(fmnuke)
+```
+
+## Showing matches
+
+\centering
+```{r out.width=".9\\textwidth", echo=FALSE}
+library(igraph)
+blah1 <- outer(fmnuke,fmnuke,FUN=function(x,y){ as.numeric(x==y) })
+blah2 <- outer(fmnukeMC1,fmnukeMC1,FUN=function(x,y){ as.numeric(x==y) })
+par(mfrow=c(1,2))
+plot(graph_from_adjacency_matrix(blah1,mode="undirected",diag=FALSE),
+     vertex.color=c("white","green")[nuke.nopt$pr+1],main="Min C=2, Max C=3")
+plot(graph_from_adjacency_matrix(blah2,mode="undirected",diag=FALSE),
+     vertex.color=c("white","green")[nuke.nopt$pr+1],main="Min C=1, Max C=Inf")
+```
+
+## Matching so as to maximize effective sample size
+
+```{r}
+stratumStructure(fmnuke)
+effectiveSampleSize(fmnuke)
+```
+
+So effective sample size for this match = $2 * 4/3 + 5* 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples.
+
+```{r}
+nukemh <- match_on(pr~date+cap,data=nuke.nopt)
+mds <- matched.distances(fmnuke,nukemh)
+mean(unlist(mds))
+```
+
+Mean of matched distances is `r mean(unlist(mds))` --- compare to 0.29 for pairs, 0.57 for triples.
+
+Note variance/bias tradeoff. Covariate balance has to do with bias and extrapolation (i.e. confounding).
+
 
 ## Inspect distances after matching
 
 What kinds of distances remain after matching?
 
-```{r eval=FALSE}
-psdistances <- matched.distances(fmCal1,distance=psdist)
-str(psdistances)
-quantile(unlist(psdistances))
+```{r}
+str(mds)
+quantile(unlist(mds))
 ```
-# Matching structure and effective sample size
 
-\begin{frame}[fragile]
-\frametitle{Evaluating matches with different structures}
 
-Here are two optimal matches from the same sample.  How do they compare?
-
-  \begin{columns}
-    \column{.5\linewidth}%
-{
-  \begin{center}
-{\usebeamercolor[fg]{titlelike}    Pair matching: }
-  \end{center}
-{\footnotesize
-    \begin{semiverbatim}
-> pm = pairmatch(my.ppty)
-> summary(pm)
-Structure of matched sets:
- 1:1  0:1
- 322 4103
-Effective Sample Size:  322
-(equivalent number of matched pairs).
-
-sum(matched.distances)=16.9
-(within 0.0464 of optimum).
-Percentiles of matched distances:
-    0%    50%    95%   100%
-0.0000 0.0024 0.2710 0.6400
-    \end{semiverbatim}
-}
-}
-  \column{.5\linewidth}%
-{
-  \begin{center}
-    {\usebeamercolor[fg]{titlelike} Matched triples:}
-  \end{center}
-{\footnotesize
-\begin{semiverbatim}
-> tm = pairmatch(my.ppty, 2)
-> summary(tm)
-Structure of matched sets:
- 1:2  0:1
- 322 3781
-Effective Sample Size:  429
-(equivalent number of matched pairs).
-
-sum(matched.distances)=85.1
-(within {0.458} of optimum).
-Percentiles of matched distances:
-   0%   50%   95%  100%
-0.000 0.020 0.609 1.020
-\end{semiverbatim}
-}
-}
-\end{columns}
-
-\note{
-  \begin{itemize}%[<+-| alert@+>]
-  \item With \atob{1}{2} matching rather than \atob{1}{1} matching, harder to get good matches.
-  \item On the other hand, using more data may help with variance.
-  \item Summary info helps to manage the bias-variance tradeoff.
-  \item \textsc{Don't linger} on effective s.s. issue --- instead
-    point to my PWH festschrift paper.  (If there's time/interest, there's more detail on it on the next slide.)
-  \item covariate balance, not indicated here (yet), also speaks to bias --- more on this presently.
-   \end{itemize}
-}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Tracking effective sample size}
+#  Tracking effective sample size
 
 In 2-sample comparisons, total sample size can be a misleading as a measure of information content.  Example:
 \begin{itemize}
@@ -436,8 +389,6 @@ So 20 matched pairs is comparable to 15 matched triples.
 
 (Correspondingly, h-mean of $n_{t},n_{c}$ for a pair is 1, while for a triple it's $[(1/1 + 1/2)/2]^{-1}=4/3$.)
 }
-
-\end{frame}
 
 \note{
   {} [\textsc{Skip unless specifically requested}, instead referring
@@ -754,17 +705,18 @@ apply(highbalres,1,summary)
 ```{r eval=TRUE, echo=FALSE}
 # color points more dark for smaller differences
 plot(resNoNA["d2p",],resNoNA["n",],
+     xlab='d2p',ylab='n',
      col=gray(1- ( resNoNA["maxHR03diff",]/max(resNoNA["maxHR03diff",]))),
      pch=19)
 
 ## identify(resNoNA["d2p",],resNoNA["n",],labels=round(resNoNA["maxHR03diff",],3),cex=.7)
 ```
 
-Which matched design might we prefer? Here is one idea
+## Which matched design might we prefer?
 
-```{r eval=FALSE}
-interestingDesigns<- (resNoNA["d2p",]>.6 & resNoNA["n",]>=40 &
-		      resNoNA["maxHR03diff",]<=1 & resNoNA["effn",] > 10)
+```{r eval=TRUE,echo=FALSE}
+interestingDesigns<- (resNoNA["d2p",]>.1 & resNoNA["n",]>=10 &
+		      resNoNA["maxHR03diff",]<=2 & resNoNA["effn",] > 6)
 candDesigns <- resNoNA[,interestingDesigns]
 str(candDesigns)
 apply(candDesigns,1,summary)
@@ -783,35 +735,33 @@ candDesigns<-candDesigns[,order(candDesigns["d2p",],decreasing=TRUE)]
 ##
 ```
 
-How would we use this information in \texttt{fullmatch}?
+## How would we use this information in \texttt{fullmatch}?
 
 ```{r }
-fm4<-fullmatch(mhdist+caliper(mhdist,candDesigns["x1",2])
-	       +caliper(mhdist,candDesigns["x3",2]),data=meddat,tol=.00001,min.controls=1)
+fm4<-fullmatch(psdist+caliper(psdist,candDesigns["x1",2])
+	       +caliper(mhdist,candDesigns["x2",2]),data=meddat,tol=.00001,min.controls=1)
 
 summary(fm4,min.controls=0,max.controls=Inf)
 
 meddat$fm4<-NULL ## this line exists to prevent confusion with new fm4 objects
 meddat[names(fm4),"fm4"]<-fm4
 
-xb3<-xBalance(update(balfmla,.~.+pScore2),
-	      strata=list(raw=NULL,fm4=~fm4),
+xb3<-balanceTest(update(balfmla,.~.+strata(fm4)),
 	      data=meddat,
 	      report=c("std.diffs","z.scores","adj.means",
 		       "adj.mean.diffs", "chisquare.test","p.values"))
-xb3$overall
+xb3$overall[,1:3]
 zapsmall(xb3$results["HomRate03",,])
-zapsmall(xb3$results["pScore2",,])
 
-save(fm4,file="fm4.rda")
+## save(fm4,file="fm4.rda")
 ```
 
+## Another approach: more fine tuned optimization
 
-```{r eval=FALSE}
+```{r eval=TRUE,cache=TRUE}
 
 matchAndBalance2<-function(x,distmat,alpha){
 	#x is a caliper widths
-	## message(paste(x,collapse=" "))
 	if(x>max(as.vector(distmat)) | x<min(as.vector(distmat))){ return(99999) }
 
 	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
@@ -834,10 +784,10 @@ maxpfn<-function(x,distmat,alpha){
 
 library(Rsolnp)
 
-maxpfn(c(minpsdist,minpsdist+1),distmat=mhdist,alpha=.25)
+maxpfn(c(minpsdist,minpsdist+1),distmat=psdist,alpha=.25)
 
-quantile(as.vector(mhdist),seq(0,1,.1))
-sort(as.vector(mhdist))[1:10]
+quantile(as.vector(psdist),seq(0,1,.1))
+sort(as.vector(psdist))[1:10]
 
 ### This takes a long time
 results3<-gosolnp(fun=maxpfn,
@@ -847,16 +797,15 @@ results3<-gosolnp(fun=maxpfn,
 		LB=c(minpsdist,minpsdist+.01),
 		UB=c(maxpsdist-.01,maxpsdist),
 		n.restarts=2,
-		alpha=.25,distmat=mhdist,
+		alpha=.25,distmat=psdist,
 		n.sim=500,
 		rseed=12345,
 		control=list(trace=1)
 		)
 
-
-maxpfn(results3$pars,distmat=mhdist,alpha=.25)
-matchAndBalance2(results3$pars[1],distmat=mhdist,alpha=.25)
-matchAndBalance(results3$par[1],distmat=mhdist)
+maxpfn(results3$pars,distmat=psdist,alpha=.25)
+matchAndBalance2(results3$pars[1],distmat=psdist,alpha=.25)
+matchAndBalance(results3$par[1],balfmla=balfmla,distmat=psdist)
 ```
 
 
@@ -865,17 +814,8 @@ matchAndBalance(results3$par[1],distmat=mhdist)
 
 ## Overview: Estimate and Test "as if block-randomized"
 
-This means we have to *define* our estimands in weighted terms (because different blocks provide different amounts of information). And our null reference distribution arise from block-randomization.
+This means we have to *define* our estimands in weighted terms (because different blocks provide different amounts of information). And our null reference distribution arise from block-randomization. One version weights by size of set (often just called the ATE), another by number of treated (the ATT), another by the precision of the block-level treatment effect estimate.
 
-Imagine, for example we had this matched design:
-
-```{r}
-mhdist <- match_on(nhTrt ~ nhPopD + nhAboveHS + HomRate03,data=meddat)
-fmMh <- fullmatch(mhdist,data=meddat,tol=.00001)
-summary(fmMh,min.controls=0,max.controls=Inf)
-```
-
-We could define the the ATE using the 
 
 
 ```{r}
