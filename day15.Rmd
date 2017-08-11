@@ -586,9 +586,13 @@ balfmla <- nhTrt ~ nhPopD + nhAboveHS + HomRate03
 mhdist <- match_on(balfmla,data=meddat)
 psmod <- arm::bayesglm(balfmla,data=meddat,family=binomial(link="logit"))
 psdist <- match_on(psmod,data=meddat)
+tmp <- meddat$HomRate03
+names(tmp) <- rownames(meddat)
+absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
 
 summary(psdist)
 summary(mhdist)
+summary(absdist)
 
 fmMh <- fullmatch(mhdist,data=meddat,tol=.00001)
 summary(fmMh,min.controls=0,max.controls=Inf)
@@ -629,18 +633,17 @@ minpsdist<-min(as.vector(psdist))
 maxmhdist<-max(as.vector(mhdist))
 minmhdist<-min(as.vector(mhdist))
 
-results1<-sapply(seq(maxmhdist,minmhdist,length=100),function(thecal){
-                   matchAndBalance(thecal,balfmla,distmat=mhdist)})
+results1<-sapply(seq(maxpsdist,minpsdist,length=100),function(thecal){
+                   matchAndBalance(thecal,balfmla,distmat=psdist)})
 
 apply(results1,1,summary)
 
-results1[,results1["d2p",]>.2]
-
+results1[,results1["d2p",]>.8]
 ```
 
 Which caliper would we choose? Now, the p-values are not strictly ordered (as
 we can see here), but the procedure actually keeps the \textbf{maximum}
-p-value of the preceding tests. 
+p-value of the preceding tests.
 
 ```{r }
 ## Reorder the data from low to high to make cummax work better
@@ -656,8 +659,11 @@ against the null that our design is like a well randomized block randomized
 study).
 
 
-```{r eval=FALSE}
-with(results1,{plot(x,d2p);points(x,maxp,col="blue")})
+```{r echo=FALSE}
+with(results1,{
+       plot(x,d2p)
+       points(x,maxp,col="blue")
+})
 ```
 
 
@@ -679,52 +685,50 @@ with(results1,{plot(x,d2p);points(x,maxp,col="blue")})
 
 findbalance<-function(x){
 	##message(paste(x,collapse=" "))
-	thefm<-try(fullmatch(mhdist+caliper(mhdist,x[1])+caliper(psdist,x[3]),data=meddat,tol=.00001,min.controls=1))
+	thefm<-try(fullmatch(psdist+caliper(mhdist,x[2])+caliper(psdist,x[1]),data=meddat,tol=.00001,min.controls=1))
 
 	if(inherits(thefm,"try-error")){
 		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
 	}
 
-	thexb<-try(xBalance(update(balfmla,.~.+pScore2),
-			    strata=data.frame(thefm=thefm),
-			    data=meddat,
-			    report=c("chisquare.test","p.values")))
+	thexb<-try(balanceTest(update(balfmla,.~.+strata(thefm)),
+			    data=cbind(meddat,thefm),
+			    report=c("chisquare.test","p.values")),silent=TRUE)
 
 	if(inherits(thexb,"try-error")){
 		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
 	}
 
-	HomRate03diff<-sapply(split(meddat[!is.na(thefm),c("HomRate03","nhTrt")],thefm[!is.na(thefm)]),
-			      function(dat){ with(dat,abs(
-							  mean(HomRate03[nhTrt==1])-mean(HomRate03[nhTrt==0])))})
-	maxHomRate03diff<-max(HomRate03diff)
+	maxHomRate03diff<-max(unlist(matched.distances(thefm,distance=absdist)))
 
-	return(c(x=x,d2p=thexb$overall[,"p.value"],maxHR03diff=maxHomRate03diff,n=sum(!is.na(thefm)),
-		 effn=summary(thefm)$effective.sample.size,
-		 psp=thexb$results["pScore2","p",]))
+	return(c(x=x,d2p=thexb$overall["thefm","p.value"],
+           maxHR03diff=maxHomRate03diff,
+           n=sum(!is.na(thefm)),
+           effn=summary(thefm)$effective.sample.size))
+
 }
 
+```
 
+```{r echo=FALSE, cache=TRUE}
 ## Test the function
-## findbalance(c(3,3,64))
+## findbalance(c(3,3))
 ## Don't worry about errors for certain combinations of parameters
 set.seed(123455)
 system.time({
-	results<-replicate(5000,findbalance(c(runif(1,minpsdist,maxpsdist),
-					      runif(1,minAbsDist,maxAbsDist),
+	results<-replicate(1000,findbalance(c(runif(1,minpsdist,maxpsdist),
 					      runif(1,minmhdist,maxmhdist))))
 }
 )
 
 ```
 
-```{r eval=FALSE}
+```{r eval=FALSE, echo=FALSE}
 ## If you have a mac or linux machine you can speed this up:
 library(parallel)
 system.time({
 	resultsList<-mclapply(1:5000,function(i){
 				      findbalance(c(runif(1,minpsdist,maxpsdist),
-						    runif(1,minAbsDist,maxAbsDist),
 						    runif(1,minmhdist,maxmhdist)))},
 			      mc.cores=detectCores())
 	resultsListNA<-sapply(resultsList,function(x){ any(is.na(x)) })
@@ -738,17 +742,16 @@ Now, how might we interpret the results of this search for matched designs?
 Here are a few ideas.
 
 ```{r }
-
 resAnyNA<-sapply(results,function(x){ any(is.na(x)) })
 resNoNA<-simplify2array(results[!resAnyNA])
 apply(resNoNA,1,summary)
 
-highbalres<-resNoNA[,resNoNA["d2p",]>.5]
+highbalres<-resNoNA[,resNoNA["d2p",]>.3]
 
 apply(highbalres,1,summary)
 ```
 
-```{r eval=FALSE}
+```{r eval=TRUE, echo=FALSE}
 # color points more dark for smaller differences
 plot(resNoNA["d2p",],resNoNA["n",],
      col=gray(1- ( resNoNA["maxHR03diff",]/max(resNoNA["maxHR03diff",]))),
@@ -759,7 +762,7 @@ plot(resNoNA["d2p",],resNoNA["n",],
 
 Which matched design might we prefer? Here is one idea
 
-```{r }
+```{r eval=FALSE}
 interestingDesigns<- (resNoNA["d2p",]>.6 & resNoNA["n",]>=40 &
 		      resNoNA["maxHR03diff",]<=1 & resNoNA["effn",] > 10)
 candDesigns <- resNoNA[,interestingDesigns]
