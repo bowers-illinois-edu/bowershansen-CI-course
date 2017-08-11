@@ -1,0 +1,945 @@
+---
+title: Information, Balance, Estimation, Testing
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2017 Session 2
+bibliography:
+ - refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before)
+    return(options$size)
+})
+
+knit_hooks$set(plotdefault = function(before, options, envir) {
+    if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
+})
+
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='\\scriptsize',
+  out.width='.8\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA,
+  mysize=TRUE,
+  plotdefault=TRUE)
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(digits=4,
+	scipen=8,
+	width=132
+	)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+```
+
+
+```{r eval=FALSE, echo=FALSE,include=FALSE}
+## Having downloaded optmatch from Box OR http://jakebowers.org/ICPSR for mac (tgz) or windows (zip)
+## For Mac
+## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.tgz', repos=NULL),'pre')
+## For Windows
+## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.zip', repos=NULL),'pre')
+```
+
+```{r eval=FALSE, echo=FALSE}
+## Or if you have all of the required libraries (like fortran and c++) for compilation use
+with_libpaths('./lib', install_github("markmfredrickson/optmatch"), 'pre')
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(chemometrics) ## for the nice Mahalanobis ellipse plot
+library(RItools,lib.loc="./lib")
+library(optmatch,lib.loc="./lib")
+```
+
+## Today
+
+\begin{enumerate}
+\item Agenda: Estimation and Testing after matching; Plus more on  Navigating implementation tradeoffs in matching: Information and blocked designs (some blockings have more information about treatment effects than others); Balance tests and the Sequential Intersection Union Principle
+\item Reading for this week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{ho:etal:07}
+\item Questions arising from the reading or assignments or life?
+\item Next week: Sensitivity Analysis; Non-bipartite matching (matching where the treatment variable not binary).
+\end{enumerate}
+
+
+```{r loaddat, echo=FALSE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat$id <- row.names(meddat)
+meddat<- mutate(meddat, HomRate03=(HomCount2003/Pop2003)*1000,
+                HomRate08=(HomCount2008/Pop2008)*1000)
+## mutate strips off row names
+row.names(meddat) <- meddat$id
+options(show.signif.stars=FALSE)
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(chemometrics)
+library(RItools,lib.loc="./lib")
+library(optmatch,lib.loc="./lib")
+```
+
+# Information
+
+
+## Matching with a varying number of controls and full matching
+
+### Fixed vs flexible ratio matching:
+
+\begin{itemize}[<+->]
+\item Pair matching \& sample size
+\item Effective vs real sample size
+\item If we limit ourselves to fixed matching ratios, we gain in
+  simplicity but pay a price in sample size (effective \& real).
+\item How big a price?  Trying is the best way to find out.
+\end{itemize}
+
+
+## Matching with a varying number of controls
+
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\
+  C & -0.4 & {0} {\mlpnode{NC}} \\
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\
+  F & 2.2 & {0} {\mlpnode{NF}} \\
+  G & 1.3 & {0} {\mlpnode{NG}} \\
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+{R code:
+}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+\begin{tikzpicture}[overlay]
+  \path[draw,gray] (NA) edge (NI);
+ \path[draw,gray] (NB) edge (NJ);
+ \path[draw,gray] (NC) edge (NH);
+ \path[draw,gray] (NC) edge (NL);
+ \path[draw,gray] (NC) edge (NN);
+ \path[draw,gray] (NC) edge (NP);
+ \path[draw,gray] (NC) edge (NS);
+ \path[draw,gray] (NC) edge (NT);
+ \path[draw,gray] (NC) edge (NW);
+ \path[draw,gray] (ND) edge (NK);
+ \path[draw,gray] (ND) edge (NM);
+ \path[draw,gray] (ND) edge (NO);
+ \path[draw,gray] (ND) edge (NQ);
+ \path[draw,gray] (NE) edge (NR);
+ \path[draw,gray] (NE) edge (NV);
+ \path[draw,gray] (NF) edge (NZ);
+ \path[draw,gray] (NG) edge (NU);
+ \path[draw,gray] (NG) edge (NX);
+ \path[draw,gray] (NG) edge (NY);
+ \end{tikzpicture}
+\texttt{fullmatch(pr \textasciitilde\ date+cap, data=nuke.nopt, min.c=1)}\\
+\textit{or,} \texttt{full(pr \textasciitilde\ date+cap, data=nuke.nopt, min=1)}\\
+
+
+\note{
+  Observe that now no control plants are left out.  (This is something you can change if you want.)
+
+Discuss effective sample size.
+
+After this slide, resume worksheet and finish \S~3.
+}
+
+
+# Matching so as to maximize effective sample size}
+\note{
+\begin{semiverbatim}
+stratumStructure( fullmatch(..., min=2, max=3) )
+
+stratum treatment:control ratios
+
+1:2 1:3
+
+2   5
+\end{semiverbatim}
+
+So effective s.s. for this match = $2 * 4/3 + 5* 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples. Mean of matched distances is 0.785. -- compare to 0.29 for pairs, 0.57 for triples.
+
+Note variance/bias tradeoff.  }
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\
+  C & -0.4 & {0} {\mlpnode{NC}} \\
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\
+  F & 2.2 & {0} {\mlpnode{NF}} \\
+  G & 1.3 & {0} {\mlpnode{NG}} \\
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+{R code:
+}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+\begin{tikzpicture}[overlay]
+  \path[draw,gray] (NA) edge (NI);
+ \path[draw,gray] (NA) edge (NJ);
+ \path[draw,gray] (NB) edge (NL);
+ \path[draw,gray] (NB) edge (NN);
+ \path[draw,gray] (NB) edge (NW);
+ \path[draw,gray] (NC) edge (NH);
+ \path[draw,gray] (NC) edge (NO);
+ \path[draw,gray] (NC) edge (NT);
+ \path[draw,gray] (ND) edge (NK);
+ \path[draw,gray] (ND) edge (NM);
+ \path[draw,gray] (ND) edge (NQ);
+ \path[draw,gray] (NE) edge (NR);
+ \path[draw,gray] (NE) edge (NS);
+ \path[draw,gray] (NE) edge (NV);
+ \path[draw,gray] (NF) edge (NY);
+ \path[draw,gray] (NF) edge (NZ);
+ \path[draw,gray] (NG) edge (NP);
+ \path[draw,gray] (NG) edge (NU);
+ \path[draw,gray] (NG) edge (NX);
+ \end{tikzpicture}\begin{semiverbatim}
+fullmatch(pr \textasciitilde\ date+cap, min=2, max=3, data=nuke.nopt)
+\end{semiverbatim}
+
+
+What kinds of distances remain after matching?
+
+```{r eval=FALSE}
+psdistances <- matched.distances(fmCal1,distance=psdist)
+str(psdistances)
+quantile(unlist(psdistances))
+```
+# Matching structure and effective sample size
+
+\begin{frame}[fragile]
+\frametitle{Evaluating matches with different structures}
+
+Here are two optimal matches from the same sample.  How do they compare?
+
+  \begin{columns}
+    \column{.5\linewidth}%
+{
+  \begin{center}
+{\usebeamercolor[fg]{titlelike}    Pair matching: }
+  \end{center}
+{\footnotesize
+    \begin{semiverbatim}
+> pm = pairmatch(my.ppty)
+> summary(pm)
+Structure of matched sets:
+ 1:1  0:1
+ 322 4103
+Effective Sample Size:  322
+(equivalent number of matched pairs).
+
+sum(matched.distances)=16.9
+(within 0.0464 of optimum).
+Percentiles of matched distances:
+    0%    50%    95%   100%
+0.0000 0.0024 0.2710 0.6400
+    \end{semiverbatim}
+}
+}
+  \column{.5\linewidth}%
+{
+  \begin{center}
+    {\usebeamercolor[fg]{titlelike} Matched triples:}
+  \end{center}
+{\footnotesize
+\begin{semiverbatim}
+> tm = pairmatch(my.ppty, 2)
+> summary(tm)
+Structure of matched sets:
+ 1:2  0:1
+ 322 3781
+Effective Sample Size:  429
+(equivalent number of matched pairs).
+
+sum(matched.distances)=85.1
+(within {0.458} of optimum).
+Percentiles of matched distances:
+   0%   50%   95%  100%
+0.000 0.020 0.609 1.020
+\end{semiverbatim}
+}
+}
+\end{columns}
+
+\note{
+  \begin{itemize}%[<+-| alert@+>]
+  \item With \atob{1}{2} matching rather than \atob{1}{1} matching, harder to get good matches.
+  \item On the other hand, using more data may help with variance.
+  \item Summary info helps to manage the bias-variance tradeoff.
+  \item \textsc{Don't linger} on effective s.s. issue --- instead
+    point to my PWH festschrift paper.  (If there's time/interest, there's more detail on it on the next slide.)
+  \item covariate balance, not indicated here (yet), also speaks to bias --- more on this presently.
+   \end{itemize}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Tracking effective sample size}
+
+In 2-sample comparisons, total sample size can be a misleading as a measure of information content.  Example:
+\begin{itemize}
+\item say $Y$ has same variance, $\sigma^{2}$,in the Tx and the Ctl population.
+\item Ben H. samples 10 Tx and 40 Ctls, and
+\item Justin M. samples 25 Tx and 25 Ctls
+\end{itemize}
+--- so that total sample sizes are the same.  However,
+
+\begin{eqnarray*}
+  V_{BH}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{10} + \frac{\sigma^{2}}{40}=.125\sigma^{2}\mbox{;}\\
+  V_{JM}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{25} + \frac{\sigma^{2}}{25}=.08\sigma^{2}.\\
+\end{eqnarray*}
+
+Similarly, a matched triple is roughly $[(\sigma^{2}/1 + \sigma^{2}/2)/(\sigma^{2}/1 + \sigma^{2}/1)]^{-1}= 1.33$ times as informative as a matched pair.
+
+\note{Use pooled 2-sample t statistic SE formula to compare 1-1 vs 1-2 matched sets' contribution to variance:
+$$
+\begin{array}{c|c}
+  \atob{1}{1} & \atob{1}{2} \\
+M^{-2}\sum_{m=1}^{M} (\sigma^{2}/1 + \sigma^{2}/1) & M^{-2}\sum_{m=1}^{M} (\sigma^{2}/1 + \sigma^{2}/2) \\
+\frac{2\sigma^{2}}{M} & \frac{1.5\sigma^{2}}{M} \\
+\end{array}
+$$
+So 20 matched pairs is comparable to 15 matched triples.
+
+(Correspondingly, h-mean of $n_{t},n_{c}$ for a pair is 1, while for a triple it's $[(1/1 + 1/2)/2]^{-1}=4/3$.)
+}
+
+\end{frame}
+
+\note{
+  {} [\textsc{Skip unless specifically requested}, instead referring
+  interested readers to Hansen, 2011]\\
+The variance of the \texttt{pr}-coeff in \texttt{v \textasciitilde pr + match} is
+$$
+ \frac{2 \sigma^{2}}{\sum_{s} h_{s}}, \hspace{3em} h_{s} = \left( \frac{n_{ts}^{-1} + n_{cs}^{-1} }{2}  \right)^{-1} ,
+$$
+assuming the OLS model and homoskedastic errors.  (This is b/c the anova formulation is equivalent to harmonic-mean weighting, under which $V(\sum_{s}w_{s}(\bar{v}_{ts} - \bar v_{cs})) = \sum_{s} w_{s}^{2}(n_{ts}^{-1} + n_{cs}^{-1}) \sigma^{2} = \sigma^{2} \sum_{s} w_{s}^{2} 2 h_{s}^{-1} = 2\sigma^{2} \sum_{s}w_{s}/\sum_{s}h_{s} = 2\sigma^{2}/\sum_{s} h_{s}$.)
+
+For matched pairs, of course, $h_{s}=1$.  Harmonic mean of 1, 2 is $4/3$. Etc.   }
+
+
+\begin{frame}
+  \frametitle{Weighting matched sets by contributions to effective s.s.}
+
+
+% \nocite{hansen:bowers:2008}
+\enlargethispage*{1000pt}
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & date & capacity \\ 
+  \hline
+A & 2.3 & {660} {\mlpnode{NA}} \\ 
+  B & 3.0 & {660} {\mlpnode{NB}} \\ 
+  C & 3.4 & {420} {\mlpnode{NC}} \\ 
+  D & 3.4 & {130} {\mlpnode{ND}} \\ 
+  E & 3.9 & {650} {\mlpnode{NE}} \\ 
+  F & 5.9 & {430} {\mlpnode{NF}} \\ 
+  G & 5.1 & {420} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+{\footnotesize
+Differences in mean capacity\\
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & diff. & pair.equiv \\ 
+  \hline
+AI & 0 & 1.0 \\ 
+  BJ & 0 & 1.0 \\ 
+  CL & 0 & 1.0 \\ 
+  DMQT & -58 & 1.5 \\ 
+  ERSW & 110 & 1.5 \\ 
+  FU & -17 & 1.0 \\ 
+  GX & 35 & 1.0 \\ 
+   \hline
+\end{tabular}}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:54 2013
+\begin{tabular}{lrr}
+  \hline
+ & date & capacity \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & 3.6 & 290 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & 2.3 & 660 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & 3.0 & 660 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & 2.9 & 110 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & 3.2 & 420 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & 3.4 &  60 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & 3.3 & 390 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & 3.6 & 160 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & 3.8 & 390 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & 3.4 & 130 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 3.9 & 650 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 3.9 & 450 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & 3.4 & 380 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 4.5 & 440 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 4.2 & 690 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & 3.8 & 510 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 4.7 & 390 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 5.4 & 140 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 6.1 & 730 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+%\hyperlink{computeNotesFr}{\beamergotobutton{Jump to ``Worksheet updates''}}
+\end{minipage}
+\begin{tikzpicture}[overlay]
+  \path[draw,gray] (NA) edge (NI);
+ \path[draw,gray] (NB) edge (NJ);
+ \path[draw,gray] (NC) edge (NL);
+ \path[draw,gray] (ND) edge (NM);
+ \path[draw,gray] (ND) edge (NQ);
+ \path[draw,gray] (ND) edge (NT);
+ \path[draw,gray] (NE) edge (NR);
+ \path[draw,gray] (NE) edge (NS);
+ \path[draw,gray] (NE) edge (NW);
+ \path[draw,gray] (NF) edge (NU);
+ \path[draw,gray] (NG) edge (NX);
+ \end{tikzpicture}
+\end{frame}
+
+\note[itemize]{
+  \item {} \textsc{Don't linger.}  (Rather than detailed explanation
+    below, default to a gesture back to previously presented material
+    about h-weighting.)
+  \item {}   The table at lower left indicates paired differences, or means of differences between a Tx and each control matched to it, along with weights attaching to matched sets.
+  \item {}  Matching ``reduces'' the difference of group means from 80 MWe
+($883-803$) to 14 MWe (sum of products of columns in prev table).
+\item This is the same harmonic weighting, ``precision weighting,'' we spoke of earlier.
+\item By contrast, using ETT weighting, it comes out to 10 MWe.
+}
+
+
+# Balance
+
+
+\item Hansen and Sales (2015) suggest one way to stop iterating between
+	\texttt{fullmatch} and \texttt{xBalance} when you have one caliper. The idea
+	is that if you would reject the null of balance with one caliper, you would
+	also certainly reject it with a wider caliper. That is, the idea is that
+	hypothesis tests about balance using calipers can be understood as nested,
+	or ordered. Rosenbaum (2008) talks about this in his paper ``Testing
+	Hypotheses in Order'' and Hansen and Sales (2008) how these ideas can
+	help us choose a matched design:
+
+	``The SIUP[sequential intersection union principle] states that if a researcher pre-specifies a sequence of
+	hypotheses and corresponding level-$\alpha$ tests, tests those hypotheses in
+	order, and stops testing after the first non-rejected hypothesis, then the
+	probability of incorrectly rejecting at least one correct hypothesis is at
+	most $\alpha$.'' (page 2)
+
+	Let us try this out and also try to assess it. Say, we start by saying that
+	we will reject the null of balance at $\alpha=.50$.
+
+```{r results='hide',cache=TRUE}
+
+matchAndBalance<-function(x,distmat){
+	#x is a caliper width
+	## message(paste(x,collapse=" "))
+	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
+
+	thexb<-xBalance(balfmla,
+			strata=data.frame(thefm=thefm[matched(thefm)]),
+			data=droplevels(meddat[matched(thefm),]),
+			report=c("chisquare.test"))
+
+	return(c(x=x,d2p=thexb$overall[,"p.value"]))
+}
+
+## Start with the maximum caliper for psDist2 (i.e. the largest distance
+## between a treated and control unit).
+
+maxPsDist2<-max(as.vector(psDist2))
+minPsDist2<-min(as.vector(psDist2))
+
+maxMhDist<-max(as.vector(mahalDist))
+minMhDist<-min(as.vector(mahalDist))
+
+maxAbsDist<-max(as.vector(absDist))
+minAbsDist<-min(as.vector(absDist))
+
+results1<-sapply(seq(maxPsDist2,minPsDist2,length=100),function(thecal){matchAndBalance(thecal,distmat=psDist2)})
+
+apply(results1,1,summary)
+
+results1[,results1["d2p",]>.4 & results1["d2p",]<.6]
+
+results1MH<-sapply(seq(maxMhDist,minMhDist,length=100),function(thecal){matchAndBalance(thecal,distmat=mahalDist)})
+results1HR<-sapply(seq(maxAbsDist,minAbsDist,length=100),function(thecal){matchAndBalance(thecal,distmat=absDist)})
+
+apply(results1MH,1,summary)
+apply(results1HR,1,summary)
+
+```
+
+Which caliper would we choose? Now, the p-values are not strictly ordered (as
+we can see here), but the procedure actually keeps the \textbf{maximum}
+p-value of the preceding tests. 
+
+```{r }
+## Reorder the data from low to high to make cummax work better
+results1 <- data.frame(t(results1))
+results1 <- results1[order(results1$x),]
+results1$maxp <- cummax(results1$d2p)
+```
+
+So, you can see that keeping the maximum produces a set of nested tests so
+that if I reject some caliper at some $p$, I know that any caliper tighter
+than the chosen one would have less balance ( a smaller $p$, more information
+against the null that our design is like a well randomized block randomized
+study).
+
+
+```{r eval=FALSE}
+with(results1,{plot(x,d2p);points(x,maxp,col="blue")})
+```
+
+
+  Sometimes we want our matched designs to relate well not only to an
+	equivalent block-randomized experiment, but also to help us make the
+	argument that our comparisons are comparing specific kinds of like
+	with like and/or that our comparisons are statistically powerful.
+	That is, among matched designs that we might call "balanced", we might
+	one which drops the fewest observations, and perhaps one that has
+	specially good balance on certain special covariates (like baseline
+	outcomes). So, here is one example, of doing such a search.
+
+	In this case, we are not doing strictly nested hypothesis testing, but are
+	using the $p$ values to tell us about information against the null of
+	balance rather than using them strictly speaking to reject this null, or
+	not-reject it.
+
+```{r gridsearch, cache=TRUE}
+
+findbalance<-function(x){
+	# x contains three calipers, ps, absDist, mahaldist
+	##message(paste(x,collapse=" "))
+	thefm<-try(fullmatch(psDist2+caliper(psDist2,x[1])+
+			     caliper(absDist,x[2])+caliper(mahalDist,x[3]),data=meddat,tol=.00001,min.controls=1))
+
+	if(inherits(thefm,"try-error")){
+		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
+	}
+
+	thexb<-try(xBalance(update(balfmla,.~.+pScore2),
+			    strata=data.frame(thefm=thefm),
+			    data=meddat,
+			    report=c("chisquare.test","p.values")))
+
+	if(inherits(thexb,"try-error")){
+		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
+	}
+
+	HomRate03diff<-sapply(split(meddat[!is.na(thefm),c("HomRate03","nhTrt")],thefm[!is.na(thefm)]),
+			      function(dat){ with(dat,abs(
+							  mean(HomRate03[nhTrt==1])-mean(HomRate03[nhTrt==0])))})
+	maxHomRate03diff<-max(HomRate03diff)
+
+	return(c(x=x,d2p=thexb$overall[,"p.value"],maxHR03diff=maxHomRate03diff,n=sum(!is.na(thefm)),
+		 effn=summary(thefm)$effective.sample.size,
+		 psp=thexb$results["pScore2","p",]))
+}
+
+
+## Test the function
+## findbalance(c(3,3,64))
+## Don't worry about errors for certain combinations of parameters
+set.seed(123455)
+system.time({
+	results<-replicate(5000,findbalance(c(runif(1,minPsDist2,maxPsDist2),
+					      runif(1,minAbsDist,maxAbsDist),
+					      runif(1,minMhDist,maxMhDist))))
+}
+)
+
+```
+
+```{r eval=FALSE}
+## If you have a mac or linux machine you can speed this up:
+library(parallel)
+system.time({
+	resultsList<-mclapply(1:5000,function(i){
+				      findbalance(c(runif(1,minPsDist2,maxPsDist2),
+						    runif(1,minAbsDist,maxAbsDist),
+						    runif(1,minMhDist,maxMhDist)))},
+			      mc.cores=detectCores())
+	resultsListNA<-sapply(resultsList,function(x){ any(is.na(x)) })
+	resultsArr<-simplify2array(resultsList[!resultsListNA])
+}
+)
+
+```
+
+Now, how might we interpret the results of this search for matched designs?
+Here are a few ideas.
+
+```{r }
+
+resAnyNA<-sapply(results,function(x){ any(is.na(x)) })
+resNoNA<-simplify2array(results[!resAnyNA])
+apply(resNoNA,1,summary)
+
+highbalres<-resNoNA[,resNoNA["d2p",]>.5]
+
+apply(highbalres,1,summary)
+```
+
+```{r eval=FALSE}
+# color points more dark for smaller differences
+plot(resNoNA["d2p",],resNoNA["n",],
+     col=gray(1- ( resNoNA["maxHR03diff",]/max(resNoNA["maxHR03diff",]))),
+     pch=19)
+
+## identify(resNoNA["d2p",],resNoNA["n",],labels=round(resNoNA["maxHR03diff",],3),cex=.7)
+```
+
+Which matched design might we prefer? Here is one idea
+
+```{r }
+interestingDesigns<- (resNoNA["d2p",]>.6 & resNoNA["n",]>=40 &
+		      resNoNA["maxHR03diff",]<=1 & resNoNA["effn",] > 10)
+candDesigns <- resNoNA[,interestingDesigns]
+str(candDesigns)
+apply(candDesigns,1,summary)
+candDesigns<-candDesigns[,order(candDesigns["d2p",],decreasing=TRUE)]
+## plot(candDesigns["d2p",],candDesigns["n",],
+##      col=gray(1- ( candDesigns["maxHR03diff",]/max(candDesigns["maxHR03diff",]))),
+##      pch=19)
+##
+## ##identify(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7)
+## text(candDesigns["d2p",],candDesigns["n",],labels=round(candDesigns["maxHR03diff",],3),cex=.7,
+##      pos=1)
+##
+##
+## mymatchSol<-candDesigns[,candDesigns["maxHR03diff",]<1 & candDesigns["n",]==43]
+## mymatchSol[,order(mymatchSol["d2p",])]
+##
+```
+
+How would we use this information in \texttt{fullmatch}?
+
+```{r }
+fm4<-fullmatch(psDist2+caliper(psDist2,candDesigns["x1",2])
+	       +caliper(absDist,candDesigns["x2",2])
+	       +caliper(mahalDist,candDesigns["x3",2]),data=meddat,tol=.00001,min.controls=1)
+
+summary(fm4,min.controls=0,max.controls=Inf)
+
+meddat$fm4<-NULL ## this line exists to prevent confusion with new fm4 objects
+meddat[names(fm4),"fm4"]<-fm4
+
+xb3<-xBalance(update(balfmla,.~.+pScore2),
+	      strata=list(raw=NULL,fm4=~fm4),
+	      data=meddat,
+	      report=c("std.diffs","z.scores","adj.means",
+		       "adj.mean.diffs", "chisquare.test","p.values"))
+xb3$overall
+zapsmall(xb3$results["HomRate03",,])
+zapsmall(xb3$results["pScore2",,])
+
+save(fm4,file="fm4.rda")
+```
+
+
+```{r eval=FALSE}
+
+matchAndBalance2<-function(x,distmat,alpha){
+	#x is a caliper widths
+	## message(paste(x,collapse=" "))
+	if(x>max(as.vector(distmat)) | x<min(as.vector(distmat))){ return(99999) }
+
+	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
+
+	thexb<-xBalance(balfmla,
+			strata=data.frame(thefm=thefm),
+			data=meddat,
+			report=c("chisquare.test"))
+
+	return(thexb$overall[,"p.value"])
+}
+
+maxpfn<-function(x,distmat,alpha){
+	## here x is the targeted caliper width and x2 is the next wider
+	## caliper width
+	p1<-matchAndBalance2(x=x[1],distmat,alpha)
+	p2<-matchAndBalance2(x=x[2],distmat,alpha)
+	return(abs( max(p1,p2) - alpha) )
+}
+
+library(Rsolnp)
+
+maxpfn(c(minPsDist2,minPsDist2+1),distmat=psDist2,alpha=.25)
+
+quantile(as.vector(psDist2),seq(0,1,.1))
+sort(as.vector(psDist2))[1:10]
+
+### This takes a long time
+results3<-gosolnp(fun=maxpfn,
+		ineqfun=function(x,distmat,alpha){ x[2] - x[1] },
+		ineqLB = 0,
+		ineqUB = maxPsDist2,
+		LB=c(minPsDist2,minPsDist2+.01),
+		UB=c(maxPsDist2-.01,maxPsDist2),
+		n.restarts=2,
+		alpha=.25,distmat=psDist2,
+		n.sim=500,
+		rseed=12345,
+		control=list(trace=1)
+		)
+
+
+maxpfn(results3$pars,distmat=psDist2,alpha=.25)
+matchAndBalance2(results3$pars[1],distmat=psDist2,alpha=.25)
+matchAndBalance(results3$par[1],distmat=psDist2)
+```
+
+
+
+# Estimation and Testing
+
+## Overview: Estimate and Test "as if block-randomized"
+
+This means we have to *define* our estimands in weighted terms (because different blocks provide different amounts of information). And our null reference distribution arise from block-randomization.
+
+Imagine, for example we had this matched design:
+
+```{r}
+mhdist <- match_on(nhTrt ~ nhPopD + nhAboveHS + HomRate03,data=meddat)
+fmMh <- fullmatch(mhdist,data=meddat,tol=.00001)
+summary(fmMh,min.controls=0,max.controls=Inf)
+```
+
+We could define the the ATE using the 
+
+
+```{r}
+meddat[names(fmMh),"fmMh"] <- fmMh
+setmeanDiffs <- meddat %>% group_by(fmMh) %>%
+  summarise(Y=mean(HomRate08[nhTrt==1])-mean(HomRate08[nhTrt==0]),
+            nb=n(),
+            nTb = sum(nhTrt),
+            nCb = sum(1-nhTrt),
+            hwt = ( 2*( nCb * nTb ) / (nTb + nCb))
+            )
+setmeanDiffs
+```
+
+
+```{r}
+## The descriptive adj.mean diff from balanceTest
+with(setmeanDiffs, sum(Y*nTb/sum(nTb)))
+
+## The set-size weighted version
+with(setmeanDiffs, sum(Y*nb/sum(nb)))
+
+meddat <- meddat %>% group_by(fmMh) %>% mutate(fmwt=n()/nrow(meddat),nb=n())
+X <- model.matrix(~fmMh-1,data=meddat)
+XminusXbar <- apply(X,2,function(x){ x - mean(x) })
+wrkdat <- cbind.data.frame(meddat,data.frame(XminusXbar))
+tmpfmla <- reformulate(grep("fmMh1",names(wrkdat),value=TRUE)[-1],response="HomRate08")
+lmfmla <- update(tmpfmla,.~nhTrt*(.))
+lm0 <- lm(lmfmla,data=wrkdat)
+coef(lm0)["nhTrt"]
+
+## But, in this case, the HC2 Standard Error is undefined because some of our blocks have too few observations.
+coeftest(lm0,vcov=vcovHC(lm0,type="HC2"))[1:2,]
+
+meddat <- meddat %>% group_by(fmMh) %>% mutate(trtprob=mean(nhTrt))
+meddat$Zf <- factor(meddat$trtprob)
+Z <- model.matrix(~Zf-1,data=meddat)
+ZminusZbar <- apply(Z,2,function(z){ z - mean(z) })
+wrkdat <- cbind.data.frame(wrkdat,ZminusZbar)
+tmpfmla <- reformulate(grep("Zf0",names(wrkdat),value=TRUE)[-1],response="HomRate08")
+lmfmlaZ <- update(tmpfmla,.~nhTrt*(.))
+lm0a <- lm(lmfmlaZ,data=wrkdat)
+coef(lm0a)["nhTrt"]
+coeftest(lm0a,vcov=vcovHC(lm0a,type="HC2"))[1:2,]
+
+
+## The mean diff used as the observed value in the testing
+## or from lm
+with(setmeanDiffs, sum(Y*hwt/sum(hwt)))
+lm1 <- lm(HomRate08~nhTrt+fmMh,data=meddat)
+```
+
+## What about confidence intervals?
+
+In the design based framework, using the experiment as our analogy, we can use the HC2 standard errors and t-based confidence intervals if we have a large sample.
+
+```{r}
+library(lmtest)
+library(sandwich)
+source("http://jakebowers.org/ICPSR/confintHC.R")
+theci0 <- confint.HC(lm0,parm="nhTrt",thevcov=vcovHC(lm0,type="HC2"))
+theci1 <- confint.HC(lm1,parm="nhTrt",thevcov=vcovHC(lm1,type="HC2"))
+
+```
+
+
+
+# Your reports
+
+## Your reports?
+
+What did you do? What kind of overall balance did you achieve so far? What did you do? What kinds of confidence intervals and/or hypothesis tests did you produce?
+
+## Anything Else?
+
+Note: `match_on()` will create missingness indicators and include missingness as a part of the match.
+
+How would we assess the claim that the sequential intersection union principle controls the family-wise error rate for balance tests?
+
+
+
+## References
