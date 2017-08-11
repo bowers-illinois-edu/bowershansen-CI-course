@@ -29,6 +29,7 @@ output:
 ```{r include=FALSE, cache=FALSE}
 # Some customization.  You can alter or delete as desired (if you know what you are doing).
 # knitr settings to control how R chunks work.
+rm(list=ls())
 
 require(knitr)
 
@@ -94,6 +95,8 @@ library(dplyr)
 library(chemometrics) ## for the nice Mahalanobis ellipse plot
 library(RItools,lib.loc="./lib")
 library(optmatch,lib.loc="./lib")
+library(lmtest)
+library(sandwich)
 ```
 
 ## Today
@@ -116,15 +119,7 @@ row.names(meddat) <- meddat$id
 options(show.signif.stars=FALSE)
 ```
 
-```{r echo=FALSE}
-library(dplyr)
-library(chemometrics)
-library(RItools,lib.loc="./lib")
-library(optmatch,lib.loc="./lib")
-```
-
 # Information
-
 
 ## Matching with a varying number of controls and full matching
 
@@ -230,12 +225,11 @@ New site\\
   Observe that now no control plants are left out.  (This is something you can change if you want.)
 
 Discuss effective sample size.
-
-After this slide, resume worksheet and finish \S~3.
 }
 
 
-# Matching so as to maximize effective sample size}
+## Matching so as to maximize effective sample size
+
 \note{
 \begin{semiverbatim}
 stratumStructure( fullmatch(..., min=2, max=3) )
@@ -250,6 +244,7 @@ stratum treatment:control ratios
 So effective s.s. for this match = $2 * 4/3 + 5* 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples. Mean of matched distances is 0.785. -- compare to 0.29 for pairs, 0.57 for triples.
 
 Note variance/bias tradeoff.  }
+
 \begin{minipage}[t]{2in}
 \begin{center}
 Existing site\\
@@ -334,6 +329,7 @@ New site\\
 fullmatch(pr \textasciitilde\ date+cap, min=2, max=3, data=nuke.nopt)
 \end{semiverbatim}
 
+## Inspect distances after matching
 
 What kinds of distances remain after matching?
 
@@ -564,7 +560,7 @@ New site\\
 # Balance
 
 
-\item Hansen and Sales (2015) suggest one way to stop iterating between
+ Hansen and Sales (2015) suggest one way to stop iterating between
 	\texttt{fullmatch} and \texttt{xBalance} when you have one caliper. The idea
 	is that if you would reject the null of balance with one caliper, you would
 	also certainly reject it with a wider caliper. That is, the idea is that
@@ -573,53 +569,72 @@ New site\\
 	Hypotheses in Order'' and Hansen and Sales (2008) how these ideas can
 	help us choose a matched design:
 
-	``The SIUP[sequential intersection union principle] states that if a researcher pre-specifies a sequence of
-	hypotheses and corresponding level-$\alpha$ tests, tests those hypotheses in
-	order, and stops testing after the first non-rejected hypothesis, then the
-	probability of incorrectly rejecting at least one correct hypothesis is at
-	most $\alpha$.'' (page 2)
+  ``The SIUP[sequential intersection union principle] states that if a
+  researcher pre-specifies a sequence of hypotheses and corresponding
+  level-$\alpha$ tests, tests those hypotheses in order, and stops testing
+  after the first non-rejected hypothesis, then the probability of incorrectly
+  rejecting at least one correct hypothesis is at most $\alpha$.'' (page 2)
 
 	Let us try this out and also try to assess it. Say, we start by saying that
 	we will reject the null of balance at $\alpha=.50$.
 
+
+Imagine, for example we had this matched design:
+
+```{r}
+balfmla <- nhTrt ~ nhPopD + nhAboveHS + HomRate03
+mhdist <- match_on(balfmla,data=meddat)
+psmod <- arm::bayesglm(balfmla,data=meddat,family=binomial(link="logit"))
+psdist <- match_on(psmod,data=meddat)
+
+summary(psdist)
+summary(mhdist)
+
+fmMh <- fullmatch(mhdist,data=meddat,tol=.00001)
+summary(fmMh,min.controls=0,max.controls=Inf)
+```
+
+## Balance Search using SIUP
+
+Define the function
+
 ```{r results='hide',cache=TRUE}
 
-matchAndBalance<-function(x,distmat){
+matchAndBalance<-function(x,balfmla,distmat){
 	#x is a caliper width
 	## message(paste(x,collapse=" "))
 	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
 
-	thexb<-xBalance(balfmla,
-			strata=data.frame(thefm=thefm[matched(thefm)]),
-			data=droplevels(meddat[matched(thefm),]),
+  ## This next is very annoying but there are scope problems with balanceTest and balfmla
+  ## And I don't want to add thefm to meddat at each iteration, which would really slow things down.
+	thexb<-balanceTest(update(balfmla,.~.+strata(thefm)),
+			data=cbind(meddat,thefm),
 			report=c("chisquare.test"))
 
-	return(c(x=x,d2p=thexb$overall[,"p.value"]))
+	return(c(x=x,d2p=thexb$overall["thefm","p.value"]))
 }
+```
 
-## Start with the maximum caliper for psDist2 (i.e. the largest distance
+
+## Balance Search using SIUP
+
+
+```{r}
+## Start with the maximum calipers (i.e. the largest distance
 ## between a treated and control unit).
 
-maxPsDist2<-max(as.vector(psDist2))
-minPsDist2<-min(as.vector(psDist2))
+maxpsdist<-max(as.vector(psdist))
+minpsdist<-min(as.vector(psdist))
 
-maxMhDist<-max(as.vector(mahalDist))
-minMhDist<-min(as.vector(mahalDist))
+maxmhdist<-max(as.vector(mhdist))
+minmhdist<-min(as.vector(mhdist))
 
-maxAbsDist<-max(as.vector(absDist))
-minAbsDist<-min(as.vector(absDist))
-
-results1<-sapply(seq(maxPsDist2,minPsDist2,length=100),function(thecal){matchAndBalance(thecal,distmat=psDist2)})
+results1<-sapply(seq(maxmhdist,minmhdist,length=100),function(thecal){
+                   matchAndBalance(thecal,balfmla,distmat=mhdist)})
 
 apply(results1,1,summary)
 
-results1[,results1["d2p",]>.4 & results1["d2p",]<.6]
-
-results1MH<-sapply(seq(maxMhDist,minMhDist,length=100),function(thecal){matchAndBalance(thecal,distmat=mahalDist)})
-results1HR<-sapply(seq(maxAbsDist,minAbsDist,length=100),function(thecal){matchAndBalance(thecal,distmat=absDist)})
-
-apply(results1MH,1,summary)
-apply(results1HR,1,summary)
+results1[,results1["d2p",]>.2]
 
 ```
 
@@ -663,10 +678,8 @@ with(results1,{plot(x,d2p);points(x,maxp,col="blue")})
 ```{r gridsearch, cache=TRUE}
 
 findbalance<-function(x){
-	# x contains three calipers, ps, absDist, mahaldist
 	##message(paste(x,collapse=" "))
-	thefm<-try(fullmatch(psDist2+caliper(psDist2,x[1])+
-			     caliper(absDist,x[2])+caliper(mahalDist,x[3]),data=meddat,tol=.00001,min.controls=1))
+	thefm<-try(fullmatch(mhdist+caliper(mhdist,x[1])+caliper(psdist,x[3]),data=meddat,tol=.00001,min.controls=1))
 
 	if(inherits(thefm,"try-error")){
 		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA))
@@ -697,9 +710,9 @@ findbalance<-function(x){
 ## Don't worry about errors for certain combinations of parameters
 set.seed(123455)
 system.time({
-	results<-replicate(5000,findbalance(c(runif(1,minPsDist2,maxPsDist2),
+	results<-replicate(5000,findbalance(c(runif(1,minpsdist,maxpsdist),
 					      runif(1,minAbsDist,maxAbsDist),
-					      runif(1,minMhDist,maxMhDist))))
+					      runif(1,minmhdist,maxmhdist))))
 }
 )
 
@@ -710,9 +723,9 @@ system.time({
 library(parallel)
 system.time({
 	resultsList<-mclapply(1:5000,function(i){
-				      findbalance(c(runif(1,minPsDist2,maxPsDist2),
+				      findbalance(c(runif(1,minpsdist,maxpsdist),
 						    runif(1,minAbsDist,maxAbsDist),
-						    runif(1,minMhDist,maxMhDist)))},
+						    runif(1,minmhdist,maxmhdist)))},
 			      mc.cores=detectCores())
 	resultsListNA<-sapply(resultsList,function(x){ any(is.na(x)) })
 	resultsArr<-simplify2array(resultsList[!resultsListNA])
@@ -770,9 +783,8 @@ candDesigns<-candDesigns[,order(candDesigns["d2p",],decreasing=TRUE)]
 How would we use this information in \texttt{fullmatch}?
 
 ```{r }
-fm4<-fullmatch(psDist2+caliper(psDist2,candDesigns["x1",2])
-	       +caliper(absDist,candDesigns["x2",2])
-	       +caliper(mahalDist,candDesigns["x3",2]),data=meddat,tol=.00001,min.controls=1)
+fm4<-fullmatch(mhdist+caliper(mhdist,candDesigns["x1",2])
+	       +caliper(mhdist,candDesigns["x3",2]),data=meddat,tol=.00001,min.controls=1)
 
 summary(fm4,min.controls=0,max.controls=Inf)
 
@@ -819,29 +831,29 @@ maxpfn<-function(x,distmat,alpha){
 
 library(Rsolnp)
 
-maxpfn(c(minPsDist2,minPsDist2+1),distmat=psDist2,alpha=.25)
+maxpfn(c(minpsdist,minpsdist+1),distmat=mhdist,alpha=.25)
 
-quantile(as.vector(psDist2),seq(0,1,.1))
-sort(as.vector(psDist2))[1:10]
+quantile(as.vector(mhdist),seq(0,1,.1))
+sort(as.vector(mhdist))[1:10]
 
 ### This takes a long time
 results3<-gosolnp(fun=maxpfn,
 		ineqfun=function(x,distmat,alpha){ x[2] - x[1] },
 		ineqLB = 0,
-		ineqUB = maxPsDist2,
-		LB=c(minPsDist2,minPsDist2+.01),
-		UB=c(maxPsDist2-.01,maxPsDist2),
+		ineqUB = maxpsdist,
+		LB=c(minpsdist,minpsdist+.01),
+		UB=c(maxpsdist-.01,maxpsdist),
 		n.restarts=2,
-		alpha=.25,distmat=psDist2,
+		alpha=.25,distmat=mhdist,
 		n.sim=500,
 		rseed=12345,
 		control=list(trace=1)
 		)
 
 
-maxpfn(results3$pars,distmat=psDist2,alpha=.25)
-matchAndBalance2(results3$pars[1],distmat=psDist2,alpha=.25)
-matchAndBalance(results3$par[1],distmat=psDist2)
+maxpfn(results3$pars,distmat=mhdist,alpha=.25)
+matchAndBalance2(results3$pars[1],distmat=mhdist,alpha=.25)
+matchAndBalance(results3$par[1],distmat=mhdist)
 ```
 
 
