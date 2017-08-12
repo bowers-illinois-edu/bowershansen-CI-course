@@ -806,16 +806,109 @@ Set size weighting is easy to explain. But set size weighting leaves information
 ## or from lm
 with(setmeanDiffs, sum(Y*hwt/sum(hwt)))
 lm1 <- lm(HomRate08~nhTrt+fmMh,data=meddat)
-lm1a <- lm(HomRate08~nhTrt,data=meddat,weights=hbwt)
+xbOutcome <- balanceTest(nhTrt~HomRate08+strata(fmMh),data=meddat,report="all")
+## lm1a <- lm(HomRate08~nhTrt,data=meddat,weights=1/hbwt)
+coeftest(lm1,parm="nhTrt",vcov=vcovHC(lm1,type="HC2"))["nhTrt",]
+coeftest(lm0b,parm="nhTrt",vcov=vcovHC(lm0b,type="HC2"))["nhTrt",]
 theci1 <- confint.HC(lm1,parm="nhTrt",thevcov=vcovHC(lm1,type="HC2"))
 theci1
 diff(theci1[1,])
 diff(theci0[1,]) ## set size weighting
 ```
 
+## `balanceTest`
+
+`balanceTest` reports the ATT (the set mean differences weighted by number of treated) but uses the precision-weighted mean for the $p$-value.
+
 ```{r echo=FALSE,eval=FALSE}
 ## The descriptive adj.mean diff from balanceTest
 with(setmeanDiffs, sum(Y*nTb/sum(nTb)))
+xbOutcome$results[,,"fmMh"]
+```
+
+## The direct permutation approach
+
+```{r}
+library(permute)
+
+newExp <- function(z,b){
+  n <- length(z)
+  h1 <- how(blocks=b)
+  z[shuffle(n,control=h1)]
+}
+
+hwtfn <- function(data){
+  tapply(data$Tx.grp,data$stratum.code,function(x){ 2* sum((x-mean(x))^2) })
+}
+
+setsizewtfn<- function(data){
+  tapply(data$Tx.grp,data$stratum.code,function(x){ length(x) })
+}
+
+trtsizewtfn<- function(data){
+  ## Assumes Tx.grp \in \{0,1\} and 1=assigned to treatment
+  tapply(data$Tx.grp,data$stratum.code,function(x){ sum(x) })
+}
+
+wtMeanDiffTZ<-function(y,z,b,wtfn){
+  tzb <- mapply(function(yb,zb){ mean(yb[zb==1]) - mean(yb[zb==0]) },
+                yb=split(y,b),
+                zb=split(z,b))
+  wts <- wtfn(data.frame(Tx.grp=z,stratum.code=b))
+  sum(tzb*wts/sum(wts))
+}
+
+## Testing (compare to above)
+obsHTZ<-wtMeanDiffTZ(meddat$HomRate08,meddat$nhTrt,fmMh,hwtfn)
+obsNTZ<-wtMeanDiffTZ(meddat$HomRate08,meddat$nhTrt,fmMh,setsizewtfn)
+obsTTZ<-wtMeanDiffTZ(meddat$HomRate08,meddat$nhTrt,fmMh,trtsizewtfn)
+```
+
+Test the null hypothesis of no effects:
+
+```{r cache=TRUE}
+
+set.seed(12345)
+nulldistHwt <- replicate(10000,wtMeanDiffTZ(meddat$HomRate08,newExp(meddat$nhTrt,fmMh),fmMh,hwtfn))
+set.seed(12345)
+nulldistNwt <- replicate(10000,wtMeanDiffTZ(meddat$HomRate08,newExp(meddat$nhTrt,fmMh),fmMh,setsizewtfn))
+
+## Notice more precision with the Harmonic weight in thes p-values.
+2*min(mean(nulldistHwt>=obsHTZ),mean(nulldistHwt<=obsHTZ))
+2*min(mean(nulldistNwt>=obsNTZ),mean(nulldistNwt<=obsNTZ))
+
+```
+
+Comparing the reference distributions to each other and to their Normal approximations.
+
+```{r}
+plot(density(nulldistHwt),ylim=c(0,3))
+lines(density(nulldistNwt),lty=2)
+curve(dnorm(x,sd=sd(nulldistHwt)),from=-1,to=1,col="gray",add=TRUE)
+curve(dnorm(x,sd=sd(nulldistNwt)),from=-1,to=1,col="gray",lty=2,add=TRUE)
+```
+
+
+```{r echo=FALSE,eval=FALSE}
+## balanceTest does not yet take functions.
+hwtfn <- function(data){
+  tapply(data$Tx.grp,data$stratum.code,function(x){ 2* sum((x-mean(x))^2) })
+}
+
+setsizewtfn<- function(data){
+  tapply(data$Tx.grp,data$stratum.code,function(x){ length(x) })
+}
+
+wtMeanDiffTZ<-function(y,z,b,wtfn){
+  temp <- balanceTest(z~y+strata(b),data=data.frame(y,z,b),
+                      report="adj.mean.diffs",
+                      stratum.weights=wtfn)
+  return(temp$results[1,"adj.diff",1])
+}
+
+## Test the function
+## table(newExp(meddat$nhTrt,meddat$fmMh),meddat$fmMh)
+
 ```
 
 # Your reports
