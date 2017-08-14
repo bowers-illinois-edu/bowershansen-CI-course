@@ -319,6 +319,7 @@ summary(fmnuke)
 
 \centering
 ```{r out.width=".8\\textwidth", echo=FALSE}
+## perhaps try this https://briatte.github.io/ggnet/#example-2-bipartite-network next time
 library(igraph)
 blah1 <- outer(fmnuke,fmnuke,FUN=function(x,y){ as.numeric(x==y) })
 blah2 <- outer(fmnukeMC1,fmnukeMC1,FUN=function(x,y){ as.numeric(x==y) })
