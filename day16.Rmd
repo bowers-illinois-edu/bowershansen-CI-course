@@ -120,18 +120,18 @@ summary(canadamapdat)
 ## Capturing perceptions
 
 \centering
-\igrphx{images/TwoMapsToronto.png}
+\igrphx{TwoMapsToronto.png}
 
 
 ## Capturing perceptions
 
 \centering
-\igrphx{images/TorontoAllCommunities1.png}
+\igrphx{TorontoAllCommunities1.png}
 
 ## Capturing perceptions
 
 \centering
-\igrphx{images/TMLCCPerceptionsQuestion.pdf}
+\igrphx{TMLCCPerceptionsQuestion.pdf}
 
 ## Capturing perceptions
 
@@ -425,6 +425,14 @@ lmer2<-lmer(social.capital01~vm.community.norm2+vmCbi+(1|nbp1)+(1|dauid),data=wr
 
 confint(lmer2)
 ```
+
+## Other applications?
+
+DOS Chapter 11.
+
+Also: for experimental design (see `blockTools` and \autocite{moore2012blocktools,moore2012multivariate})
+
+
 
 ## Anything Else?
 
