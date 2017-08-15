@@ -166,7 +166,7 @@ opts_chunk$set(message=FALSE,
 
 Thus far this course has considered how to make \textit{valid} inferences conditional on the premise of no imbalances on unobserved covariates of which treatment assignment is a function. But what about the soundness of such inferences? Is the premise of no imbalances on unobserved covariates true? Ultimately, that is a question we cannot answer since it requires data that is not available; however, we can consider \textit{hypothetical} scenarios of confounding and then assess the extent to which such scenarios would alter our inferences.
 
-When considering overt bias, \citet{rosenbaum2002observational} remains agnostic about the functional form, $\lambda(\cdot)$, that links $\mathbf{x}_i$ to $\pi_i$. After all, if $\mathbf{x}_i = \mathbf{x}_j$, then, irrespective of the functional form of $\lambda(\cdot)$, $\lambda(\mathbf{x}_i) = \lambda(\mathbf{x}_j) = \pi_i = \pi_j$. 
+When considering overt bias, \citet{rosenbaum2002observational} remains agnostic about the functional form, $\lambda(\cdot)$, that links $\mathbf{x}_i$ to $\pi_i$. After all, if $\mathbf{x}_i = \mathbf{x}_j$, then, irrespective of the functional form of $\lambda(\cdot)$, $\lambda(\mathbf{x}_i) = \lambda(\mathbf{x}_j) = \pi_i = \pi_j$.
 
 In order to avoid making any functional form assumptions about how baseline covariates relate to treatment assignment probabilities, then one must \textit{exactly} match treated and control units on baseline covariates. Therefore, the sensitivity analyses today consider \textit{hidden bias} due to an unobserved confounder and due to residual imbalances on unobserved covariates.
 
@@ -178,7 +178,7 @@ Let's define the \textit{treatment odds ratio} as:
 \begin{align} \label{eq: treatment odds ratio}
 \frac{\left(\frac{\pi_i}{1 - \pi_i} \right)}{\left(\frac{\pi_j}{1 - \pi_j} \right)} \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j \notag \\
 \implies \notag \\
-& \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j. 
+& \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j.
 \end{align}
 \end{center}
 
@@ -191,14 +191,14 @@ Let's define the \textit{treatment odds ratio} as:
 \end{equation}
 \end{center}
 
-where $\kappa(\cdot)$ is an unknown function and $\gamma$ is an unknown parameter. 
+where $\kappa(\cdot)$ is an unknown function and $\gamma$ is an unknown parameter.
 
 \begin{center}
 \textbf{Remember}:
 \end{center}
 A logarithm is simply the power to which a number must be raised in order to get some other number. In this case we're dealing with natural logarithms. Thus, we can read $\text{log} \left(\frac{\pi_i}{1 - \pi_i} \right)$ as asking: $\mathrm{e}$ to the power of what gives us $\left(\frac{\pi_i}{1 - \pi_i} \right)$? And the answer is $\mathrm{e}$ to the power of $\kappa(\mathbf{x}_i) + \gamma u_i$. If $\mathbf{x}_i = \mathbf{x}_j$, then $\text{log} \left(\frac{\pi_i}{1 - \pi_i} \right) = \gamma u_i$, which means that $\mathrm{e}^{\gamma u_i} = \left(\frac{\pi_i}{1 - \pi_i} \right)$.
 
-\citet{rosenbaum2002observational} further shows that if there is indeed a logistic functional form that links $u \in [0, 1]$ to $\Gamma$, such that $\mathrm{e}^{\gamma} = \Gamma$, then 
+\citet{rosenbaum2002observational} further shows that if there is indeed a logistic functional form that links $u \in [0, 1]$ to $\Gamma$, such that $\mathrm{e}^{\gamma} = \Gamma$, then
 
 \begin{center}
 \begin{equation}
@@ -221,11 +221,11 @@ Thus, in conclusion we're left with:
 
 \begin{center}
 \begin{equation}
-\frac{1}{\Gamma} \leq \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \leq \Gamma \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j 
+\frac{1}{\Gamma} \leq \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \leq \Gamma \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j
 \end{equation}
 \end{center}
 
-For any specific $(\gamma, \mathbf{u})$, there is a distribution of treatment assignments $\mathbf{Z}$ on $\Omega$. If $(\gamma, \mathbf{u})$ were known, then $Pr\left(\mathbf{Z} = \mathbf{z} \in \Omega \right)$ would also be known and one could perform permutation inference. But, since $(\gamma, \mathbf{u})$ is \textit{not} known, a sensitivity analysis illustrates the sensitivity of inferences to a range of assumptions about $(\gamma, \mathbf{u})$. 
+For any specific $(\gamma, \mathbf{u})$, there is a distribution of treatment assignments $\mathbf{Z}$ on $\Omega$. If $(\gamma, \mathbf{u})$ were known, then $Pr\left(\mathbf{Z} = \mathbf{z} \in \Omega \right)$ would also be known and one could perform permutation inference. But, since $(\gamma, \mathbf{u})$ is \textit{not} known, a sensitivity analysis illustrates the sensitivity of inferences to a range of assumptions about $(\gamma, \mathbf{u})$.
 
 \subsection{Sensitivity Analysis with Matched Sets Design}
 
@@ -257,13 +257,13 @@ obs_ate
 new_block_experiment <- function(z,
                                  y,
                                  s){
-  
+
   Z <- unsplit(lapply(split(z, s), sample), s)
-  
+
   obs_ATE <- coef(lm(y ~ Z + s))[["Z"]]
-  
+
   return(obs_ATE)
-  
+
 }
 
 null_dist <- replicate(1000, new_block_experiment(z = meddat$nhTrt,
@@ -302,26 +302,26 @@ reshape_sensitivity <- function(.data,
                                 .z,
                                 .y,
                                 .fm){
-  
+
   suppressMessages(stopifnot(require(dplyr, quietly = TRUE)))
   suppressMessages(stopifnot(require(magrittr, quietly = TRUE)))
-  
+
   num_cols <- max(table(meddat$fm4))
-  
+
   reshaped <- lapply(X = split(.y, .fm),
                      FUN = function(x){
-                       
+
                        return(c(x,
                                 rep(x = NA,
                                     times = max(num_cols - length(x),
                                                 0))))
-                       
+
                        })
-  
+
   reshaped_df <- data.frame(t(simplify2array(reshaped)))
-  
+
   return(reshaped_df)
-  
+
   }
 
 meddat_reshaped <- reshape_sensitivity(.data = meddat,
@@ -341,7 +341,7 @@ gammas <- seq(from = 1,
 
 sens_results <- sapply(X = gammas,
                        FUN = function(g) {
-                         
+
                          c(gamma = g,
                            senmv(meddat_reshaped,
                                  method = "t",
@@ -369,10 +369,10 @@ plot(x = sens_results['gamma',],
 
 find_Sens_G <- function(gamma,
                         alpha){
-  
+
   senmv(meddat_reshaped,
         gamma = gamma)$pval - alpha
-} 
+}
 
 ## Find x value at which the function above == 0
 
@@ -401,23 +401,23 @@ gen_sensitivity_analysis <- function(.Y,
                                      .nt,
                                      .pi,
                                      .gamma){
-  
+
   if(.gamma == 1)
-    
+
     prob_treated_u <- prob_treated_l <- .pi # If Gamma = 1, treatment assignment probability stays same
-  
+
   else {
-    
+
     odds_u <- .gamma * .pi / (1 - .pi) # Get upper hypothetical odds
-    
+
     odds_l <- .pi / (.gamma * (1 - .pi) ) # Get lower hypothetical odds
-    
+
     prob_treated_u <- odds_u / (1 + odds_u) # Convert upper odds back to probabilities
-    
+
     prob_treated_l <- odds_l / (1 + odds_l) # Convert lower odds back to probabilities
-    
+
   }
-  
+
   treated_sample <- sort(sample(x = .Y, ## This corresponds to sharp null
                                 size = .nt,
                                 replace = FALSE,
@@ -425,15 +425,15 @@ gen_sensitivity_analysis <- function(.Y,
                                              times = .nt),
                                          rep(x = .pi,
                                              times = .n - .nt))))
-  
+
   Y <- c(treated_sample,
          base::setdiff(.Y,
                        treated_sample))
-  
+
   ATE_under_sharp_null <- mean(Y[1 : .nt]) - mean(Y[(.nt + 1) : .n])
-  
+
   return(ATE_under_sharp_null)
-  
+
 }
 
 @
@@ -454,11 +454,11 @@ obs_ATE <- fake_data %$%{ mean(y[z == 1]) - mean(y[z == 0]) }
 ## Test sharp null hypothesis of no effect and calculate p-value according to Gamma = 1
 
 new_ra_under_null <- function(z, y){
-  
+
   Z = sample(z)
-  
+
   ate = coef(lm(y ~ Z))[["Z"]]
-  
+
   return(ate)
 }
 
@@ -498,7 +498,7 @@ ggplot(data = null_dists_long,
        aes(x = value, fill = Gamma)) +
   geom_histogram() +
   facet_wrap(~ Gamma,
-             ncol = 1) + 
+             ncol = 1) +
   geom_vline(xintercept = 0,
              colour = "black",
              linetype = "longdash") +
