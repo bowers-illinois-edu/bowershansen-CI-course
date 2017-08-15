@@ -223,6 +223,7 @@ table(is.na(wrkdat$nbp1)) ## recall the "ghost message"
 wrkdat[order(wrkdat$nbp1),c("nbp1","vmdaPct","vm.community.norm2")][1:6,]
 ## table(wrkdat$nbp1)
 nbp1vmdiffs<-tapply(wrkdat$vmdaPct,wrkdat$nbp1,function(x){ abs(diff(x)) })
+nbp1percdiffs<-tapply(wrkdat$vm.community.norm2,wrkdat$nbp1,function(x){ abs(diff(x)) })
 summary(nbp1vmdiffs)
 ```
 
@@ -337,6 +338,17 @@ nbmplot(wrkdat,yvar="vmdaPct",xvar="vm.community.norm2",strata="nbp2",points=FAL
 The difference in "treatment" within sets varies:
 ```{r}
 summary(nbp1vmdiffs)
+summary(nbp1percdiffs)
+
+percDist <- scalar.dist(wrkdat$vm.community.norm2*100)
+
+da <- vmdaDist[1:5,1:5]
+perc <- percDist[1:5,1:5]
+
+da/perc
+
+da + 1000*(perc < 2)
+
 ```
 
 \normalsize
