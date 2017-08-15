@@ -39,6 +39,7 @@ announcement-of-the-day.tex
 BIB
 units  #use this as a link to current-year directory's subfolder for slides, handouts etc
 data/lawnsigns
-# tex files derived from tracked Rnw sources
+# tex files derived from tracked Rnw and Rmd sources
 *-Rex.tex
 unit01-fishercombs.tex
+day[0-9]*.tex
