@@ -1,0 +1,325 @@
+---
+title: Sensitivity Analysis I --- Rosenbaum Style
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2017 Session 2
+bibliography:
+ - refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+rm(list=ls())
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before)
+    return(options$size)
+})
+
+knit_hooks$set(plotdefault = function(before, options, envir) {
+    if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
+})
+
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='\\scriptsize',
+  out.width='.8\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA,
+  mysize=TRUE,
+  plotdefault=TRUE)
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(digits=4,
+	scipen=8,
+	width=132
+	)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+
+## Having downloaded optmatch from Box OR http://jakebowers.org/ICPSR for mac (tgz) or windows (zip)
+## For Mac
+## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.tgz', repos=NULL),'pre')
+## For Windows
+## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.zip', repos=NULL),'pre')
+
+## Or if you have all of the required libraries (like fortran and c++) for compilation use
+with_libpaths('./lib', install_github("markmfredrickson/optmatch"), 'pre')
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(RItools,lib.loc="./lib")
+library(optmatch,lib.loc="./lib")
+## library(nbpMatching)
+library(lmtest)
+library(sandwich)
+library(sensitivitymv)
+library(sensitivitymw)
+library(rbounds)
+```
+
+## Today
+
+\begin{enumerate}
+\item Agenda: Sensitivity analysis I --- Rosenbaum Style --- focusing on relationship between unobserved confounders and treatment assignment / selection.
+\item Reading for this week: (1) Non-bipartite matching DOS Chap 11 and \autocite{lu2011optimal}  and DOS 12 (longitudinal applications of non-bipartite matching) and (2) Sensitivity analysis DOS Chap 3 \autocite{hhh2010}
+\item Questions arising from the reading or assignments or life?
+\item Recap: Matching with non-binary treatment (with groups, with a continuous active ingredient but no instrument, etc...).
+\item Tomorrow and Wed: Sensitivity Analysis
+\item Thurs: Interference
+\end{enumerate}
+
+```{r loaddat, echo=FALSE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat$id <- row.names(meddat)
+meddat<- mutate(meddat, HomRate03=(HomCount2003/Pop2003)*1000,
+                HomRate08=(HomCount2008/Pop2008)*1000,
+                HomRate0803=( HomRate08 - HomRate03))
+## mutate strips off row names
+row.names(meddat) <- meddat$id
+options(show.signif.stars=FALSE)
+```
+
+## Make a matched design.
+
+We will need a matched design. Please create one. Produce a balance test. And interpret the results of the balance test.
+
+\note{
+You'll need a matched design to start. So why don't you take a few minutes to
+make one. In this handout, I'm using a version of the one that I made last
+time. You can substitute in your own match for mine.
+}
+
+```{r echo=FALSE}
+meddat <- transform(meddat, pairm = pairmatch(nhTrt~HomRate03, data=meddat))
+thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+balfmla<-reformulate(thecovs,response="nhTrt")
+xb1 <- balanceTest(update(balfmla,.~.+strata(pairm)),data=meddat,report="chisquare.test")
+```
+
+\begin{frame}{Test the hypothesis of no effects on the change over time.}
+
+Use a gain score approach to a difference-in-differences design. You can use `balanceTest` or `xBalance` or `oneway_test` from the `coin` package.
+
+
+\end{frame}
+
+\note{
+```{r results="hide"}
+xbtest3<-xBalance(nhTrt~HomRate0803,
+		  strata=list(pairm=~pairm),
+		  data=meddat[matched(meddat$pairm),],
+		  report="all")
+xbtest3$overall
+xbtest3$results
+```
+}
+
+
+## What about unobserved confounders?
+
+We can claim that our comparison contains as much confounding on *observed* covariates (those assessed by our balance test) as would be seen in a block-randomized experiment.
+
+But, we haven't said anything about *unobserved* covariates (which a truly randomized study would balance, but which our study does not).
+
+> "In an observational study, a
+  sensitivity analysis replaces qualitative claims about whether unmeasured
+  biases are present with an objective quantitative statement about the
+  magnitude of bias that would need to be present to change the conclusions."
+  (Rosenbaum, sensitivitymv manual)
+
+
+## How does this work?
+
+>  "The sensitivity analysis asks about the magnitude, gamma, of bias in
+  treatment assignment in observational studies that would need to be present
+  to alter the conclusions of a randomization test that assumed matching for
+  observed covariates removes all bias."  (Rosenbaum, sensitivitymv manual)
+
+What does this mean?  In principle, how does this kind of analysis respond to
+alternative explanations invoking covariates that you have not observed?
+
+## An example of sensitivity analysis 
+  
+  
+```{r dosens, results="hide"}
+reshape_sensitivity<-function(y,z,fm){
+  ## A function to reformat fullmatches for use with sensmv/mw
+  ## y is the outcome
+  ## z is binary treatment indicator (1=assigned treatment)
+  ## fm is a factor variable indicating matched set membership
+  ## We assume that y,z, and fm have no missing data.
+  dat<-data.frame(y=y,z=z,fm=fm)[order(fm,z,decreasing=TRUE),]
+  numcols<-max(table(fm))
+  resplist<-lapply(split(y,fm),
+		   function(x){
+		     return(c(x,rep(NA, max(numcols-length(x),0))))
+		   })
+  respmat<-t(simplify2array(resplist))
+  return(respmat)
+}
+```
+
+The workflow: First, reshape the matched design into the appropriate shape
+
+```{r}
+respmat<-with(meddat[matched(meddat$pairm),],reshape_sensitivity(HomRate0803,nhTrt,pairm))
+respmat[1:4,]
+meddat <- transform(meddat,fm=fullmatch(nhTrt~HomRate03+nhAboveHS+nhPopD,data=meddat,min.controls=1))
+respmat2<-with(meddat[matched(meddat$fm),],reshape_sensitivity(HomRate0803,nhTrt,fm))
+respmat2[10:14,]
+```
+
+## An example of sensitivity analysis: the search for Gamma
+
+The workflow: Second, assess sensitivity at different levels of $\Gamma$.
+
+```{r}
+senmv(-respmat,method="t",gamma=1)
+senmv(-respmat,method="t",gamma=2)
+
+somegammas<-seq(1,5,.1)
+
+sensTresults<-sapply(somegammas,function(g){
+		     c(gamma=g,senmv(-respmat,method="t",gamma=g))
+		   })
+
+sensHresults<-sapply(somegammas,function(g){
+		     c(gamma=g,senmv(-respmat,gamma=g))
+		   })
+```
+
+
+## An example of sensitivity analysis: the search for Gamma
+
+Or you can try to directly find the $\Gamma$ for a given $\alpha$ level test.
+
+
+```{r }
+findSensG<-function(g,a){
+  senmv(-respmat,gamma=g)$pval-a
+}
+
+res1<-uniroot(f=findSensG,lower=1,upper=6,a=.05)
+res1$root
+
+```
+
+
+Since we have fixed size sets (i.e. all 1:1 or all 1:2...), we can also look at an example involving
+point-estimates and confidence intervals assuming an additive effect of
+treatment. Notice that the two-sided intervals have lower bounds that are
+lower than the one-sided intervals. Notice also that that when $\Gamma$ is
+greater than 1, we have a range of point estimates consistent with that
+$\Gamma$.
+
+%% meddat$pmFake<-meddat$pairm
+%% meddat$pmFake[meddat$pairm %in% names(table(meddat$pairm)[table(meddat$pairm)!=2])]<-NA
+%% table(meddat$pmFake,exclude=c())
+
+```{r results='hide'}
+## Not run here because we don't have all sets the same size
+## install.packages("sensitivitymw")
+library(sensitivitymw)
+
+respmatPm<-with(droplevels(meddat[matched(meddat$pairm),]),reshape_sensitivity(HomRate0803,nhTrt,pairm))
+
+sensCItwosidedG1<-senmwCI(-respmatPm,method="t",one.sided=FALSE)
+sensCIonesidedG1<-senmwCI(-respmatPm,method="t",one.sided=TRUE)
+
+sensCItwosidedG2<-senmwCI(-respmatPm,method="t",one.sided=FALSE,gamma=2)
+sensCIonesidedG2<-senmwCI(-respmatPm,method="t",one.sided=TRUE,gamma=2)
+
+```
+
+Or we could use the \texttt{rbounds} package:
+
+```{r eval=FALSE}
+library(rbounds)
+
+hlsens(respmatPm[,2],respmatPm[,1])
+psens(respmatPm[,2],respmatPm[,1])
+
+```
+
+\item As an aid to interpreting sensitivity analyses,
+  \citet{rosenbaum2009amplification} propose a way decompose $\Gamma$ into two
+  pieces: one $\Delta$ gauges the relationship between an unobserved
+  confounder at the outcome (it records the maximum effect of the unobserved
+  confounder on the odds of a positive response (imagining a binary outcome))
+  and the other $\Lambda$ gauges the maximum relationship between the unobserved
+  confounder and treatment assignment.
+
+  How should we interpret the following (using the $\Gamma$ that we found
+  above)? What pairs of treatment assignment and outcome relationships are
+  equivalent to our $\Gamma$? What does this mean for our interpretation of
+  the sensitivity analysis?
+
+
+```{r results='hide'}
+
+amplify(round(res1$root,1),lambda=seq(round(res1$root,1)+.1,10*res1$root,length=10))
+
+```
+
+\item What did you learn about your matched design? Would this analysis change
+  any policy recommendations you might have for another city? Or for Medellin
+  itself (if it considers building more Metrocable stations with associated
+  social services)?
+
+## What questions are raised by this mode of sensitivity analysis?
+
+
+
+
+## Anything Else?
+
+## References
+
+
+
+
+\bibliographystyle{apalike}
+\bibliography{refs}
+% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+
+\end{document}
