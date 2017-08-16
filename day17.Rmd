@@ -1,0 +1,412 @@
+---
+title: Sensitivity Analysis I --- Rosenbaum Style
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2017 Session 2
+bibliography:
+ - refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+rm(list=ls())
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before)
+    return(options$size)
+})
+
+knit_hooks$set(plotdefault = function(before, options, envir) {
+    if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
+})
+
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='\\scriptsize',
+  out.width='.8\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA,
+  mysize=TRUE,
+  plotdefault=TRUE)
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(digits=4,
+	scipen=8,
+	width=132
+	)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+
+## Having downloaded optmatch from Box OR http://jakebowers.org/ICPSR for mac (tgz) or windows (zip)
+## For Mac
+## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.tgz', repos=NULL),'pre')
+## For Windows
+## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.zip', repos=NULL),'pre')
+
+## Or if you have all of the required libraries (like fortran and c++) for compilation use
+with_libpaths('./lib', install_github("markmfredrickson/optmatch"), 'pre')
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(RItools,lib.loc="./lib")
+library(optmatch,lib.loc="./lib")
+## library(nbpMatching)
+library(lmtest)
+library(sandwich)
+library(sensitivitymv)
+library(sensitivitymw)
+library(rbounds)
+```
+
+## Today
+
+\begin{enumerate}
+\item Agenda: Sensitivity analysis I --- Rosenbaum Style --- focusing on relationship between unobserved confounders and treatment assignment / selection.
+\item Reading for this week: (1) Non-bipartite matching DOS Chap 11 and \textcite{lu2011optimal}  and DOS 12 (longitudinal applications of non-bipartite matching) and (2) Sensitivity analysis DOS Chap 3, \textcite{hhh2010}, \textcite{rosenbaumtwo}.
+\item Questions arising from the reading or assignments or life?
+\item Recap: Matching with non-binary treatment (with groups, with a continuous active ingredient but no instrument, etc...).
+\item Tomorrow and Wed: Sensitivity Analysis
+\item Thurs: Interference
+\end{enumerate}
+
+```{r loaddat, echo=FALSE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat$id <- row.names(meddat)
+meddat<- mutate(meddat, HomRate03=(HomCount2003/Pop2003)*1000,
+                HomRate08=(HomCount2008/Pop2008)*1000,
+                HomRate0803=( HomRate08 - HomRate03))
+## mutate strips off row names
+row.names(meddat) <- meddat$id
+options(show.signif.stars=FALSE)
+```
+
+## Make a matched design, assess balance, test a hypothesis of no effects..
+
+Your tasks to start the class:
+
+ 1. We will need a matched design. Please create one --- you can use the Medellin
+data (see the .Rmd files) or your own data.
+ 2. Produce and interpret a a balance
+test.
+ 3. Use a gain score approach aka difference-in-differences design if you
+are using the Medellin data or a simpler outcome if you are using your own
+data. You can use `balanceTest` or `xBalance` or `oneway_test` from the `coin`
+package.
+
+
+```{r echo=FALSE}
+meddat <- transform(meddat, pairm = pairmatch(nhTrt~HomRate03, data=meddat))
+thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+balfmla<-reformulate(thecovs,response="nhTrt")
+xb1 <- balanceTest(update(balfmla,.~.+strata(pairm)),data=meddat,report="chisquare.test")
+```
+
+```{r echo=FALSE, results="hide"}
+xbtest3<-xBalance(nhTrt~HomRate0803,
+		  strata=list(pairm=~pairm),
+		  data=meddat[matched(meddat$pairm),],
+		  report="all")
+xbtest3$overall
+xbtest3$results
+```
+
+## What about unobserved confounders?
+
+A high $p$-value from an omnibus balance tests gives us some basis to claim
+that our comparison contains as much confounding on *observed* covariates
+(those assessed by our balance test) as would be seen in a block-randomized
+experiment. That is, our treatment-vs-control comparison contains demonstrably
+little bias from the variables that we have balanced.
+
+\smallskip
+\pause
+
+But, we haven't said anything about *unobserved* covariates (which a truly randomized study would balance, but which our study does not).
+
+## Rosenbaum's sensitivity analysis is a formalized thought experiment
+
+> "In an observational study, a
+  sensitivity analysis replaces qualitative claims about whether unmeasured
+  biases are present with an objective quantitative statement about the
+  magnitude of bias that would need to be present to change the conclusions."
+  (Rosenbaum, sensitivitymv manual)
+
+
+>  "The sensitivity analysis asks about the magnitude, gamma, of bias in
+  treatment assignment in observational studies that would need to be present
+  to alter the conclusions of a randomization test that assumed matching for
+  observed covariates removes all bias."  (Rosenbaum, sensitivitymv manual)
+
+
+
+```{r dosens, echo=FALSE,results="hide"}
+reshape_sensitivity<-function(y,z,fm){
+  ## A function to reformat fullmatches for use with sensmv/mw
+  ## y is the outcome
+  ## z is binary treatment indicator (1=assigned treatment)
+  ## fm is a factor variable indicating matched set membership
+  ## We assume that y,z, and fm have no missing data.
+  dat<-data.frame(y=y,z=z,fm=fm)[order(fm,z,decreasing=TRUE),]
+  numcols<-max(table(fm))
+  resplist<-lapply(split(y,fm),
+		   function(x){
+		     return(c(x,rep(NA, max(numcols-length(x),0))))
+		   })
+  respmat<-t(simplify2array(resplist))
+  return(respmat)
+}
+```
+
+## An example of sensitivity analysis with `senmv`.
+
+
+The workflow: First, reshape the matched design into the appropriate shape (one treated unit in column 1, controls in columns 2+).^[So notice that this software requires 1:K matches although K can vary.]
+
+```{r}
+respmat<-with(meddat[matched(meddat$pairm),],reshape_sensitivity(HomRate0803,nhTrt,pairm))
+respmat[1:4,]
+meddat <- transform(meddat,fm=fullmatch(nhTrt~HomRate03+nhAboveHS+nhPopD,data=meddat,min.controls=1))
+respmat2<-with(meddat[matched(meddat$fm),],reshape_sensitivity(HomRate0803,nhTrt,fm))
+respmat2[10:14,]
+```
+
+
+## An example of sensitivity analysis: the search for Gamma
+
+The workflow: Second, assess sensitivity at different levels of $\Gamma$.
+
+```{r}
+sensG1<-senmv(-respmat,method="t",gamma=1)
+sensG2<-senmv(-respmat,method="t",gamma=2)
+sensG1$pval
+sensG2$pval
+```
+
+
+##  Why $\Gamma$?
+
+How can an unobserved covariate confound our causal inferences? We need to have a model that we can play with in order to reason about this.  \textcite{rosenbaum2002observational} starts with a \textit{treatment odds ratio} for two units $i$ and $j$
+
+\begin{center}
+\begin{align} \label{eq: treatment odds ratio}
+\frac{\left(\frac{\pi_i}{1 - \pi_i} \right)}{\left(\frac{\pi_j}{1 - \pi_j} \right)} \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j \notag \\
+\implies \notag \\
+& \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j.
+\end{align}
+\end{center}
+ which implies a logistic model that links treatment odds, $\frac{\pi_i}{(1 - \pi_i)}$, to the *observed and unobserved* covariates $(\mathbf{x}_i, u_i)$,
+
+\begin{center}
+\begin{equation}
+\label{eq: unobserved confounding}
+\text{log} \left(\frac{\pi_i}{1 - \pi_i} \right) = \kappa(\mathbf{x}_i) + \gamma u_i,
+\end{equation}
+\end{center}
+
+where $\kappa(\cdot)$ is an unknown function and $\gamma$ is an unknown parameter.
+
+\note{
+\begin{center}
+\textbf{Remember}:
+\end{center}
+A logarithm is simply the power to which a number must be raised in order to get some other number. In this case we're dealing with natural logarithms. Thus, we can read $\text{log} \left(\frac{\pi_i}{1 - \pi_i} \right)$ as asking: $\mathrm{e}$ to the power of what gives us $\left(\frac{\pi_i}{1 - \pi_i} \right)$? And the answer is $\mathrm{e}$ to the power of $\kappa(\mathbf{x}_i) + \gamma u_i$. If $\mathbf{x}_i = \mathbf{x}_j$, then $\text{log} \left(\frac{\pi_i}{1 - \pi_i} \right) = \gamma u_i$, which means that $\mathrm{e}^{\gamma u_i} = \left(\frac{\pi_i}{1 - \pi_i} \right)$.
+}
+
+## Why $\Gamma$?
+
+Say, we rescale $u$ to $[0,1]$, then we can write the original ratio of treatment odds using the logistic model and the unobserved covariate $u$:
+
+\begin{center}
+\begin{equation}
+\frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} = \mathrm{e}^{\gamma(u_i - u_j)} \ \text{if} \ \mathbf{x}_i = \mathbf{x}_j.
+\end{equation}
+\end{center}
+
+Since the minimum and maximum possible value for $u_i - u_j$ are $-1$ and $1$,
+for any fixed $\gamma$ the upper and lower bounds on the treatment odds ratio
+are:
+
+\begin{center}
+\begin{equation}
+\label{eq: treatment odds ratio bounds gamma}
+\frac{1}{\mathrm{e}^{\gamma}} \leq \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \leq \mathrm{e}^{\gamma}.
+\end{equation}
+\end{center}
+
+If we use $\Gamma$ for  $\mathrm{e}^{\gamma}$, then we can express \eqref{eq: treatment odds ratio bounds gamma} as \eqref{eq: treatment odds ratio} by substituting $\frac{1}{\Gamma}$ for $\mathrm{e}^{-\gamma}$ and $\Gamma$ for $\mathrm{e}^{\gamma}$.
+
+## Why $\Gamma$?
+
+\ldots so we can write the odds of treatment in terms of $\Gamma$ (the effect
+of $u$ on the odds of treatment) for any two units $i$ and $j$ with the same
+covariates (i.e. in the same matched set):
+
+\begin{center}
+\begin{equation}
+\frac{1}{\Gamma} \leq \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \leq \Gamma \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j
+\end{equation}
+\end{center}
+
+So when $\pi_i = \pi_j$ then $\Gamma=1$: the treatment probabilities are the same for the two units --- just as we would expect in a randomized study.
+
+
+## An example of sensitivity analysis: the search for Gamma
+
+The workflow: Second, assess sensitivity at different levels of $\Gamma$ (here
+using two different test statistics).
+
+```{r}
+somegammas<-seq(1,5,.1)
+sensTresults<-sapply(somegammas,function(g){
+		     c(gamma=g,senmv(-respmat,method="t",gamma=g)) })
+sensHresults<-sapply(somegammas,function(g){
+		     c(gamma=g,senmv(-respmat,gamma=g)) })
+```
+
+## An example of sensitivity analysis: the search for Gamma
+
+The workflow: Second, assess sensitivity at different levels of $\Gamma$ (here
+using two different test statistics).
+
+```{r echo=FALSE, out.width=".8\\textwidth"}
+par(mar=c(3,3,2,1))
+plot(x = sensTresults['gamma',],
+     y = sensTresults['pval',],
+     xlab = "Gamma", ylab = "P-Value",
+     main = "Sensitivity Analysis",ylim=c(0,.2))
+points(x = sensHresults['gamma',],
+     y = sensHresults['pval',],pch=2)
+abline(h = 0.05)
+text(sensTresults['gamma',20],sensTresults['pval',20],label="T stat (Mean diff)")
+text(sensHresults['gamma',20],sensHresults['pval',20],label="Influential point resistent mean diff")
+```
+
+## An example of sensitivity analysis: the search for Gamma
+
+Or you can try to directly find the $\Gamma$ for a given $\alpha$ level test.
+
+
+```{r }
+findSensG<-function(g,a,method){
+  senmv(-respmat,gamma=g,method=method)$pval-a
+}
+res1<-uniroot(f=findSensG,method="h",lower=1,upper=6,a=.05)
+res1$root
+res2<-uniroot(f=findSensG,method="t",lower=1,upper=6,a=.05)
+res2$root
+```
+
+## Confidence Intervals
+
+Since we have fixed size sets (i.e. all 1:1 or all 1:2...), we can also look at
+an example involving point-estimates for bias of at most $\Gamma$ and
+confidence intervals assuming an additive effect of treatment. Notice also that
+that when $\Gamma$ is greater than 1, we have a range of point estimates
+consistent with that $\Gamma$.
+
+```{r cis}
+respmatPm<-with(droplevels(meddat[matched(meddat$pairm),]),reshape_sensitivity(HomRate0803,nhTrt,pairm))
+(sensCItwosidedG1<-senmwCI(-respmatPm,method="t",one.sided=FALSE))
+(sensCIonesidedG1<-senmwCI(-respmatPm,method="t",one.sided=TRUE))
+(sensCItwosidedG2<-senmwCI(-respmatPm,method="t",one.sided=FALSE,gamma=2))
+(sensCIonesidedG2<-senmwCI(-respmatPm,method="t",one.sided=TRUE,gamma=2))
+```
+
+\note{
+ Notice that the
+two-sided intervals have lower bounds that are lower than the one-sided
+intervals. }
+
+
+## Confidence Intervals
+
+Or with a pairmatch we could use the \texttt{rbounds} package:
+
+```{r }
+hlsens(respmatPm[,2],respmatPm[,1])
+```
+
+## Confidence Intervals
+
+Or with a pairmatch we could use the \texttt{rbounds} package:
+
+```{r}
+psens(respmatPm[,2],respmatPm[,1])
+```
+
+## Interpreting sensitivity analyses
+
+
+ As an aid to interpreting sensitivity analyses,
+  \textcite{rosenbaum2009amplification} propose a way decompose $\Gamma$ into two
+  pieces: one $\Delta$ gauges the relationship between an unobserved
+  confounder at the outcome (it records the maximum effect of the unobserved
+  confounder on the odds of a positive response (imagining a binary outcome))
+  and the other $\Lambda$ gauges the maximum relationship between the unobserved
+  confounder and treatment assignment.
+
+```{r amplify}
+lambdas <- seq(round(res1$root,1)+.1,2*res1$root,length=100)
+ampres1<-amplify(round(res1$root,1), lambda=lambdas)
+ampres2<-amplify(2, lambda=lambdas)
+```
+
+```{r echo=FALSE, out.width=".5\\textwidth"}
+par(mar=c(3,3,1,1),mgp=c(1.5,.5,0))
+plot(as.numeric(names(ampres1)),ampres1,
+     xlab="Lambda (maximum selection effect of confounder)",
+     ylab="Delta (maximum outcome effect of confounder)",
+     main="Decomposition of Gamma=4.4")
+lines(as.numeric(names(ampres2)),ampres2,type="b")
+```
+
+## How sensitive to hidden biases was your design?
+
+Take some minutes to do this. Report back to the class.
+
+## What questions are raised by this mode of sensitivity analysis?
+
+
+## Anything Else?
+
+## References
+
