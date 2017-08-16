@@ -1,0 +1,230 @@
+%  For slides only
+\input{slidesonly}
+
+% % For handout
+%\input{handout}
+
+%For handout + mynotes
+%\input{handout+mynotes}
+
+\input{beamer-preamble-bbh-all}
+\input{defs-all}
+\input{courseedition}
+
+\title[Day 18]{Day 18: $H^{3}$ sensitivity analysis; various}
+% \author, date moved to beamer-preamble-*-all.tex
+
+
+% copied from CSCAR svn repo, `dissdefs.tex`
+\usepackage{xspace}
+\newcommand{\satm}{\mbox{\textsc{sat-m}}\xspace}
+\newcommand{\satv}{\mbox{\textsc{sat-v}}\xspace}
+\newcommand{\upm}{\mbox{\textsc{urm}}\xspace}
+\newcommand{\asian}{\mbox{\textsc{asian}}\xspace}
+\newcommand{\presatm}{\mbox{\textsc{pre-m}}\xspace}
+\newcommand{\premath}{\mbox{\textsc{pre-m}}\xspace}
+\newcommand{\presatv}{\mbox{\textsc{pre-v}}\xspace}
+\newcommand{\preverb}{\mbox{\textsc{pre-v}}\xspace}
+\newcommand{\parentsinc}{\mbox{\textsc{incm}}\xspace}
+\newcommand{\gpa}{\mbox{\textsc{gpa}}\xspace}
+\newcommand{\dadsed}{\mbox{\textsc{dadsed}}\xspace}
+\newcommand{\momsed}{\mbox{\textsc{momsed}}\xspace}
+\newcommand{\avgeng}{\mbox{\textsc{e-gpa}}\xspace}
+\newcommand{\avgmath}{\mbox{\textsc{m-gpa}}\xspace}
+\newcommand{\avgnatsci}{\mbox{\textsc{ns-gpa}}\xspace}
+\newcommand{\avgssci}{\mbox{\textsc{ss-gpa}}\xspace}
+\newcommand{\coach}{\mbox{\textsc{coach}}\xspace}
+\newcommand{\dadcoll}{\mbox{\textsc{dadcoll}}\xspace}
+\newcommand{\aavg}{\mbox{\textsc{a-avg}}\xspace}
+
+\begin{document}
+
+\input{announcement-of-the-day}
+
+\section{$H^{3}$ sensitivity analysis; PS $\leftrightarrow$ OV ``interaction''}
+
+
+\begin{frame}
+  \frametitle{Background: omitted variables}
+  
+  Almost all findings from observational studies could in principle be
+  explained by an unmeasured variable. But how strong a confounder
+  would be needed?  Rosenbaum (1987,\ldots) quantifies confounding in
+  terms of propensity scores.
+  
+  \begin{center}
+  \igrphx[height=.6\textheight]{rb2010p77}
+\end{center}
+
+  An analytically easier course uses regression to quantify confounding. 
+\end{frame}
+
+\begin{frame}
+  \frametitle{Causal inference via covariance adjustment}
+
+
+When we fit a model
+$$
+Y = a + Zb +  \mathbf{X} c + e,\,\,\, e \sim \mathcal{N}(0, \sigma^{2}),
+$$
+the estimated $b$ merits interpretation as the causal effect of treatment $Z$ if\\
+\begin{enumerate}
+\item $(Y_{t}, Y_{c}) \perp Z | X$
+\item The linear relationship well-enough describes the finite population of interest.
+\end{enumerate}
+
+The first of these assumptions is usually untestable, and more central. 
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Sensitivity analysis for the linear model}
+\framesubtitle{An omitted variable}
+
+We fit
+$$
+Y = a + Zb +  \mathbf{X} c + e,\,\,\, e \sim \mathcal{N}(0, \sigma^{2}),
+$$
+but would have liked to have fit
+$$
+Y = \alpha + Z\beta +  \mathbf{X} \gamma + W\zeta + e,\,\,\, e \sim \mathcal{N}(0, \sigma^{2}).
+$$
+
+\begin{enumerate}
+\item<2-> How different are $b$ and $\beta$?
+\item<3-> How different are the confidence intervals for $b$ and $\beta$?
+\end{enumerate}
+
+\end{frame}
+
+ 
+\begin{frame}
+  \frametitle{Sensitivity analysis for the linear model}
+\framesubtitle{``speculation parameters''}
+
+We can quantify the relationship of $b$ to $\beta$, and of $\mathrm{se}(b)$ to
+$\mathrm{se}(\beta)$, in terms of 2 ``speculation parameters'':
+\begin{enumerate}
+\item $t_{w}$, the $t$-statistic associated with $W$'s coefficient in the (OLS) regression of $Z$ on $W$ and $\mathbf{X}$;
+\item $R^2_{y\cdot z\mathbf{x} w}$, the
+coefficient of multiple determination of the regression of $Y$ on $Z$,
+$\mathbf{X}$, and $W$.
+\end{enumerate}
+
+More specifically, we can bound the upper and lower limits of conventional confidence intervals in terms of $t_{w}$ alone, or (often more sharply) in terms of $t_{w}$ and $R^2_{y\cdot z\mathbf{x} w}$.
+\end{frame}
+\begin{frame}
+  \frametitle{$W$-insensitive confidence bounds as a function of $t_{w}$}
+
+  \begin{prop}[Hosman, Hansen \& Holland, 2010]
+Let $T>0$.  If $|t_{w}| \leq T$ then 
+$$
+\hat{\beta}\pm q\widehat{\mathrm{se}} (\hat{\beta}) \subseteq 
+\hat{b} \pm \left( \sqrt{T^2 + q^{2} \cdot \frac{T^2 + 
+n-r(\mathbf{X})-2}{n-r(\mathbf{X})-3} } \right) \widehat{\mathrm{se}}(\hat{b}).
+$$
+\end{prop}
+\end{frame}
+
+\frame<1-4>[label=probsstudy]
+{
+  \frametitle{Application: An observational study of coaching for the SAT}
+
+Powers \& Rock (1999) sampled one in 200 SAT-I registrants in 1995-96.
+\begin{itemize}
+\item<2-| alert@+> The ``treatment'' is being coached for the SAT.  This
+  information comes from survey responses.
+\item<3-| alert@+> Outcomes, \textit{i.e.} SAT scores, come from the College Board's
+administrative records.
+\item<4-| alert@+> Many students took the SAT or PSAT before being coached; so
+  there are pretest scores too. \pause
+\item<5-| alert@+> Covariate is high-dimensional (and a little bit messy).
+\end{itemize}
+}
+
+\begin{frame}  \frametitle{Sensitivity of estimates of \satm benefit of coaching }
+\framesubtitle{\satm \textasciitilde \coach + \presatm + \presatv + \asian + \upm + \dadcoll + \aavg + \avgmath}
+
+\newlength{\pholderlngth}
+\settowidth{\pholderlngth}{[aims for postgrad. deg.]}
+\begin{center}
+\begin{tabular}{|l|l|r|} \hline
+\parbox{\pholderlngth}{Excluding from predictors in regression of \coach on 
+\asian,\ldots, \avgmath the
+ variable}  & 
+\parbox{2cm}{dullens prediction of \coach by $t=$}
+    & \parbox{2.5cm}{Then if $W$ is s.t. $t_w \leq t$,
+$\beta \pm 2\widehat{\mathrm{se}}(\hat{\beta})  \subseteq$} \\  
+\hline
+\asian &       8.1 & [-2,44] \\
+\upm  &       3.2 &  [11,32] \\
+\dadcoll &       7.9 & [-1,44]\\
+\presatm &       2.4 &  [13,30 ]\\
+\presatv  &       -2.4&  [13,30 ]  \\ 
+\aavg    &      0.5 &  [16,27] \\ 
+\avgmath &      -2.0& [13,29 ] \\\hline 
+ \end{tabular}
+\end{center}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Confidence limits for math effect under several omitted variable scenarios }
+
+
+\begin{columns}
+\column{.5\linewidth}%
+{
+\igrphx[width=\linewidth]{SensAnal-mathSA}
+
+\bigskip
+{\footnotesize Propensity score stratification + fixed effects regression}
+}
+
+\column{.5\linewidth}%
+{
+\only<2->{
+\igrphx[width=\linewidth]{climits_ovsa1}
+
+\bigskip
+{\footnotesize Covariate adjustment via OLS}
+}
+}
+\end{columns}
+
+$H^{3}$ (2010) show this phenomenon in another example.
+\end{frame}
+
+
+\section{matching prior to probability sampling}
+
+
+\begin{frame}{Example: propensity matching prior to cluster sampling}
+  \framesubtitle{to balance internal and external validity}
+  \begin{itemize}[<+->]
+  \item \only<2->{\sout}{Question: how did Grutter v. Bollinger affect applicants'
+    responses to the diversity essay?}
+\item Question: how applicants responses to diversity essay vary by
+  race of applicant?
+\item B/c race was so confounded w/ class, Kirkland \& Hansen (2011)
+  propensity-matched, then studied a sample of propensity matched
+  sets (clusters) and unmatched applicants.
+  \end{itemize}
+  
+  \addtolength{\tabcolsep}{-\tabcolsepadj}
+  {\footnotesize
+  \begin{center}
+\begin{tabular}{rrrrrrrrr}
+  \hline & \multicolumn{2}{c}{Matched:} & \multicolumn{2}{c}{Matches:} & \multicolumn{1}{c}{Sampling} & \multicolumn{2}{c}{Unmatched:} & \multicolumn{1}{c}{Smpling} \\ & Tot. \# & Spl. \# & Tot. \# & Spl. \# & weight & Tot. \# & Spl. \# & weight. \\ 
+  \hline
+[0,30] & 1400 & 54 & 540 & 20 & 27 & 1600 & 10 & 160 \\ 
+  (30,60] & 2600 & 45 & 880 & 15 & 59 & 9300 & 10 & 930 \\ 
+  (60,100] & 610 & 47 & 200 & 15 & 14 & 2200 & 10 & 220 \\ 
+   \hline
+\end{tabular}
+\end{center}
+}
+  \addtolength{\tabcolsep}{\tabcolsepadj}
+\end{frame}
+
+\end{document}
