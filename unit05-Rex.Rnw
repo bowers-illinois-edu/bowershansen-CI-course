@@ -2,7 +2,7 @@
 %\usepackage{natbib}
 
 \title{Making and justifying a matched design.}
-\author{ICPSR Causal Inference '16}
+\input{courseedition}
 \usepackage{icpsr-classwork}
 
 \begin{document}
@@ -136,23 +136,23 @@ with(meddat,boxplot(split(penpscore,nhTrt)))
 ## Rank-Based Mahalanobis distance (Rosenbaum, Chap 8)
 mahalDist<-match_on(balfmla,data=meddat,method="rank_mahalanobis")
 
-fm3<-fullmatch(psDist2+caliper(psDist2,4)
+fm3<-fullmatch(psdist+ caliper(psdist,4)
                +caliper(absdist,2)
-               +caliper(mahalDist,40),data=meddat,tol=.00001,min.controls=1)
+               +caliper(mahalDist,40), data=meddat,tol=.00001,min.controls=1)
 
-##fm3<-fullmatch(psDist2,data=meddat,tol=.00001,min.controls=1)
+##fm3<-fullmatch(psdist,data=meddat,tol=.00001,min.controls=1)
 
 meddat$fm3<-NULL
 meddat[names(fm3),"fm3"]<-fm3
 
-xb2<-xBalance(update(balfmla,.~.+pScore2),
+xb2<-xBalance(update(balfmla,.~.+pscore),
 	      strata=list(raw=NULL,fm3=~fm3),
 	      data=meddat,
 	      report=c("std.diffs","z.scores","adj.means",
 		       "adj.mean.diffs", "chisquare.test","p.values"))
 xb2$overall
 xb2$results["HomRate03",,]
-xb2$results["pScore2",,]
+xb2$results["pscore",,]
 
 summary(fm3)
 
