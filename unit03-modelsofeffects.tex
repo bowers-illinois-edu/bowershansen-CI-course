@@ -216,25 +216,42 @@ Now start \texttt{unit03-Rex}
 
 \section{Inference w/ general models of effects}
 
+\subsection{Confidence intervals by inversion of tests}
 \begin{frame}{Confidence intervals and models of effects}
 
   \begin{itemize}[<+->]
   \item The 3 models just considered fall under the broader model that the GOTV
 generated $v$ votes per contact, some $v \in [-1, 1]$.
 \item Assuming that model, the 95\% CI for $v$ is the collection of $v$s corresponding to incomplete response schedules that would not be rejected at level .05 - a confidence interval by inversion of a family of hypothesis tests.
-\item If you want an estimate to go with such a confidence interval, the convention is to report a \textit{Hodges-Lehmann} estimate --- essentially, limit of 100*$(1-\alpha)$\% CIs, as $\alpha \uparrow 1$.
-\item There's no precise analogue of the ``standard error.''
-\item However, for some of the spirit of a ``standard error'', report a sometimes 2/3 CI alongside a 95\% CI, as suggested by Mosteller \& Tukey (1977, \textit{Data analysis and regression}).
-\item We just backed out estimates of the ``Complier average treatment effect,'' and associated confidence intervals, w/o violating the intention-to-treat principle! (Rosenbaum, 1997).
+\item This enables us to back out a confidence interval for the
+  ``Complier average treatment effect,'' w/o violating the
+  intention-to-treat principle! (Rosenbaum, 1997).
+\item In addition, this method of confidence interval construction is
+  immune to the problem of weak instruments (cf. \textit{DOS} \S~5.3 \&
+  contained references).
   \end{itemize}
 
 
 \end{frame}
 
-
+\begin{frame}{Estimates and models of effects}
+  
+  \begin{itemize}
+\item If you want an estimate to go with such a confidence interval,
+  the convention is to report a \textit{Hodges-Lehmann} estimate ---
+  the limit of 100*$(1-\alpha)$\% CIs, as $\alpha \uparrow
+  1$\footnote{Assuming the limit exists and contains a single
+    point. If you want to compute (rather than interpret) an HL
+    estimate, get the precise definition, as e.g. in \textit{DOS} \S~2.4.3. }. 
+\item There's no precise analogue of the ``standard error''\ldots
+\item So you can't use $\hat{\theta} \pm z_{*}\mathrm{s.e.}(\hat
+  \theta)$ as a CI. 
+\item However, for the spirit of a ``standard error'', some report a 2/3 CI alongside a 95\% CI  (Mosteller \& Tukey, 1977, \textit{Data analysis and regression}).
+  \end{itemize}
+\end{frame}
+\subsection{Example: Violence in Medell{\'i}n} 
 \begin{frame}
-\frametitle{Example: Violence and public infrastructure in Medell{\'i}n, Colombi
-a}
+\frametitle{Example: Violence and public infrastructure in Medell{\'i}n, Colombia}
 \begin{columns}
   \begin{column}{.5\linewidth}
     \begin{itemize}
@@ -253,7 +270,12 @@ ods.
 \end{columns}
 
 \end{frame}
-\Note{(strata will enter the story because the end analysis involved matching)}
+\itnote{
+\item 2017+: Cycled back to this later in course, not during unit 3.
+  Ordinarily it's too much at first pass.
+\item (strata will enter the story because the end analysis involved
+  matching)
+}
 
 
 
@@ -267,12 +289,12 @@ dependence assumptions.   For instance, using random
 
  \begin{enumerate}[<+->]
  \item Let
-   $y(T)=$ neighborhood homicide rate in year $T=2002, \ldots, 2008$.  We test models of
+   $y(T)=$ neighborhood homicide rate in year $T=2002, \ldots, 2008$.  We'll test models of
    effects of form, for rates $r \leq 0$:
 $$H_{0}: y_{t}(T) = \left\{ \begin{array}{lr}\exp((T-2004) r/4)
                               y_{c}(T),& T> 2004; \\
 y_{c}(T),& T\leq 2004.\end{array} \right.$$ 
- \item We then fit a random effects model of this form:
+ \item Given $H_{0}$, fit a random effects model of this form:
 \begin{semiverbatim}
  lmer(Count \textasciitilde\  year + (year+1|nh) +\ \pause
             \alert<@+| handout:0>{offset}( nhTrt*(yr>2004)*(r/4)*(yr-2004) ),
@@ -282,22 +304,33 @@ y_{c}(T),& T\leq 2004.\end{array} \right.$$
   $\hat{\beta}_{0(r)}$ and $ \hat{\beta}_{1(r)}$,\pause  plus a
   ``random'' slope and intercept (also specific to $r$) for
   each n-hood.  
-\item To test $H_{0}$, I calculated a test statistic comparing $t$ vs $c$
-  n-hoods' fitted intercepts. For the reference dist'n, I rerandomized
-  $Z$ and recalculated.
+\item To test $H_{0}$, I used a test statistic comparing $t$ vs $c$
+  n-hoods' fitted intercepts. For reference distribution, 
+  intercepts shuffled within matched sets.
  \end{enumerate}
 
   
 \end{frame}
 
 \begin{frame}<\nottheirhandout>{Outcome analysis for the Medellin study}
+\framesubtitle{Official statistics on n-hood violence}
   
   \begin{center}
-    \igrphx[width=\linewidth]{RIoutcomeAnalysisBarchart}
+    \igrphx[width=\linewidth]{medellin-TEs-homicide}
   \end{center}
 
 \end{frame}
 
+
+
+\begin{frame}<\nottheirhandout>{Outcome analysis for the Medellin
+    study}
+\framesubtitle{Outcomes constructed from survey responses}
+
+\begin{center}
+      \igrphx[width=\linewidth]{medellin-TEs-amenities}
+\end{center}
+\end{frame}
 \section{Tests for normal, not Normal, data distributions}
 
 
