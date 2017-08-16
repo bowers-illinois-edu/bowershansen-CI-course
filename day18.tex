@@ -195,6 +195,122 @@ $\beta \pm 2\widehat{\mathrm{se}}(\hat{\beta})  \subseteq$} \\
 $H^{3}$ (2010) show this phenomenon in another example.
 \end{frame}
 
+\section[R.I. w/ modeled outcomes]{Randomization inference w/ modeled outcomes}
+\subsection[U3 review]{Unit 3 review: Confidence intervals by inversion of tests}
+\begin{frame}{Confidence intervals and models of effects}
+
+  \begin{itemize}[<+->]
+  \item The 3 models just considered fall under the broader model that the GOTV
+generated $v$ votes per contact, some $v \in [-1, 1]$.
+\item Assuming that model, the 95\% CI for $v$ is the collection of $v$s corresponding to incomplete response schedules that would not be rejected at level .05 - a confidence interval by inversion of a family of hypothesis tests.
+\item This enables us to back out a confidence interval for the
+  ``Complier average treatment effect,'' w/o violating the
+  intention-to-treat principle! (Rosenbaum, 1997).
+\item In addition, this method of confidence interval construction is
+  immune to the problem of weak instruments (cf. \textit{DOS} \S~5.3 \&
+  contained references).
+  \end{itemize}
+
+
+\end{frame}
+
+\begin{frame}{Estimates and models of effects}
+  
+  \begin{itemize}
+\item If you want an estimate to go with such a confidence interval,
+  the convention is to report a \textit{Hodges-Lehmann} estimate ---
+  the limit of 100*$(1-\alpha)$\% CIs, as $\alpha \uparrow
+  1$\footnote{Assuming the limit exists and contains a single
+    point. If you want to compute (rather than interpret) an HL
+    estimate, get the precise definition, as e.g. in \textit{DOS} \S~2.4.3. }. 
+\item There's no precise analogue of the ``standard error''\ldots
+\item So you can't use $\hat{\theta} \pm z_{*}\mathrm{s.e.}(\hat
+  \theta)$ as a CI. 
+\item However, for the spirit of a ``standard error'', some report a 2/3 CI alongside a 95\% CI  (Mosteller \& Tukey, 1977, \textit{Data analysis and regression}).
+  \end{itemize}
+\end{frame}
+\subsection{Example: Violence in Medell{\'i}n} 
+\begin{frame}
+\frametitle{Example: Violence and public infrastructure in Medell{\'i}n, Colombia}
+\begin{columns}
+  \begin{column}{.5\linewidth}
+    \begin{itemize}
+    \item 2 million residents; 16 districts
+    \item Pre-intervention: 60\% poverty rate, 20\% unemployment, homicide 185 p
+er 100K
+    \item High residential segregation
+    \item<2-> 2004-2006: infrastructure intervention for certain poor neighborho
+ods.
+    \end{itemize}
+  \end{column}
+  \begin{column}{.5\linewidth}
+    \only<1>{\igrphx{medellin-conc-pov}}
+\only<2-\mynoteonly>{\igrphx{medellin-gondola}}
+  \end{column}
+\end{columns}
+
+\end{frame}
+\itnote{
+\item 2017+: Cycled back to this later in course, not during unit 3.
+  Ordinarily it's too much at first pass.
+\item (strata will enter the story because the end analysis involved
+  matching)
+}
+
+
+
+\begin{frame}[fragile]{A model of effects for homicide rates in Medellin}
+
+Each Medellin neighborhood provides several years of non-independent
+data.  If we're willing to model Metrocable as a natural experiment,
+we can borrow longitudinal data methods, without having to adopt their
+dependence assumptions.   For instance, using random
+ effects: 
+
+ \begin{enumerate}[<+->]
+ \item Let
+   $y(T)=$ neighborhood homicide rate in year $T=2002, \ldots, 2008$.  We'll test models of
+   effects of form, for rates $r \leq 0$:
+$$H_{0}: y_{t}(T) = \left\{ \begin{array}{lr}\exp((T-2004) r/4)
+                              y_{c}(T),& T> 2004; \\
+y_{c}(T),& T\leq 2004.\end{array} \right.$$ 
+ \item Given $H_{0}$, fit a random effects model of this form:
+\begin{semiverbatim}
+ lmer(Count \textasciitilde\  year + (year+1|nh) +\ \pause
+            \alert<@+| handout:0>{offset}( nhTrt*(yr>2004)*(r/4)*(yr-2004) ),
+          family=poisson, data=homd)
+\end{semiverbatim}
+\item Fitted params include  ``fixed'' intercept and slope,
+  $\hat{\beta}_{0(r)}$ and $ \hat{\beta}_{1(r)}$,\pause  plus a
+  ``random'' slope and intercept (also specific to $r$) for
+  each n-hood.  
+\item To test $H_{0}$, I used a test statistic comparing $t$ vs $c$
+  n-hoods' fitted intercepts. For reference distribution, 
+  intercepts shuffled within matched sets.
+ \end{enumerate}
+
+  
+\end{frame}
+
+\begin{frame}<\nottheirhandout>{Outcome analysis for the Medellin study}
+\framesubtitle{Official statistics on n-hood violence}
+  
+  \begin{center}
+    \igrphx[width=\linewidth]{medellin-TEs-homicide}
+  \end{center}
+
+\end{frame}
+
+
+
+\begin{frame}<\nottheirhandout>{Outcome analysis for the Medellin
+    study}
+\framesubtitle{Outcomes constructed from survey responses}
+
+\begin{center}
+      \igrphx[width=\linewidth]{medellin-TEs-amenities}
+\end{center}
+\end{frame}
 
 \section{matching prior to probability sampling}
 
