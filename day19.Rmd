@@ -17,6 +17,7 @@ output:
     latex_engine: xelatex
     citation_package: biblatex
     template: icpsr.beamer
+    incremental: true
     includes:
         in_header:
            - defs-all.sty
@@ -123,8 +124,18 @@ library(RItools,lib.loc="./lib")
 
 \end{frame}
 
-\begin{frame}
-  \frametitle{Statistical inference for counterfactual quantities with interference?}
+## Approaches to creating interpretable comparisons:
+
+   - Randomized experiments (more precision from reducing heterogeneity in $Y$)
+   - Instrumental variables (with randomized $Z$ created $D$)
+   - Natural Experiments / Discontinuities (one $X$ creates $Z$)
+   - Difference-in-Differences (reduce bias *and* increase precision from reducing heterogeneity in $Y$)
+   - Semi-/Non-parametric Covariance Adjustment (i.e. matching)
+   - Parametric covariance adjustment
+
+# What about interference? How define, estimate and test causal effects.
+
+## Statistical inference for counterfactual quantities with interference?
 
   \centering
   \includegraphics{complete-graph.pdf}
@@ -146,9 +157,8 @@ library(RItools,lib.loc="./lib")
   }
 
 
-\end{frame}
 
-# Application: The effects of voter registration observers in Ghana, 2008
+# A Simple Design-based Estimation Approach
 
 \begin{frame}
   \frametitle{Voter Registration in Ghana 2008}
@@ -265,13 +275,39 @@ etc..
 
 ## Estimation restricting interference by design
 
-[Ichino results]
+How would we use this data to estimate direct, indirect, or spillover effects?
 
-## The Model of Effects Approach
+```{r echo=FALSE}
+library(sp)
+library(maptools)
+load("~/Documents/PROJECTS/GhanaModels/data/ELAs.rda")
+load("~/Documents/PROJECTS/GhanaModels/data/network.rda")
+ELAs.df <- as.data.frame(ELAs)
+outcome<-ELAs$outcome
+treatment<-ELAs$tela
+options(scipen=10)
+```
+
+```{r}
+table(Z=ELAs.df$tela,TrtRegion=ELAs.df$NSF_Const_registration_Treat)
+tmpdat <- group_by(ELAs.df,block,ZLv2=tela,ZLv1=NSF_Const_registration_Treat) %>% 
+  summarise(barYb=round(mean(reg2008ELA - reg2004ELA),5),
+            nb=n(), nTb=sum(tela),
+            barY08=mean(reg2008ELA),
+            barY04=mean(reg2004ELA))
+tmpdat
+```
+
+# The Model of Effects Approach
+
+[See the ColumbiaStats Talk]
 
 
+## Summary
 
-## Anything Else?
+  - The sharp null implies no interference. So no need for an *assumption* of no interference.
+  - Careful design can allow estimation when the number of potential outcomes is small-ish per unit.
+  - Models of effects can specify flexible theoretical models of propagation over networks and randomization can justify statistical inference and causal inference.
 
 ## References
 
