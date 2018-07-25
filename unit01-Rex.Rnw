@@ -19,16 +19,29 @@ concordance=TRUE
 \section{Two ways to read in data}
 Two running examples: The results of (last year's) coffee experiment, and data from \cite{arceneaux:2005}.
 
-To read in data%
-\footnote{This is a recommended way to type in small data sets in interactive sessions, but it (specifically, \texttt{scan()}) doesn't work in scripts.  To see how this script actually assembled the data, check out the source code, at \url{https://github.com/bowers-illinois-edu/bowershansen-CI-course}.}
-from the coffee experiment:
+To enter the coffee data directly into R, do:
 \begin{verbatim}
 > z = scan(nlines=1)
-1 1 1 1 0 0 0 0
+1:  1 1 1 1 0 0 0 0
+\end{verbatim}
+That is, type ``\texttt{z = scan(nlines=1)}'' at the ``\texttt{>}'' prompt in your R console. You'll be 
+greeted with a ``\texttt{1:},'' followed by the cursor. Then you'll type in 
+\begin{verbatim}
+1 1 1 1 0 0 0 0 <Enter-key>
+\end{verbatim}
+and be greeted by a fresh ``\texttt{>}'' prompt at the next line. 
+
+Once you reach that point, continue with:
+\begin{verbatim}
 > y = scan(nlines=1)
-1 1 1 1 0 0 0 0
+1:  1 1 1 1 0 0 0 0
 > coffee = data.frame(z, y)
 \end{verbatim}
+The variables \texttt{z} and \texttt{y} are now bound together in the \texttt{coffee} data frame. 
+
+The above sequence of commands won't work if you select and copy them from this document and then paste them into R; nor should you use them in scripts.%
+\footnote{To see how \textit{this} script actually assembled its \texttt{coffee} data frame, check out the source code, at \url{https://github.com/bowers-illinois-edu/bowershansen-CI-course}.} 
+However, each block of R code \textit{below} can be cut-and-pasted into your R session.
 
 <<echo=FALSE>>=
 coffee = data.frame(z=rep(1:0, each=4), y=rep(1:0, each=4))
@@ -42,11 +55,13 @@ table(coffee)
 @
 
 
-Here is the Acorn GOTV experiment data described in Arceneaux (2005),
-after aggregation to the precinct level.
+The next command demonstrates data import in the common scenario that the data have been stored in the csv (comma separated values) format. 
 <<>>=
 acorn = read.csv("data/acorn03.csv")
 @
+(The specific data we just read in are those of the Acorn GOTV experiment data described in Arceneaux (2005),
+after aggregation to the precinct level.)
+
 
 \section{A test statistic and its distribution under the strict null}
 
@@ -85,7 +100,7 @@ with(coffee, sum(z*y))
 @
 or, to use an R function mirroring our notation,
 <<>>=
-with(coffee, crossprod(z, y)) # beware: crossprod() return a **matrix** (of dim (1,1))
+with(coffee, crossprod(z, y)) # beware: crossprod() returns **matrices** (of dim (1,1))
 with(coffee, crossprod(z, y)[1,1]) #to return a length-1 vector instead
 @
 
@@ -122,10 +137,11 @@ hang of his way of doing things before going back to translate.)
 \subsection{Approximate p-values by simulation}
 
 To simulate from the null distribution of a test statistic, use
-\texttt{sample} to randomly permute $z$.
+\texttt{sample} to randomly permute, i.e. shuffle, the entries in $z$.
 
 <<>>=
 with(coffee, sum(z*y))
+z ; sample(z)
 with(coffee, sum(sample(z)*y))
 with(coffee, sum(sample(z)*y))
 with(coffee, replicate(3, sum(sample(z)*y)))
@@ -133,7 +149,8 @@ simT = with(coffee, replicate(1000, sum(sample(z)*y)))
 
 @
 
-This says that the null distribution of $T = \mathbf{Z}'\mathbf{y}$ can be approximated as
+(If you re-run this code expect to see somewhat different output, due to the difference between your computer's random shuffles and mine.)  This says that the null distribution of $T = \mathbf{Z}'\mathbf{y}$ can be approximated as
+
 <<>>=
 round(table(simT)/1000, 2)
 @
