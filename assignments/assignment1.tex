@@ -42,15 +42,24 @@
   \end{enumerate}
 \item Calculate $\mathrm{E}_{0} [ n_{1}^{-1}\mathbf{Z}'\mathbf{y} ]$, the expected value of the
   sample mean under the strict null hypothesis of no effect, from first principles --- i.e., without simulations ---  using data in $\mathbf{y}$.  \label{q:exactEV}
-\item In this setup, $\mathrm{Var}_{0}\, [n_{1}^{-1}\mathbf{Z}'\mathbf{y}]  = n_{1}^{-1}
-  \frac{n_{0}}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n-1} $.
-  If you've seen formulas for the sample variance in earlier stats
+\item In this setup, $\mathrm{Var}_{0}\, [\bar{y}_{1}]  = \frac{1}{n_{1}}
+  \frac{n_{0}}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n-1} $,
+  where $\bar{y}_{1} = n_{1}^{-1}\mathbf{Z}'\mathbf{y}$ is the mean of
+  $y$s among the group assigned to treatment ($\{i: Z_{i} =1\}$) while
+  $\bar{y} = n^{-1}\mathbf{1}'\mathbf{y}$ is the mean of $y$ over
+  the full study population.  If you've seen formulas for the sampling
+  variance of the mean in earlier stats
   courses, you probably saw
   $$
-  \mathrm{Var} \left[\bar{y}\right] = \frac{\sigma_{y}^{2}}{n_{1}} = \frac{1}{n_{1}}
-  \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n} .
+  \widehat{\mathrm{Var}} \left[\bar{y}_{1}\right] = \frac{s^{2}_{y}}{n_{1}} = \frac{1}{n_{1}}
+  \frac{\sum_{i=1}^{n_{1}} (y_{i} - \bar{y}_{1})^{2}}{n_{1}-1}, 
+\, \mathrm{and/or}\,
+  \mathrm{Var} \left[\bar{y}_{1}\right] = \frac{\sigma_{y}^{2}}{n_{1}} = \frac{1}{n_{1}}
+  \frac{\sum_{i=1}^{n} (y_{i} - \bar{y})^{2}}{n}.
   $$
-Which of the two formulas gives a larger value?  Explain why it makes
+Which gives a larger value, our new $\mathrm{Var}_{0}\,
+[\bar{y}_{1}]$-formula or the  $\mathrm{Var} \left[\bar{y}_{1}\right]$
+formula immediately above?  Explain why it makes
 sense that the formula we've given would differ the direction it does
 from this other formula, in terms of the difference between this
 sampling situation and the sampling model that more commonly
@@ -82,24 +91,25 @@ member of each pair.
 \begin{itemize}
 \item[a] Discuss strengths \& weaknesses of each method.
 \item[b] How would your answers to (a) change if $n: 6 \mapsto 600$?
-\item[c] Determine $\E[  Z_{1} ]$  under each method.
-\item[d] Determine $\E\big[  Z_{1} + Z_{2} + \cdots + Z_{6} \big]$ under each method.
-\item[e] Calculate $\E[\mathbf{Z}'\mathbf{1}]$ under each of the three methods.
+\item[c] Determine $\EE[  Z_{1} ]$  under each method.
+\item[d] Determine $\EE\big[  Z_{1} + Z_{2} + \cdots + Z_{6} \big]$ under each method.
+\item[e] Calculate $\EE[\mathbf{Z}'\mathbf{1}]$ under each of the three methods.
 \end{itemize}
 \end{minipage}
 % \input{gg15ii}
 \begin{minipage}{.45\linewidth}
   \begin{itemize}
- \item[f] For which of the methods does $\E
-  \big[\big(\mathbf{Z}'\mathbf{1} -\E [\mathbf{Z}'\mathbf{1}]\big)^{2}\big] =
+ \item[f] For which of the methods does $\EE
+  \big[\big(\mathbf{Z}'\mathbf{1} -\EE [\mathbf{Z}'\mathbf{1}]\big)^{2}\big] =
   0$?\footnote{I.e., for which does
     $\mathrm{Var}[\mathbf{Z}'\mathbf{1}] = 0$?  (In general,
-    $\mathrm{Var}[V] = \E \big[V - \E[V] \big]^{2} $.)}
+    $\mathrm{Var}[V] = \EE \big[V - \EE[V] \big]^{2} $.)}
 \item[h] For two of the three methods, algebraic principles we've seen
   let you reduce
-  $\E [\frac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}}]$ to a
+  $\EE [\frac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}}]$ to a
   familiar function of $(x_{1}, x_{2}, \ldots, x_{6}) $.  Which 2 are
   these, and why doesn't the same thing work for the third?
-
-
+\end{itemize}
+\end{minipage}
+\end{enumerate}
 \end{document}
