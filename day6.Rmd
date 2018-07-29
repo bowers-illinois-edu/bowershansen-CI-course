@@ -91,15 +91,17 @@ library(RItools,lib.loc="./lib")
 \item Recap: 
 \end{enumerate}
 
-# But first: An overview of approaches to statistical inference for causal quantities
+# But first: Who am I? Who are you?
+
+## Brief Introductions
+
+# But second: An overview of approaches to statistical inference for causal quantities
 
 \begin{frame}{Approach 1: Test Hypotheses about Models of Potential Outcomes}
-
 
   \smallskip
   \centering
   \includegraphics[width=.9\textwidth]{images/cartoonFisher.pdf}
-
 
 \end{frame}
 
@@ -110,7 +112,6 @@ library(RItools,lib.loc="./lib")
   \centering
   \includegraphics[width=.9\textwidth]{images/cartoonNeyman.pdf}
 
-
 \end{frame}
 
 
@@ -120,10 +121,9 @@ library(RItools,lib.loc="./lib")
   \centering
   \includegraphics[width=.9\textwidth]{images/cartoonBayes.pdf}
 
-
 \end{frame}
 
-# And second, some more context: The creation of interpretable comparisons.
+# And third, some more context: The creation of interpretable comparisons.
 
 ## Research designs to aid the creation of interpretable comparisons
 
@@ -134,7 +134,13 @@ library(RItools,lib.loc="./lib")
    - Parametric covariance adjustment (same as above, but with a model for statistical adjustment, i.e. "controlling for")
 
 
-# Now: Instruments
+# Now: Instruments, the ITT and CACE/LATE
+
+## An instrument moves a dose.
+
+
+
+
 
 ## Summary of the Day
 
