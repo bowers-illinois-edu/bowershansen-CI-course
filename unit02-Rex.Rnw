@@ -77,7 +77,7 @@ size = 1:size) %>% mutate_all( funs(last(.)))
 ## 		      y <- rep(c(0,1),round(c(ny0,ny1)))
 ## 		      return(y)
 ## })
-## 
+##
 ## stopifnot( all( sapply(tmp,length) - table(acornbig$pnum) == 0 ))
 
 acornbig <- acornbig %>% group_by(pnum) %>% mutate(ny1=round(vote03*size),
@@ -156,6 +156,7 @@ acorn$y0 <- acorn$v_g2002 ## using past turnout
 acorn$y1 <- acorn$y0 + .1 ## positing a constant additive effect
 ## Is this the right way to think about what we are estimating??
 aceSmallTrue <- mean(acorn$y1)
+aceSmallTrue
 
 ## Expand proportion voting in past into 1 and 0s
 acornbig <- acornbig %>% group_by(pnum) %>% mutate(ny1past=round(v_g2002*size),
@@ -216,20 +217,19 @@ getestsBig(y0=acornbig$y0,y1=acornbig$y1,z=newBigExperiment(acornbig$pnum),pop=a
 
 Now look at how these work across many experiments:
 
-<<dosims cache=TRUE>>=
+<<dosims, cache=TRUE>>=
 set.seed(12345)
-smallres <- replicate(1000,getestsSmall(y0=acorn$y0,y1=acorn$y1,
+smallres <- replicate(10000,getestsSmall(y0=acorn$y0,y1=acorn$y1,
 					newz=newSmallExperiment(N=28,m=14),pop=acorn$size)
 )
 set.seed(12345)
 bigres <-
-	replicate(1000,getestsBig(y0=acornbig$y0,y1=acornbig$y1,
+	replicate(10000,getestsBig(y0=acornbig$y0,y1=acornbig$y1,
 				  z=newBigExperiment(acornbig$pnum),pop=acornbig$size))
 
 
 apply(smallres,1,mean)
 apply(bigres,1,mean)
-
 @
 
 How would we assess whether the downward or upward bias of the standard errors
