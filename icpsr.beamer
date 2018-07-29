@@ -202,7 +202,7 @@ $endif$
     \setbeamercolor{background canvas}{bg=blue}
     %\setbeamercolor{frametitle}{fg=white,bg=darkblue}
     %\setbeamercolor{normal text}{fg=white,bg=darkblue}
-    %\setbeamercolor{structure}{fg=white}
+    \setbeamercolor{structure}{fg=white}
        \begin{frame}
     %\frametitle{\sectionpage}
     \tableofcontents[currentsection]
