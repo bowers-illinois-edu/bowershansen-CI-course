@@ -1,0 +1,545 @@
+\documentclass[11pt]{article}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts}          % AMS Fonts
+\usepackage{amsthm}
+\usepackage{amsmath}           % Mathtype; To align to the left use option [fleqn]
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{amssymb}           % AMS Symbols
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{rotating}
+\usepackage{pdflscape}
+\usepackage{float}             % Force floats around
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+
+\usepackage[final]{pdfpages}
+% \usepackage{lmodern}
+% \usepackage{libertine} \usepackage[libertine]{newtxmath}
+\usepackage{stix}
+% \usepackage[osf,sc]{mathpazo}     % alternative math
+\usepackage[T1]{fontenc}
+% \usepackage{fontspec}
+% \setmainfont{Times New Roman}
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage[makeroom]{cancel}
+\usepackage{verbatim}
+\usepackage{geometry}
+\geometry{verbose,margin=1in,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{mathtools}
+ \usepackage{tikz}
+  \def\firstcircle{(90:1.75cm) circle (2.5cm)}
+  \def\secondcircle{(210:1.75cm) circle (2.5cm)}
+  \def\thirdcircle{(330:1.75cm) circle (2.5cm)}
+
+\usepackage{tkz-euclide}
+
+% arrow and line for 'tkzPointShowCoord'
+\makeatletter
+\tikzset{arrow coord style/.style={%
+    densely dashed,
+    \tkz@euc@linecolor,
+    %>=stealth',
+    %->,
+    }}
+    \tikzset{xcoord style/.style={%
+    \tkz@euc@labelcolor,
+    font=\normalsize,text height=1ex,
+    inner sep = 0pt,
+    outer sep = 0pt,
+    fill=\tkz@fillcolor,
+    below=6pt
+    }} 
+\tikzset{ycoord style/.style={%
+    \tkz@euc@labelcolor,
+    font=\normalsize,text height=1ex, 
+    inner sep = 0pt,
+    outer sep = 0pt, 
+    fill=\tkz@fillcolor,
+    left=6pt
+    }}  
+\makeatother
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=false,
+            colorlinks=true,
+            hypertexnames=false]{hyperref}
+\hypersetup{pdfstartview={XYZ null null 1},
+            citecolor=blue!50,
+            linkcolor=red,
+            urlcolor=green!70!black}
+
+\usepackage{multirow}
+\usepackage{tikz}
+\usetikzlibrary{trees, positioning, arrows, automata, calc}
+
+\tikzset{
+  treenode/.style = {align=center, inner sep=0pt, text centered,
+    font=\sffamily},
+  arn_n/.style = {treenode, rectangle, black, fill=white, text width=6em},
+  arn_r/.style = {treenode, circle, red, draw=red, text width=1.5em, thick}
+}
+
+\usepackage{pgfplots}
+% argument #1: any options
+\newenvironment{customlegend}[1][]{%
+    \begingroup
+    % inits/clears the lists (which might be populated from previous
+    % axes):
+    \csname pgfplots@init@cleared@structures\endcsname
+    \pgfplotsset{#1}%
+}{%
+    % draws the legend:
+    \csname pgfplots@createlegend\endcsname
+    \endgroup
+}%
+
+% makes \addlegendimage available (typically only available within an
+% axis environment):
+\def\addlegendimage{\csname pgfplots@addlegendimage\endcsname}
+
+%%--------------------------------
+
+% definition to insert numbers
+\pgfkeys{/pgfplots/number in legend/.style={%
+        /pgfplots/legend image code/.code={%
+            \node at (0.125,-0.0225){#1}; % <= changed x value
+        },%
+    },
+}
+\pgfplotsset{
+every legend to name picture/.style={west}
+}
+
+
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+\usepackage[small,bf]{caption}  % Captions
+
+\usepackage[obeyFinal,textwidth=0.8in, colorinlistoftodos,prependcaption,textsize=tiny]{todonotes} % \fxnote*[options]{note}{text} to make sticky notes
+\usepackage{xargs}
+\newcommandx{\unsure}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+\newcommandx{\change}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}}
+\newcommandx{\info}[2][1=]{\todo[linecolor=OliveGreen,backgroundcolor=OliveGreen!25,bordercolor=OliveGreen,#1]{#2}}
+\newcommandx{\improvement}[2][1=]{\todo[linecolor=Plum,backgroundcolor=Plum!25,bordercolor=Plum,#1]{#2}}
+
+\parskip=10pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\newcommand{\qedknitr}{\hfill\rule{1.2ex}{1.2ex}}
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{} %Aboveskip
+{} %Below skip
+{\mdseries} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\newcommand\given[1][]{\:#1\vert\:}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\N}{\mathbb{N}}
+\DeclareMathOperator{\Z}{\mathbb{Z}}
+\DeclareMathOperator{\Q}{\mathbb{Q}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\e}{\rm{e}}
+\DeclareMathOperator{\logit}{\rm{logit}}
+\DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
+
+
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+
+\begin{document}
+\begin{titlepage}
+\title{Causal Inference for the Social Sciences: \\
+Assignment 2 Answer Key}
+\author{Tom Leavitt}
+\date{\today}
+\maketitle
+
+\end{titlepage}
+\tableofcontents
+\clearpage
+
+\doublespacing
+
+\maketitle
+
+<< >>=
+
+rm(list=ls())
+
+if(!require(pacman)) {install.packages("pacman")}
+
+p_load(MASS,
+       plyr,
+       dplyr,
+       magrittr,
+       haven,
+       ggplot2,
+       randomizr)
+
+@
+
+\citet[276--277]{albertsonlawrence2009} write that ``[b]y using a random sample, we avoid the external validity problems associated with samples of convenience that are generally used in laboratory experiments. In addition, by assigning respondents at random to viewing and nonviewing conditions, these studies benefit from experimental control. Yet unlike laboratory experiments, this design allows respondents to view programs in their own homes, thus more closely approximating regular viewing conditions.''
+
+\section{\texttt{unit02-Ex.pdf} Question 1}
+
+If we assume that the IV assumptions are valid for the Round 2 respondents in the \citet{albertsonlawrence2009} study, we can estimate the average causal effect of encouragement to view the program on actual program viewing as follows:
+\begin{align*}
+\frac{244}{510} - \frac{74}{579} & = 0.4784314 - 0.1278066 \\
+& = 0.3506248.
+\end{align*}
+
+\section{\texttt{unit02-Ex.pdf} Question 2}
+
+A hypothetical outcome variable one could collect is ``Views on Addiction Policy,'' measured on a scale from 0 -- 10 in which 0 represents no support for public treatment programs and 10 is full support. Let's imagine that we had the following results:
+\begin{align*}
+\frac{3723}{510} - \frac{2895}{579} & = 7.3 - 5 \\
+& = 2.3.
+\end{align*}
+
+The CACE estimator is $\frac{\widehat{\text{ITT}}}{\widehat{\text{ITT}_D}}$; hence, our CACE estimate is 
+\begin{align*}
+\frac{2.3}{0.3506} & = 6.559718.
+\end{align*}
+
+<<>>=
+
+if(!require(pacman)) {install.packages("pacman")}
+
+p_load(MASS,
+       plyr,
+       dplyr,
+       magrittr,
+       haven,
+       ggplot2,
+       randomizr)
+
+set.seed(1:3)
+
+z <- complete_ra(N = 10,
+                 m = 5)
+
+## These potential outcomes imply 6 compliers and 2 always takers and 2 never takers
+d_c <- c(rep(x = 0, times = 8), rep(x = 1, times = 2))
+
+d_t <- c(rep(x = 0, times = 2), rep(x = 1, times = 8))
+
+d <- z * d_t + (1 - z) * d_c
+
+comp_type <- c(rep(x = "never taker",
+              times = 2),
+          rep(x = "complier",
+              times = 6),
+          rep(x = "always taker",
+              times = 2))
+
+sum(comp_type == "never taker" | comp_type == "always taker")
+
+y_c <- round(x = runif(n = 10,
+                       min = 0,
+                       max = 6),
+             digits = 0)
+
+y_t <- rep(x = NA, times = 10)
+
+## Ensure excludability assumption is met
+y_t[comp_type == "never taker" | comp_type == "always taker"] <- y_c[comp_type == "never taker" | comp_type == "always taker"]
+
+y_t[comp_type == "complier"] <- y_c[comp_type == "complier"] +
+  round(x = runif(n = sum(comp_type == "complier"),
+                  min = 1,
+                  max = 4),
+        digits = 0)
+
+## observed potential outcomes
+y <- z * y_t + (1 - z) * y_c
+
+tau <- y_t - y_c
+
+true_itt <- mean(tau)
+
+## True CACE is mean treatment effect among the compliers
+true_cace <- mean(tau[comp_type == "complier"])
+
+## True proportion of compliers
+true_itt_d <- sum(comp_type == "complier")/length(comp_type) # mean(d_t) - mean(d_c)
+
+fake_data <- data.frame(z = z,
+                        d = d,
+                        y = y)
+
+treated <- combn(x = 1:nrow(fake_data),
+                 m = sum(fake_data$z),
+                 simplify = TRUE) 
+
+all_z <- apply(X = treated,
+               MARGIN = 2,
+               FUN = function(x) as.integer(1:nrow(fake_data) %in% x))
+
+itt_d <- function(.d_c,
+                  .d_t,
+                  .z) {
+  
+  d = .z * (.d_t) + (1 - .z) * .d_c
+  
+  return(coef(lm(d ~ .z))[[".z"]])
+  
+  }
+
+dist_itt_d <- apply(X = all_z,
+                    MARGIN = 2,
+                    FUN = itt_d,
+                    .d_c = d_c,
+                    .d_t = d_t)
+
+itt <- function(.y_c,
+                .y_t,
+                .z) {
+  
+  y = .z * (.y_t) + (1 - .z) * .y_c
+  
+  return(coef(lm(y ~ .z))[[".z"]])
+  
+}
+
+dist_itt <- apply(X = all_z,
+                  MARGIN = 2,
+                  FUN = itt,
+                  .y_c = y_c,
+                  .y_t = y_t)
+
+dist_itt_data <- data.frame(itt = dist_itt)
+
+dist_bloom_est <- dist_itt / dist_itt_d
+
+dist_est_plot <- ggplot(data = dist_itt_data,
+                        mapping = aes(x = itt)) +
+  geom_histogram(bins = 50) +
+  geom_vline(xintercept = true_cace,
+             color = "red",
+             linecomp_type = "dashed") +
+  geom_vline(xintercept = mean(dist_itt_data$itt),
+             color = "green",
+             linecomp_type = "dashed") +
+  xlab("CACE Estimates") +
+  ylab("Count") +
+  ggtitle("Distribution of CACE Estimator") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+dist_est_plot
+
+@
+
+\section{\texttt{unit02-Ex.pdf} Question 3}
+
+The Round 1 sample recruitment consisted of a survey conducted on a random sample of individuals from five metropolitan areas. If the researcher wants to make causal inferences among only the individuals who responded to the initial sample recruitment, then knowledge of the response rates are not necessary.
+
+\section{\texttt{unit02-Ex.pdf} Question 4}
+
+Yes.
+
+\section{\texttt{unit02-Ex.pdf} Question 5}
+
+Used random sampling from five metropolitan areas to recruit individuals into study. Among individuals who were successfully recruited, researchers assigned units to treatment and control groups. Then 80\% of original respondents were interviewed in Round 2 \citep[284]{albertsonlawrence2009}.
+
+We can reason backwards to infer that there were $\frac{1089}{0.8} \approx 1361$ individuals in the study, only $1089$ of which responded in Round 2.
+
+Let $r_{ti}$ be an indicator for whether subject $i$ would respond in Round 2 if assigned to treatment and let $r_{ci}$ be an indicator for whether subject $i$ would respond in Round 2 if assigned to control.
+
+If there are many people who would respond in Round 2 if assigned to the treatment but not if assigned to the control, then in expectation the treated group will have more ``If-Treated-Reporters'' and the control group will have only ``Always-Reporters.'' Only measuring compliance on a nonrandom subset.
+
+Potential outcomes are translated into observed outcomes according to the following equation:
+
+\begin{equation}
+\label{eq:obs_outcomes}
+D_i = \begin{cases} d_{ci} + [d_{ti} - d_{ci}] Z_i & \text{if } R_i = 1 \\
+\text{NA} & \text{if } R_i = 0, \end{cases}
+\end{equation}
+where $R_i = Z_i r_{ti} + \left(1 - Z_i\right) r_{ci}$.
+
+From Equation \ref{eq:obs_outcomes} above, we can see that if $R_i = 1$, then the researcher will observe $d_{ci}$ for unit $i$ if $Z_i = 0$ and $d_{ti}$ for unit $i$ if $Z_i = 1$. By contrast, if $R_i = 0$, then $D_i$ will be unobserved---i.e., NA.
+
+Now we can define four distinct types of subjects with regard to attrition:
+
+\begin{table}[h]
+\centering
+    \begin{tabular}{lll}
+    \toprule
+    $z_i = 0$ & $z_i = 1$ & Type of Subject       \\
+    \midrule
+    $r_{ci} = 1$ & $r_{ti} = 1$ & \textit{Always-Reporter} \\
+    $r_{ci} = 0$ & $r_{ti} = 1$ & \textit{If-Treated-Reporter} \\
+    $r_{ci} = 1$ & $r_{ti} = 0$ & \textit{If-Untreated-Reporter} \\
+    $r_{ci} = 0$ & $r_{ti} = 0$ & \textit{Never-Reporter} \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\citet{albertsonlawrence2009} measure $D_i$ among only 80\% of the individuals who were assigned to treatment and control. The individuals who report their $D_i$ outcomes could be ``Always-Reporters,'' ``If-Treated-Reporters'' and ``If-Untreated-Reporters.'' \citet{albertsonlawrence2009} restrict their analysis to only the individuals whose $D_i$ outcomes they did observe. Random assignment---i.e., a uniform probability distribution over all treatment assignment permutations in which $n_t$ units are assigned to treatment and $n - n_t$ units are assigned to control---will be violated if $r_{ti} \equiv r_{ci} \ \forall \ i$. To show why such a violation will obtain when reporting status, $R_i$, is not independent of treatment assignment, $Z_i$, let's return to the hypothetical experiment with only 10 units:
+
+<<>>=
+
+## units 1:4, 7, 8 and 9 are Always-Reporters
+## units 5, 8 and 9 are If-Treated Reporters
+r_c <- c(1, 1, 1, 1, 0, 0, 1, 1, 0, 1)
+
+r_t <- c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+
+@
+
+
+<<>>=
+
+itt_d_miss_est <- function(.z,
+                           .r_c,
+                           .r_t,
+                           .d_c,
+                           .d_t) {
+  
+  ## whether units report values
+  R = .z * .r_t + (1 - .z) * .r_c
+  
+  D = ifelse(test = R == 1,
+             yes = d_c + (d_t - d_c) * .z,
+             no = NA)
+  
+  z_no_NA = .z[which(is.na(D) == FALSE)]
+  
+  D_no_NA = D[which(is.na(D) == FALSE)]
+  
+  return(mean(D_no_NA[z_no_NA == 1]) -
+           mean(D_no_NA[z_no_NA == 0]))
+  
+}
+
+dist_itt_d_est_miss <- apply(X = all_z,
+                             MARGIN = 2,
+                             FUN = itt_d_miss_est,
+                             .r_c = r_c,
+                             .r_t = r_t,
+                             .d_c = d_c,
+                             .d_t = d_t)
+
+## Bias
+mean(dist_itt_d_est_miss) - true_itt_d
+
+@
+
+Why do we have bias when whether $D_i$ is observed is a function of $Z_i$? Under complete random assignment, both the number of treated units, $n_t$, and number of control units, $n_c$, is fixed by the random assignment procedure. In the imaginary experiment above, 5 out of 10 units are assigned to treatment; hence, there are ${10 \choose 5} = 252$ possible treatment assignment permutations. All 252 treatment assignment permutations yield the same number of treated units and the same number of control units. Hence, each unit's probability of treatment assignment is $\frac{n_t}{n}$. (For a proof of this proposition, please see the answer key for assignment 1.)
+
+<<>>=
+
+unit_treat_probs <- cbind(apply(X = all_z,
+                                MARGIN = 1,
+                                FUN = sum),
+                          ncol(all_z),
+                          apply(X = all_z,
+                                MARGIN = 1,
+                                FUN = mean))
+
+colnames(unit_treat_probs) <- c("num perm treated", "total perm", "treat prob")
+
+rownames(unit_treat_probs) <- sapply(X = 1:10,
+                                     FUN = function(x) { paste("Unit", x, sep = "_"  )})
+
+unit_treat_probs
+
+@
+
+The estimator is
+\begin{align*}
+\widehat{\text{ITT}_D} & = \frac{\mathbf{Z}^{\prime}\mathbf{D}}{\mathbf{Z}^{\prime}\mathbf{Z}} - \frac{\left(\mathbf{1} - \mathbf{Z}\right)^{\prime} \mathbf{D}}{\left(\mathbf{1} - \mathbf{Z}\right)^{\prime}\left(\mathbf{1} - \mathbf{Z}\right)} 
+\end{align*}
+
+Let's consider the bias of both terms, $\frac{\mathbf{Z}^{\prime}\mathbf{D}}{\mathbf{Z}^{\prime}\mathbf{Z}}$ and $\frac{\left(\mathbf{1} - \mathbf{Z}\right)^{\prime} \mathbf{D}}{\left(\mathbf{1} - \mathbf{Z}\right)^{\prime}\left(\mathbf{1} - \mathbf{Z}\right)}$.
+
+<<>>=
+
+itt_d_miss_est <- function(.z,
+                           .r_c,
+                           .r_t,
+                           .d_c,
+                           .d_t) {
+  
+  ## whether units report values
+  R = .z * .r_t + (1 - .z) * .r_c
+  
+  D = ifelse(test = R == 1,
+             yes = d_c + (d_t - d_c) * .z,
+             no = NA)
+  
+  z_no_NA = .z[which(is.na(D) == FALSE)]
+  
+  D_no_NA = D[which(is.na(D) == FALSE)]
+  
+  return(mean(D_no_NA[z_no_NA == 0]))
+  
+}
+
+dist_itt_d_est_miss <- apply(X = all_z,
+                             MARGIN = 2,
+                             FUN = itt_d_miss_est,
+                             .r_c = r_c,
+                             .r_t = r_t,
+                             .d_c = d_c,
+                             .d_t = d_t)
+
+mean(dist_itt_d_est_miss)
+
+@
+
+
+
+
+
+
+\newpage
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{master_bibliography}
+\end{singlespace}
+\end{document}
