@@ -146,20 +146,26 @@ Experiments}, Chapter 5, etc.
 
 **Context:** An NGO invites you to help design and evaluate a program to increase donations involving in-person, door-to-door, discussions about the canvasser's own personal experiences. Building rapport with another person should increase willingness to donate, according to the NGO.
 
+\smallskip
+
 **Opportunity for learning about theory** You know have been interested in
 understanding why and how social norms influence behavior. So, you ask to
 that canvassers appeal to a descriptive social norm ("other people we have
 spoken with agree") toward the end of the discussion.
 
+\smallskip
+
 **Design:** The NGO randomizes visits by canvassers to a set of addresses and
 measures the amount pledged online in the following month.
+
+\smallskip
 
 **Analysis:** The NGO cares about the cost effectiveness of the approach. Did
 it work? You (and the NGO should care) about **why** it worked (or did not
 work).
 
 
-## Defining our causal effects
+## Defining causal effects
 
  - $Z_i$ is random assignment to a visit ($Z_i=1$) or not ($Z_i=0$).
  - $d_{i,Z_i=1}=1$ means that person $i$ opened the door to have a conversation when assigned a visit. Opening the door is an outcome of the treatment, is caused by the treatment.

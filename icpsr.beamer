@@ -203,7 +203,7 @@ $endif$
     %\setbeamercolor{frametitle}{fg=white,bg=darkblue}
     %\setbeamercolor{normal text}{fg=white,bg=darkblue}
     \setbeamercolor{normal text}{bg=white,fg=black}
-    %\setbeamercolor{structure}{fg=white}
+    \setbeamercolor{structure}{fg=black}
        \begin{frame}
     %\frametitle{\sectionpage}
    \tableofcontents[currentsection,hideallsubsections,sectionstyle=show]
