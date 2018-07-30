@@ -138,6 +138,37 @@ library(RItools,lib.loc="./lib")
 
 ## An instrument moves a dose.
 
+We 
+
+
+```{r}
+library(randomizr)
+set.seed(20180730)
+n <- 1000
+x <- rnorm(n,mean=45,sd=2)
+y0tmp <- round(rnorm(n,mean=0,sd=10))
+y0 <- ifelse(y0tmp>=0,y0tmp,0)
+Z <- complete_ra(n)
+```
+
+Imagine that **assignment** caused the outcome to differ:
+
+```{r}
+
+taubar <- 1
+y1 <- y0 + taubar
+
+Y <- Z * y1 + (1-Z) * y0
+
+taubarhat <- mean(Y[Z==1]) - mean(Y[Z==0])
+## or taubarhat <- coef(lm(Y~Z))[["Z"]]
+
+```
+
+But what if we want to know about the effect of experiencing the treatment,
+the effect of talking with a canvasser $D=1$ versus the effect of being assigned to
+have that talk ($Z=1$).
+
 
 
 
