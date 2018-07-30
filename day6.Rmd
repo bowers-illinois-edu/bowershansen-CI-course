@@ -128,18 +128,37 @@ library(RItools,lib.loc="./lib")
 ## Research designs to aid the creation of interpretable comparisons
 
    - Randomized experiments (randomized $Z$ changes $y$) <!-- (more precision from reducing heterogeneity in $Y$) -->
+     - No systematic differences between groups
+     - Known reference distribution for tests of the sharp null and, in large
+       samples, the weak null.
    - Instrumental variables (randomized $Z$ changes $D$ which changes $y$)
    - Natural Experiments / Discontinuities (one $X$ creates $Z$ which \ldots)
-   - Semi-/Non-parametric Covariance Adjustment ($Z$ out of our control, but we can choose how to organize and observe) (matching and difference-in-differences)
+   - Semi-/Non-parametric Covariance Adjustment ($Z$ out of our control, but we can choose how to organize and observe given $X$) (matching and difference-in-differences)
    - Parametric covariance adjustment (same as above, but with a model for statistical adjustment, i.e. "controlling for")
 
 
 # Now: Instruments, the ITT and CACE/LATE
 
-## An instrument moves a dose.
+## Instruments, the ITT and CACE/LATE
 
-We 
+**Context:** An NGO invites you to help design and evaluate a program to increase donations involving in-person, door-to-door, discussions about the canvasser's own personal experiences. Building rapport with another person should increase willingness to donate, according to the NGO.
 
+**Opportunity for learning about theory** You know have been interested in
+understanding why and how social norms influence behavior. So, you ask to
+that canvassers appeal to a descriptive social norm ("other people we have
+spoken with agree") toward the end of the discussion.
+
+**Design:** The NGO randomizes visits by canvassers to a set of addresses and
+measures the amount pledged at each house.
+
+**Analysis:** The NGO cares about the cost effectiveness of the approach. Did
+it work? You (and the NGO should care) about **why** it worked (or did not
+work).
+
+
+## A simulation to understand the design and analysis
+
+Setting up the simulation and analysis before going into the field.
 
 ```{r}
 library(randomizr)
@@ -175,6 +194,10 @@ have that talk ($Z=1$).
 
 ## Summary of the Day
 
+  - More than one way to use what we observe to reason about potential
+    outcomes: testing, estimating, predicting
+  - An instrument moves a dose. The effect of the dose is specific, or local,
+    to those who took a dose, to those who experienced the treatment.
   - 
   - 
   - 
