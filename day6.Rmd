@@ -85,10 +85,13 @@ library(RItools,lib.loc="./lib")
 ## Today
 
 \begin{enumerate}
-\item Agenda:
-\item Reading:
+\item Agenda: Introductions, Overview and context for where we are in the
+course, Instrumental Variables or Encouragement Designs.
+\item Reading: Angrist, Imbens and Rubin 1996 including the Rosenbaum
+discussion; Gerber and Green \emph{Field
+Experiments}, Chapter 5, etc.
 \item Questions arising from the reading or assignments or life?
-\item Recap:
+%\item Recap:
 \end{enumerate}
 
 # But first: Who am I? Who are you?
@@ -159,11 +162,14 @@ work).
 ## Defining our causal effects
 
  - $Z_i$ is random assignment to a visit ($Z_i=1$) or not ($Z_i=0$).
- - $d_{i,Z_i=1}$ means that person $i$ opened the door to have a conversation when assigned a visit. Opening the door is an outcome of the treatment, is caused by the treatment.
+ - $d_{i,Z_i=1}=1$ means that person $i$ opened the door to have a conversation when assigned a visit. Opening the door is an outcome of the treatment, is caused by the treatment.
  - $y_{i,Z_i = 1, d_{i,Z_i=1}=1}$ is the potential outcome for people who were assigned a visit and who opened the door.
  - $y_{i,Z_i = 1, d_{i,Z_i=1}=0}$ is the potential outcome for people who were assigned a visit and who did not open the door.
- - $y_{i,Z_i = 0, d_{i,Z_i=1}=1}$ is the potential outcome for people who were not assigned a visit and who opened the door.
- - $y_{i,Z_i = 0, d_{i,Z_i=1}=0}$ is the potential outcome for people who were not assigned a visit and who would not have opened the door.
+ - $y_{i,Z_i = 0, d_{i,Z_i=0}=1}$ is the potential outcome for people who were not assigned a visit and who opened the door.
+ - $y_{i,Z_i = 0, d_{i,Z_i=0}=0}$ is the potential outcome for people who were not assigned a visit and who would not have opened the door.
+ - We could also write $y_{i,Z_i = 0, d_{i,Z_i=1}=1}$ for people who were not
+   assigned a visit who would have opened the door had they been assigned a
+   visit etc..
 
 In this case, $y_{i,Z_i = 0, d_{i,Z_i=1}=1} = y_{i,Z_i = 0, d_{i,Z_i=1}=0}
 \equiv y_{i,Z_i=0}$ because you can't open the door unless visited.
@@ -171,14 +177,15 @@ In this case, $y_{i,Z_i = 0, d_{i,Z_i=1}=1} = y_{i,Z_i = 0, d_{i,Z_i=1}=0}
 And also $y_{i,Z_i = 1, d_{i,Z_i=1}=0} = y_{i,Z_i=0}$ because there can be no
 effect of the visit if you don't open the door.
 
-\medskip
+##  Defining our causal effects
 
 People refer to an "Intent To Treat Effect" (ITT) as the causal effect of
 **assignment** to treatment. In our case, we can write the ITT as a weighted
-sum of the responses to treatment $p(d_1=1)$ is the proportion of people
-opening their doors minus the response to assignment to control.
+sum of the responses to treatment  minus the response to assignment to control
+( where $p(d_1=1)$ is the proportion of people opening their doors ).
 
-$ITT= ( \bar{y}_{Z=1,d_1=1}p(d_1=1) + \bar{y}_{Z=1,d_1=0}(1-p(d_1=1)) )  - \bar{y}_{Z=0}$
+
+$$ITT= ( \bar{y}_{Z=1,d_1=1}p(d_1=1) + \bar{y}_{Z=1,d_1=0}(1-p(d_1=1)) )  - \bar{y}_{Z=0}$$
 
 \medskip
 
@@ -291,7 +298,7 @@ taubarhat <- difference_in_means(Y~Z,data=dat)
 Now we would like to learn about the causal effect of answering the door and having the
 conversation, the theoretically interesting effect. But, this comparison is confounded
 by $x$ (tells us about differences in the outcome due to $x$ in addition to
-$D$).
+the difference caused by $D$).
 
 ```{r}
 with(dat,cor(Y,x))
@@ -300,33 +307,40 @@ with(dat,cor(Z,x)) ## should be near 0
 ```
 
 
-## Some helpful math.
+## Identifying the causal effect of opening the door
 
 We want to learn about the Complier Average Causal Effect (aka the Local
-Average Treatment Effect): CACE$= \bar{y_{i,Z=1,d_1=1}} - \bar{$
+Average Treatment Effect): CACE$= \bar{y_{i,Z=1,d_1=1}} -
+\bar{y_{i,Z=0,d_1=1}}$
+
+
+Let $p$ be the proportion of compliers ($\sum_{i=1}^N I(d_{i,1} = 1)/N$).
 
 \begin{align*}
-ITT & = ( \bar{y}_{Z=1,d_1=1}p(d_1=1) + \bar{y}_{Z=1,d_1=0}(1-p(d_1=1)) )  - \bar{y}_{Z=0} \\
-    & = ( \bar{y}_{Z=1,d_1=1}p(d_1=1) + \bar{y}_{Z=1,d_1=0}(1-p(d_1=1)) )  - ( \bar{y}_{Z=0,d_1=1}p(d_0=1) + \bar{y}_{Z=0,d_1=0}(1-p(d_0=1)) ) 
-   & = ( \bar{y}_{Z=1,d_1=1}p(d_1=1) + \bar{y}_{Z=1,d_1=0} - \bar{y}_{Z=1,d_1=0}p(d_1=1) )  - 
-
-( \bar{y}_{Z=0,d_1=1}p(d_0=1) + \bar{y}_{Z=0,d_1=0} - \bar{y}_{Z=0,d_1=0}p(d_0=1) ) \\
-\intertext{but $p(d_0=1)=0$
-
+ITT & = \left( \bar{y}_{1,d_1=1}p + \bar{y}_{1,d_1=0}(1-p) \right)  - \bar{y}_{0} \\
+    & = ( \bar{y}_{1,d_1=1}p + \bar{y}_{1,d_1=0}(1-p) )  - ( \bar{y}_{0,d_0=1}p+ \bar{y}_{0,d_0=0}(1-p) )  \\
+    & = ( \bar{y}_{1,d_1=1}p - \bar{y}_{0,d_0=1}p )  +  ( \bar{y}_{1,d_1=0}(1-p)  - \bar{y}_{0,d_0=0}(1-p) )  \\
+    & = ( \bar{y}_{1,d_1=1} - \bar{y}_{0,d_0=1} )p  +  ( \bar{y}_{1,d_1=0}  - \bar{y}_{0,d_0=0}) (1-p)  \\
+\intertext{but $\bar{y}_{1,d_1=0} = \bar{y}_{0,d_1=0} = \bar{y}_{0,d_0=0}$ so }
+  ITT  & = ( \bar{y}_{1,d_1=1} - \bar{y}_{0,d_0=1} ) p \\
+  ITT  & = ( CACE ) p \\
+\intertext{so we can write the CACE as ITT/p}
+  ITT/p & = CACE
 \end{align*}
+
+This means that we can write the CACE as $CACE = ITT/\text{proportion of compliers}$
 
 ## Code snippets
 
 ```{r}
+ITT <- with(dat,mean(Y[Z==1]) - mean(Y[Z==0]))
+pd <- with(dat, mean(d[Z==1]) - mean(d[Z==0]))
+ITT/pd
+
 library(AER)
 iv1 <- ivreg(Y~d | Z, data=dat)
+
 ```
-
-
-
-
-
-
 
 
 
@@ -334,9 +348,13 @@ iv1 <- ivreg(Y~d | Z, data=dat)
 
   - More than one way to use what we observe to reason about potential
     outcomes: testing, estimating, predicting
+  - Structure of the course. Where we are now. Where we are going: away from
+    randomized experiments toward observational studies, but with the statistical basis
+    developed from our understanding of randomized experiments.
   - An instrument moves a dose. The effect of the dose is specific, or local,
     to those who took a dose, to those who experienced the treatment.
-  - The ITT and CACE/LATE represent different causal effects.
+  - The ITT and CACE/LATE represent different causal effects. ITT tends to be
+    the policy-relevant effect. 
   - An "as-treated" analysis is no longer an experiment.
 
 ## References
