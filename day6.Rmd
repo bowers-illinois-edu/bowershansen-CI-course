@@ -85,10 +85,10 @@ library(RItools,lib.loc="./lib")
 ## Today
 
 \begin{enumerate}
-\item Agenda: 
+\item Agenda:
 \item Reading:
 \item Questions arising from the reading or assignments or life?
-\item Recap: 
+\item Recap:
 \end{enumerate}
 
 # But first: Who am I? Who are you?
@@ -149,12 +149,45 @@ that canvassers appeal to a descriptive social norm ("other people we have
 spoken with agree") toward the end of the discussion.
 
 **Design:** The NGO randomizes visits by canvassers to a set of addresses and
-measures the amount pledged at each house.
+measures the amount pledged online in the following month.
 
 **Analysis:** The NGO cares about the cost effectiveness of the approach. Did
 it work? You (and the NGO should care) about **why** it worked (or did not
 work).
 
+
+## Defining our causal effects
+
+ - $Z_i$ is random assignment to a visit ($Z_i=1$) or not ($Z_i=0$).
+ - $d_{i,Z_i=1}$ means that person $i$ opened the door to have a conversation when assigned a visit. Opening the door is an outcome of the treatment, is caused by the treatment.
+ - $y_{i,Z_i = 1, d_{i,Z_i=1}=1}$ is the potential outcome for people who were assigned a visit and who opened the door.
+ - $y_{i,Z_i = 1, d_{i,Z_i=1}=0}$ is the potential outcome for people who were assigned a visit and who did not open the door.
+ - $y_{i,Z_i = 0, d_{i,Z_i=1}=1}$ is the potential outcome for people who were not assigned a visit and who opened the door.
+ - $y_{i,Z_i = 0, d_{i,Z_i=1}=0}$ is the potential outcome for people who were not assigned a visit and who would not have opened the door.
+
+In this case, $y_{i,Z_i = 0, d_{i,Z_i=1}=1} = y_{i,Z_i = 0, d_{i,Z_i=1}=0}
+\equiv y_{i,Z_i=0}$ because you can't open the door unless visited.
+
+And also $y_{i,Z_i = 1, d_{i,Z_i=1}=0} = y_{i,Z_i=0}$ because there can be no
+effect of the visit if you don't open the door.
+
+\medskip
+
+People refer to an "Intent To Treat Effect" (ITT) as the causal effect of
+**assignment** to treatment. In our case, we can write the ITT as a weighted
+sum of the responses to treatment $p(d_1=1)$ is the proportion of people
+opening their doors minus the response to assignment to control.
+
+$ITT= ( \bar{y}_{Z=1,d_1=1}p(d_1=1) + \bar{y}_{Z=1,d_1=0}(1-p(d_1=1)) )  - \bar{y}_{Z=0}$
+
+\medskip
+
+Notice that if everyone opens the door when visited then $y_{i,Z=1,d_1=1} =
+y_{i,Z=1}$  so the ITT=ATE.
+
+\medskip
+
+Why give it a new name?
 
 ## A simulation to understand the design and analysis
 
@@ -164,43 +197,134 @@ Setting up the simulation and analysis before going into the field.
 library(randomizr)
 set.seed(20180730)
 n <- 1000
-x <- rnorm(n,mean=45,sd=2)
-y0tmp <- round(rnorm(n,mean=0,sd=10))
-y0 <- ifelse(y0tmp>=0,y0tmp,0)
+## Make a covariate, like age
+xtmp <- rnorm(n,mean=45,sd=10)
+x <- pmax(xtmp,18)
+## Make potential outcome to control
+y0tmp <- round(rnorm(n,mean=0,sd=10)) + x/2
+y0 <- pmax(y0tmp,0)
 Z <- complete_ra(n)
+## Door opening is a function of x (age) and Z (visits)
+probd <- ( x-min(x) )/( max(x) - min(x) ) 
+mean(probd)
+d <- ifelse(Z==1, rbinom(sum(Z==1),prob=probd/2,size=1), 0)
+table(Z,d,exclude=c())
+mean(d[Z==1])
 ```
-
-Imagine that **assignment** caused the outcome to differ:
 
 ```{r}
-
-taubar <- 2
-y1 <- y0 + taubar
-
-Y <- Z * y1 + (1-Z) * y0
-
-taubarhat <- mean(Y[Z==1]) - mean(Y[Z==0])
-## or taubarhat <- coef(lm(Y~Z))[["Z"]]
-
+## No effects possible if not visited
+y0d0 <- y0
+y0d1 <- y0
+y1d0 <- y0
+taubar <- .25*sd(y0) ## Effect of .25 sds on compliers/door openers
+## The treatment also changes variance of y1d1
+y1d1 <- mean(y0) + taubar + (y0 - mean(y0))/2
+## Define observed outcome
+Y <-  Z*d*y1d1 + Z*(1-d)*y1d0 + (1-Z)*d*y0d1 + (1-Z)*(1-d)*y0d0
+dat <- data.frame(y1d1,y1d0,y0d1,y0d0,y0,Y,Z,d,x,probd)
+dat$y1 <- (1-Z)*y0 + Z*d*y1d1 + Z*(1-d)*y1d0
 ```
 
-## Assessing the Intent to Treat Effect (ITT)
+## A simulation to understand the design and analysis
 
-The ITT is defined as $\bar{y}_T - \bar{y}_C$ where $y_T$ is the potential
-outcome to treatment, and $y_C$ is the potential outcome to control. 
 
-Why give it a new name?
+```{r}
+boxplot(Y~Z*d,data=dat)
+```
+
+
+## Learning about the ITT
+
+First, let's learn about the effect of the policy itself, about the ITT.
+
+```{r}
+## True ITT with one-sided non-compliance
+pd <- mean(dat$d[dat$Z==1])
+
+bary1 <- mean(dat$y1d1)*pd + mean(dat$y1d0)*(1-pd)
+bary0 <- mean(dat$y0)
+
+trueITT <- bary1 - bary0
+```
+
+
 \smallskip
-What evidence do we have against the claim that the policy had no effects?
+
+What evidence do we have against the claim that the policy had no effects? How
+would we assess whether this testing procedure is trustworthy --- controls its
+false positive error rate?
+
 \smallskip
-What is our best guess about the ITT itself?
+
+What is our best guess about the ITT itself? How would we assess whether or
+not this estimator is biased or not?
+
+\smallskip
+
+What is our best guess about how our estimate of the ITT would vary from
+experiment to experiment?
 
 
-## The Effect of a Dose
+## Some code notes
 
-But what if we want to know about the effect of experiencing the treatment,
-the effect of talking with a canvasser $D=1$ versus the effect of being assigned to
-have that talk ($Z=1$).
+```{r, eval=FALSE}
+newExp <- function(trt){ sample(trt) }
+testStat <- function(outcome,trt){  mean(outcome[trt==1]) - mean(outcome[trt==0]) }
+obsTestStat <- testStat(outcome=dat$Y,trt=dat$Z)
+nullDist <- replicate(1000,testStat(outcome=dat$Y,trt=newExp(dat$Z)))
+upperP <- mean(nullDist >= obsTestStat)
+```
+
+
+```{r, eval=FALSE}
+##taubarhat <- with(dat, mean(Y[Z==1]) - mean(Y[Z==0]))
+## or taubarhat <- coef(lm(Y~Z))[["Z"]]
+library(estimatr)
+taubarhat <- difference_in_means(Y~Z,data=dat)
+## sqrt( var(Y[Z==1])/sum(Z==1) + var(Y[Z==0])/sum(Z==0) )
+```
+
+
+## The Complier Average Causal Effect or Local Average Treatment Effect (on the Compliers)
+
+Now we would like to learn about the causal effect of answering the door and having the
+conversation, the theoretically interesting effect. But, this comparison is confounded
+by $x$ (tells us about differences in the outcome due to $x$ in addition to
+$D$).
+
+```{r}
+with(dat,cor(Y,x))
+with(dat,cor(d,x))
+with(dat,cor(Z,x)) ## should be near 0
+```
+
+
+## Some helpful math.
+
+We want to learn about the Complier Average Causal Effect (aka the Local
+Average Treatment Effect): CACE$= \bar{y_{i,Z=1,d_1=1}} - \bar{$
+
+\begin{align*}
+ITT & = ( \bar{y}_{Z=1,d_1=1}p(d_1=1) + \bar{y}_{Z=1,d_1=0}(1-p(d_1=1)) )  - \bar{y}_{Z=0} \\
+    & = ( \bar{y}_{Z=1,d_1=1}p(d_1=1) + \bar{y}_{Z=1,d_1=0}(1-p(d_1=1)) )  - ( \bar{y}_{Z=0,d_1=1}p(d_0=1) + \bar{y}_{Z=0,d_1=0}(1-p(d_0=1)) ) 
+   & = ( \bar{y}_{Z=1,d_1=1}p(d_1=1) + \bar{y}_{Z=1,d_1=0} - \bar{y}_{Z=1,d_1=0}p(d_1=1) )  - 
+
+( \bar{y}_{Z=0,d_1=1}p(d_0=1) + \bar{y}_{Z=0,d_1=0} - \bar{y}_{Z=0,d_1=0}p(d_0=1) ) \\
+\intertext{but $p(d_0=1)=0$
+
+\end{align*}
+
+## Code snippets
+
+```{r}
+library(AER)
+iv1 <- ivreg(Y~d | Z, data=dat)
+```
+
+
+
+
 
 
 
@@ -212,9 +336,8 @@ have that talk ($Z=1$).
     outcomes: testing, estimating, predicting
   - An instrument moves a dose. The effect of the dose is specific, or local,
     to those who took a dose, to those who experienced the treatment.
-  - 
-  - 
-  - 
+  - The ITT and CACE/LATE represent different causal effects.
+  - An "as-treated" analysis is no longer an experiment.
 
 ## References
 
