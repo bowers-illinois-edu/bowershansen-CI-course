@@ -1,4 +1,54 @@
-\documentclass[11pt]{article}
+\documentclass[11pt]{article}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
 \usepackage{microtype} %
 \usepackage{setspace}
 \onehalfspacing
@@ -190,7 +240,7 @@ every legend to name picture/.style={west}
 
 \setcounter{tocdepth}{4}
 \setcounter{secnumdepth}{4}
-
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
 \begin{titlepage}
 \title{Causal Inference for the Social Sciences: \\
@@ -207,20 +257,27 @@ Assignment 1 Answer Key}
 
 \maketitle
 
-<< >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{rm}\hlstd{(}\hlkwc{list}\hlstd{=}\hlkwd{ls}\hlstd{())}
 
-rm(list=ls())
+\hlkwa{if}\hlstd{(}\hlopt{!}\hlkwd{require}\hlstd{(pacman)) \{}\hlkwd{install.packages}\hlstd{(}\hlstr{"pacman"}\hlstd{)\}}
+\end{alltt}
 
-if(!require(pacman)) {install.packages("pacman")}
 
-p_load(MASS,
-       plyr,
-       dplyr,
-       magrittr,
-       haven,
-       ggplot2)
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: pacman}}
 
-@
+{\ttfamily\noindent\color{warningcolor}{\#\# Warning: package 'pacman' was built under R version 3.3.2}}\begin{alltt}
+\hlkwd{p_load}\hlstd{(MASS,}
+       \hlstd{plyr,}
+       \hlstd{dplyr,}
+       \hlstd{magrittr,}
+       \hlstd{haven,}
+       \hlstd{ggplot2)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
 
 \section{Question 1}
 
@@ -235,34 +292,62 @@ For the coffee experiment, does the chi-squared procedure report a similar p-val
 
 Recall that we can tabulate the results of the coffee experiment as follows:
 
-<<  >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{coffee_experiment} \hlkwb{<-} \hlkwd{matrix}\hlstd{(}\hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{4}\hlstd{),}
+                            \hlkwc{nrow} \hlstd{=} \hlnum{2}\hlstd{,}
+                            \hlkwc{ncol} \hlstd{=} \hlnum{2}\hlstd{)}
 
-coffee_experiment <- matrix(c(4, 0, 0, 4),
-                            nrow = 2,
-                            ncol = 2)
+\hlkwd{colnames}\hlstd{(coffee_experiment)} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"0"}\hlstd{,} \hlstr{"1"}\hlstd{)}
 
-colnames(coffee_experiment) <- c("0", "1")
-
-rownames(coffee_experiment) <- c("0", "1")
-
-@
+\hlkwd{rownames}\hlstd{(coffee_experiment)} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"0"}\hlstd{,} \hlstr{"1"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
 
 The exact p-value from the Fisher test is $\frac{1}{70} \approx 0.01429$, which we can produce with the \texttt{[R]} code below:
 
-<<  >>=
-
-fisher.test(x = coffee_experiment,
-            alternative = "greater")
-
-@
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{fisher.test}\hlstd{(}\hlkwc{x} \hlstd{= coffee_experiment,}
+            \hlkwc{alternative} \hlstd{=} \hlstr{"greater"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## 
+## 	Fisher's Exact Test for Count Data
+## 
+## data:  coffee_experiment
+## p-value = 0.01429
+## alternative hypothesis: true odds ratio is greater than 1
+## 95 percent confidence interval:
+##  2.003768      Inf
+## sample estimates:
+## odds ratio 
+##        Inf
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 
 By contrast, the p-value from the chi-squared test is $0.03389$
 
-<<  >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{chisq.test}\hlstd{(}\hlkwc{x} \hlstd{= coffee_experiment)}
+\end{alltt}
 
-chisq.test(x = coffee_experiment)
 
-@
+{\ttfamily\noindent\color{warningcolor}{\#\# Warning in chisq.test(x = coffee\_experiment): Chi-squared approximation may be incorrect}}\begin{verbatim}
+## 
+## 	Pearson's Chi-squared test with Yates' continuity correction
+## 
+## data:  coffee_experiment
+## X-squared = 4.5, df = 1, p-value = 0.03389
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 
 \section{Question 3}
 
@@ -270,13 +355,22 @@ A general rule of thumb often cited in introductory statistics textbooks is that
 
 \section{Question 4}
 
-<<  >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{acorn_data} \hlkwb{<-} \hlkwd{read.csv}\hlstd{(}\hlstr{"acorn03.csv"}\hlstd{)}
+\end{alltt}
 
-acorn_data <- read.csv("acorn03.csv")
-  
-acorn_data_subset <- dplyr::select(.data = acorn_data, unit, size, z, vote03)
 
-@
+{\ttfamily\noindent\color{warningcolor}{\#\# Warning in file(file, "{}rt"{}): cannot open file 'acorn03.csv': No such file or directory}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in file(file, "{}rt"{}): cannot open the connection}}\begin{alltt}
+\hlstd{acorn_data_subset} \hlkwb{<-} \hlstd{dplyr}\hlopt{::}\hlkwd{select}\hlstd{(}\hlkwc{.data} \hlstd{= acorn_data, unit, size, z, vote03)}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in dplyr::select(.data = acorn\_data, unit, size, z, vote03): object 'acorn\_data' not found}}\end{kframe}
+\end{knitrout}
 
 \subsection{(a)}
 
@@ -284,115 +378,137 @@ Let's use the mean of turnout proportions in treatment group precincts, $n_t^{-1
 
 Let's write a function to calculate this specific test statistic, $n_t^{-1}\mathbf{Z}^{\prime}\mathbf{y}$, under the sharp null hypothesis of no effect:
 
-<<>>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{treat_group_mean} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{.Z}\hlstd{,}
+                             \hlkwc{.y}\hlstd{)\{}
 
-treat_group_mean <- function(.Z,
-                             .y){
-  
-  n_t = sum(.Z == 1)
-  
-  
-  test_stat = as.numeric(n_t^{-1} * t(.Z) %*% .y)
-  
-  return(test_stat)
-  
-  }
+  \hlstd{n_t} \hlkwb{=} \hlkwd{sum}\hlstd{(.Z} \hlopt{==} \hlnum{1}\hlstd{)}
 
-obs_test_stat <- treat_group_mean(.Z = acorn_data_subset$z,
-                                  .y = acorn_data_subset$vote03)
 
-set.seed(1:5)
-null_test_stats <- replicate(n = 10^5,
-                             expr = treat_group_mean(.Z = sample(acorn_data_subset$z),
-                                                     .y = acorn_data_subset$vote03))
+  \hlstd{test_stat} \hlkwb{=} \hlkwd{as.numeric}\hlstd{(n_t}\hlopt{^}\hlstd{\{}\hlopt{-}\hlnum{1}\hlstd{\}} \hlopt{*} \hlkwd{t}\hlstd{(.Z)} \hlopt{%*%} \hlstd{.y)}
 
-null_test_stat_dist <- data.frame(null_test_stat = null_test_stats)
+  \hlkwd{return}\hlstd{(test_stat)}
 
-null_dist_plot <- ggplot(data = null_test_stat_dist,
-                         mapping = aes(x = null_test_stat)) +
-  geom_histogram(bins = 100) +
-  geom_histogram(data = subset(x = null_test_stat_dist,
-                               subset = null_test_stat >= obs_test_stat),
-                 colour = "black",
-                 fill = "red",
-                 bins = 100) +
-  geom_vline(xintercept = obs_test_stat,
-             color = "red",
-             linetype = "dashed") +
-  xlab("Null Test Statistics") +
-  ylab("Count") +
-  ggtitle("Distribution of Test Statistic under Sharp Null") +
-  theme(plot.title = element_text(hjust = 0.5))
+  \hlstd{\}}
 
-null_dist_plot
+\hlstd{obs_test_stat} \hlkwb{<-} \hlkwd{treat_group_mean}\hlstd{(}\hlkwc{.Z} \hlstd{= acorn_data_subset}\hlopt{$}\hlstd{z,}
+                                  \hlkwc{.y} \hlstd{= acorn_data_subset}\hlopt{$}\hlstd{vote03)}
+\end{alltt}
 
-@
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in treat\_group\_mean(.Z = acorn\_data\_subset\$z, .y = acorn\_data\_subset\$vote03): object 'acorn\_data\_subset' not found}}\begin{alltt}
+\hlkwd{set.seed}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{)}
+\hlstd{null_test_stats} \hlkwb{<-} \hlkwd{replicate}\hlstd{(}\hlkwc{n} \hlstd{=} \hlnum{10}\hlopt{^}\hlnum{5}\hlstd{,}
+                             \hlkwc{expr} \hlstd{=} \hlkwd{treat_group_mean}\hlstd{(}\hlkwc{.Z} \hlstd{=} \hlkwd{sample}\hlstd{(acorn_data_subset}\hlopt{$}\hlstd{z),}
+                                                     \hlkwc{.y} \hlstd{= acorn_data_subset}\hlopt{$}\hlstd{vote03))}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in sample(acorn\_data\_subset\$z): object 'acorn\_data\_subset' not found}}\begin{alltt}
+\hlstd{null_test_stat_dist} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{null_test_stat} \hlstd{= null_test_stats)}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in data.frame(null\_test\_stat = null\_test\_stats): object 'null\_test\_stats' not found}}\begin{alltt}
+\hlstd{null_dist_plot} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= null_test_stat_dist,}
+                         \hlkwc{mapping} \hlstd{=} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= null_test_stat))} \hlopt{+}
+  \hlkwd{geom_histogram}\hlstd{(}\hlkwc{bins} \hlstd{=} \hlnum{100}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_histogram}\hlstd{(}\hlkwc{data} \hlstd{=} \hlkwd{subset}\hlstd{(}\hlkwc{x} \hlstd{= null_test_stat_dist,}
+                               \hlkwc{subset} \hlstd{= null_test_stat} \hlopt{>=} \hlstd{obs_test_stat),}
+                 \hlkwc{colour} \hlstd{=} \hlstr{"black"}\hlstd{,}
+                 \hlkwc{fill} \hlstd{=} \hlstr{"red"}\hlstd{,}
+                 \hlkwc{bins} \hlstd{=} \hlnum{100}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_vline}\hlstd{(}\hlkwc{xintercept} \hlstd{= obs_test_stat,}
+             \hlkwc{color} \hlstd{=} \hlstr{"red"}\hlstd{,}
+             \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)} \hlopt{+}
+  \hlkwd{xlab}\hlstd{(}\hlstr{"Null Test Statistics"}\hlstd{)} \hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlstr{"Count"}\hlstd{)} \hlopt{+}
+  \hlkwd{ggtitle}\hlstd{(}\hlstr{"Distribution of Test Statistic under Sharp Null"}\hlstd{)} \hlopt{+}
+  \hlkwd{theme}\hlstd{(}\hlkwc{plot.title} \hlstd{=} \hlkwd{element_text}\hlstd{(}\hlkwc{hjust} \hlstd{=} \hlnum{0.5}\hlstd{))}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in ggplot(data = null\_test\_stat\_dist, mapping = aes(x = null\_test\_stat)): object 'null\_test\_stat\_dist' not found}}\begin{alltt}
+\hlstd{null_dist_plot}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'null\_dist\_plot' not found}}\end{kframe}
+\end{knitrout}
 
 The one-sided simulation p-value is the probability mass of all treatment assignment permutations that yield a test statistic greater than or equal to the observed test statistic, which make up the red-shaded portion of the null distribution.
 
 We can calculate one sided and two sided simulation p-values via the function below. Note that \citet[33]{rosenbaum2010} defines a two sided p-value as follows: ``In general, if you want a two-sided P-value, compute both one-sided P-values, double the smaller one, and take the minimum of this value and 1.''
 
-<<  >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{sim_p_value} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{.null_dist}\hlstd{,}
+                        \hlkwc{.obs_stat}\hlstd{,}
+                        \hlkwc{.alternative}\hlstd{)\{}
 
-sim_p_value <- function(.null_dist,
-                        .obs_stat,
-                        .alternative){
-  
-  if(.alternative == "greater") {
-    
-    return(mean(.null_dist >= abs(.obs_stat)))
-    
-  }
-  
-  if(.alternative == "less") {
-    
-    
-    return(mean(.null_dist <= -abs(.obs_stat)))
-    
-  }
-  
-  if(.alternative == "two.sided"){
-    
-    ## Following Rosenbaum 2010, p. 33
-    return(min(1, min(mean(.null_dist >= .obs_stat),
-               mean(.null_dist <= .obs_stat)) * 2))
-    
-  }
-  
-}
+  \hlkwa{if}\hlstd{(.alternative} \hlopt{==} \hlstr{"greater"}\hlstd{) \{}
 
-sim_p_value(.null_dist = null_test_stat_dist,
-            .obs_stat = obs_test_stat,
-            .alternative = "greater")
+    \hlkwd{return}\hlstd{(}\hlkwd{mean}\hlstd{(.null_dist} \hlopt{>=} \hlkwd{abs}\hlstd{(.obs_stat)))}
 
-@
+  \hlstd{\}}
+
+  \hlkwa{if}\hlstd{(.alternative} \hlopt{==} \hlstr{"less"}\hlstd{) \{}
+
+
+    \hlkwd{return}\hlstd{(}\hlkwd{mean}\hlstd{(.null_dist} \hlopt{<= -}\hlkwd{abs}\hlstd{(.obs_stat)))}
+
+  \hlstd{\}}
+
+  \hlkwa{if}\hlstd{(.alternative} \hlopt{==} \hlstr{"two.sided"}\hlstd{)\{}
+
+    \hlcom{## Following Rosenbaum 2010, p. 33}
+    \hlkwd{return}\hlstd{(}\hlkwd{min}\hlstd{(}\hlnum{1}\hlstd{,} \hlkwd{min}\hlstd{(}\hlkwd{mean}\hlstd{(.null_dist} \hlopt{>=} \hlstd{.obs_stat),}
+               \hlkwd{mean}\hlstd{(.null_dist} \hlopt{<=} \hlstd{.obs_stat))} \hlopt{*} \hlnum{2}\hlstd{))}
+
+  \hlstd{\}}
+
+\hlstd{\}}
+
+\hlkwd{sim_p_value}\hlstd{(}\hlkwc{.null_dist} \hlstd{= null_test_stat_dist,}
+            \hlkwc{.obs_stat} \hlstd{= obs_test_stat,}
+            \hlkwc{.alternative} \hlstd{=} \hlstr{"greater"}\hlstd{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in mean(.null\_dist >= abs(.obs\_stat)): object 'null\_test\_stat\_dist' not found}}\end{kframe}
+\end{knitrout}
 
 \subsection{(b)}
 
-<< eval = FALSE >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{treated} \hlkwb{<-} \hlkwd{combn}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{nrow}\hlstd{(acorn_data_subset),}
+                 \hlkwc{m} \hlstd{=} \hlkwd{sum}\hlstd{(acorn_data_subset}\hlopt{$}\hlstd{z),}
+                 \hlkwc{simplify} \hlstd{=} \hlnum{TRUE}\hlstd{)}
 
-treated <- combn(x = 1:nrow(acorn_data_subset),
-                 m = sum(acorn_data_subset$z),
-                 simplify = TRUE) 
+\hlstd{all_z} \hlkwb{<-} \hlkwd{apply}\hlstd{(}\hlkwc{X} \hlstd{= treated,}
+               \hlkwc{MARGIN} \hlstd{=} \hlnum{2}\hlstd{,}
+               \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)} \hlkwd{as.integer}\hlstd{(}\hlnum{1}\hlopt{:}\hlkwd{nrow}\hlstd{(acorn_data_subset)} \hlopt{%in%} \hlstd{x))}
 
-all_z <- apply(X = treated,
-               MARGIN = 2,
-               FUN = function(x) as.integer(1:nrow(acorn_data_subset) %in% x))
+\hlkwd{save}\hlstd{(all_z,} \hlkwc{file} \hlstd{=} \hlstr{"treat_perm.RData"}\hlstd{)}
 
-save(all_z, file = "treat_perm.RData")
+\hlkwd{load}\hlstd{(}\hlkwc{file} \hlstd{=} \hlstr{"treat_perm.RData"}\hlstd{)}
 
-load(file = "treat_perm.RData")
+\hlstd{null_distribution} \hlkwb{<-} \hlkwd{apply}\hlstd{(}\hlkwc{X} \hlstd{= all_z,}
+                           \hlkwc{MARGIN} \hlstd{=} \hlnum{2}\hlstd{,}
+                           \hlkwc{FUN} \hlstd{= treat_group_mean,}
+                           \hlkwc{.y} \hlstd{= acorn_data_subset}\hlopt{$}\hlstd{vote03)}
 
-null_distribution <- apply(X = all_z,
-                           MARGIN = 2,
-                           FUN = treat_group_mean,
-                           .y = acorn_data_subset$vote03)
-
-## exact p-value
-mean(null_distribution >= obs_test_stat)
-## 0.07484012
-
-@
+\hlcom{## exact p-value}
+\hlkwd{mean}\hlstd{(null_distribution} \hlopt{>=} \hlstd{obs_test_stat)}
+\hlcom{## 0.07484012}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
 
 The exact, one-sided p-value based on the ${28 \choose 14} = 40116600$ test statistics calculated under the sharp null hypothesis of no effect is $0.07484012$. The simulation, one-sided p-value based on $10^5$ simulations is $0.07443$. Therefore, the error of the simulation p-value is $\left|0.07443 - 0.07484012\right| = 0.00041012$.
 
@@ -402,24 +518,35 @@ If we were to approximate the simulation error via the formula $\frac{1}{\sqrt{n
 
 The simulation approximation of the null expected value of the test statistic, $\E\left[n_t^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]$, is $0.306631$, which is simply the mean of the simulated null distribution of the test statistic:
 
-<<  >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{mean}\hlstd{(null_test_stat_dist}\hlopt{$}\hlstd{null_test_stat)}
+\end{alltt}
 
-mean(null_test_stat_dist$null_test_stat)
 
-@
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in mean(null\_test\_stat\_dist\$null\_test\_stat): object 'null\_test\_stat\_dist' not found}}\end{kframe}
+\end{knitrout}
 
 \subsection{(d)}
 
 The simulation approximation of $\Var\left[n_t^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]$ is simply the variance of the simulated null distribution of the test statistic, which is $0.00015$. The variance can be calculated as follows:
 
-<<  >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{sim_var} \hlkwb{<-} \hlkwd{mean}\hlstd{((null_test_stat_dist}\hlopt{$}\hlstd{null_test_stat} \hlopt{-}
+                   \hlkwd{mean}\hlstd{(null_test_stat_dist}\hlopt{$}\hlstd{null_test_stat))}\hlopt{^}\hlnum{2}\hlstd{)}
+\end{alltt}
 
-sim_var <- mean((null_test_stat_dist$null_test_stat -
-                   mean(null_test_stat_dist$null_test_stat))^2)
 
-sim_var
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in mean((null\_test\_stat\_dist\$null\_test\_stat - mean(null\_test\_stat\_dist\$null\_test\_stat))\textasciicircum{}2): object 'null\_test\_stat\_dist' not found}}\begin{alltt}
+\hlstd{sim_var}
+\end{alltt}
 
-@
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'sim\_var' not found}}\end{kframe}
+\end{knitrout}
 
 \section{Question 5} \label{qu: 5}
 
@@ -485,11 +612,15 @@ Therefore, exactly $\frac{n_t}{n}$ out of all treatment assignment permutations 
 
 We have thus proven that $\E_0\left[n_t^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right] = \overline{y_t}$. Therefore, to calculate the null expected value of the test staistic, we can simply take the mean of $\mathbf{y}_t$ values, which we know is equal to $\mathbf{y}$ under the sharp null hypothesis of no effect.
 
-<< >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{mean}\hlstd{(acorn_data_subset}\hlopt{$}\hlstd{vote03)}
+\end{alltt}
 
-mean(acorn_data_subset$vote03)
 
-@
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in mean(acorn\_data\_subset\$vote03): object 'acorn\_data\_subset' not found}}\end{kframe}
+\end{knitrout}
 
 \section{Question 6}
 
@@ -525,13 +656,17 @@ This quantity is the mean turnout proportion among treated units.
 
 We can calculate this value in \texttt{[R]} as follows:
 
-<<  >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## t() is to transpose a matrix; %*% is the matrix multiplication operator}
+\hlstd{(}\hlnum{1}\hlopt{/}\hlkwd{sum}\hlstd{(acorn_data_subset}\hlopt{$}\hlstd{z))} \hlopt{*}
+  \hlkwd{t}\hlstd{(acorn_data_subset}\hlopt{$}\hlstd{z)} \hlopt{%*%} \hlstd{acorn_data_subset}\hlopt{$}\hlstd{vote03}
+\end{alltt}
 
-## t() is to transpose a matrix; %*% is the matrix multiplication operator
-(1/sum(acorn_data_subset$z)) *
-  t(acorn_data_subset$z) %*% acorn_data_subset$vote03
 
-@
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'acorn\_data\_subset' not found}}\end{kframe}
+\end{knitrout}
 
 Under the sharp null hypothesis of no effect, we know both potential outcomes for all $i = 1 , \dots , 28$ units:
 
@@ -576,17 +711,27 @@ $\vdots$ & $\vdots$  & $\vdots$ & $\vdots$ & $\vdots$ \\
 
 Therefore, we can directly calculate the population mean and variance of all $28$ $y_t$ values under the sharp null hypothesis of no effect. The population mean and variance of $y_t$ under the sharp null hyothesis of no effect are $\mu_{y_t} = 0.3066632$ and $\sigma^2_{y_t} = 0.004194751$, respectively.
 
-<< >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{pop_mean} \hlkwb{<-} \hlkwd{mean}\hlstd{(acorn_data_subset}\hlopt{$}\hlstd{vote03)}
+\end{alltt}
 
-pop_mean <- mean(acorn_data_subset$vote03)
 
-pop_var <- mean((acorn_data_subset$vote03 -
-                   mean(acorn_data_subset$vote03))^2)
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in mean(acorn\_data\_subset\$vote03): object 'acorn\_data\_subset' not found}}\begin{alltt}
+\hlstd{pop_var} \hlkwb{<-} \hlkwd{mean}\hlstd{((acorn_data_subset}\hlopt{$}\hlstd{vote03} \hlopt{-}
+                   \hlkwd{mean}\hlstd{(acorn_data_subset}\hlopt{$}\hlstd{vote03))}\hlopt{^}\hlnum{2}\hlstd{)}
+\end{alltt}
 
-cbind(pop_mean,
-      pop_var)
 
-@
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in mean((acorn\_data\_subset\$vote03 - mean(acorn\_data\_subset\$vote03))\textasciicircum{}2): object 'acorn\_data\_subset' not found}}\begin{alltt}
+\hlkwd{cbind}\hlstd{(pop_mean,}
+      \hlstd{pop_var)}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in cbind(pop\_mean, pop\_var): object 'pop\_mean' not found}}\end{kframe}
+\end{knitrout}
 
 Given that we now know $\mu_{y_t}$ and $\sigma^2_{y_t}$ under the sharp null hypothesis, we can directly calculate $\Var_0\left[n_t^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]$:
 \begin{align*}
@@ -596,24 +741,34 @@ Given that we now know $\mu_{y_t}$ and $\sigma^2_{y_t}$ under the sharp null hyp
 \end{align*}
 This quantity is the variance of the sampling distribution, which is distinct from the variance of the population from which we are sampling.
 
-<< >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{fpc_var_sample_mean} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{.y}\hlstd{,}
+                                \hlkwc{.n_t}\hlstd{) \{}
 
-fpc_var_sample_mean <- function(.y,
-                                .n_t) {
-  
-  (.n_t^(-1)) * ((length(.y) - .n_t)/length(.y)) *
-    (sum((.y - mean(.y))^2))/(length(.y) - 1)
-  
-}
+  \hlstd{(.n_t}\hlopt{^}\hlstd{(}\hlopt{-}\hlnum{1}\hlstd{))} \hlopt{*} \hlstd{((}\hlkwd{length}\hlstd{(.y)} \hlopt{-} \hlstd{.n_t)}\hlopt{/}\hlkwd{length}\hlstd{(.y))} \hlopt{*}
+    \hlstd{(}\hlkwd{sum}\hlstd{((.y} \hlopt{-} \hlkwd{mean}\hlstd{(.y))}\hlopt{^}\hlnum{2}\hlstd{))}\hlopt{/}\hlstd{(}\hlkwd{length}\hlstd{(.y)} \hlopt{-} \hlnum{1}\hlstd{)}
 
-fpc_var <- fpc_var_sample_mean(.y = acorn_data_subset$vote03,
-                               .n_t = sum(acorn_data_subset$z))
+\hlstd{\}}
 
-fpc_var
+\hlstd{fpc_var} \hlkwb{<-} \hlkwd{fpc_var_sample_mean}\hlstd{(}\hlkwc{.y} \hlstd{= acorn_data_subset}\hlopt{$}\hlstd{vote03,}
+                               \hlkwc{.n_t} \hlstd{=} \hlkwd{sum}\hlstd{(acorn_data_subset}\hlopt{$}\hlstd{z))}
+\end{alltt}
 
-(abs(sim_var - fpc_var)/fpc_var) * 100
 
-@
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in fpc\_var\_sample\_mean(.y = acorn\_data\_subset\$vote03, .n\_t = sum(acorn\_data\_subset\$z)): object 'acorn\_data\_subset' not found}}\begin{alltt}
+\hlstd{fpc_var}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'fpc\_var' not found}}\begin{alltt}
+\hlstd{(}\hlkwd{abs}\hlstd{(sim_var} \hlopt{-} \hlstd{fpc_var)}\hlopt{/}\hlstd{fpc_var)} \hlopt{*} \hlnum{100}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'sim\_var' not found}}\end{kframe}
+\end{knitrout}
 
 The error of the simulation based approximation, expressed as a percentage of $\Var\left[n_t^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]$ is:
 \begin{align*}
@@ -629,19 +784,29 @@ In the case of the Acorn experiment, we can calculate the Z-score as follows:
 & = \frac{\left(0.3248104 - 0.3066632\right)}{0.01246439}
 \end{align*}
 
-<<  >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{z_score} \hlkwb{<-} \hlstd{(obs_test_stat} \hlopt{-} \hlstd{pop_mean)} \hlopt{/} \hlkwd{sqrt}\hlstd{(fpc_var)}
+\end{alltt}
 
-z_score <- (obs_test_stat - pop_mean) / sqrt(fpc_var)
 
-pnorm(q = z_score,
-      lower.tail = FALSE)
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'obs\_test\_stat' not found}}\begin{alltt}
+\hlkwd{pnorm}\hlstd{(}\hlkwc{q} \hlstd{= z_score,}
+      \hlkwc{lower.tail} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+\end{alltt}
 
-pnorm(q = obs_test_stat,
-      mean = pop_mean,
-      sd = sqrt(fpc_var),
-      lower.tail = FALSE)
 
-@
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in pnorm(q = z\_score, lower.tail = FALSE): object 'z\_score' not found}}\begin{alltt}
+\hlkwd{pnorm}\hlstd{(}\hlkwc{q} \hlstd{= obs_test_stat,}
+      \hlkwc{mean} \hlstd{= pop_mean,}
+      \hlkwc{sd} \hlstd{=} \hlkwd{sqrt}\hlstd{(fpc_var),}
+      \hlkwc{lower.tail} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in pnorm(q = obs\_test\_stat, mean = pop\_mean, sd = sqrt(fpc\_var), : object 'obs\_test\_stat' not found}}\end{kframe}
+\end{knitrout}
 
 The \texttt{pnorm} function reports the probability density to the left of the observed test statistic by default; but since we expect a positive effect, we want the probability density to the right of the observed test statistic, which we can do by setting \texttt{lower.tail = FALSE}. The normal theory approximation to the p-value is $0.0727$. 
 
@@ -683,27 +848,32 @@ However, in order to encourage thinking about possible treatment assignment vect
 
 In the case of the specific experiment with $6$ units and simple random assignment, the probability of $Z_i = 1$, which is equivalent to $\E\left[Z_i\right]$, can be calculated as follows:
 
-<<>>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{n_t} \hlkwb{<-} \hlnum{0}\hlopt{:}\hlnum{6}
 
-n_t <- 0:6
+\hlcom{## Total number of treatment assignment vectors}
+\hlstd{Omega} \hlkwb{<-} \hlkwd{sum}\hlstd{(}\hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{= n_t,}\hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{choose}\hlstd{(}\hlkwc{n} \hlstd{=} \hlnum{6}\hlstd{,} \hlkwc{k} \hlstd{= x)\}))}
 
-## Total number of treatment assignment vectors
-Omega <- sum(sapply(X = n_t,FUN = function(x) { choose(n = 6, k = x)}))
+\hlstd{srs_probs} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{.n_t}\hlstd{,} \hlkwc{.n}\hlstd{,} \hlkwc{.Omega}\hlstd{) \{}
 
-srs_probs <- function(.n_t, .n, .Omega) {
-  
-  return((.n_t / .n) * (choose(n = .n,
-                       k = .n_t) / .Omega))
-  
-  }
+  \hlkwd{return}\hlstd{((.n_t} \hlopt{/} \hlstd{.n)} \hlopt{*} \hlstd{(}\hlkwd{choose}\hlstd{(}\hlkwc{n} \hlstd{= .n,}
+                       \hlkwc{k} \hlstd{= .n_t)} \hlopt{/} \hlstd{.Omega))}
 
-## 0.5
-sum(sapply(X = n_t,
-       FUN = srs_probs,
-       .n = 6,
-       .Omega = Omega))
+  \hlstd{\}}
 
-@
+\hlcom{## 0.5}
+\hlkwd{sum}\hlstd{(}\hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{= n_t,}
+       \hlkwc{FUN} \hlstd{= srs_probs,}
+       \hlkwc{.n} \hlstd{=} \hlnum{6}\hlstd{,}
+       \hlkwc{.Omega} \hlstd{= Omega))}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.5
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 
 \subsection{(d)}
 
@@ -720,30 +890,34 @@ for all methods.
 
 Under method I, we can easily calculate $\E\left[\mathbf{Z}^{\prime}\mathbf{Z}\right]$ via the following \texttt{[R]} code:
 
-<< >>=
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{n_t_sra} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{.n}\hlstd{,}
+                    \hlkwc{.k}\hlstd{,}
+                    \hlkwc{.p}\hlstd{) \{}
+
+  \hlkwd{return}\hlstd{(}\hlkwd{choose}\hlstd{(}\hlkwc{n} \hlstd{= .n,} \hlkwc{k} \hlstd{= .k)} \hlopt{*} \hlstd{.p}\hlopt{^}\hlstd{(.k)}\hlopt{*}\hlstd{(}\hlnum{1} \hlopt{-} \hlstd{.p)}\hlopt{^}\hlstd{(.n} \hlopt{-} \hlstd{.k))}
+
+  \hlstd{\}}
+
+\hlstd{probs} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlnum{0}\hlstd{,}
+                        \hlkwc{to} \hlstd{=} \hlnum{6}\hlstd{,}
+                        \hlkwc{by} \hlstd{=} \hlnum{1}\hlstd{),}
+                \hlkwc{FUN} \hlstd{= n_t_sra,}
+                \hlkwc{.n} \hlstd{=} \hlnum{6}\hlstd{,}
+                \hlkwc{.p} \hlstd{=} \hlnum{0.5}\hlstd{)}
 
 
-n_t_sra <- function(.n,
-                    .k,
-                    .p) {
-  
-  return(choose(n = .n, k = .k) * .p^(.k)*(1 - .p)^(.n - .k))
-  
-  }
+\hlstd{events} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlnum{0} \hlstd{,} \hlkwc{to} \hlstd{=} \hlnum{6}\hlstd{,} \hlkwc{by} \hlstd{=} \hlnum{1}\hlstd{)}
 
-probs <- sapply(X = seq(from = 0,
-                        to = 6,
-                        by = 1),
-                FUN = n_t_sra,
-                .n = 6,
-                .p = 0.5)
-
-
-events <- seq(from = 0 , to = 6, by = 1)
-
-sum(events * probs)
-
-@
+\hlkwd{sum}\hlstd{(events} \hlopt{*} \hlstd{probs)}
+\end{alltt}
+\begin{verbatim}
+## [1] 3
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 
 Since all units have the same treatment assignment probability,
 \begin{align*}
