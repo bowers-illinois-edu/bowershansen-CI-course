@@ -174,7 +174,7 @@ Imagine that **assignment** caused the outcome to differ:
 
 ```{r}
 
-taubar <- 1
+taubar <- 2
 y1 <- y0 + taubar
 
 Y <- Z * y1 + (1-Z) * y0
@@ -183,6 +183,20 @@ taubarhat <- mean(Y[Z==1]) - mean(Y[Z==0])
 ## or taubarhat <- coef(lm(Y~Z))[["Z"]]
 
 ```
+
+## Assessing the Intent to Treat Effect (ITT)
+
+The ITT is defined as $\bar{y}_T - \bar{y}_C$ where $y_T$ is the potential
+outcome to treatment, and $y_C$ is the potential outcome to control. 
+
+Why give it a new name?
+\smallskip
+What evidence do we have against the claim that the policy had no effects?
+\smallskip
+What is our best guess about the ITT itself?
+
+
+## The Effect of a Dose
 
 But what if we want to know about the effect of experiencing the treatment,
 the effect of talking with a canvasser $D=1$ versus the effect of being assigned to
