@@ -272,7 +272,7 @@ A general rule of thumb often cited in introductory statistics textbooks is that
 
 <<  >>=
 
-acorn_data <- read.csv("acorn03.csv")
+acorn_data <- read.csv("../data/acorn03.csv")
   
 acorn_data_subset <- dplyr::select(.data = acorn_data, unit, size, z, vote03)
 
@@ -806,6 +806,6 @@ For method I, $\mathbf{Z}^{\prime}\mathbf{Z}$ varies across different realizatio
 \newpage
 \bibliographystyle{chicago}
 \begin{singlespace}
-\bibliography{master_bibliography}
+\bibliography{../Master_Bibliography}
 \end{singlespace}
 \end{document}
