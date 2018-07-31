@@ -40,7 +40,7 @@ cbind(y_c, y_t_null_false)
 obs_ys_null_false <- apply(X = Omega, MARGIN = 2, FUN = function(x) { x * y_t_null_false + (1 - x) * y_c })
 obs_ds <- apply(X = Omega, MARGIN = 2, FUN = function(x) { x * d_t + (1 - x) * d_c })
 
-## this corresponds to Rosenbaum's notion of a "positive effect"
+## this corresponds to Rosenbaum's notion of a "positive effect," in this case a positive complier causal effect
 true_effects_d_y <- y_t_null_false[d_c == 0 & d_t == 1] - y_c[d_c == 0 & d_t == 1]
 
 ## Now under each possible realizaion of data, let's test the sharp null hypothesis of no effect
@@ -98,7 +98,7 @@ p_values_null_false <- sapply(X = 1:ncol(Omega),
                               FUN = function(x) { gen_p_value(.z = Omega[,x],
                                                               .obs_ys = obs_ys_null_false[,x],
                                                               .obs_ds = obs_ds[,x],
-                                                              .null_tau = rep(x = 0, times = n),
+                                                              .null_tau = rep(x = 0, times = n), ## the sharp null of no complier causal effect, which is no causal effect overall due to exclusion restriction
                                                               .Omega = Omega,
                                                               .Omega_probs = cra_vec_probs,
                                                               .test_stat_fun = iv_test_stat,
@@ -133,9 +133,3 @@ sum((p_values_null_true <= 0.05) * cra_vec_probs)
 ## we have just shown that the probability of rejecting the sharp null when it is false and the alternative of
 ## a positive effect is true is greater than the probability of rejecting the sharp null when it is true
 ## and the alternative of a positive effect is false
-
-
-
-
-
-
