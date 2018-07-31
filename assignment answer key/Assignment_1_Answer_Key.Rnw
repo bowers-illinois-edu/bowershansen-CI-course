@@ -226,7 +226,6 @@ p_load(MASS,
 
 A limit on the absolute error of a p-value, $\left|p_{\text{approx}} - p_{\text{exact}}\right|$, that seems reasonably tolerable to me is $\leq 0.005$. Hence, we can solve for the number of simulations as follows:
 \begin{align*}
-\left|p_{\text{approx}} - p_{\text{exact}}\right| & \leq 0.005 \leq \frac{1}{\sqrt{n_{\text{sims}}}} \\
 0.005 & \leq \frac{1}{\sqrt{n_{\text{sims}}}} \\
 0.000025 & \leq \frac{1}{n_{\text{sims}}} \\
 \frac{1}{0.000025} & \leq n_{\text{sims}} \\
