@@ -86,48 +86,16 @@ library(RItools,lib.loc="./lib")
 
 \begin{enumerate}
 \item Agenda: Recap of the Estimation approach to Causal Inference with
-Instruments
+Instruments, Walk through a testing based approach.
 \item Reading for tomorrow from "Principled Search for designs with ignorable
 assignment" on the Syllabus. DOS Chapter 1, Chapter 6 in Dunning, Hansen and
 Sales 2015, Hansen and Bowers 2008. We are beginning the "Found experiments" section
-of the course. 
+of the course.
 \item Questions arising from the reading or assignments or life?
 %\item Recap:
 \end{enumerate}
 
-# But first: Who am I? Who are you?
-
-## Brief Introductions
-
-# But second: An overview of approaches to statistical inference for causal quantities
-
-\begin{frame}{Approach 1: Test Hypotheses about Models of Potential Outcomes}
-
-  \smallskip
-  \centering
-  \includegraphics[width=.9\textwidth]{images/cartoonFisher.pdf}
-
-\end{frame}
-
-
-\begin{frame}{Approach 2: Estimate Averages of Potential Outcomes}
-
-  \smallskip
-  \centering
-  \includegraphics[width=.9\textwidth]{images/cartoonNeyman.pdf}
-
-\end{frame}
-
-
-\begin{frame}{Approach 3: Predict Potential Outcomes}
-
-  \smallskip
-  \centering
-  \includegraphics[width=.9\textwidth]{images/cartoonBayes.pdf}
-
-\end{frame}
-
-# And third, some more context: The creation of interpretable comparisons.
+# But first: Where are we and where are we going?
 
 ## Research designs to aid the creation of interpretable comparisons
 
@@ -143,56 +111,48 @@ of the course.
 
 # Now: Instruments, the ITT and CACE/LATE
 
-## Instruments, the ITT and CACE/LATE
+## Defining causal effects for the Adams and Smith (1980) Study
 
-**Context:** An NGO invites you to help design and evaluate a program to increase donations involving in-person, door-to-door, discussions about the canvasser's own personal experiences. Building rapport with another person should increase willingness to donate, according to the NGO.
+ -  $Y$ & outcome ($y_{i,T}$ or $y_{i,Z_i=1}$ for potential outcome to
+   treatment for person $i$, fixed)
+ - $X$ & covariate/baseline variable
+ - $Z$ & treatment assignment ($Z_i=1$ if assigned to a call, $Z_i=0$ if not
+   assigned to a call)
+ -  $D$ & treatment received ($D_i=1$ if answered phone, $D_i=0$ if person $i$
+   dd not answer the phone.)
 
-\smallskip
+We have two causal effects: $Z \rightarrow Y$ ($\delta$, ITT, ITT$_Y$), and $Z \rightarrow D$ (GG
+call this ITT$_D$).
 
-**Opportunity for learning about theory** You know have been interested in
-understanding why and how social norms influence behavior. So, you ask to
-that canvassers appeal to a descriptive social norm ("other people we have
-spoken with agree") toward the end of the discussion.
+And different types of people can react differently to the attempt to move the
+dose with the instrument.
 
-\smallskip
+\centering
+\begin{tabular}{llcc}
+                       &        & \multicolumn{2}{c}{$Z=1$} \\
+		       &       & $D=0$ & $D=1$ \\
+		       \midrule
+\multirow{2}{*}{$Z=0$} & $D=0$ & Nevertaker & Complier \\
+                       & $D=1$ & Defier     & Always taker \\
+		       \bottomrule
+\end{tabular}
 
-**Design:** The NGO randomizes visits by canvassers to a set of addresses and
-measures the amount pledged online in the following month.
+##  Defining causal effects
 
-\smallskip
+The $ITT=ITT_Y=delta= \bar{y}_{Z=1} - \bar{y}_{Z=0}$.
 
-**Analysis:** The NGO cares about the cost effectiveness of the approach. Did
-it work? You (and the NGO should care) about **why** it worked (or did not
-work).
+But, in this design, $\bar{y}_{Z=1}$ is split into two pieces: the outcome of
+those who answered the phone and those who did not. So:
 
-
-## Defining causal effects
-
- - $Z_i$ is random assignment to a visit ($Z_i=1$) or not ($Z_i=0$).
- - $d_{i,Z_i=1}=1$ means that person $i$ opened the door to have a conversation when assigned a visit. Opening the door is an outcome of the treatment, is caused by the treatment.
- - $y_{i,Z_i = 1, d_{i,Z_i=1}=1}$ is the potential outcome for people who were assigned a visit and who opened the door.
- - $y_{i,Z_i = 1, d_{i,Z_i=1}=0}$ is the potential outcome for people who were assigned a visit and who did not open the door.
- - $y_{i,Z_i = 0, d_{i,Z_i=0}=1}$ is the potential outcome for people who were not assigned a visit and who opened the door.
- - $y_{i,Z_i = 0, d_{i,Z_i=0}=0}$ is the potential outcome for people who were not assigned a visit and who would not have opened the door.
- - We could also write $y_{i,Z_i = 0, d_{i,Z_i=1}=1}$ for people who were not
-   assigned a visit who would have opened the door had they been assigned a
-   visit etc..
-
-In this case, $y_{i,Z_i = 0, d_{i,Z_i=1}=1} = y_{i,Z_i = 0, d_{i,Z_i=1}=0}
-\equiv y_{i,Z_i=0}$ because you can't open the door unless visited.
-
-And also $y_{i,Z_i = 1, d_{i,Z_i=1}=0} = y_{i,Z_i=0}$ because there can be no
-effect of the visit if you don't open the door.
-
-##  Defining our causal effects
-
-People refer to an "Intent To Treat Effect" (ITT) as the causal effect of
-**assignment** to treatment. In our case, we can write the ITT as a weighted
-sum of the responses to treatment  minus the response to assignment to control
-( where $p(d_1=1)$ is the proportion of people opening their doors ).
+$ITT=$
 
 
-$$ITT= ( \bar{y}_{Z=1,d_1=1}p(d_1=1) + \bar{y}_{Z=1,d_1=0}(1-p(d_1=1)) )  - \bar{y}_{Z=0}$$
+ - $\delta_C = ITT_{Complier} = \bar{y}_{1,1} - \bar{y}_{0,0} | Complier$
+ - $\delta_D = ITT_{Defier} = \bar{y}_{1,0} - \bar{y}_{0,1} | Defier$
+ - $\delta_N = ITT_{Nevertaker} = \bar{y}_{1,0} - \bar{y}_{0,0} | Nevertaker$
+ - $\delta_A = ITT_{Alwaystaker} = \bar{y}_{1,1} - \bar{y}_{0,1} | Alwaystaker$
+
+$$ITT=\delta = ( \bar{y}_{1,1}p(d_1=1) + \bar{y}_{Z=1,d_1=0}(1-p(d_1=1)) )  - \bar{y}_{Z=0}$$
 
 \medskip
 
@@ -219,7 +179,7 @@ y0tmp <- round(rnorm(n,mean=0,sd=10)) + x/2
 y0 <- pmax(y0tmp,0)
 Z <- complete_ra(n)
 ## Door opening is a function of x (age) and Z (visits)
-probd <- ( x-min(x) )/( max(x) - min(x) ) 
+probd <- ( x-min(x) )/( max(x) - min(x) )
 mean(probd)
 d <- ifelse(Z==1, rbinom(sum(Z==1),prob=probd/2,size=1), 0)
 table(Z,d,exclude=c())
@@ -361,7 +321,7 @@ iv1 <- ivreg(Y~d | Z, data=dat)
   - An instrument moves a dose. The effect of the dose is specific, or local,
     to those who took a dose, to those who experienced the treatment.
   - The ITT and CACE/LATE represent different causal effects. ITT tends to be
-    the policy-relevant effect. 
+    the policy-relevant effect.
   - An "as-treated" analysis is no longer an experiment.
 
 ## References
