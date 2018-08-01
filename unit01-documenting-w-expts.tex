@@ -1,8 +1,8 @@
 %  For slides only
-\input{slidesonly}
+%\input{slidesonly}
 
 % % For handout
-%\input{handout}
+\input{handout}
 
 %For handout + mynotes
 %\input{handout+mynotes}
@@ -17,20 +17,22 @@
 \begin{document}
 
 
-  \begin{frame}[shrink]
+\begin{frame}[shrink]
     \frametitle{Outline \& Readings}
 
 \tableofcontents[subsectionstyle=show/hide/hide]
 
 {\usebeamercolor[fg]{titlelike} Announcements:}\\
 
-\InputIfFileExists{announcement-of-the-day.tex}{% from https://tex.stackexchange.com/questions/100663/if-the-remote-file-exists-then-include-it-else-include-the-local-one
-  % File personal/bar.tex exists and is read
+\InputIfFileExists{announcement-of-the-day.tex}{% from https://tex.stackexchange.com/q
+uestions/100663/if-the-remote-file-exists-then-include-it-else-include-the-local-one
+ % File personal/bar.tex exists and is read
   \input{announcement-of-the-day}  % announcement-of-the-day.tex not
 }{%
   % File personal/bar.tex is not found, try bar.tex
 }
                                 % announcement-of-the-day.tex not part of repo
+
 \end{frame}
 \itnote{
 \item Day 2: Starting in part 2, I'll demo use of R to do some Fisher test calcs for the Salk polio trial. 
@@ -145,7 +147,7 @@ analysis in social science, by century:
 \item Then break to discuss testing of hypotheses of no effect, i.e. start worksheet.
 \medskip
 
-\item 2016-07: at the
+\item[2016] at the
 blackboard I walked them through strict null for the Salk trial,
 tested it approximately using N-approx, $\mathrm{sd}_{0}(\hat p)
 \approx \sqrt{p_{0}q_{0}/n_{1}}$.  This seemed to work well.
@@ -157,7 +159,6 @@ tested it approximately using N-approx, $\mathrm{sd}_{0}(\hat p)
   \item Distributions of response under treatment and control: $\mu_{t},
     \mu_{c}$; $\mu_{t}(x), \mu_{c}(x)$.
   \item Counterfactual conditional.
-  \item $x$ or $\mathbf{x}$?\ldots
   \item Unit-level potential outcomes (Rubin, 1970s): $y_{t}, y_{c}$.
   \end{itemize}
 
@@ -186,6 +187,27 @@ don't, you'll tend not to.
   outcomes; comparability of treatment and control groups; \ldots;
   formal study planning (Rosenbaum, \textit{DOS}, ch. 1.)
 \end{itemize}
+
+\end{frame}
+
+\begin{frame}{Example 2: overconfidence \& theories of intelligence}
+
+\igrphx{ehrlingeretal16-titlebanner}
+
+\end{frame}
+
+\begin{frame}[handout:0]{Example 2: overconfidence \& theories of intelligence}
+
+\igrphx{ehrlingeretal16sec2para1}
+
+\end{frame}
+
+\begin{frame}[handout:0]{Example 2: overconfidence \& theories of intelligence}
+
+\begin{tabular}{c}
+\igrphx{ehrlingeretal16-4-1-2-0}\\
+\igrphx{ehrlingeretal16-4-1-2-1}\\
+\end{tabular}
 
 \end{frame}
 
@@ -282,8 +304,39 @@ findings as summarized by Rosenbaum, \textit{DOS} ch1?}
         Bad For Your Health?'', BMJ 307 1584--86.}
 \end{frame}
 
+\itnote{
+\item Numbers of emergency admissions to a UK hospital due to
+  vehicular accidents, on consecutive fridays the second of which is a
+  Friday the 13th. 
+\item (\S~2.1--2.2.1 of \textit{DOS} creates a small paired expt from
+  the NSW data.)
+}
+
+\againframe{timelineFr}
 
 \begin{frame}{The hypothesis of no effect (again)}
+
+  \begin{center}
+    \begin{tabular}{l|l|r|l|l|r|l|l}
+\hline
+year & month & Fri6th & y\_11C & y\_11T & Fri13th & y\_12C & y\_12T\\
+\hline
+'89 & Oct. & 9 &  &  & 13 &  & \\
+\hline
+'90 & Jul. & 6 &  &  & 12 &  & \\
+\hline
+'91 & Sep. & 11 &  &  & 14 &  & \\
+\hline
+'91 & Dec. & 11 &  &  & 10 &  & \\
+\hline
+'92 & Mar. & 3 &  &  & 4 &  & \\
+\hline
+'92 & Nov. & 5 &  &  & 12 &  & \\
+\hline
+\end{tabular}
+
+  \end{center}
+
   
 \end{frame}
 \section*{Closing remarks}
