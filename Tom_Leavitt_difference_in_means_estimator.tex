@@ -1,0 +1,265 @@
+\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
+\documentclass[12pt,leqno]{article}
+\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\newcommand\given[1][]{\:#1\vert\:}
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb}          % AMS Stuff
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{afterpage}% http://ctan.org/pkg/afterpage
+\usepackage[T1]{fontenc}
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfig}
+\usepackage{lscape}
+\usepackage{titling}            % modify maketitle in latex
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage{verbatim}
+\usepackage{geometry}
+\usepackage{bigfoot}
+\usepackage[format=hang,
+            font={small},
+            labelfont=bf,
+            textfont=rm]{caption}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+
+\geometry{verbose,margin=2cm,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=page,
+            colorlinks=true,
+            hyperfootnotes=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1},
+            citecolor=blue!70!black,
+            linkcolor=red!70!black,
+            urlcolor=green!70!black]{hyperref}
+\usepackage{hypernat}
+
+\usepackage{multirow}
+\usepackage{titlesec}
+
+\titleformat*{\section}{\large\bfseries}
+\titleformat*{\subsection}{\normalsize\bfseries}
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+
+\parskip=12pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{12pt} %Aboveskip
+{12pt} %Below skip
+{\itshape} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\N}{\mathbb{N}}
+\DeclareMathOperator{\Z}{\mathbb{Z}}
+\DeclareMathOperator{\Q}{\mathbb{Q}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\e}{\rm{e}}
+
+
+%\DeclareMathOperator{\Pr}{\rm{Pr}}
+
+% COLORS FOR GRAPHICS (3-class Set1)
+\definecolor{Blue}{RGB}{55,126,184}
+\definecolor{Red}{RGB}{228,26,28}
+\definecolor{Green}{RGB}{77,175,74}
+
+% COLORS FOR EQUATIONS (3-class Dark2)
+\definecolor{eqgreen}{RGB}{27,158,119}
+\definecolor{eqblue}{RGB}{117,112,179}
+\definecolor{eqred}{RGB}{217,95,2}
+
+\begin{document}
+
+\begin{titlepage}
+\title{ICPSR Causal Inference:\\Unbiasedness of Difference-in-Means Estimator under Complete Random Assignment}
+\author{Thomas Leavitt}
+\date{\today}
+\maketitle
+\end{titlepage}
+
+\begin{lem} \label{lem: exp val Z}
+Under complete, uniform random assignment, $\E_{\Omega}\left[Z_i\right] = \frac{n_t}{n}$ for all $i \in \left\{1, \dots , n\right\}$ units.
+\end{lem}
+\begin{proof}
+
+First note that in general there are $\binom{n}{k} = \frac{n!}{\left(n - k\right)!k!}$ ways to choose a subset of $k$ elements from a fixed set of $n$ elements. Therefore, the number of ways to choose a subset of $n_t$ treated units from a fixed population of $n$ units is $\binom{n}{n_t} = \frac{n!}{\left(n - n_t\right)!n_t!}$. Notice that the $n - n_t$ units that are not selected for treatment are assigned to the control condition; hence, $n - n_t = n_c$ and $\binom{n}{n_t} = \frac{n!}{n_c!n_t!}$. 
+
+Now let's condition on the event that an arbitrary unit $i$ is assigned to the treatment condition. The number of ways in which one could select $n_t - 1$ units from the remaining population of $n - 1$ units is $\binom{n - 1}{n_t - 1}$. Hence, the proportion of treatment assignment permutations in which unit $i$ is in the treatment condition is $\frac{\binom{n - 1}{n_t - 1}}{\binom{n}{n_t}}$.
+First note that we can write $\frac{\binom{n - 1}{n_t - 1}}{\binom{n}{n_t}}$ as $\frac{\left(\frac{\left(n - 1\right)!}{\left(n - 1 - n_t - 1\right)!\left(n_t - 1\right)!}\right)}{\left(\frac{n!}{n_c!n_t!}\right)}$ based on the definition of the binomial coefficient, $\binom{n}{k}$, given above.
+
+Since $n_c = n - n_t$ and we are conditioning on the event that one arbitrary unit $i$ has been selected into the treatment condition, in which case there is one fewer number of treated units, $n_t$, and one fewer unit in the population, $n$, it follows that $n_c = n - 1 - n_t - 1$. We can therefore substitute $n_c$ for $n - 1 - n_t - 1$:
+\begin{align*}
+\frac{\binom{n - 1}{n_t - 1}}{\binom{n}{n_t}} \\ 
+& = \frac{\left(\frac{\left(n - 1\right)!}{\left(n - 1 - n_t - 1\right)!\left(n_t - 1\right)!}\right)}{\left(\frac{n!}{n_c!n_t!}\right)} \\
+& = \frac{\left(\frac{\left(n - 1\right)!}{n_c!\left(n_t - 1\right)!}\right)}{\left(\frac{n!}{n_c!n_t!}\right)} \\
+\end{align*}
+Now we can simply manipulate the expression above and cancel terms until we are left with $\frac{n_t}{n}$:
+\begin{align*}
+& = \left(\frac{\left(n - 1\right)!}{n_c!\left(n_t - 1\right)!}\right)\left(\frac{n_c!n_t!}{n!}\right) \\
+& = \left(\frac{\left(n - 1\right)\left(n - 2\right) \dots 1}{n_c\left(n_c - 1\right) \dots 1 \left(n_t - 1\right)\left(n_t - 2\right) \dots 1}\right) \left(\frac{n_c\left(n_c - 1\right) \dots 1 n_t \left(n_t - 1\right) \dots 1}{n\left(n - 1\right) \dots 1}\right) \\
+& = \frac{\left(n - 1\right)\left(n - 2\right) \dots 2 n_c\left(n_c - 1\right) \dots 2 n_t \left(n_t - 1\right) \dots 2}{n_c\left(n_c - 1\right) \dots 2 \left(n_t - 1\right)\left(n_t - 2\right) \dots 2 n\left(n - 1\right) \dots 2} \\
+& = \frac{n_t}{n}.
+\end{align*}
+Therefore, exactly $\frac{n_t}{n}$ out of all treatment assignment permutations will be those in which unit $i$ is in the treatment condition. 
+
+Assuming a uniform distribution on the set of treatment assignment permutations, $\Omega$, then the probability of each permutation is $\frac{1}{\left\lvert\Omega\right\rvert}$ and the total probability of all permutations in which $i$ is treated is simply the sum of the probabilities of those permutations in which unit $i$ is in the treatment condition. Under uniform random assignment, the probability of each assignment permutation is $\frac{1}{\left\lvert\Omega\right\rvert}$. Thus, the probability that unit $i$ is treated is as follows:
+\begin{align*}
+\left(\frac{1}{\left\lvert\Omega\right\rvert}\right) \left(\left(\frac{n_t}{n}\right)\left(\left\lvert\Omega\right\rvert\right)\right) \\ 
+& = \left(\frac{1}{\left\lvert\Omega\right\rvert}\right) \left(\frac{n_t\left\lvert\Omega\right\rvert}{n}\right) \\
+& = \left(\frac{n_t\left\lvert\Omega\right\rvert}{\left\lvert\Omega\right\rvert n}\right) \\ 
+& = \frac{n_t}{n}  
+ \end{align*}
+Since $\Pr\left(Z_i = 1\right) = \frac{n_t}{n}$ for all $i \in \left\{1, \dots , n\right\}$ units, it follows that the expected value of $Z_i \in \left\{0, 1\right\}$ is $\E_{\Omega}\left[Z_i\right] = 1\left(\frac{n_t}{n}\right) + 0\left(1 - \frac{n_t}{n}\right) = \frac{n_t}{n}$.
+\end{proof}
+
+\begin{prop} \label{prop: complete ran assign}
+Under complete, uniform random assignment, $\mathbb{E}_{\Omega} \left[\frac{\mathbf{Z}^{\prime}\mathbf{Y}}{\mathbf{Z}^{\prime}\mathbf{Z}} - \frac{(\mathbf{1} - \mathbf{Z})^{\prime} \mathbf{Y}}{(\mathbf{1} - \mathbf{Z})^{\prime}(\mathbf{1} - \mathbf{Z})}\right] = \overline{y_{t}} - \overline{y_{c}} = \overline{\tau}$.
+\end{prop}
+\begin{proof}
+\begin{align*}
+\mathbb{E}_{\Omega} \left[\frac{\mathbf{Z}^{\prime}\mathbf{Y}}{\mathbf{Z}^{\prime}\mathbf{Z}} - \frac{(\mathbf{1} - \mathbf{Z})^{\prime} \mathbf{Y}}{(\mathbf{1} - \mathbf{Z})^{\prime}(\mathbf{1} - \mathbf{Z})}\right] \\
+= \mathbb{E}_{\Omega} \left[\frac{\mathbf{Z}^{\prime}\mathbf{Y}}{\mathbf{Z}^{\prime}\mathbf{Z}}\right] - \mathbb{E}_{\Omega}\left[\frac{(\mathbf{1} - \mathbf{Z})^{\prime} \mathbf{Y}}{(\mathbf{1} - \mathbf{Z})^{\prime}(\mathbf{1} - \mathbf{Z})}\right] \\
+\end{align*}
+Notice that $\mathbf{Z}^{\prime}\mathbf{Y}$ is simply the sum of observed outcomes among treated units (i.e., the sum of observed outcomes among units for which $Z_i = 1$). The quantity $\mathbf{Z}^{\prime}\mathbf{y_t}$ is the sum of treatment potential outcomes among treated units. Since the observed outcomes for treated units is equal to those units' treatment potential outcomes, we can substitute $\mathbf{Z}^{\prime}\mathbf{y_t}$ for $\mathbf{Z}^{\prime}\mathbf{Y}$. Analogously, we can substitute $\left(\mathbf{1} - \mathbf{Z}\right)^{\prime}\mathbf{y_c}$ for $\left(\mathbf{1} - \mathbf{Z}\right)^{\prime}\mathbf{Y}$.
+Substituting $\mathbf{Z}^{\prime}\mathbf{y_t}$ for $\mathbf{Z}^{\prime}\mathbf{Y}$ and $\left(\mathbf{1} - \mathbf{Z}\right)^{\prime}\mathbf{y_c}$ for $\left(\mathbf{1} - \mathbf{Z}\right)^{\prime}\mathbf{Y}$, we are left with:
+\begin{align*}
+= \mathbb{E}_{\Omega} \left[\frac{\mathbf{Z}^{\prime} \mathbf{y_t}}{\mathbf{Z}^{\prime}\mathbf{Z}}\right] - \mathbb{E}_{\Omega}\left[\frac{(\mathbf{1} - \mathbf{Z})^{\prime} \mathbf{y_c}}{(\mathbf{1} - \mathbf{Z})^{\prime}(\mathbf{1} - \mathbf{Z})}\right].
+\end{align*}
+Notice that under complete random assignment, the number of treatment units, $\mathbf{Z}^{\prime}\mathbf{Z}$, and the number of control units, $\left(\mathbf{1} - \mathbf{Z}\right)^{\prime}\left(\mathbf{1} - \mathbf{Z}\right)$ are fixed constants, which we denote by $n_t$ and $n_c$, respectively.
+\begin{align*}
+= \mathbb{E}_{\Omega} \left[\frac{\mathbf{Z}^{\prime} \mathbf{y_t}}{n_t}\right] - \mathbb{E}_{\Omega}\left[\frac{(\mathbf{1} - \mathbf{Z})^{\prime} \mathbf{y_c}}{n_c}\right] \\
+= \left(\frac{1}{n_t} \right) \mathbb{E}_{\Omega} \left[\mathbf{Z}^{\prime} \mathbf{y_t}\right] - \left(\frac{1}{n_c}\right) \mathbb{E}_{\Omega}\left[(\mathbf{1} - \mathbf{Z})^{\prime} \mathbf{y_c}\right] \\
+= \left(\frac{1}{n_t} \right) \mathbb{E}_{\Omega} \left[ \sum \limits_{i = 1}^n Z_i y_{ti}\right] - \left(\frac{1}{n_c}\right) \mathbb{E}_{\Omega}\left[\sum \limits_{i = 1}^n \left(1 - Z_i\right) y_{ci} \right] \\
+= \left(\frac{1}{n_t} \right) \mathbb{E}_{\Omega} \left[ Z_1 y_{t1} + \dots + Z_n y_{tn}\right] - \left(\frac{1}{n_c}\right) \mathbb{E}_{\Omega}\left[\left(1 - Z_1\right) y_{c1} + \dots + \left(1 - Z_n\right) y_{cn} \right] \\
+= \left(\frac{1}{n_t} \right) \mathbb{E}_{\Omega} \left[ Z_1 y_{t1}\right] + \dots + \mathbb{E}_{\Omega} \left[Z_n y_{tn}\right] - \left(\frac{1}{n_c}\right) \mathbb{E}_{\Omega}\left[\left(1 - Z_1\right) y_{c1}\right] + \dots + \mathbb{E}_{\Omega} \left[\left(1 - Z_n\right) y_{cn} \right] \\
+= \left(\frac{1}{n_t} \right) y_{t1}\mathbb{E}_{\Omega} \left[ Z_1 \right] + \dots + y_{tn}\mathbb{E}_{\Omega} \left[Z_n\right] - \left(\frac{1}{n_c}\right) y_{c1}\mathbb{E}_{\Omega}\left[\left(1 - Z_1\right) \right] + \dots + y_{cn}\mathbb{E}_{\Omega} \left[\left(1 - Z_n\right) \right] \\
+\end{align*}
+In a uniform randomized experiment, $Z_1, \dots , Z_n$ are independent and identically distributed random variables, which implies that the expected value of each independent Bernouli random variable is identical. Hence, we can represent each $\mathbb{E}_{\Omega} \left[ Z_1 \right], \dots , \mathbb{E}_{\Omega} \left[ Z_n \right]$ by $\mathbb{E}_{\Omega} \left[ Z_i \right]$.
+
+\begin{align*}
+= \left(\frac{1}{n_t} \right) y_{t1}\mathbb{E}_{\Omega} \left[ Z_i \right] + \dots + y_{tn}\mathbb{E}_{\Omega} \left[Z_i\right] - \left(\frac{1}{n_c}\right) y_{c1}\mathbb{E}_{\Omega}\left[\left(1 - Z_i\right) \right] + \dots + y_{cn}\mathbb{E}_{\Omega} \left[\left(1 - Z_i\right) \right] \\
+= \left(\frac{1}{n_t} \right) \mathbb{E}_{\Omega} \left[ Z_i \right] \left(y_{t1} + \dots + y_{tn} \right) - \left(\frac{1}{n_c}\right) \mathbb{E}_{\Omega}\left[\left(1 - Z_i\right) \right] \left(y_{c1} + \dots + y_{cn} \right) \\
+\end{align*}
+By Lemma \ref{lem: exp val Z}, $\mathbb{E}_{\Omega}\left[Z_i \right] = \left(\frac{n_t}{n}\right)$, which implies that $\mathbb{E}_{\Omega}\left[\left(1 - Z_i\right) \right] = 1 - \left(\frac{n_t}{n}\right) = \left(\frac{n_c}{n}\right)$. Hence, we can substitute $\left(\frac{n_t}{n}\right)$ for $\mathbb{E}_{\Omega}\left[Z_i \right]$ and $\left(\frac{n_c}{n}\right)$ for $\mathbb{E}_{\Omega}\left[1 - Z_i \right]$, respectively.
+\begin{align*}
+= \left(\frac{1}{n_t} \right) \left(\frac{n_t}{n}\right) \left(y_{t1} + \dots + y_{tn} \right) - \left(\frac{1}{n_c}\right) \left(\frac{n_c}{n}\right) \left(y_{c1} + \dots + y_{cn} \right) \\
+= \left(\frac{1}{n} \right) \left(y_{t1} + \dots + y_{tn} \right) - \left(\frac{1}{n}\right) \left(y_{c1} + \dots + y_{cn} \right) \\
+= \frac{\left(y_{t1} + \dots + y_{tn} \right)}{n} - \frac{\left(y_{c1} + \dots + y_{cn} \right)}{n} \\
+= \overline{y_{t}} - \overline{y_{c}} \\
+= \overline{\tau}.
+\end{align*}
+\end{proof}
+
+\end{document}

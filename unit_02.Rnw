@@ -1,0 +1,695 @@
+\documentclass[11pt]{article}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts}          % AMS Fonts
+\usepackage{amsthm}
+\usepackage{amsmath}           % Mathtype; To align to the left use option [fleqn]
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{amssymb}           % AMS Symbols
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{rotating}
+\usepackage{pdflscape}
+\usepackage{float}             % Force floats around
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+
+\usepackage[final]{pdfpages}
+% \usepackage{lmodern}
+% \usepackage{libertine} \usepackage[libertine]{newtxmath}
+\usepackage{stix}
+% \usepackage[osf,sc]{mathpazo}     % alternative math
+\usepackage[T1]{fontenc}
+% \usepackage{fontspec}
+% \setmainfont{Times New Roman}
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage[makeroom]{cancel}
+\usepackage{verbatim}
+\usepackage{geometry}
+\geometry{verbose,margin=1in,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{mathtools}
+
+\makeatother
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=false,
+            colorlinks=true,
+            hypertexnames=false]{hyperref}
+\hypersetup{pdfstartview={XYZ null null 1},
+            citecolor=blue!50,
+            linkcolor=red,
+            urlcolor=green!70!black}
+
+
+%%--------------------------------
+
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+\usepackage[small,bf]{caption}  % Captions
+
+\usepackage[obeyFinal,textwidth=0.8in, colorinlistoftodos,prependcaption,textsize=tiny]{todonotes} % \fxnote*[options]{note}{text} to make sticky notes
+\usepackage{xargs}
+\newcommandx{\unsure}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+\newcommandx{\change}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}}
+\newcommandx{\info}[2][1=]{\todo[linecolor=OliveGreen,backgroundcolor=OliveGreen!25,bordercolor=OliveGreen,#1]{#2}}
+\newcommandx{\improvement}[2][1=]{\todo[linecolor=Plum,backgroundcolor=Plum!25,bordercolor=Plum,#1]{#2}}
+
+\parskip=10pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\newcommand{\qedknitr}{\hfill\rule{1.2ex}{1.2ex}}
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{} %Aboveskip
+{} %Below skip
+{\mdseries} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+
+\newcommand\given[1][]{\:#1\vert\:}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+
+
+
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+
+\begin{document}
+\begin{titlepage}
+\title{Causal Inference for the Social Sciences: \\
+Unit 02}
+\author{Tom Leavitt}
+\date{\today}
+\maketitle
+
+\end{titlepage}
+\tableofcontents
+\clearpage
+
+\doublespacing
+
+\maketitle
+
+<<  >>=
+
+rm(list=ls())
+
+if(!require(pacman)) { install.packages("pacman") }
+
+p_load(dplyr,
+       magrittr,
+       haven,
+       ggplot2)
+
+@
+
+\section{Random Assignment}
+
+\subsection{Notation}
+
+\begin{itemize}
+\item By convention, $X$, $Y$, $Z$ denote random variables and $x$, $y$, $z$ denote realizations of random variables
+\item $Z_i$ is a random variable for subject $i$; $\mathbf{Z} = \begin{bmatrix} Z_1 & Z_2 & \dots & Z_N \end{bmatrix}^T$ is a random column vector.
+\item $\mathbf{z} = \begin{bmatrix} z_1 & z_2 & \dots & z_N \end{bmatrix}^T$ is a realization of the random column vector $\mathbf{Z}$.
+\item In general, we will observe the following conventions:
+\begin{itemize}
+\item Y outcome
+\item x covariate (baseline variable measured prior to treatment)
+\item Z treatment assignment
+\item D treatment received
+\end{itemize}
+\end{itemize}
+
+\subsection{Probability Review}
+
+\begin{itemize}
+\item For simplicity, assume a discrete random variable, an example of which is $\mathbf{Z}$ in a randomized experiment
+\item $\E\left[V\right] = \sum_v v \Pr\left(V = v\right)$, where $v$ ranges over the possible values of $V$
+\item Linearity of Expectations: $\E\left[V \pm W\right] = \E\left[V\right] \pm  \E\left[W\right]$
+\item For constant $c$, $\E\left[cV\right] = c\E\left[V\right]$
+\item $\Var\left[V\right] = \sum_v \left(v - \E\left[V\right]\right)^2 \Pr\left(V = v\right) = \E\left[\left(v - \E\left[V\right]\right)^2\right]  = \E\left[V^2\right] - \E\left[V\right]^2$
+\end{itemize}
+
+\subsection{Methods of Random Assignment}
+
+A researcher plans to ask eight subjects to donate time to an adult literacy program. Each subject will be asked to donate either 30 or 60 minutes. The researcher is considering [two] methods for randomizing the treatment. One method is to flip a coin before talking to each person and to ask for a 30-minute donation if the coin comes up heads or a 60-minute donation if it comes up tails. The second method is to write ``30'' and ``60'' on four playing cards each, and then shuffle the eight cards . . .
+
+\begin{enumerate}
+\item Let $0$ denote assignment to the 30-minute condition and let $1$ denote assignment to the 60-minute condition. Calculate $\E\left[\mathbf{Z}^T\mathbf{Z}\right]$ under each of the two methods.
+\item For which of the two methods does $\Var\left[\mathbf{Z}^T\mathbf{Z}\right] = 0$? 
+\end{enumerate}
+\newpage
+<<  >>=
+
+sra_treated <- sapply(X = 0:8,
+                      FUN = function(x) { combn(x = 1:8,
+                                                m = x) })
+
+sra_z_vecs <- lapply(X = 1:length(sra_treated),
+                     FUN = function(t) { apply(X = sra_treated[[t]],
+                                               MARGIN = 2,
+                                               FUN = function(x) { as.integer(1:8 %in% x) }) })
+
+sra_z_vecs_mat <- matrix(data = unlist(sra_z_vecs),
+                         nrow = 8,
+                         byrow = FALSE)
+
+indiv_probs <- rep(x = (1/2), times = 8)
+
+sra_vec_probs <- apply(X = sra_z_vecs_mat,
+                       MARGIN = 2,
+                       FUN = function(x) { prod(indiv_probs^(x) * (1 - indiv_probs)^(1 - x)) })
+
+cbind(0:8, sapply(X = 0:8,
+                  FUN = function(n_t) { sum(sra_vec_probs[which(apply(X = sra_z_vecs_mat,
+                                                                      MARGIN = 2,
+                                                                      FUN = sum) == n_t)]) }))
+
+
+
+## simple random assignment
+#cbind(0:8, sapply(X = 0:8,
+#                  FUN = function(x) { choose(n = 8, k = x) }) * (.5^8))
+@
+
+How would we calculate the expected value of $\mathbf{Z}^T\mathbf{Z}$ for the second method? Try that on your own here:
+
+\newpage
+
+The random assignment process in Fisher's lady tasting tea experiment \citep{fisher1935} is such that each possible way in which four teacups could be assigned to treatment ("milk first") and the other four teacups to control ("tea first") have an equal probability of realization. Therefore, the probability associated with each assignment vector in $\Omega$ is $\cfrac{1}{70}$.
+
+One way in which Fisher could have implemented such randomization is by writing ``milk first'' on four cups and ``tea first'' on the other four cups and subsequently shuffling the order of the cups.
+
+<<  >>=
+
+n <- 8
+n_t <- 4
+
+treated <- combn(x = 1:n,
+                 m = n_t) 
+
+Omega <- apply(X = treated,
+               MARGIN = 2,
+               FUN = function(x) { as.integer(1:n %in% x) })
+
+cra_vec_probs <- rep(x = (1/ncol(Omega)), times = ncol(Omega))
+
+@
+
+However, what if Fisher simply flipped a coin for each of the cups and, if the coin landed heads, assigned that cup to ``milk first'' and, if the coin landed tails, assigned that cup to ``tea first.'' If exactly four cups were not assigned to each condition, then Fisher would simply repeat the process until exactly four cups were ``milk first'' and the other four cups were ``tea first.''
+
+To derive the probability distribution on $\Omega$ in this case we can simply calculate the probability of each assignment vector \textit{conditional on the event that} $\mathbf{Z}^T\mathbf{Z} = 4$.
+
+Formally, we can represent this conditional distribution as follows:
+
+By the definition of conditional probability,
+\begin{align*}
+\cfrac{\Pr\left(\mathbf{Z} = \mathbf{z}, \mathbf{Z}^T\mathbf{Z} = 4\right)}{\Pr\left(\mathbf{Z}^T\mathbf{Z} = 4\right)}
+\end{align*}
+
+By the definition of joint probability, we know that $\Pr\left(\mathbf{Z} = \mathbf{z}, \mathbf{Z}^T\mathbf{Z} = 4\right) \equiv \Pr\left(\mathbf{Z} = \mathbf{z}\right)\Pr\left(\mathbf{Z}^T\mathbf{Z} = 4 \given \mathbf{Z} = \mathbf{z}\right)$. Since $\Pr\left(\mathbf{Z}^T\mathbf{Z} = 4 \given \mathbf{Z} = \mathbf{z}\right)$ can equal only 0 or 1 depending on whether the assignment vector $\mathbf{z}$ has four treated units or not, we can represent the joint probability of $\mathbf{Z} = \mathbf{z}$ and $\mathbf{Z}^T\mathbf{Z}$ as follows:
+\begin{align*}
+\Pr\left(\mathbf{Z} = \mathbf{z}, \mathbf{Z}^T\mathbf{Z} = 4\right) & = \begin{cases}
+0 & \text{if } \sum \limits_{i = 1}^n z_i \neq 4 \\
+\prod_{i = 1}^8 0.5^{z_i}\left(1 - 0.5\right)^{(1 - z_i)} & \text{otherwise} 
+\end{cases}
+\end{align*}
+
+Now let's consider $\Pr\left(\mathbf{Z}^T\mathbf{Z}\right) = 4$. Formally, let the index $j \in \left\{1, \dots, \#\Omega \given \mathbf{z}^T\mathbf{z} = 4\right\}$ run over the set of all assignment vectors with exactly four treatment units. Based on the axiom of countable additivity (this is the third axiom of probability, which you should look up if more interested), the probability of the event that $\mathbf{z}^T\mathbf{z} = 4$ is simply the sum of probabilities of assignment vectors in which $\mathbf{z}^T\mathbf{z} = 4$. Hence,
+\begin{align*}
+\Pr\left(\mathbf{Z}^T\mathbf{Z} = 4\right) & = \sum_{j = 1} \Pr\left(\mathbf{z}_j\right) 
+\end{align*}
+
+<< >>=
+
+cra_total_prob <- sum(sra_vec_probs[which(apply(X = sra_z_vecs_mat,
+                                                MARGIN = 2,
+                                                FUN = sum) == 4)])
+
+cra_vec_probs <- sra_vec_probs[which(apply(X = sra_z_vecs_mat,
+                                           MARGIN = 2,
+                                           FUN = sum) == 4)]/cra_total_prob
+@
+
+The probability distribution on the set of assignment vectors, denoted by $\Omega$, constitutes what \citet{fisher1935} called ``the reasoned basis for inference.'' Today we will show how the probability distribution on $\Omega$ forms the basis for p-values and tomorrow we will show how this same probability distribution forms the basis for causal estimators.
+
+\section{Hypothesis Testing}
+
+The stochastic properties of hypothesis tests are based solely on random assignment processes described in the section above. Let's now consider a null hypothesis and an alternative hypothesis.
+
+\subsection{The Sharp Null Hypothesis of No Effect}
+
+The sharp null hypothesis of no effect \citep{fisher1935} (hereafter referred to as sharp null) specifically postulates that $\forall i \in \left\{ 1, \dots, n \right\}: y_{c_{i}} = y_{t_{i}}$. What does this null hypothesis mean in the context of the lady tasting tea experiment?
+
+Recall that the observed results of the experiment can be summarized as follows:
+
+\begin{table}[!hbt]
+\centering
+    \begin{tabular}{l|l|ll|}
+    Unit & $\mathbf{z}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ \\ \hline
+    1    & 1          & ?                & 1 \\
+    2    & 1          & ?                & 1  \\
+    3    & 1          & ?                & 1  \\
+    4    & 1          & ?                & 1  \\
+    5    & 0          & 0                & ?  \\
+    6    & 0          & 0                & ?  \\
+    7    & 0          & 0                & ?  \\
+    8    & 0          & 0                & ?  \\
+    \end{tabular}
+\end{table}
+
+Each cup in the experiment has two potential outcomes, $y_{c_i}$ and $y_{t_i}$, but only one of these two outcomes can be observed. The potential outcome that is observed is a random variable defined as $Y_i = Z_i y_{t_i} + \left(1 - Z_i\right)y_{c_i}$. Notice that $Y_i$ inherits its randomness solely from $Z_i$. 
+
+The sharp null hypothesis postulates that each unit's treatment potential outcome, $y_{t_i}$, is equal to its control potential outcome, $y_{c_i}$. In other words, the outcome that was observed for each cup (i.e., whether it was marked as ``milk first'' or ``tea first'') would have been the same had that cup been assigned to the alternative experimental condition.
+
+\begin{table}[!hbt]
+\centering
+    \begin{tabular}{l|l|l}
+    Unit & $\mathbf{y_c}$ & $\mathbf{y_t}$ \\ \hline
+    1    & 1                & 1 \\
+    2    & 1                & 1  \\
+    3    & 1                & 1  \\
+    4    & 1                & 1  \\
+    5    & 0                & 0  \\
+    6    & 0                & 0  \\
+    7    & 0                & 0  \\
+    8    & 0                & 0  \\
+    \end{tabular}
+\caption{Potential Outcomes under the Sharp Null Hypothesis of No Effect}    
+\end{table}
+
+\subsection{The Alternative Hypothesis of ``Perfect Discrimination''}
+
+The alternative hypothesis of ``perfect discrimination,'' by contrast, stipulates that $\forall \, i \in \left\{1, \dots, N \right\}: y_{c_i} = 0, y_{t_i} = 1$. Consider the table below:
+
+\begin{table}[!hbt]
+\centering
+    \begin{tabular}{l|l|l}
+    Unit & $\mathbf{y_c}$ & $\mathbf{y_t}$ \\ \hline
+    1    & 0                & 1 \\
+    2    & 0                & 1  \\
+    3    & 0                & 1  \\
+    4    & 0                & 1  \\
+    5    & 0                & 1  \\
+    6    & 0                & 1  \\
+    7    & 0                & 1  \\
+    8    & 0                & 1  \\
+    \end{tabular}
+\caption{Potential Outcomes under the Alternative Hypothesis of No Effect}  
+\end{table}
+
+Having defined these two hypotheses, we now need a single numerical summary of the experimental data of a given hypothesis under all possible realizations of experimental assignment. We refer to this numerical summary as a test-statistic.
+
+\section{Test Statistics}
+
+Fisher's test statistic is $\mathbf{z}'\mathbf{y}$. Other test statistics are also possible. For example, the proportion of the focal-group cups that were correctly identified is $\mathbf{Z}'\mathbf{y}/n_1$, where $n_{1}$ is the design constant $\sum_{i} Z_{i}$, here 4.
+
+Yet another possibility would be the difference in proportions of focal and non-focal group cups that were identified as being in the focal group, $\mathbf{Z}'\mathbf{y}/n_{1} - \mathbf{Z}'\mathbf{y}/n_{0}$, where $n_{0}= \sum_{i} 1- Z_{i} = 4$.
+
+We can calculate these test statistics on the realized experimental data to get our observed test statistic.
+
+<<  >>=
+
+z <- c(rep(x = 1, times = 4), rep(x = 0, times = 4))
+y <- c(rep(x = 1, times = 4), rep(x = 0, times = 4))
+n <- length(z)
+n_t <- sum(z)
+
+obs_treat_sum <- as.integer(t(z) %*% y)
+
+obs_treat_mean <- (1/sum(z)) * as.integer(t(z) %*% y)
+
+obs_mean_diff <- (1/sum(z)) * as.integer(t(z) %*% y) -
+  (1/sum(1 - z)) * as.integer(t(1 - z) %*% y)
+
+@
+
+\section{P-Values}
+
+\subsection{Exact P-Values}
+
+We first need to define a null distribution of the test statistic, i.e., the test statistics that would be observed under all possible random assignments if the sharp null were true. Let's write functions for each of these test statistics:
+
+<<  >>=
+
+treat_sum <- function(.Z,
+                      .y_c,
+                      .y_t) {
+  
+  y = .Z * .y_t + (1 - .Z) * .y_c
+  
+  return( as.integer(t(.Z) %*% y) )
+  
+}
+
+treat_mean <- function(.Z, .y_c, .y_t) {
+  
+  y = .Z * .y_t + (1 - .Z) * .y_c
+  
+  return( (1/sum(.Z)) * as.integer(t(.Z) %*% y) ) 
+  
+}
+
+mean_diff <- function(.Z, .y_c, .y_t) {
+  
+  y = .Z * .y_t + (1 - .Z) * .y_c
+  
+  return( (1/sum(.Z)) * as.integer(t(.Z) %*% y) - (1/sum(1 - .Z)) * as.integer(t(1 - .Z) %*% y) ) 
+  
+  }
+
+@
+
+Now let's generate the null distribution of Fisher's test statistic:
+
+<<  >>=
+
+y_c_null <- c(rep(x = 1, times = 4), rep(x = 0, times = 4))
+y_t_null <- c(rep(x = 1, times = 4), rep(x = 0, times = 4))
+
+null_test_stats <- apply(X = Omega,
+                         MARGIN = 2,
+                         FUN = function(x) { treat_sum(.Z = x,
+                                                       .y_c = y_c_null,
+                                                       .y_t = y_t_null) })
+
+null_prob_dist <- cbind(0:4,
+                        sapply(X = 0:4,
+                               FUN = function(x) { sum((null_test_stats == x) * cra_vec_probs) }))
+
+colnames(null_prob_dist) <- c("Test_Stat", "Prob")
+
+null_prob_dist
+
+@
+
+To calculate the one sided p-value, we need to know the probability of observing a null test statistic greater than or equal to the observed test statistic. Formally, we can write this p-value as follows:
+
+\begin{equation}
+\Pr\left(t\left(\mathbf{z}, \mathbf{y}_0 \right) \geq T \right) = \sum \limits_{\mathbf{z} \in \Omega} \mathbf{I}\left[t\left(\mathbf{z}, \mathbf{y}_0 \right) \geq T\right] \Pr\left(\mathbf{Z} = \mathbf{z}\right),
+\end{equation}
+where $\mathbf{I}$ is an indicator function that is $1$ if the argument to the function is true and $0$ if it is false. 
+
+Now let's calculate the p-value:
+
+<<  >>=
+
+exact_p_value <- sum((null_prob_dist[,"Test_Stat"] >= obs_treat_sum) * null_prob_dist[,"Prob"])
+
+@
+
+We can also get the same exact p-value from the \texttt{fisher.test} command in \texttt{[R]}:
+
+<<  >>=
+
+coffee_experiment <- matrix(data = c(4, 0, 0, 4),
+                            nrow = 2,
+                            ncol = 2,
+                            byrow = TRUE)
+
+colnames(coffee_experiment) <- c("0", "1")
+
+rownames(coffee_experiment) <- c("0", "1")
+
+fisher.test(x = coffee_experiment,
+            alternative = "greater")
+
+chisq.test(x = coffee_experiment)
+
+@
+
+The exact p-value from the Fisher test is $\frac{1}{70} \approx 0.01429$, but why do we get a different p-value from the chi-squared test?
+
+We can see that if our $\alpha$-level is $0.05$, then we would reject the sharp null:
+
+<<>>=
+
+exact_p_value <= 0.05
+
+@
+
+But why does the low probability of a test statistic greater than or equal to the observed test statistic constitute evidence against the sharp null hypothesis and evidence in favor of the alternative hypothesis? The short answer is that test statistics when the alternative hypothesis is true (and the null is false) are greater than or equal to test statistics when the null hypothesis is true (and the alternative is false). Therefore, tests of the sharp null always produce a lower p-value when the alternative hypothesis is true (and the sharp null is false) compared to when the sharp null is true (and the alternative hypothesis is false).
+
+<<  >>=
+
+y_c_null_true <- c(rep(x = 1, times = 4), rep(x = 0, times = 4))
+y_t_null_true <- c(rep(x = 1, times = 4), rep(x = 0, times = 4))
+
+y_c_null_false <- rep(x = 0, times = 8)
+y_t_null_false <- rep(x = 1, times = 8)
+
+test_stats_null_true <- apply(X = Omega,
+                              MARGIN = 2,
+                              FUN = function(x) { treat_sum(.Z = x,
+                                                            .y_c = y_c_null_true,
+                                                            .y_t = y_t_null_true) })
+
+test_stats_null_false <- apply(X = Omega,
+                               MARGIN = 2,
+                               FUN = function(x) { treat_sum(.Z = x,
+                                                             .y_c = y_c_null_false,
+                                                             .y_t = y_t_null_false) })
+
+cbind(test_stats_null_true, test_stats_null_false)
+
+@
+
+We can see that the test statistic when the null is false and the alternative is true is always greater than or equal to the test statistic when the null is true and the alternative is false. This property implies that the probability of rejecting the null hypothesis when it is false is greater than the probability of rejecting the null hypothesis when it is true.
+
+Let's calculate the probability of rejecting the sharp null when it is true (i.e., the type I error rate).
+
+<< >>=
+
+y_c_null_true <- c(rep(x = 1, times = 4), rep(x = 0, times = 4))
+y_t_null_true <- c(rep(x = 1, times = 4), rep(x = 0, times = 4))
+
+get_p_value <- function(.Z,
+                        .y_c,
+                        .y_t,
+                        .y_c_null,
+                        .y_t_null,
+                        .Omega,
+                        .probs) {
+  
+  Y = .Z * .y_t + (1 - .Z) * .y_c
+  
+  obs_test_stat = as.integer(t(.Z) %*% Y)
+  
+  null_dist = apply(X = .Omega,MARGIN = 2,
+                    FUN = function(x){ as.integer(t(x) %*% Y) })
+  
+  return(sum((null_dist >= obs_test_stat) * .probs))
+  
+}
+
+p_values_null_true <- apply(X = Omega,
+                            MARGIN = 2,
+                            FUN = function(x) { get_p_value(.Z = x,
+                                                            .y_c = y_c_null_true,
+                                                            .y_t = y_t_null_true,
+                                                            .y_c_null = y_c_null,
+                                                            .y_t_null = y_t_null,
+                                                            .Omega = Omega,
+                                                            .probs = cra_vec_probs) })
+
+## The probability of rejecting the null hypothesis when it is true
+sum((p_values_null_true <= 0.05) * cra_vec_probs)
+
+@
+
+Let's now calculate the probability of rejecting the sharp null when it is false and the alternative hypothesis is true (i.e., the power of the test).
+
+<<  >>=
+
+y_c_null_false <- rep(x = 0, times = 8)
+y_t_null_false <- rep(x = 1, times = 8)
+
+p_values_null_false <- apply(X = Omega,
+                             MARGIN = 2,
+                             FUN = function(x) { get_p_value(.Z = x,
+                                                             .y_c = y_c_null_false,
+                                                             .y_t = y_t_null_false,
+                                                             .y_c_null = y_c_null,
+                                                             .y_t_null = y_t_null,
+                                                             .Omega = Omega,
+                                                             .probs = cra_vec_probs) })
+
+sum((p_values_null_false <= 0.05) * cra_vec_probs)
+
+@
+
+\subsection{Simulation P-Values}
+
+<<  >>=
+
+set.seed(1:5)
+Omega_sim <- replicate(n = 10^5,
+                         expr = sample(z))
+
+dim(Omega_sim)
+
+null_dist <- apply(X = Omega_sim,
+                   MARGIN = 2, FUN = function(x) { treat_sum(.Z = x, .y_c = y_c_null, .y_t = y_t_null) })
+
+mean(null_dist >= obs_treat_sum)
+
+@
+
+Let's now try another test statistic:
+
+<<  >>=
+
+obs_treat_mean <- (1/sum(z)) * as.integer(t(z) %*% y)
+
+null_dist <- apply(X = Omega_sim,
+                   MARGIN = 2, FUN = function(x) { treat_mean(.Z = x, .y_c = y_c_null, .y_t = y_t_null) })
+
+mean(null_dist >= obs_treat_mean)
+
+@
+
+\subsection{Normal Theory P-Values}
+
+Normal theory approximation:
+
+<<  >>=
+
+null_dist <- apply(X = Omega,
+                   MARGIN = 2, FUN = function(x) { treat_mean(.Z = x, .y_c = y_c_null, .y_t = y_t_null) })
+
+null_ev <- sum(null_dist * cra_vec_probs)
+
+null_var <- sum( (null_dist - mean(null_ev))^2   * cra_vec_probs)
+
+norm_p_value <- pnorm(q = obs_treat_mean,
+                      mean = null_ev,
+                      sd = sqrt(null_var),
+                      lower.tail = FALSE)
+
+sqrt((exact_p_value - norm_p_value)^2)
+
+z_score <- (obs_treat_mean - null_ev)/sqrt(null_var)
+
+pnorm(q = z_score,
+      mean = 0,
+      sd = 1,
+      lower.tail = FALSE)
+
+@
+
+Why is the p-value from the Normal null distribution different from the exact p-value?
+
+Let's take a look at the exact distribution under the sharp null:
+
+<<>>=
+
+ggplot(data = data.frame(test_stats = null_dist,
+                         probs = rep(x = (1/length(null_dist)), times = length(null_dist))),
+       mapping = aes(x = test_stats,
+                     y = probs)) +
+  geom_bar(stat = "identity") +
+  geom_vline(xintercept = null_ev,
+             color = "red",
+             linetype = "dashed") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  xlab(label = "Null Test Statistic") +
+  ylab("Probability")
+
+@
+
+What if our experiment's population size were larger?
+
+<<>>=
+
+cbind(y_c_null, y_t_null)
+
+n_as_1 <- 16
+n_t_as_1 <- 8
+
+treated_as_1 <- combn(x = 1:n_as_1,
+                 m = n_t_as_1) 
+
+Omega_as_1 <- apply(X = treated_as_1,
+               MARGIN = 2,
+               FUN = function(x) { as.integer(1:n_as_1 %in% x) })
+
+cra_vec_probs_as_1 <- rep(x = (1/ncol(Omega_as_1)), times = ncol(Omega_as_1))
+
+z_as_1 <- rep(x = z, times = 2)
+y_as_1 <- rep(x = y, times = 2)
+y_c_null_as_1 <- rep(x = y_c_null, times = 2)
+y_t_null_as_1 <- rep(x = y_t_null, times = 2)
+
+obs_treat_mean_as_1 <- (1/sum(z_as_1)) * as.integer(t(z_as_1) %*% y_as_1)
+
+null_test_stats_as_1 <- apply(X = Omega_as_1,
+                              MARGIN = 2,
+                              FUN = function(x) { treat_mean(.Z = x,
+                                                             .y_c = y_c_null_as_1,
+                                                             .y_t = y_t_null_as_1) })
+
+null_ev_as_1 <- sum(null_test_stats_as_1 * cra_vec_probs_as_1)
+null_var_as_1 <- sum((null_test_stats_as_1 - mean(null_ev_as_1))^2 * cra_vec_probs_as_1)
+
+options(scipen = 999)
+exact_p_value_as_1 <- sum((null_test_stats_as_1 >= obs_treat_mean_as_1) * cra_vec_probs_as_1)
+norm_p_value_as_1 <- pnorm(q = obs_treat_mean_as_1,
+                           mean = null_ev_as_1,
+                           sd = sqrt(null_var_as_1),
+                           lower.tail = FALSE)
+
+sqrt((exact_p_value_as_1 - norm_p_value_as_1)^2)
+
+ggplot(data = data.frame(test_stats = null_test_stats_as_1,
+                         probs = cra_vec_probs_as_1),
+       mapping = aes(x = test_stats,
+                     y = probs)) +
+  geom_bar(stat = "identity") +
+  geom_vline(xintercept = null_ev_as_1,
+             color = "red",
+             linetype = "dashed") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  xlab(label = "Null Test Statistic") +
+  ylab("Probability")
+
+@
+
+
+\newpage
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{master_bibliography}
+\end{singlespace}
+\end{document}

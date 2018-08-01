@@ -1,0 +1,474 @@
+\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
+\documentclass[11pt,leqno]{article}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb}          % AMS Stuff
+\usepackage[linewidth=1pt]{mdframed}
+\usepackage{mdframed}
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{afterpage}% http://ctan.org/pkg/afterpage
+\usepackage[T1]{fontenc}
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfig}
+\usepackage{titling}            % modify maketitle in latex
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage{verbatim}
+\usepackage{geometry}
+\usepackage{bigfoot}
+\usepackage[format=hang,
+            font={small},
+            labelfont=bf,
+            textfont=rm]{caption}
+
+\geometry{verbose,margin=2cm,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=page,
+            colorlinks=true,
+            hyperfootnotes=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1},
+            citecolor=blue!70!black,
+            linkcolor=red!70!black,
+            urlcolor=green!70!black]{hyperref}
+\usepackage{hypernat}
+
+\usepackage{multirow}
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+
+\parskip=12pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{12pt} %Aboveskip
+{12pt} %Below skip
+{\itshape} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+% \DeclareMathOperator{\Pr}{\rm{Pr}}
+
+% COLORS FOR GRAPHICS (3-class Set1)
+\definecolor{Blue}{RGB}{55,126,184}
+\definecolor{Red}{RGB}{228,26,28}
+\definecolor{Green}{RGB}{77,175,74}
+
+% COLORS FOR EQUATIONS (3-class Dark2)
+\definecolor{eqgreen}{RGB}{27,158,119}
+\definecolor{eqblue}{RGB}{117,112,179}
+\definecolor{eqred}{RGB}{217,95,2}
+
+
+\title{Standard Errors of Estimators of Causal Effects}
+\author{Thomas Leavitt}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+<< setup, include = FALSE, eval = TRUE >>=
+
+if (!require("pacman")) install.packages("pacman")
+
+pacman::p_load(ggplot2)
+
+opts_chunk$set(message=FALSE,
+               warning=FALSE,
+               size = "footnotesize")
+
+@
+
+\newpage
+
+\section{Standard Errors}
+
+\subsection{Analytic Definition of Standard Errors}
+
+The analytic expression for the variance of the difference-in-means estimator is as follows:
+\begin{equation}
+\sigma^2_{\hat{\theta}} = \frac{1}{n - 1}\left(\frac{n_t \sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{\left(n - n_t\right) \sigma^2_{y_t}}{n_t} + 2\sigma_{y_c, y_t}\right),
+\label{eq: var diff-means est}
+\end{equation}
+where $\sigma^2_{y_c}$ is the variance of control potential outcomes, $\sigma^2_{y_t}$ is the variance of treated potential outcomes and $\sigma_{y_c, y_t}$ is the covariance of control and treated potential outcomes.
+
+Now let's look at equation \eqref{eq: var diff-means est} and think about which components affect its value. As the components marked in \textcolor{red}{red} \textit{increase}, while all other components are held constant, the standard error \textit{decreases}. By contrast, as the components marked in \textcolor{blue}{blue} \textit{increase}, while all other components are held constant, the standard error \textit{increases}:
+
+\begin{equation*}
+\sigma^2_{\hat{\theta}} = \frac{1}{\textcolor{red}{n} - 1}\left(\frac{n_t \textcolor{blue}{\sigma^2_{y_c}}}{\left(n - n_t\right)} + \frac{\left(n - n_t\right) \textcolor{blue}{\sigma^2_{y_t}}}{n_t} + 2\textcolor{blue}{\sigma_{y_c, y_t}}\right)
+\end{equation*}
+
+Three implications of equation \eqref{eq: var diff-means est}, as \citet[p. 58]{gerbergreen2012} state, are:
+
+\begin{itemize}
+\item If $\sigma^2_{y_t} > \sigma^2_{y_c}$, then adding additional units to the treatment condition lowers the standard error. 
+
+\item By contrast, if $\sigma^2_{y_t} < \sigma^2_{y_c}$ , then adding more units to the control condition lowers the standard error. 
+
+\item Finally, if $\sigma^2_{y_t} \approx \sigma^2_{y_t}$, then assigning roughly half of subjects to each condition is best for lowering the standard error.
+\end{itemize}
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Drawing on equation \eqref{eq: var diff-means est}, can you explain why these three statements are true?
+\end{itemize}
+\end{mdframed}
+
+\subsection{Example}
+
+<<>>=
+rm(list=ls())
+n <- 8
+n_t <- 4
+
+treated <- combn(x = 1:n,
+                 m = n_t) 
+
+Omega <- apply(X = treated,
+               MARGIN = 2,
+               FUN = function(x) { as.integer(1:n %in% x) })
+
+cra_vec_probs <- rep(x = (1/ncol(Omega)),
+                     times = ncol(Omega))
+
+set.seed(1:5)
+y_c_small_var <- rnorm(n = 8, mean = 200, sd = 5)
+y_t_small_var <- y_c_small_var + rnorm(n = 8, mean = 10, sd = 5)
+
+cbind(y_c_small_var, y_t_small_var)
+mean(y_t_small_var) - mean(y_c_small_var)
+
+obs_outs_small_var <- sapply(X = 1:ncol(Omega),
+                             FUN = function(x) { Omega[,x] * y_t_small_var + (1 - Omega[,x]) * y_c_small_var })
+
+diff_means_est <- function(.Z, .Y){
+  
+  return((t(.Z) %*% .Y)/(t(.Z) %*% .Z) - (t(1 - .Z) %*% .Y)/(t(1 - .Z) %*% (1-.Z)))
+  
+}
+
+diff_means_var <- function(.n, .n_t, .y_c, .y_t){
+  
+  var_y_c = mean((.y_c - mean(.y_c))^2)
+  
+  var_y_t = mean((.y_t - mean(.y_t))^2)
+  
+  cov_y_c_y_t = mean((.y_c - mean(.y_c)) * (.y_t - mean(.y_t)))
+  
+  var = (1/(.n - 1)) * ((.n_t * var_y_c) / (.n - .n_t) +
+                          
+                          (((.n - .n_t) * var_y_t) / .n_t) +
+                          
+                          (2 * cov_y_c_y_t))
+  
+  return(var)
+  
+}
+
+diff_means_var(.n = n, .n_t = n_t, .y_c = y_c_small_var, .y_t = y_t_small_var)
+
+estimates_small_var <- sapply(X = 1:ncol(Omega),
+                              FUN = function(x) { diff_means_est(.Z = Omega[,x], .Y = obs_outs_small_var[,x])})
+
+est_ev_small_var <- sum(estimates_small_var * cra_vec_probs)
+est_var_small_var <- sum((estimates_small_var - est_ev_small_var)^2 * cra_vec_probs)
+
+set.seed(1:5)
+y_c_large_var <- rnorm(n = 8, mean = 200, sd = 20)
+y_t_large_var <- y_c_large_var + rnorm(n = 8, mean = 10, sd = 5)
+cbind(y_c_large_var, y_t_large_var)
+mean(y_t_large_var) - mean(y_c_large_var)
+
+obs_outs_large_var <- sapply(X = 1:ncol(Omega),
+                             FUN = function(x) { Omega[,x] * y_t_large_var + (1 - Omega[,x]) * y_c_large_var })
+
+estimates_large_var <- sapply(X = 1:ncol(Omega),
+                              FUN = function(x) { diff_means_est(.Z = Omega[,x], .Y = obs_outs_large_var[,x])})
+
+diff_means_var(.n = n, .n_t = n_t, .y_c = y_c_large_var, .y_t = y_t_large_var)
+
+est_ev_large_var <- sum(estimates_large_var * cra_vec_probs)
+est_var_large_var <- sum((estimates_large_var - est_ev_large_var)^2 * cra_vec_probs)
+
+all_estimates <- data.frame(estimates = c(estimates_small_var, estimates_large_var),
+                            var = c(rep(x = "Small Variance", times = length(estimates_small_var)),
+                                    rep(x = "Large Variance", times = length(estimates_large_var))))
+ggplot(data = all_estimates,
+       mapping = aes(x = estimates)) +
+  geom_histogram(bins = 70) +
+  geom_vline(xintercept = mean(y_t_small_var - y_c_small_var),
+             color = "red",
+             linetype = "dashed") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(size = 6)) +
+  xlab(label = "Difference-in-Means Estiates") +
+  ylab("Frequency") +
+  facet_wrap(facets =  ~ var,
+             nrow = 2,
+             ncol = 1)
+
+
+@
+
+\subsection{Estimating the Estimator's Variance}
+
+There is no generally unbiased estimator of $\sigma^2_{\hat{\theta}}$! While there are unbiased estimators of $\sigma^2_{y_c}$ and $\sigma^2_{y_t}$, there is no unbiased estimator of $\sigma_{y_c, y_t}$. However, we can derive an estimator that is either unbiased or conservatively biased as follows:
+
+By the Cauchy-Schwarz inequality and the inequality of arithmetic and geometric means $2\sigma_{y_c, y_t} \leq  \sigma^2_{y_c} +  \sigma^2_{y_t}$; hence, if we substitute $\sigma^2_{y_c} +  \sigma^2_{y_t}$ for $2\sigma_{y_c, y_t}$, then the true variance of the difference-in-means estimator, $\frac{1}{n - 1}\left(\frac{n_t \sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{\left(n - n_t\right) \sigma^2_{y_t}}{n_t} + 2\sigma_{y_c, y_t}\right)$, is less than or equal to the conservative variance of the difference-in-means estimator, $\frac{1}{n - 1}\left(\frac{n_t \sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{\left(n - n_t\right) \sigma^2_{y_t}}{n_t} + \sigma^2_{y_c} + \sigma^2_{y_t}\right)$.
+
+For example, to return to the previous \texttt{[R]} example, notice that $\sigma^2_{y_c} +  \sigma^2_{y_t} \geq 2\sigma_{y_c, y_t}$:
+
+<< >>=
+
+var_y_c_small_var <- mean((y_c_small_var - mean(y_c_small_var))^2)
+
+var_y_t_small_var <- mean((y_t_small_var - mean(y_t_small_var))^2)
+
+cov_y_c_y_t_small_var <- mean((y_c_small_var - mean(y_c_small_var)) * (y_t_small_var - mean(y_t_small_var)))
+
+var_y_c_small_var + var_y_t_small_var >= (2 * cov_y_c_y_t_small_var)
+
+@
+
+Let's now substitute $\sigma^2_{y_c} +  \sigma^2_{y_t}$ for $2\sigma_{y_c, y_t}$ and further manipulate the conservative variance expression as follows:
+
+\begin{align*}
+\frac{1}{n - 1}\left(\frac{n_t \sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{\left(n - n_t\right) \sigma^2_{y_t}}{n_t} + 2\sigma_{y_c, y_t}\right)\\
+\frac{1}{n - 1}\left(\frac{n_t \sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{\left(n - n_t\right) \sigma^2_{y_t}}{n_t} + \sigma^2_{y_c} + \sigma^2_{y_t}\right) \\
+\frac{1}{n - 1}\left(\frac{n_t \sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{n\sigma^2_{y_t} - n_t\sigma^2_{y_t}}{n_t} + \sigma^2_{y_c} + \sigma^2_{y_t}\right) \\ 
+\frac{1}{n - 1}\left(\frac{n_t \sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{n\sigma^2_{y_t}}{n_t} - \frac{n_t\sigma^2_{y_t}}{n_t} + \sigma^2_{y_c} + \sigma^2_{y_t}\right) \\
+\frac{1}{n - 1}\left(\frac{n_t \sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{n\sigma^2_{y_t}}{n_t} - \sigma^2_{y_t} + \sigma^2_{y_c} +  \sigma^2_{y_t}\right) \\  
+\frac{1}{n - 1}\left(\frac{n_t \sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{n\sigma^2_{y_t}}{n_t} + \sigma^2_{y_c} \right) \\ 
+\frac{1}{n - 1}\left(\frac{n_t \sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{\left(n - n_t\right)\sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{n\sigma^2_{y_t}}{n_t} \right) \\  
+\frac{1}{n - 1}\left(\frac{n_t \sigma^2_{y_c} + \left(n - n_t\right)\sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{n\sigma^2_{y_t}}{n_t} \right) \\
+\frac{1}{n - 1}\left(\frac{n_t \sigma^2_{y_c} + n\sigma^2_{y_c} - n_t\sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{n\sigma^2_{y_t}}{n_t} \right) \\
+\frac{1}{n - 1}\left(\frac{n\sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{n\sigma^2_{y_t}}{n_t} \right) \\
+\frac{n}{n - 1}\left(\frac{\sigma^2_{y_c}}{\left(n - n_t\right)} + \frac{\sigma^2_{y_t}}{n_t} \right) \\    
+\end{align*} 
+The parameters $\sigma^2_{y_c}$ and $\sigma^2_{y_t}$ are unknown. We can, however, ``plug in'' unbiased estimators of these two quantities for $\sigma^2_{y_c}$ and $\sigma^2_{y_t}$. Following \citet[Theorem 2.4]{cochran1977}, unbiased estimators of $\sigma^2_{y_c}$ and $\sigma^2_{y_t}$, respectively, are: $\widehat{\sigma}^2_{y_c} = \left(\frac{1}{n_c - 1}\right) \sum \limits_{i: Z_i = 0} \left(y_{ci} - \widehat{\mu}_{y_c}\right)^2$and $\widehat{\sigma}^2_{y_t} = \left(\frac{1}{n_t - 1}\right)\sum \limits_{i: Z_i = 1}^{n} \left(y_{ti} - \widehat{\mu}_{y_t}\right)^2$, where $n_c = n - n_t$.
+
+Therefore, the unbiased or conservatively biased estimator of the variance of the difference-in-means estimator is:
+\begin{equation}
+\widehat{\sigma}^2_{\hat{\theta}} = \frac{n}{n - 1}\left(\frac{\widehat{\sigma}^2_{y_c}}{\left(n - n_t\right)} + \frac{\widehat{\sigma}^2_{y_t}}{n_t} \right)
+\label{eq: diff-means var est}
+\end{equation}
+
+We typically refer to Equation \eqref{eq: diff-means var est} as the Neyman variance estimator \citep{neyman1990}. 
+
+\section{Confidence Interval Estimation}
+
+We can use the Neyman variance estimator to generate Normal approximation based confidence intervals for $\overline{y_t} - \overline{y_c} = \overline{\tau}$.
+
+Let's define this two-sided confidence interval as follows:
+\begin{equation}
+\widehat{\text{CI}}_{1 - \alpha}\left(\overline{\tau}\right) = \left(\widehat{\overline{\tau}} - z_{1 - \frac{\alpha}{2}} \sqrt{\widehat{\sigma}^2_{\widehat{\overline{\tau}}}}, \, \widehat{\overline{\tau}} + z_{1 - \frac{\alpha}{2}} \sqrt{\widehat{\sigma}^2_{\widehat{\overline{\tau}}}} \right)
+\label{eq: normal approx ci}
+\end{equation}
+
+The confidence interval in Equation \eqref{eq: normal approx ci} is asymptotically valid in that $\lim \limits_{n \to \infty} \Pr\left(\overline{\tau} \in \widehat{\text{CI}}_{1 - \alpha}\left(\overline{\tau}\right) \right) \geq 1 - \alpha$.
+
+Let's return to the above \texttt{[R]} example to assess whether the probability that the true $\widehat{\overline{\tau}}$ is indeed bracketed by $\widehat{\text{CI}}_{1 - \alpha}\left(\overline{\tau}\right)$ with probability greater than or equal to $1 - \alpha$. 
+
+<<>>=
+
+diff_means_var_est <- function(.n,
+                               .n_t,
+                               .z,
+                               .y) {
+  
+  est_var_y_c = (1/(sum(1 - .z) - 1)) * sum((.y[.z == 0] - mean(.y[.z == 0]))^2)
+  
+  est_var_y_t = (1/(sum(.z) - 1)) * sum((.y[.z == 1] - mean(.y[.z == 1]))^2)
+  
+  (.n / (.n - 1)) * (( (est_var_y_c) / (.n - .n_t)) + ( ( est_var_y_t ) / (.n_t)) )
+  
+}
+
+var_ests <- sapply(X = 1:ncol(Omega),
+                   FUN = function(x) { diff_means_var_est(.n = length(Omega[,x]),
+                                                          .n_t = sum(Omega[,x]),
+                                                          .z = Omega[,x],
+                                                          .y = obs_outs_small_var[,x]) })
+
+asymp_CI_fun <- function(.tau_hat,
+                         .var_hat){
+  
+  return(c(.tau_hat - 1.96 * sqrt(.var_hat), .tau_hat + 1.96 * sqrt(.var_hat))) 
+  
+}
+
+CIs <- sapply(X = 1:length(estimates_small_var),
+              FUN = function(x) { asymp_CI_fun(.tau_hat = estimates_small_var[x], .var_hat = var_ests[x]) })
+
+sum((CIs[1,] <= mean(y_t_small_var - y_c_small_var) & mean(y_t_small_var - y_c_small_var) <= CIs[2,]) * cra_vec_probs)
+
+@
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Why is the coverage of our confidence interval estimator not exactly equal to $\left(1 - \alpha\right)100$\%?
+\end{itemize}
+\end{mdframed}
+
+\section{Neyman-Style Normal Approximation P-Values}
+
+An asymptotically valid two-tailed p-value for $\widehat{\overline{\tau}}$ is \begin{equation}
+2\left(1 - \Phi\left(\frac{\left\lvert \widehat{\overline{\tau}} - \overline{\tau}_0 \right\rvert}{\sqrt{\widehat{\sigma}^2_{\widehat{\overline{\tau}}}}}\right)\right)
+\end{equation}
+
+<<>>=
+
+set.seed(1:5)
+z_ind <- sample(x = 1:ncol(Omega), size = 1)
+obs_z <- Omega[,z_ind]
+obs_y <- obs_outs_small_var[,z_ind]
+
+obs_mean_diff <- diff_means_est(.Z = obs_z, .Y = obs_y)
+
+obs_var <- diff_means_var_est(.n = n, .n_t = n_t, .z = obs_z, .y = obs_y)
+
+z_score <- (abs(obs_mean_diff - 0))/sqrt(obs_var)
+
+## two sided p-value
+2 * pnorm(q = z_score,
+          lower.tail = FALSE)
+
+@
+
+\vspace{5mm}
+\begin{mdframed}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item How does this Normal approximation based p-value differ from the Fisher-style Normal approximation based p-value in Unit 02?
+\end{itemize}
+\end{mdframed}
+
+If we were to implement the Normal approximation p-values from unit 2, we would get the following:
+
+<<>>=
+
+y_c_null <- obs_y
+
+y_t_null <- obs_y
+
+mean_diff <- function(.Z, .y_c, .y_t) {
+  
+  y = .Z * .y_t + (1 - .Z) * .y_c
+  
+  return( (1/sum(.Z)) * as.integer(t(.Z) %*% y) - (1/sum(1 - .Z)) * as.integer(t(1 - .Z) %*% y) ) 
+  
+  }
+
+null_dist <- apply(X = Omega, MARGIN = 2, FUN = function(x) mean_diff(.Z = x, .y_c = y_c_null, .y_t = y_t_null))
+
+null_ev <- sum(null_dist * cra_vec_probs)
+
+null_var <- sum((null_dist - null_ev)^2 * cra_vec_probs)
+
+z_score_null <- abs((obs_mean_diff - null_ev)/sqrt(null_var))
+
+1 - pnorm(q = z_score_null)
+
+@
+
+\subsection{Neyman's Weak Null versus Fisher's Strong Null}
+
+What is the difference in the null hypotheses in both types of p-values? Does the sharp null hypothesis of no effect imply the weak null hypothesis of no effect? Does the weak null hypothesis of no effect imply the sharp null hypothesis of no effect?
+
+<<>>=
+
+#Neyman's weak null is true
+y_c_ney <- c(8, 12, 14, 8, 2, 7)
+y_t_ney <- c(4, 20, 11, 6, 7, 3)
+cbind(y_t_ney, y_c_ney)
+
+mean(y_t_ney - y_c_ney)
+
+mean(y_c_ney) == mean(y_t_ney)
+
+y_c_fish <- c(8, 12, 14, 8, 2, 7)
+y_t_fish <- y_c_fish
+cbind(y_c_fish, y_t_fish)
+mean(y_c_fish) == mean(y_t_fish)
+
+@
+
+
+
+\newpage
+
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{master_bibliography}   % name your BibTeX data base
+\end{singlespace}
+
+\newpage
+
+\end{document}
