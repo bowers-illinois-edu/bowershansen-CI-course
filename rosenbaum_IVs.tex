@@ -1,0 +1,665 @@
+%\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
+\documentclass[11pt,leqno]{article}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb}          % AMS Stuff
+\usepackage[linewidth=1pt]{mdframed}
+\usepackage{mdframed}
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{afterpage}% http://ctan.org/pkg/afterpage
+\usepackage[T1]{fontenc}
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfig}
+\usepackage{titling}            % modify maketitle in latex
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage{verbatim}
+\usepackage{geometry}
+\usepackage{bigfoot}
+\usepackage[format=hang,
+            font={small},
+            labelfont=bf,
+            textfont=rm]{caption}
+
+\geometry{verbose,margin=2cm,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=page,
+            colorlinks=true,
+            hyperfootnotes=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1},
+            citecolor=blue!70!black,
+            linkcolor=red!70!black,
+            urlcolor=green!70!black]{hyperref}
+\usepackage{hypernat}
+
+\usepackage{multirow}
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+
+\parskip=12pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{12pt} %Aboveskip
+{12pt} %Below skip
+{\itshape} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+% \DeclareMathOperator{\Pr}{\rm{Pr}}
+
+% COLORS FOR GRAPHICS (3-class Set1)
+\definecolor{Blue}{RGB}{55,126,184}
+\definecolor{Red}{RGB}{228,26,28}
+\definecolor{Green}{RGB}{77,175,74}
+
+% COLORS FOR EQUATIONS (3-class Dark2)
+\definecolor{eqgreen}{RGB}{27,158,119}
+\definecolor{eqblue}{RGB}{117,112,179}
+\definecolor{eqred}{RGB}{217,95,2}
+
+
+\title{Hypothesis Testing with Instrumental Variables}
+\author{Jake Bowers, Ben Hansen \& Tom Leavitt}
+\date{\today}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+
+\maketitle
+
+
+
+\section{The Parameters We Want Test Hypotheses About}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{rm}\hlstd{(}\hlkwc{list} \hlstd{=} \hlkwd{ls}\hlstd{())}
+\hlstd{n} \hlkwb{<-} \hlnum{8}
+\hlstd{n_t} \hlkwb{<-} \hlnum{4}
+
+\hlkwd{set.seed}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{)}
+\hlstd{d_c} \hlkwb{<-} \hlkwd{rbinom}\hlstd{(}\hlkwc{n} \hlstd{=} \hlnum{8}\hlstd{,} \hlkwc{size} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{prob} \hlstd{=} \hlnum{0.3}\hlstd{)}
+\hlstd{d_t} \hlkwb{<-} \hlkwd{rep}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{NA}\hlstd{,} \hlkwc{times} \hlstd{=} \hlkwd{length}\hlstd{(d_c))}
+\hlcom{## HERE WE SATISFY THE AT LEAST ONE COMPLIER (NON-WEAK INSTRUMENT) ASSUMPTION}
+\hlstd{d_t[}\hlkwd{which}\hlstd{(d_c} \hlopt{!=} \hlnum{1}\hlstd{)]} \hlkwb{<-} \hlkwd{rbinom}\hlstd{(}\hlkwc{n} \hlstd{=} \hlkwd{length}\hlstd{(}\hlkwd{which}\hlstd{(d_c} \hlopt{!=} \hlnum{1}\hlstd{)),} \hlkwc{size} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{prob} \hlstd{=} \hlnum{0.6}\hlstd{)}
+\hlcom{## HERE WE SATISFY THE NO DEFIERS (MONOTONICITY) ASSUMPTION}
+\hlstd{d_t[}\hlkwd{which}\hlstd{(d_c} \hlopt{==} \hlnum{1}\hlstd{)]} \hlkwb{<-} \hlkwd{rep}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{times} \hlstd{=} \hlkwd{length}\hlstd{(}\hlkwd{which}\hlstd{(d_c} \hlopt{==} \hlnum{1}\hlstd{)))}
+\hlkwd{cbind}\hlstd{(d_c, d_t)}
+\end{alltt}
+\begin{verbatim}
+     d_c d_t
+[1,]   0   0
+[2,]   0   1
+[3,]   0   1
+[4,]   1   1
+[5,]   0   1
+[6,]   1   1
+[7,]   1   1
+[8,]   0   0
+\end{verbatim}
+\begin{alltt}
+\hlstd{prop_comp} \hlkwb{<-} \hlkwd{length}\hlstd{(}\hlkwd{which}\hlstd{(d_c} \hlopt{==} \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{))}\hlopt{/}\hlstd{n}
+\hlstd{prop_def} \hlkwb{<-} \hlkwd{length}\hlstd{(}\hlkwd{which}\hlstd{(d_c} \hlopt{==} \hlnum{1} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{0}\hlstd{))}\hlopt{/}\hlstd{n}
+\hlstd{prop_at} \hlkwb{<-} \hlkwd{length}\hlstd{(}\hlkwd{which}\hlstd{(d_c} \hlopt{==} \hlnum{1} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{))}\hlopt{/}\hlstd{n}
+\hlstd{prop_nt} \hlkwb{<-} \hlkwd{length}\hlstd{(}\hlkwd{which}\hlstd{(d_c} \hlopt{==} \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{0}\hlstd{))}\hlopt{/}\hlstd{n}
+
+\hlcom{## HERE WE SATISFY THE EXCLUSION RESTRICTION ASSUMPTION BY LETTING y_c = y_t FOR ALL ALWAYS-TAKERS AND}
+\hlcom{## NEVER-TAKERS AND WE ALSO SATISFY THE SUTVA ASSUMPTION BY LETTING ALL UNITS HAVE ONLY TWO POT OUTS}
+\hlkwd{set.seed}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{)}
+\hlstd{y_c} \hlkwb{<-} \hlkwd{round}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{rnorm}\hlstd{(}\hlkwc{n} \hlstd{=} \hlnum{8}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{20}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{10}\hlstd{),} \hlkwc{digits} \hlstd{=} \hlnum{0}\hlstd{)}
+\hlstd{y_t_null_false} \hlkwb{<-} \hlkwd{rep}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{NA}\hlstd{,} \hlkwc{times} \hlstd{= n)}
+\hlstd{y_t_null_false[}\hlkwd{which}\hlstd{(d_c} \hlopt{==} \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{)]} \hlkwb{<-} \hlstd{y_c[}\hlkwd{which}\hlstd{(d_c} \hlopt{==} \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{)]} \hlopt{+} \hlkwd{round}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{rnorm}\hlstd{(}\hlkwc{n} \hlstd{=} \hlkwd{length}\hlstd{(}\hlkwd{which}\hlstd{(d_c} \hlopt{==}
+    \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{)),} \hlkwc{mean} \hlstd{=} \hlnum{10}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{4}\hlstd{),} \hlkwc{digits} \hlstd{=} \hlnum{0}\hlstd{)}
+\hlstd{y_t_null_false[}\hlopt{!}\hlstd{(d_c} \hlopt{==} \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{)]} \hlkwb{<-} \hlstd{y_c[}\hlopt{!}\hlstd{(d_c} \hlopt{==} \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{)]}
+\hlkwd{cbind}\hlstd{(y_c, y_t_null_false)}
+\end{alltt}
+\begin{verbatim}
+     y_c y_t_null_false
+[1,]  14             14
+[2,]  22             34
+[3,]  12             21
+[4,]  36             36
+[5,]  23             39
+[6,]  12             12
+[7,]  25             25
+[8,]  27             27
+\end{verbatim}
+\begin{alltt}
+\hlstd{true_data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{y_t} \hlstd{= y_t_null_false,} \hlkwc{y_c} \hlstd{= y_c,} \hlkwc{d_t} \hlstd{= d_t,} \hlkwc{d_c} \hlstd{= d_c,} \hlkwc{tau} \hlstd{= y_t_null_false} \hlopt{-}
+    \hlstd{y_c)}
+
+\hlstd{true_data} \hlopt{%<>%} \hlkwd{mutate}\hlstd{(}\hlkwc{type} \hlstd{=} \hlnum{NA}\hlstd{,} \hlkwc{type} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{= d_c} \hlopt{==} \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{0}\hlstd{,} \hlkwc{yes} \hlstd{=} \hlstr{"never_taker"}\hlstd{,} \hlkwc{no} \hlstd{= type),}
+    \hlkwc{type} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{= d_c} \hlopt{==} \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{,} \hlkwc{yes} \hlstd{=} \hlstr{"complier"}\hlstd{,} \hlkwc{no} \hlstd{= type),} \hlkwc{type} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{= d_c} \hlopt{==}
+        \hlnum{1} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{0}\hlstd{,} \hlkwc{yes} \hlstd{=} \hlstr{"defier"}\hlstd{,} \hlkwc{no} \hlstd{= type),} \hlkwc{type} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{= d_c} \hlopt{==} \hlnum{1} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{,} \hlkwc{yes} \hlstd{=} \hlstr{"always_taker"}\hlstd{,}
+        \hlkwc{no} \hlstd{= type))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Let's look at the true data, which when we run our experiment can only be partially observed. Can we see where the assumptions of instrumental variables are satisfied?
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{kable}\hlstd{(true_data)}
+\end{alltt}
+\end{kframe}
+\begin{tabular}{r|r|r|r|r|l}
+\hline
+y\_t & y\_c & d\_t & d\_c & tau & type\\
+\hline
+14 & 14 & 0 & 0 & 0 & never\_taker\\
+\hline
+34 & 22 & 1 & 0 & 12 & complier\\
+\hline
+21 & 12 & 1 & 0 & 9 & complier\\
+\hline
+36 & 36 & 1 & 1 & 0 & always\_taker\\
+\hline
+39 & 23 & 1 & 0 & 16 & complier\\
+\hline
+12 & 12 & 1 & 1 & 0 & always\_taker\\
+\hline
+25 & 25 & 1 & 1 & 0 & always\_taker\\
+\hline
+27 & 27 & 0 & 0 & 0 & never\_taker\\
+\hline
+\end{tabular}
+
+
+\end{knitrout}
+
+\section{An Actual Study}
+
+In an experiment with $8$ units and $4$ treated units, we know that there are $\binom{8}{4} = 70$ ways in which units could be assigned to treatment and control. The actual assignment is a random draw from this set of $70$ assignment vectors in which each assignment vector's selection probability is $\frac{1}{70}$.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{treated} \hlkwb{<-} \hlkwd{combn}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlopt{:}\hlstd{n,} \hlkwc{m} \hlstd{= n_t)}
+
+\hlstd{Omega} \hlkwb{<-} \hlkwd{apply}\hlstd{(}\hlkwc{X} \hlstd{= treated,} \hlkwc{MARGIN} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+    \hlkwd{as.integer}\hlstd{(}\hlnum{1}\hlopt{:}\hlstd{n} \hlopt{%in%} \hlstd{x)}
+\hlstd{\})}
+
+\hlstd{assign_vec_probs} \hlkwb{<-} \hlkwd{rep}\hlstd{(}\hlkwc{x} \hlstd{= (}\hlnum{1}\hlopt{/}\hlnum{70}\hlstd{),} \hlkwc{times} \hlstd{=} \hlkwd{ncol}\hlstd{(Omega))}
+
+\hlkwd{set.seed}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{)}
+\hlstd{obs_z} \hlkwb{<-} \hlstd{Omega[,} \hlkwd{sample}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),} \hlkwc{size} \hlstd{=} \hlnum{1}\hlstd{)]}
+
+\hlcom{# obs_ys_null_false <- apply(X = Omega, MARGIN = 2, FUN = function(x) \{ x * y_t_null_false + (1 - x)}
+\hlcom{# * y_c \})}
+
+\hlcom{# obs_ds <- apply(X = Omega, MARGIN = 2, FUN = function(x) \{ x * d_t + (1 - x) * d_c \})}
+
+\hlstd{obs_y} \hlkwb{<-} \hlstd{obs_z} \hlopt{*} \hlstd{true_data}\hlopt{$}\hlstd{y_t} \hlopt{+} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{obs_z)} \hlopt{*} \hlstd{true_data}\hlopt{$}\hlstd{y_c}
+\hlstd{obs_d} \hlkwb{<-} \hlstd{obs_z} \hlopt{*} \hlstd{true_data}\hlopt{$}\hlstd{d_t} \hlopt{+} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{obs_z)} \hlopt{*} \hlstd{true_data}\hlopt{$}\hlstd{d_c}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+The actual data that we observe based on the randomly selected assignment vector is as follows:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{kable}\hlstd{(}\hlkwd{cbind}\hlstd{(obs_z, obs_y, obs_d))}
+\end{alltt}
+\end{kframe}
+\begin{tabular}{r|r|r}
+\hline
+obs\_z & obs\_y & obs\_d\\
+\hline
+1 & 14 & 0\\
+\hline
+0 & 22 & 0\\
+\hline
+1 & 21 & 1\\
+\hline
+1 & 36 & 1\\
+\hline
+0 & 23 & 0\\
+\hline
+0 & 12 & 1\\
+\hline
+0 & 25 & 1\\
+\hline
+1 & 27 & 0\\
+\hline
+\end{tabular}
+
+
+\end{knitrout}
+
+Notice that, by assumption, we can already fill in some units unobserved potential outcomes:
+
+\begin{table}[!hbt]
+\centering
+    \begin{tabular}{l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ \\ \hline
+    1 & 14 & ? & 14 & 0 & ? & 0 \\
+    0 & 22 & 22 & ? & 0 & 0 & ? \\
+    1 & 21 & ? & 21 & 1 & ? & 1 \\
+    1 & 36 & ? & 36 & 1 & ? & 1 \\
+    0 & 23 & 23 & ? & 0 & 0 & ? \\
+    0 & 12 & 12 & ? & 1 & 1 & ? \\
+    0 & 25 & 25 & ? & 1 & 1 & ? \\
+    1 & 27 & ?  & 27 & 0 & ? & 0\\
+    \end{tabular}
+    \hfill 
+    \begin{tabular}{l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ \\ \hline
+    1 & 14 & 14 & 14 & 0 & 0 & 0 \\
+    0 & 22 & 22 & ? & 0 & 0 & ? \\
+    1 & 21 & ? & 21 & 1 & ? & 1 \\
+    1 & 36 & ? & 36 & 1 & ? & 1 \\
+    0 & 23 & 23 & ? & 0 & 0 & ? \\
+    0 & 12 & 12 & 12 & 1 & 1 & 1 \\
+    0 & 25 & 25 & 25 & 1 & 1 & 1 \\
+    1 & 27 & 27  & 27 & 0 & 0 & 0\\
+    \end{tabular}    
+\end{table}
+
+Now we need a way to provide a single numerical summary of our observed data. We call this single numerical summary an observed test statistic; it is observed because it's calculated only on our observed data, not the data we would have observed under other realizations of assignment if a given null hypothesis were true.
+
+Let's calculate our observed test statistic:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{obs_test_stat} \hlkwb{<-} \hlkwd{as.numeric}\hlstd{((}\hlkwd{t}\hlstd{(obs_z)} \hlopt{%*%} \hlstd{obs_y)}\hlopt{/}\hlstd{(}\hlkwd{t}\hlstd{(obs_z)} \hlopt{%*%} \hlstd{obs_z)} \hlopt{-} \hlstd{(}\hlkwd{t}\hlstd{(}\hlnum{1} \hlopt{-} \hlstd{obs_z)} \hlopt{%*%} \hlstd{obs_y)}\hlopt{/}\hlstd{(}\hlkwd{t}\hlstd{(}\hlnum{1} \hlopt{-}
+    \hlstd{obs_z)} \hlopt{%*%} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{obs_z)))}
+
+\hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= obs_y} \hlopt{~} \hlstd{obs_z))[[}\hlstr{"obs_z"}\hlstd{]]}
+\end{alltt}
+\begin{verbatim}
+[1] 4
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+We have our observed test statistic. Now the question is: What is the probability of a test statistic as extreme as the one we observed if the null hypothesis of no complier causal effect were true? To answer this question we need to posit for the purposes of testing the hypothesis of no complier causal effect.
+\begin{table}[!hbt]
+\centering
+    \begin{tabular}{l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ \\ \hline
+    1 & 14 & 14 & 14 & 0 & 0 & 0 \\
+    0 & 22 & 22 & 22 & 0 & 0 & ? \\
+    1 & 21 & 21 & 21 & 1 & ? & 1 \\
+    1 & 36 & 36 & 36 & 1 & ? & 1 \\
+    0 & 23 & 23 & 23 & 0 & 0 & ? \\
+    0 & 12 & 12 & 12 & 1 & 1 & 1 \\
+    0 & 25 & 25 & 25 & 1 & 1 & 1 \\
+    1 & 27 & 27  & 27 & 0 & 0 & 0\\
+    \end{tabular}
+    \caption{What Potential Outcomes Would Look Like under the Null Hypothesis of No Complier Causal Effect}
+\end{table}
+
+Notice that under the assumption of excludability and ``no defiers,'' we do not need to know which units are compliers in order to assert the hypothesis of no complier causal effect. Notice, however, that if we were to postit a hypothesis other than no complier causal effect, then we would need to also posit some hypothesis about which units are compliers and which are not.
+
+Let's calculate the set of all $70$ possible test statistics under the assumption that the null hypothesis is true:
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{null_test_stats} \hlkwb{<-} \hlkwd{apply}\hlstd{(}\hlkwc{X} \hlstd{= Omega,} \hlkwc{MARGIN} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+    \hlkwd{as.numeric}\hlstd{((}\hlkwd{t}\hlstd{(x)} \hlopt{%*%} \hlstd{obs_y)}\hlopt{/}\hlstd{(}\hlkwd{t}\hlstd{(x)} \hlopt{%*%} \hlstd{x)} \hlopt{-} \hlstd{(}\hlkwd{t}\hlstd{(}\hlnum{1} \hlopt{-} \hlstd{x)} \hlopt{%*%} \hlstd{obs_y)}\hlopt{/}\hlstd{(}\hlkwd{t}\hlstd{(}\hlnum{1} \hlopt{-} \hlstd{x)} \hlopt{%*%} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{x)))}
+\hlstd{\})}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Since we know the probability distribution on this set of $70$ test statistics, we can calculate a p-value:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{upper_p_val} \hlkwb{<-} \hlkwd{sum}\hlstd{((null_test_stats} \hlopt{>=} \hlstd{obs_test_stat)} \hlopt{*} \hlstd{assign_vec_probs)}
+
+\hlstd{lower_p_val} \hlkwb{<-} \hlkwd{sum}\hlstd{((null_test_stats} \hlopt{<=} \hlstd{obs_test_stat)} \hlopt{*} \hlstd{assign_vec_probs)}
+
+\hlstd{two_sided_p_value} \hlkwb{<-} \hlkwd{min}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{2} \hlopt{*} \hlkwd{min}\hlstd{(upper_p_val, lower_p_val))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\section{General Properties of P-Values when Testing No Complier Causal Effect}
+
+Why do p-values constitute evidence that can speak to the truth of the null hypothesis of no complier causal effect relative to the alternative hypothesis of a positive complier causal effect?
+
+If p-values are to tell us about whether the null hypothesis we're testing is true or false, then when the null is true it should yield greater p-values compared to when the null is false.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{iv_test_stat} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{.treat_vec}\hlstd{,}
+                         \hlkwc{.obs_out_vec}\hlstd{) \{}
+  \hlkwd{return}\hlstd{(((}\hlkwd{as.numeric}\hlstd{(}\hlkwd{t}\hlstd{(.treat_vec)} \hlopt{%*%} \hlstd{.obs_out_vec)} \hlopt{/} \hlkwd{as.numeric}\hlstd{(}\hlkwd{t}\hlstd{(.treat_vec)} \hlopt{%*%} \hlstd{.treat_vec))))}
+\hlstd{\}}
+
+\hlstd{obs_ys_null_false} \hlkwb{<-} \hlkwd{apply}\hlstd{(}\hlkwc{X} \hlstd{= Omega,} \hlkwc{MARGIN} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+  \hlstd{x} \hlopt{*} \hlstd{y_t_null_false} \hlopt{+} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{x)} \hlopt{*} \hlstd{y_c}
+\hlstd{\})}
+\hlstd{obs_ds} \hlkwb{<-} \hlkwd{apply}\hlstd{(}\hlkwc{X} \hlstd{= Omega,} \hlkwc{MARGIN} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+  \hlstd{x} \hlopt{*} \hlstd{d_t} \hlopt{+} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{x)} \hlopt{*} \hlstd{d_c}
+\hlstd{\})}
+
+\hlstd{gen_p_value} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{.z}\hlstd{,}
+                        \hlkwc{.obs_ys}\hlstd{,}
+                        \hlkwc{.obs_ds}\hlstd{,}
+                        \hlkwc{.null_tau}\hlstd{,}
+                        \hlkwc{.Omega}\hlstd{,}
+                        \hlkwc{.Omega_probs}\hlstd{,}
+                        \hlkwc{.test_stat_fun}\hlstd{,}
+                        \hlkwc{.alternative}\hlstd{) \{}
+  \hlstd{null_y_c} \hlkwb{<-} \hlstd{.obs_ys} \hlopt{-} \hlstd{(.obs_ds} \hlopt{*} \hlstd{.null_tau)}
+
+  \hlstd{null_y_t} \hlkwb{<-} \hlstd{.obs_ys} \hlopt{-} \hlstd{((}\hlnum{1} \hlopt{-} \hlstd{.obs_ds)} \hlopt{*} \hlstd{.null_tau)}
+
+  \hlstd{obs_test_stat} \hlkwb{<-} \hlkwd{.test_stat_fun}\hlstd{(}\hlkwc{.treat_vec} \hlstd{= .z,} \hlkwc{.obs_out_vec} \hlstd{= .z} \hlopt{*} \hlstd{null_y_t} \hlopt{+} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{.z)} \hlopt{*} \hlstd{null_y_c)}
+
+  \hlstd{obs_null_outs} \hlkwb{<-} \hlkwd{apply}\hlstd{(}
+    \hlkwc{X} \hlstd{= .Omega,}
+    \hlkwc{MARGIN} \hlstd{=} \hlnum{2}\hlstd{,}
+    \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+      \hlstd{x} \hlopt{*} \hlstd{null_y_t} \hlopt{+} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{x)} \hlopt{*} \hlstd{null_y_c}
+    \hlstd{\}}
+  \hlstd{)}
+
+  \hlstd{null_test_stat_dist} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}
+    \hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(.Omega),}
+    \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+      \hlkwd{.test_stat_fun}\hlstd{(}
+        \hlkwc{.treat_vec} \hlstd{= .Omega[, x],}
+        \hlkwc{.obs_out_vec} \hlstd{= obs_null_outs[, x]}
+      \hlstd{)}
+    \hlstd{\}}
+  \hlstd{)}
+
+  \hlstd{lower_p_val} \hlkwb{<-} \hlkwd{sum}\hlstd{((null_test_stat_dist} \hlopt{<=} \hlstd{obs_test_stat)} \hlopt{*} \hlstd{.Omega_probs)}
+  \hlstd{upper_p_val} \hlkwb{<-} \hlkwd{sum}\hlstd{((null_test_stat_dist} \hlopt{>=} \hlstd{obs_test_stat)} \hlopt{*} \hlstd{.Omega_probs)}
+  \hlstd{two_sided_p_val} \hlkwb{<-} \hlkwd{min}\hlstd{(}\hlnum{2} \hlopt{*} \hlkwd{min}\hlstd{(lower_p_val, upper_p_val),} \hlnum{1}\hlstd{)}
+
+  \hlstd{p_values} \hlkwb{<-} \hlkwd{cbind}\hlstd{(lower_p_val, upper_p_val, two_sided_p_val)}
+
+  \hlkwd{colnames}\hlstd{(p_values)} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"lower_p_val"}\hlstd{,} \hlstr{"upper_p_val"}\hlstd{,} \hlstr{"two_sided_p_val"}\hlstd{)}
+
+  \hlkwa{if} \hlstd{(.alternative} \hlopt{==} \hlstr{"lesser"}\hlstd{) \{}
+    \hlkwd{return}\hlstd{(p_values[,} \hlnum{1}\hlstd{])}
+  \hlstd{\}}
+  \hlkwa{if} \hlstd{(.alternative} \hlopt{==} \hlstr{"greater"}\hlstd{) \{}
+    \hlkwd{return}\hlstd{(p_values[,} \hlnum{2}\hlstd{])}
+  \hlstd{\}}
+  \hlkwa{if} \hlstd{(.alternative} \hlopt{==} \hlstr{"two.sided"}\hlstd{) \{}
+    \hlkwd{return}\hlstd{(p_values[,} \hlnum{3}\hlstd{])}
+  \hlstd{\}}
+
+  \hlkwd{return}\hlstd{(p_values)}
+\hlstd{\}}
+
+\hlstd{p_values_null_false} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}
+  \hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+  \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+    \hlkwd{gen_p_value}\hlstd{(}
+      \hlkwc{.z} \hlstd{= Omega[, x],}
+      \hlkwc{.obs_ys} \hlstd{= obs_ys_null_false[, x],}
+      \hlkwc{.obs_ds} \hlstd{= obs_ds[, x],}
+      \hlkwc{.null_tau} \hlstd{=} \hlkwd{rep}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{times} \hlstd{= n),} \hlcom{## the sharp null of no complier causal effect, which is no causal effect overall due to exclusion restriction}
+      \hlkwc{.Omega} \hlstd{= Omega,}
+      \hlkwc{.Omega_probs} \hlstd{= assign_vec_probs,}
+      \hlkwc{.test_stat_fun} \hlstd{= iv_test_stat,}
+      \hlkwc{.alternative} \hlstd{=} \hlstr{"greater"}
+    \hlstd{)}
+  \hlstd{\}}
+\hlstd{)}
+
+\hlcom{## check that rejection prob is greater than alpha}
+\hlkwd{sum}\hlstd{((p_values_null_false} \hlopt{<=} \hlnum{0.05}\hlstd{)} \hlopt{*} \hlstd{assign_vec_probs)}
+\end{alltt}
+\begin{verbatim}
+[1] 0.1
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## now consider case of testing sharp null when the null is true and the alternative of a positive}
+\hlcom{## effect is false}
+\hlstd{y_t_null_true} \hlkwb{<-} \hlkwd{rep}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{NA}\hlstd{,} \hlkwc{times} \hlstd{= n)}
+\hlstd{y_t_null_true[}\hlkwd{which}\hlstd{(d_c} \hlopt{==} \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{)]} \hlkwb{<-} \hlstd{y_c[}\hlkwd{which}\hlstd{(d_c} \hlopt{==} \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{)]} \hlopt{+} \hlkwd{rep}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{times} \hlstd{=} \hlkwd{length}\hlstd{(}\hlkwd{which}\hlstd{(d_c} \hlopt{==}
+    \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{)))}
+\hlstd{y_t_null_true[}\hlopt{!}\hlstd{(d_c} \hlopt{==} \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{)]} \hlkwb{<-} \hlstd{y_c[}\hlopt{!}\hlstd{(d_c} \hlopt{==} \hlnum{0} \hlopt{&} \hlstd{d_t} \hlopt{==} \hlnum{1}\hlstd{)]}
+\hlkwd{cbind}\hlstd{(d_c, d_t, y_c, y_t_null_true)}
+\end{alltt}
+\begin{verbatim}
+     d_c d_t y_c y_t_null_true
+[1,]   0   0  14            14
+[2,]   0   1  22            22
+[3,]   0   1  12            12
+[4,]   1   1  36            36
+[5,]   0   1  23            23
+[6,]   1   1  12            12
+[7,]   1   1  25            25
+[8,]   0   0  27            27
+\end{verbatim}
+\begin{alltt}
+\hlstd{obs_ys_null_true} \hlkwb{<-} \hlkwd{apply}\hlstd{(}\hlkwc{X} \hlstd{= Omega,} \hlkwc{MARGIN} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+    \hlstd{x} \hlopt{*} \hlstd{y_t_null_true} \hlopt{+} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{x)} \hlopt{*} \hlstd{y_c}
+\hlstd{\})}
+
+\hlstd{p_values_null_true} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),} \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+    \hlkwd{gen_p_value}\hlstd{(}\hlkwc{.z} \hlstd{= Omega[, x],} \hlkwc{.obs_ys} \hlstd{= obs_ys_null_true[, x],} \hlkwc{.obs_ds} \hlstd{= obs_ds[, x],} \hlkwc{.null_tau} \hlstd{=} \hlkwd{rep}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{0}\hlstd{,}
+        \hlkwc{times} \hlstd{= n),} \hlkwc{.Omega} \hlstd{= Omega,} \hlkwc{.Omega_probs} \hlstd{= assign_vec_probs,} \hlkwc{.test_stat_fun} \hlstd{= iv_test_stat,} \hlkwc{.alternative} \hlstd{=} \hlstr{"greater"}\hlstd{)}
+\hlstd{\})}
+
+\hlcom{## should be less than or equal to alpha = 0.05}
+\hlkwd{sum}\hlstd{((p_values_null_true} \hlopt{<=} \hlnum{0.05}\hlstd{)} \hlopt{*} \hlstd{assign_vec_probs)}
+\end{alltt}
+\begin{verbatim}
+[1] 0.0429
+\end{verbatim}
+\begin{alltt}
+\hlcom{## it is}
+
+\hlkwd{cbind}\hlstd{(p_values_null_true, p_values_null_false)}
+\end{alltt}
+\begin{verbatim}
+            p_values_null_true p_values_null_false
+upper_p_val             0.6143              0.2857
+upper_p_val             0.9286              0.4286
+upper_p_val             1.0000              0.9143
+upper_p_val             0.8714              0.6286
+upper_p_val             0.7714              0.5571
+upper_p_val             0.3000              0.0714
+upper_p_val             0.6143              0.4571
+upper_p_val             0.2286              0.1286
+upper_p_val             0.1286              0.0714
+upper_p_val             0.9286              0.5429
+upper_p_val             0.6143              0.2571
+upper_p_val             0.5000              0.1857
+upper_p_val             0.8714              0.7286
+upper_p_val             0.7714              0.6429
+upper_p_val             0.3857              0.2714
+upper_p_val             0.5429              0.2143
+upper_p_val             0.8286              0.7571
+upper_p_val             0.4571              0.3429
+upper_p_val             0.3714              0.2429
+upper_p_val             0.9857              0.8143
+upper_p_val             0.8286              0.4857
+upper_p_val             0.7429              0.4000
+upper_p_val             0.9714              0.9571
+upper_p_val             0.9571              0.9286
+upper_p_val             0.7000              0.5857
+upper_p_val             0.5429              0.3000
+upper_p_val             0.1714              0.1000
+upper_p_val             0.1143              0.0571
+upper_p_val             0.4571              0.4571
+upper_p_val             0.3714              0.3714
+upper_p_val             0.0714              0.0714
+upper_p_val             0.8286              0.5714
+upper_p_val             0.7429              0.5286
+upper_p_val             0.3714              0.2143
+upper_p_val             0.7000              0.7000
+upper_p_val             0.3286              0.0429
+upper_p_val             0.6714              0.3143
+upper_p_val             0.3000              0.0714
+upper_p_val             0.2286              0.0571
+upper_p_val             0.9429              0.4714
+upper_p_val             0.6714              0.1714
+upper_p_val             0.6143              0.1571
+upper_p_val             0.9286              0.6714
+upper_p_val             0.8714              0.6286
+upper_p_val             0.5000              0.2286
+upper_p_val             0.3286              0.1143
+upper_p_val             0.0571              0.0286
+upper_p_val             0.0429              0.0143
+upper_p_val             0.3000              0.1714
+upper_p_val             0.2286              0.1286
+upper_p_val             0.0286              0.0143
+upper_p_val             0.6714              0.3000
+upper_p_val             0.6143              0.2571
+upper_p_val             0.2286              0.0571
+upper_p_val             0.5000              0.3571
+upper_p_val             0.6286              0.2714
+upper_p_val             0.2571              0.0714
+upper_p_val             0.1714              0.0429
+upper_p_val             0.5429              0.4143
+upper_p_val             0.4571              0.3429
+upper_p_val             0.1143              0.0429
+upper_p_val             0.8857              0.5571
+upper_p_val             0.8286              0.4857
+upper_p_val             0.4571              0.1714
+upper_p_val             0.7429              0.6571
+upper_p_val             0.2571              0.1429
+upper_p_val             0.1714              0.1000
+upper_p_val             0.0143              0.0143
+upper_p_val             0.1143              0.1143
+upper_p_val             0.4571              0.2429
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+
+
+\newpage
+
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{refs}   % name your BibTeX data base
+\end{singlespace}
+
+\newpage
+
+\end{document}
