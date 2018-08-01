@@ -2,7 +2,7 @@
 %\input{slidesonly}
 
 % % For handout
-\input{handout}
+%\input{handout}
 
 %For handout + mynotes
 %\input{handout+mynotes}
@@ -20,12 +20,12 @@
 % putting `\begin{frame}`/ `\end{frame}` in announcement-of-the-day.tex lets us 
 % put frame notes into that file
 % announcement-of-the-day.tex not part of repo
-\InputIfFileExists{announcement-of-the-day.tex}{% from https://tex.stackexchange.com/questions/100663/if-the-remote-file-exists-then-include-it-else-include-the-local-one
+%\InputIfFileExists{announcement-of-the-day.tex}{% from https://tex.stackexchange.com/questions/100663/if-the-remote-file-exists-then-include-it-else-include-the-local-one
   % File personal/bar.tex exists and is read
   \input{announcement-of-the-day}
-}{%
+%}{%
   % File personal/bar.tex is not found, try bar.tex
-}
+%}
 
 
 
@@ -748,6 +748,103 @@ $\bar{y}_{1} - \bar{y}_0   \pm \sqrt{\mathrm{SE}(\bar{y}_{1})^{2} +
 \end{itemize}
 \end{frame}
 
+\section{Instrumental variables estimation for partial compliance}
+
+\subsection{Outmoded alternatives to IV}
+
+\begin{frame}[shrink]{FACEs and ACEs (Holland, 1988, \textit{Soc
+      Meth}) }
+
+\visible<2->{\igrphx{SalkVtable-full}}
+
+
+\begin{columns}
+  \begin{column}{.45\linewidth}
+  \begin{enumerate}[<+->]
+  \item   Compare $\EE(Y | V=1)$ to $\EE[Y(1)]= \EE(Y_{T})$.  
+\item Comp.  $\EE(Y | V=0)$ to $\EE(Y_{c})$.
+\end{enumerate}    
+\end{column}
+\begin{column}{.55\linewidth}
+\begin{enumerate}[<+->]
+\item ACE = $\EE(Y_t - Y_c) = \EE(Y_{t}) - \EE(Y_{c})$
+\item ``FACE'' = $\EE(Y | V=1) - \EE(Y | V=0)$
+\end{enumerate}
+\end{column}
+\end{columns}
+
+
+\pause
+ If $\mathrm{Pr}(V_{i}=1 | (Y_{T}, Y_{C})=(y_{T}, y_{C})) = \pi$
+  irrespective of $(y_{T}, y_{C}) $ --- as in the UM but not the
+  ``Ohio State'' Salk trial  --- then ACE = FACE.  
+
+
+
+\end{frame}
+
+\itnote{
+\item Refer to sec 2.6 of G\&G 
+}
+
+
+\begin{frame} \frametitle{The 1979 special election to replace Marion
+    Barry}
+  \begin{columns}
+    \begin{column}{0.6\linewidth}
+
+      \textit{
+        John Ray, Mayor Marion Barry's handpicked choice to succeed Barry on the City Council, won yesterday's special District of Columbia election, defeating his nearest rival, controversial former council member Douglas E. Moore, by a lopsided margin.
+      }
+\vfill
+
+    \end{column}
+    \begin{column}{0.4\linewidth}
+      \igrphx{ray_john_w} \vfill
+
+    \end{column}
+  \end{columns}
+\bigskip
+
+\textit{The Washington Post,} 5/2/1979, A-1.
+\end{frame}
+
+\begin{frame} \frametitle{Adams \& Smith's (1980) telephone GOTV
+    experiment, analysis}
+\framesubtitle{``Per-protocol,'' an outmoded mode of analysis}
+  \begin{columns}
+    \begin{column}{0.6\linewidth}
+      \begin{tabular}{r@{\hspace{.5em}}rr} \hline
+%  \multicolumn{2}{l}{Status} & $n$ \\
+% \hline
+\multicolumn{3}{l}{\underline{Contacted by caller}} \\
+ & Voted & 310 \\
+ & No vote & 640 \\
+ & all & 950 \\ \hline
+\multicolumn{3}{l}{\underline{Not contacted}} \\
+ & Voted & 397 \\
+ & No vote & 1303 \\
+ & all & 1700 \\  \hline
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.4\linewidth}
+      \igrphx{70srotaryphone}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+\note{
+
+  A \& S compared the treated to controls + not contacted, without
+  further adjustment.  This might be a problem: the non-contacted part
+  of the Tx group votes even a little less than controls do, something
+  that can't be explained by treatment, as they never received it.   }
+
+
+
+\subsection{Estimating ITTs and CACEs/LATEs}
+
 \begin{frame}{$Z$s/$z$s vs $D$s/$d$s}
   
 Additional conventions, this time shared by DOS, G\& G and this course:
@@ -767,7 +864,7 @@ In the coffee experiment, $\mathbf{D} \equiv \mathbf{Z}$; also in experiments di
 \end{frame}
 
 
-\begin{frame}{Per-protocol and intention to treat}
+\begin{frame}{Per-protocol vs intention to treat}
 
 When there is \textit{non-compliance}, $Z$ and $D$ may differ.  \pause  
 
@@ -797,6 +894,20 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
   \end{columns}
 \end{frame}
 
+\begin{frame} \frametitle{Results of the Adams-Smith experiment}
+  \includegraphics[height=.9\textheight]{images/ASdesign2edited}
+\end{frame}
+\note{As
+  Angrist, Imbens and Rubin (1996) might have it, both groups are a
+  blend of reachable and unreachable voters, although only for the Tx
+  group are we able to distinguish the two; and it may well be that
+  reachables and unreachables differ in terms of their voting
+  behavior, even in the absence of any Tx.  The fact that
+  non-contacted Tx group members voted less frequently than controls
+  certainly suggests this.  For this reason few statisticians today
+  would support Adams \& Smith's analytic strategy of simply comparing
+  the treated to controls.}
+
 \begin{frame}{The complier average causal effect via Bloom's(1984) method}
   \begin{itemize}
   \item intention-to-treat effect ($\delta$) vs
@@ -808,43 +919,52 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
     (exclusivity), $\delta = p_{c} \delta_{c} + p_{d} \delta_{d} $.
   \item Assuming no defiers (monotonicity), $\delta = p_{c}
     \delta_{c}$. 
-  \item both $\delta$ and $p_{c}$ are ACEs of assignment.
+  \item Random assignment, non-interference $\Rightarrow$ both $\delta$ and $p_{c}$ are ACEs of assignment.
  \end{itemize}
 
-\visible<2->{\igrphx{SalkVtable-full}}
 \end{frame}
+
+\begin{frame} \frametitle{The Adams-Smith (1980) telephone GOTV
+    experiment}
+\framesubtitle{Contact rates by assignment condition}
+  \begin{columns}
+    \begin{column}{0.5\linewidth}
+      \begin{tabular}{r@{\hspace{.5em}}rr} \hline
+%  \multicolumn{2}{l}{Status} & $n$ \\
+% \hline
+\multicolumn{3}{l}{\underline{Telephone group}} \\
+ & Contacted & 950 \\
+ & No contact & 375 \\
+ & all & 1325 \\ \hline
+\multicolumn{3}{l}{\underline{Control group}} \\
+ & Contacted & 0 \\
+ & No contact & 1325 \\
+ & all & 1325 \\  \hline
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.5\linewidth}
+      \begin{tabular}{r@{\hspace{.5em}}rr} \hline
+%  \multicolumn{2}{l}{Status} & $n$ \\
+% \hline
+\multicolumn{3}{l}{\underline{Telephone group}} \\
+ & Voted &  392 \\
+ & No vote &  \\
+ & all & 1325 \\ \hline
+\multicolumn{3}{l}{\underline{Control group}} \\
+ & Voted &  315 \\
+ & No vote &  \\
+ & all & 1325 \\  \hline
+      \end{tabular}
+    \end{column}
+  \end{columns}
+\end{frame}
+
 
 \begin{frame}{Exercises}
 
-Consider these examples as you answer the below: A university operates 2 oversubscribed charter schools
-serving a nearby high-poverty neighborhood.  One is admission by
-lottery only, while the other has open enrollment.  Their effects on
-graduation rates are studied separately, with the first study using
-all lottery entrants as its sample and the second all eligible
-students living in the neighborhood. 
-
-    \begin{enumerate}
-    \item Explain the notation $Y_{i}(0)$ (as appears in G\&G
-      2012)\footnote{I.e., $y_{ti}$ in our notation.}.
-    \item Contrast the meaning of ``$Y(0) | Z=1$'' w/ that of ``$Y(0) | Z=0$''.
-    \item How does $\EE(Y(1) | Z=1)$ differ in meaning from $\EE(Y(1))$?
-    \item Give an example in which you believe that $\EE(Y(1) | Z=1) =
-      \EE(Y(1))$.  Justify your opinion. 
-    \item Given an example of real or hypothetical study in which (you
-      believe)$\EE(Y(1) | Z=1) \neq \EE(Y(1))$.
-    \item Do randomized studies always satisfy $\EE(Y(1) | Z=1)
-      = \EE(Y(1))$?  Why or why not?
-    \item Do randomized studies always satisfy $\EE(Y(1) | D=1)
-      = \EE(Y(1))$?  (What's the difference between this q and
-      the last one?)
-    \end{enumerate}
-(Based on G.\&G. ex.1, ch 1.)
-
 \end{frame}
 
-\note{Rewrite me in our notation?  (trim down? Skip?)}
-
-
+\end{document}
 
 \begin{frame}{Average causal effects for samples of populations}
   
@@ -868,41 +988,6 @@ students living in the neighborhood.
   \end{itemize}
 \end{frame}
 
-\begin{frame}{FACEs and ACEs (Holland, 1988, \textit{Soc Meth}) }
 
-Example: a university operates 2 oversubscribed charter schools
-serving a nearby high-poverty neighborhood. Admission to both is by
-lottery; the 2 schools' lotteries are separate, and some families
-choose to enter their children in 
-both. Let $Z=$ offered admission to at least one.
-
-  \begin{enumerate}[<+->]
-  \item   Compare $\EE(Y | Z=1)$ to $\EE(Y_{T})$.  
-\item Likewise  $\EE(Y | Z=0)$ vs $\EE(Y_{c})$.
-\item ``ACE'' = $\EE(Y_t - Y_c) = \EE(Y_{t}) - \EE(Y_{c})$
-\item ``FACE'' = $\EE(Y | Z=1) - \EE(Y | Z=0)$
-\item If $\mathrm{Pr}(Z_{i}=1 | (Y_{T}, Y_{C})=(y_{T}, y_{C})) = \pi$
-  irrespective of $(y_{T}, y_{C}) $ --- as in simply randomized
-  experiments --- then the two coincide.  
-Not ordinarily otherwise.
-  \end{enumerate}
-
-\pause
-
-(Holland  had nonrandomized studies in mind.  FACEs differ from ACEs
-in most observational studies.)
-
-\end{frame}
-
-\itnote{
-\item Refer to sec 2.6 of G\&G 
-}
-
-
-
-\end{document}
-
-
-\section{Differences-in-differences}
 
 
