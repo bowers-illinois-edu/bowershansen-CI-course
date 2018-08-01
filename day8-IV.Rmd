@@ -111,57 +111,7 @@ of the course.
 
 # Now: Instruments, the ITT and CACE/LATE
 
-## Defining causal effects for the Adams and Smith (1980) Study
 
- -  $Y$ & outcome ($y_{i,T}$ or $y_{i,Z_i=1}$ for potential outcome to
-   treatment for person $i$, fixed)
- - $X$ & covariate/baseline variable
- - $Z$ & treatment assignment ($Z_i=1$ if assigned to a call, $Z_i=0$ if not
-   assigned to a call)
- -  $D$ & treatment received ($D_i=1$ if answered phone, $D_i=0$ if person $i$
-   dd not answer the phone.)
-
-We have two causal effects: $Z \rightarrow Y$ ($\delta$, ITT, ITT$_Y$), and $Z \rightarrow D$ (GG
-call this ITT$_D$).
-
-And different types of people can react differently to the attempt to move the
-dose with the instrument.
-
-\centering
-\begin{tabular}{llcc}
-                       &        & \multicolumn{2}{c}{$Z=1$} \\
-		       &       & $D=0$ & $D=1$ \\
-		       \midrule
-\multirow{2}{*}{$Z=0$} & $D=0$ & Nevertaker & Complier \\
-                       & $D=1$ & Defier     & Always taker \\
-		       \bottomrule
-\end{tabular}
-
-##  Defining causal effects
-
-The $ITT=ITT_Y=delta= \bar{y}_{Z=1} - \bar{y}_{Z=0}$.
-
-But, in this design, $\bar{y}_{Z=1}$ is split into two pieces: the outcome of
-those who answered the phone and those who did not. So:
-
-$ITT=$
-
-
- - $\delta_C = ITT_{Complier} = \bar{y}_{1,1} - \bar{y}_{0,0} | Complier$
- - $\delta_D = ITT_{Defier} = \bar{y}_{1,0} - \bar{y}_{0,1} | Defier$
- - $\delta_N = ITT_{Nevertaker} = \bar{y}_{1,0} - \bar{y}_{0,0} | Nevertaker$
- - $\delta_A = ITT_{Alwaystaker} = \bar{y}_{1,1} - \bar{y}_{0,1} | Alwaystaker$
-
-$$ITT=\delta = ( \bar{y}_{1,1}p(d_1=1) + \bar{y}_{Z=1,d_1=0}(1-p(d_1=1)) )  - \bar{y}_{Z=0}$$
-
-\medskip
-
-Notice that if everyone opens the door when visited then $y_{i,Z=1,d_1=1} =
-y_{i,Z=1}$  so the ITT=ATE.
-
-\medskip
-
-Why give it a new name?
 
 ## A simulation to understand the design and analysis
 
@@ -185,6 +135,9 @@ d <- ifelse(Z==1, rbinom(sum(Z==1),prob=probd/2,size=1), 0)
 table(Z,d,exclude=c())
 mean(d[Z==1])
 ```
+## A simulation to understand the design and analysis
+
+Setting up the simulation and analysis before going into the field.
 
 ```{r}
 ## No effects possible if not visited
@@ -197,31 +150,113 @@ y1d1 <- mean(y0) + taubar + (y0 - mean(y0))/2
 ## Define observed outcome
 Y <-  Z*d*y1d1 + Z*(1-d)*y1d0 + (1-Z)*d*y0d1 + (1-Z)*(1-d)*y0d0
 dat <- data.frame(y1d1,y1d0,y0d1,y0d0,y0,Y,Z,d,x,probd)
-dat$y1 <- (1-Z)*y0 + Z*d*y1d1 + Z*(1-d)*y1d0
+dat$y1 <- dat$Y[dat$Z==1]
 ```
 
-## A simulation to understand the design and analysis
+```{r}
+dat %>% group_by(Z,d) %>% summarize(meanY=mean(Y),
+				    sdY=sd(Y),
+				    n=n())
 
+```
+
+
+## A simulation to understand the design and analysis
 
 ```{r}
 boxplot(Y~Z*d,data=dat)
 ```
 
+## Defining causal effects for the Adams and Smith (1980) Study
+
+ -  $Y$ : outcome ($y_{i,T}$ or $y_{i,Z_i=1}$ for potential outcome to
+   treatment for person $i$, fixed)
+ - $X$ : covariate/baseline variable
+ - $Z$ : treatment assignment ($Z_i=1$ if assigned to a call, $Z_i=0$ if not
+   assigned to a call)
+ -  $D$ : treatment received ($D_i=1$ if answered phone, $D_i=0$ if person $i$
+   dd not answer the phone.)
+
+We have two causal effects: $Z \rightarrow Y$ ($\delta$, ITT, ITT$_Y$), and $Z \rightarrow D$ (GG
+call this ITT$_D$).
+
+And different types of people can react differently to the attempt to move the
+dose with the instrument.
+
+\centering
+\begin{tabular}{llcc}
+                       &        & \multicolumn{2}{c}{$Z=1$} \\
+		       &       & $D=0$ & $D=1$ \\
+		       \midrule
+\multirow{2}{*}{$Z=0$} & $D=0$ & Nevertaker & Complier \\
+                       & $D=1$ & Defier     & Always taker \\
+		       \bottomrule
+\end{tabular}
+
+##  Defining causal effects
+
+The $ITT=ITT_Y=delta= \bar{y}_{Z=1} - \bar{y}_{Z=0}$.
+
+\medskip
+
+But, in this design, $\bar{y}_{Z=1}=\bar{y}_{1}$ is split into two pieces: the outcome of
+those who answered the phone (Compliers and Alwaystakers and Defiers). Write
+$p_C$ for the proportion of compliers in the study.
+
+$$ \bar{y}_{1}=(\bar{y}_{1}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_1|N)p_N + (\bar{y}_1|D)p_D $$.
+
+And $\bar{y}_{0}$ is also split into pieces:
+
+$$ \bar{y}_{0}=(\bar{y}_{0}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_{0}|N)p_N + (\bar{y}_0|D)p_D $$.
+
+\medskip
+
+So, the ITT itself is a combination of the effects of $Z$ on $Y$ within these
+different groups (imagine substituting in and then re-arranging so that we
+have a set of ITTs, one for each type of subject). But, we can still estimate it because we have unbiased
+estimators of $\bar{y}_1$ and $\bar{y}_0$.
 
 ## Learning about the ITT
 
-First, let's learn about the effect of the policy itself, about the ITT.
+First, let's learn about the effect of the policy itself, about the ITT. To
+write down the ITT, we do not need to consider all of the types above. For
+example, we have no defiers ($ p_D=0 $) and that the ITT for both
+Alwaystakers and Nevertakers is 0.
 
-```{r}
-## True ITT with one-sided non-compliance
-pd <- mean(dat$d[dat$Z==1])
+So:
 
-bary1 <- mean(dat$y1d1)*pd + mean(dat$y1d0)*(1-pd)
-bary0 <- mean(dat$y0)
+$$\bar{y}_{1}=(\bar{y}_{1}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_1|N)p_N$$.
 
-trueITT <- bary1 - bary0
-```
+$$\bar{y}_{0}=(\bar{y}_{0}|C)p_C + (\bar{y}_{0}|A)p_A + (\bar{y}_{0}|N)p_N$$.
 
+
+\begin{align}
+ITT  & = \bar{y}_{1} - \bar{y}_{0} \\
+       & = ( (\bar{y}_{1}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_1|N)p_N ) - ( (\bar{y}_{0}|C)p_C + (\bar{y}_{0}|A)p_A + (\bar{y}_{0}|N)p_N )  \\
+       & = ( (\bar{y}_{1}|C)p_C -  (\bar{y}_{0}|C)p_C )  +   ( (\bar{y}_{1}|A)p_A - (\bar{y}_{1}|A)p_A ) +  ( (\bar{y}_1|N)p_N  - (\bar{y}_{0}|N)p_N ) \\
+       & = ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C   +   ( (\bar{y}_{1}|A)- (\bar{y}_{0}|A))p_A  +  ( (\bar{y}_1|N) - (\bar{y}_{0}|N) )p_N
+\end{align}
+
+## Learning about the ITT
+
+\begin{align}
+ITT  & = \bar{y}_{1} - \bar{y}_{0} \\
+       & = ( (\bar{y}_{1}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_1|N)p_N ) - ( (\bar{y}_{0}|C)p_C + (\bar{y}_{0}|A)p_A + (\bar{y}_{0}|N)p_N )  \\
+       & = ( (\bar{y}_{1}|C)p_C -  (\bar{y}_{0}|C)p_C )  +   ( (\bar{y}_{1}|A)p_A - (\bar{y}_{1}|A)p_A ) +  ( (\bar{y}_1|N)p_N  - (\bar{y}_{0}|N)p_N ) \\
+       & = ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C   +   ( (\bar{y}_{1}|A)- (\bar{y}_{0}|A))p_A  +  ( (\bar{y}_1|N) - (\bar{y}_{0}|N) )p_N
+\end{align}
+
+
+And, if the effect of the dose can only occur for those who open the door, and you can only open the door/pick up the phone when assigned to do so then: 
+
+$$ ( (\bar{y}_{1}|A)- (\bar{y}_{0}|A))p_A = 0  \text{ and } ( (\bar{y}_1|N) - (\bar{y}_{0}|N) )p_N = 0 $$.
+
+And
+
+$$ ITT =  ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C  = ( CACE ) p_C$$.
+
+
+## Some practice with code: How would you answer these questions?
 
 \smallskip
 
@@ -242,22 +277,50 @@ experiment to experiment?
 
 ## Some code notes
 
+### Testing a hypothesis of no effects
+
 ```{r, eval=FALSE}
 newExp <- function(trt){ sample(trt) }
 testStat <- function(outcome,trt){  mean(outcome[trt==1]) - mean(outcome[trt==0]) }
 obsTestStat <- testStat(outcome=dat$Y,trt=dat$Z)
 nullDist <- replicate(1000,testStat(outcome=dat$Y,trt=newExp(dat$Z)))
 upperP <- mean(nullDist >= obsTestStat)
+upperP
+## OR
+library(coin)
+dat$ZF<- factor(Z)
+meanTest <- oneway_test(Y~ZF,data=dat,distribution=approximate(B=1000),
+			alternative="less")
+pvalue(meanTest)
+
+meanTestAsymp <- oneway_test(Y~ZF,data=dat,distribution=asymptotic(),
+			alternative="less")
+pvalue(meanTestAsymp)
+
+t.test(Y~ZF,data=dat,alternative="less")$p.value
+
 ```
+
+## Estimating the ITT and SE
 
 
 ```{r, eval=FALSE}
-##taubarhat <- with(dat, mean(Y[Z==1]) - mean(Y[Z==0]))
+taubarhat <- with(dat, mean(Y[Z==1]) - mean(Y[Z==0]))
 ## or taubarhat <- coef(lm(Y~Z))[["Z"]]
 library(estimatr)
 taubarhat <- difference_in_means(Y~Z,data=dat)
-## sqrt( var(Y[Z==1])/sum(Z==1) + var(Y[Z==0])/sum(Z==0) )
+setaubarhat <- sqrt( var(Y[Z==1])/sum(Z==1) + var(Y[Z==0])/sum(Z==0) )
 ```
+
+## How would you assess these procedures?
+
+How would we check to see if this is a good estimator? (What does "good
+estimator" mean anyway?)
+
+\medskip
+
+How would we check to see if this is a good test? (What does "good test" mean
+anyway?)
 
 
 ## The Complier Average Causal Effect or Local Average Treatment Effect (on the Compliers)
@@ -276,26 +339,8 @@ with(dat,cor(Z,x)) ## should be near 0
 
 ## Identifying the causal effect of opening the door
 
-We want to learn about the Complier Average Causal Effect (aka the Local
-Average Treatment Effect): CACE$= \bar{y_{i,Z=1,d_1=1}} -
-\bar{y_{i,Z=0,d_1=1}}$
-
-
-Let $p$ be the proportion of compliers ($\sum_{i=1}^N I(d_{i,1} = 1)/N$).
-
-\begin{align*}
-ITT & = \left( \bar{y}_{1,d_1=1}p + \bar{y}_{1,d_1=0}(1-p) \right)  - \bar{y}_{0} \\
-    & = ( \bar{y}_{1,d_1=1}p + \bar{y}_{1,d_1=0}(1-p) )  - ( \bar{y}_{0,d_0=1}p+ \bar{y}_{0,d_0=0}(1-p) )  \\
-    & = ( \bar{y}_{1,d_1=1}p - \bar{y}_{0,d_0=1}p )  +  ( \bar{y}_{1,d_1=0}(1-p)  - \bar{y}_{0,d_0=0}(1-p) )  \\
-    & = ( \bar{y}_{1,d_1=1} - \bar{y}_{0,d_0=1} )p  +  ( \bar{y}_{1,d_1=0}  - \bar{y}_{0,d_0=0}) (1-p)  \\
-\intertext{but $\bar{y}_{1,d_1=0} = \bar{y}_{0,d_1=0} = \bar{y}_{0,d_0=0}$ so }
-  ITT  & = ( \bar{y}_{1,d_1=1} - \bar{y}_{0,d_0=1} ) p \\
-  ITT  & = ( CACE ) p \\
-\intertext{so we can write the CACE as ITT/p}
-  ITT/p & = CACE
-\end{align*}
-
-This means that we can write the CACE as $CACE = ITT/\text{proportion of compliers}$
+From above, and yesterday (and in the reading) we learned that we can write
+the CACE as $CACE = ITT/\text{proportion of compliers}$
 
 ## Code snippets
 
@@ -307,22 +352,20 @@ ITT/pd
 library(AER)
 iv1 <- ivreg(Y~d | Z, data=dat)
 
+library(estimatr)
+
+iv2 <- iv_robust(Y~d | Z, data=dat)
+
 ```
 
+## What about standard errors?
 
+What is $Var( \hat{\delta}_c/\hat{p}_c)$? Why wouldn't it be a ratio of
+standard errors? How would we check to see if we agreed with `ivreg`?
+
+# A Testing Approach
 
 ## Summary of the Day
-
-  - More than one way to use what we observe to reason about potential
-    outcomes: testing, estimating, predicting
-  - Structure of the course. Where we are now. Where we are going: away from
-    randomized experiments toward observational studies, but with the statistical basis
-    developed from our understanding of randomized experiments.
-  - An instrument moves a dose. The effect of the dose is specific, or local,
-    to those who took a dose, to those who experienced the treatment.
-  - The ITT and CACE/LATE represent different causal effects. ITT tends to be
-    the policy-relevant effect.
-  - An "as-treated" analysis is no longer an experiment.
 
 ## References
 
