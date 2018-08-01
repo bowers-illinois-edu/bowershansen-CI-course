@@ -15,13 +15,14 @@
 \igrphx{albertsonLawrence2009tab1}
 \end{wrapfigure}
 
-The table at right comes from Albertson and Lawrence's (2009, \textit{Amer. Pol. Res.} \textbf{37}/2) paper ``After the credits roll: The long term effects of educational television on public knowledge and attitudes,'' which reported on two field experiments. (You'll find a PDF in \texttt{articles/applications/}.)   Besides being thematically related, the two experiments followed very similar designs, using random digit dialing (RDD) telephone sampling to recruit initial samples, then employing a randomized encouragement design.  One can analyze them using IV methods under the following assumptions:
+The table at right comes from Albertson and Lawrence's (2009, \textit{Amer. Pol. Res.} \textbf{37}/2) paper ``After the credits roll: The long term effects of educational television on public knowledge and attitudes,'' which reported on two field experiments. (You'll find a PDF in \texttt{articles/applications/}.)   Besides being thematically related, the two experiments followed very similar designs, using random digit dialing (RDD) telephone sampling to recruit initial samples, then employing a randomized encouragement design.  Common methods estimate the CACE (LATE) under the following assumptions:
 
 \begin{itemize}
 \item Random assignment: $\mathrm{Pr}(Z_{i}=1) = $ constant over study population;  and $\mathrm{Z} $ is determined by coin tosses, card shuffles or equivalent methods
-\item Monotonicity (no defiers)
 \item Excludability (for all $z$, $d$, $y_{Z=z, D=z} \equiv y_{D=d}$)
 \item $p_{c} = \mathrm{Pr}(\mathrm{Complier}) > 0$ 
+\item No interference 
+\item Monotonicity (no defiers) 
 \end{itemize}
   
 \end{minipage}
@@ -36,8 +37,16 @@ The table at right comes from Albertson and Lawrence's (2009, \textit{Amer. Pol.
   \begin{enumerate}
   \item Explain why the Random Assignment assumption would be violated for a study population consisting of \textit{Round 2} respondents, despite proper use of random assignment procedures during Round 1, if it's common that $r_{T}=1$ while $r_{C}=0$.
   \item Conversely, explain how for a study population of Round 2 respondents, Random Assignment follows from a combination of Random Assignment at round 1 plus an additional assumption that $r_{Ti} \equiv r_{Ci}$, all $i$. 
-  \item What pieces of information that are necessary to appraise the plausibility of Albertson and Lawrence's (2009) random assignment assumption are missing from the table? 
+  % \item What pieces of information that are necessary to appraise the plausibility of Albertson and Lawrence's (2009) random assignment assumption are missing from the table? 
   \end{enumerate}
 
 \end{enumerate}
+
+
+
+\begin{tabular}{c}
+  \includegraphics[height=.5\textheight]{images/ASdesign2edited}  \\
+\igrphx{SalkVtable-full}
+\end{tabular}
+
 \end{document}
