@@ -312,6 +312,30 @@ taubarhat <- difference_in_means(Y~Z,data=dat)
 setaubarhat <- sqrt( var(Y[Z==1])/sum(Z==1) + var(Y[Z==0])/sum(Z==0) )
 ```
 
+```{r}
+
+minidat <- dat[sample(1:nrow(dat),6),]
+
+minidat$y1 <- minidat$y0 + 50
+minidat$Y <- with(minidat, Z*y1 + (1-Z)*y0)
+
+ap <- summary(lm(Y~Z,data=minidat))$coef[2,4]
+
+myfn <- function(){
+	newz <- sample(minidat$Z) # make truth 0
+	##newY <- newz * minidat$y1 + (1-newz)*minidat$y0 # reveal new potential outcomes
+	newp <- summary(lm(minidat$Y~newz))$coef[2,4] # test H0: no effects.
+	return(newp)
+}
+
+res <- replicate(1000,myfn())
+
+
+
+
+```
+
+
 ## How would you assess these procedures?
 
 How would we check to see if this is a good estimator? (What does "good
@@ -346,8 +370,8 @@ the CACE as $CACE = ITT/\text{proportion of compliers}$
 
 ```{r}
 ITT <- with(dat,mean(Y[Z==1]) - mean(Y[Z==0]))
-pd <- with(dat, mean(d[Z==1]) - mean(d[Z==0]))
-ITT/pd
+pc <- with(dat, mean(d[Z==1]) - mean(d[Z==0]))
+ITT/pc
 
 library(AER)
 iv1 <- ivreg(Y~d | Z, data=dat)
