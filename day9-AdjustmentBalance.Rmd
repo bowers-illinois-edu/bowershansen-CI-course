@@ -373,6 +373,7 @@ resdirectlst <- mclapply(1:1000,function(i){ d2pfn(z=acorn$z,X=acorn[,acorncovs]
 resdirect <- unlist(resdirectlst)
 ```
 
+## Does the simulation based approach have a controlled false positive rate here?
 
 ```{r}
 summary(resdirect)
