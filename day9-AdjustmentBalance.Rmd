@@ -513,12 +513,12 @@ text(c(.3,.5),c( coef(lm1)[1]+coef(lm1)[3]*.3 , coef(lm1)[1]+coef(lm1)[2]+coef(l
      labels=c("Control","Treat"))
 ```
 
-## Did we adjust enough? Assessing extrapolation/interpolation problems.
+## Did we adjust enough? 
 
-Maybe adding some more information to the plot can help us decide whether, and to what extend, we effectively "controlled for" the proportion of the neighborhood with more than High School education.
+Maybe adding some more information to the plot can help us decide whether, and to what extend, we effectively "controlled for" the proportion of the neighborhood with more than High School education. Specifically, we might be interested in assessing extrapolation/interpolation problems arising from our linear assumptions.
 
 \centering
-```{r, out.width=".9\\textwidth", echo=FALSE, warning=FALSE, message=FALSE}
+```{r, out.width=".7\\textwidth", echo=FALSE, warning=FALSE, message=FALSE}
 par(oma=rep(0,4),mgp=c(1.5,.5,0),mar=c(3,3,0,0))
 with(meddat, plot(nhAboveHS,HomRate08,pch=c(1,2)[nhTrt+1]))
 with(subset(preddat,subset=nhTrt==0), lines(nhAboveHS,fit,lty=1))
@@ -651,7 +651,7 @@ summary(fm1, min.controls=0, max.controls=Inf )
 table(meddat$nhTrt,fm1)
 ```
 
-## Evaluate the matched design: Within set differences
+## Evaluate the design: Within set differences
 
 Look within sets:
 
@@ -673,7 +673,7 @@ quantile(setdiffs$mneddiffs, seq(0,1,.1))
 ```
 
 
-## Evaluate the matched design: Compare to a randomized experiment.
+## Evaluate the design: Compare to a randomized experiment.
 
 ```{r}
 xbHS2 <- xBalance(nhTrt~nhAboveHS,
