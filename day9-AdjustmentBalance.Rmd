@@ -361,9 +361,18 @@ d2pfn <- function(z,X){
 
 	return(d2p)
 }
+```
 
+```{r doresdirect, eval=FALSE, cache=TRUE}
 resdirect <- replicate(1000,d2pfn(z=acorn$z,X=acorn[,acorncovs]))
 ```
+
+```{r doresdirectparallel, cache=TRUE}
+library(parallel)
+resdirectlst <- mclapply(1:1000,function(i){ d2pfn(z=acorn$z,X=acorn[,acorncovs]) },mc.cores=detectCores())
+resdirect <- unlist(resdirectlst)
+```
+
 
 ```{r}
 summary(resdirect)
