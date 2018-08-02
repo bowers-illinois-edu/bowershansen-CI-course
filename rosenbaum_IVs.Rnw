@@ -1,0 +1,489 @@
+%\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
+\documentclass[11pt,leqno]{article}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb}          % AMS Stuff
+\usepackage[linewidth=1pt]{mdframed}
+\usepackage{mdframed}
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{afterpage}% http://ctan.org/pkg/afterpage
+\usepackage[T1]{fontenc}
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfig}
+\usepackage{titling}            % modify maketitle in latex
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage{verbatim}
+\usepackage{geometry}
+\usepackage{bigfoot}
+\usepackage[format=hang,
+            font={small},
+            labelfont=bf,
+            textfont=rm]{caption}
+
+\geometry{verbose,margin=2cm,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=page,
+            colorlinks=true,
+            hyperfootnotes=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1},
+            citecolor=blue!70!black,
+            linkcolor=red!70!black,
+            urlcolor=green!70!black]{hyperref}
+\usepackage{hypernat}
+
+\usepackage{multirow}
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+
+\parskip=12pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{12pt} %Aboveskip
+{12pt} %Below skip
+{\itshape} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+% \DeclareMathOperator{\Pr}{\rm{Pr}}
+
+% COLORS FOR GRAPHICS (3-class Set1)
+\definecolor{Blue}{RGB}{55,126,184}
+\definecolor{Red}{RGB}{228,26,28}
+\definecolor{Green}{RGB}{77,175,74}
+
+% COLORS FOR EQUATIONS (3-class Dark2)
+\definecolor{eqgreen}{RGB}{27,158,119}
+\definecolor{eqblue}{RGB}{117,112,179}
+\definecolor{eqred}{RGB}{217,95,2}
+
+
+\title{Hypothesis Testing with Instrumental Variables}
+\author{Jake Bowers, Ben Hansen \& Tom Leavitt}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+<< setup, echo=FALSE, results='hide',include = FALSE, eval = TRUE >>=
+
+if (!require("pacman")) {install.packages("pacman")}
+
+pacman::p_load(
+  plyr,
+  dplyr,
+  magrittr,
+  tidyr,
+  haven,
+  broom,
+  randomizr,
+  lmtest,
+  ggplot2,
+  knitr,
+  xtable,
+  devtools,
+  optmatch,
+  RItools,
+  sandwich,
+  parallel,
+  doParallel)
+
+
+opts_chunk$set(tidy = TRUE,
+	       echo = TRUE,
+	       results = 'markup',
+	       strip.white = TRUE,
+	       fig.path = 'figs/fig',
+	       cache = FALSE,
+	       highlight = TRUE,
+	       width.cutoff = 100,
+	       size = 'footnotesize',
+	       out.width = '.9\\textwidth',
+	       message = FALSE,
+	       warning = FALSE,
+	       comment = NA)
+
+options(width = 100,
+	digits = 3)
+
+@
+
+\section{The Parameters We Want Test Hypotheses About}
+
+<< >>=
+
+rm(list = ls())
+n <- 8
+n_t <- 4
+
+set.seed(1:5)
+d_c <- rbinom(n = 8, size = 1, prob = 0.3)
+d_t <- rep(x = NA, times = length(d_c))
+## HERE WE SATISFY THE AT LEAST ONE COMPLIER (NON-WEAK INSTRUMENT) ASSUMPTION
+d_t[which(d_c != 1)] <- rbinom(n = length(which(d_c != 1)), size = 1, prob = 0.6)
+## HERE WE SATISFY THE NO DEFIERS (MONOTONICITY) ASSUMPTION
+d_t[which(d_c == 1)] <- rep(x = 1, times = length(which(d_c == 1)))
+cbind(d_c, d_t)
+prop_comp <- length(which(d_c == 0 & d_t == 1)) / n
+prop_def <- length(which(d_c == 1 & d_t == 0)) / n
+prop_at <- length(which(d_c == 1 & d_t == 1)) / n
+prop_nt <- length(which(d_c == 0 & d_t == 0)) / n
+
+## HERE WE SATISFY THE EXCLUSION RESTRICTION ASSUMPTION BY LETTING y_c = y_t FOR ALL ALWAYS-TAKERS AND NEVER-TAKERS AND
+## WE ALSO SATISFY THE SUTVA ASSUMPTION BY LETTING ALL UNITS HAVE ONLY TWO POT OUTS
+set.seed(1:5)
+y_c <- round(x = rnorm(n = 8, mean = 20, sd = 10), digits = 0)
+y_t_null_false <- rep(x = NA, times = n)
+y_t_null_false[which(d_c == 0 & d_t == 1)] <- y_c[which(d_c == 0 & d_t == 1)] +
+  round(x = rnorm(n = length(which(d_c == 0 & d_t == 1)),
+                  mean = 10,
+                  sd = 4),
+        digits = 0)
+y_t_null_false[!(d_c == 0 & d_t == 1)] <- y_c[!(d_c == 0 & d_t == 1)]
+cbind(y_c, y_t_null_false)
+
+true_data <- data.frame(y_t = y_t_null_false,
+                        y_c = y_c,
+                        d_t = d_t,
+                        d_c = d_c,
+                        tau = y_t_null_false - y_c)
+
+true_data %<>% mutate(type = NA,
+                      type = ifelse(test = d_c == 0 & d_t == 0, yes = "never_taker", no = type),
+                      type = ifelse(test = d_c == 0 & d_t == 1, yes = "complier", no = type),
+                      type = ifelse(test = d_c == 1 & d_t == 0, yes = "defier", no = type),
+                      type = ifelse(test = d_c == 1 & d_t == 1, yes = "always_taker", no = type))
+
+@
+
+Let's look at the true data, which when we run our experiment can only be partially observed. Can we see where the assumptions of instrumental variables are satisfied?
+
+<<>>=
+
+kable(true_data)
+
+@
+
+\section{An Actual Study}
+
+In an experiment with $8$ units and $4$ treated units, we know that there are $\binom{8}{4} = 70$ ways in which units could be assigned to treatment and control. The actual assignment is a random draw from this set of $70$ assignment vectors in which each assignment vector's selection probability is $\frac{1}{70}$.
+
+<<>>=
+
+treated <- combn(x = 1:n,
+                 m = n_t)
+
+Omega <- apply(X = treated,
+               MARGIN = 2,
+               FUN = function(x) { as.integer(1:n %in% x) })
+
+assign_vec_probs <- rep(x = (1/70), times = ncol(Omega))
+
+set.seed(1:5)
+obs_z <- Omega[,sample(x = 1:ncol(Omega), size = 1)]
+
+#obs_ys_null_false <- apply(X = Omega, MARGIN = 2, FUN = function(x) {
+#  x * y_t_null_false + (1 - x) * y_c })
+
+#obs_ds <- apply(X = Omega, MARGIN = 2, FUN = function(x) {
+#  x * d_t + (1 - x) * d_c }) 
+
+obs_y <- obs_z * true_data$y_t + (1 - obs_z) * true_data$y_c
+obs_d <- obs_z * true_data$d_t + (1 - obs_z) * true_data$d_c
+
+@
+
+The actual data that we observe based on the randomly selected assignment vector is as follows:
+
+<<>>=
+
+kable(cbind(obs_z, obs_y, obs_d))
+
+@
+
+Notice that, by assumption, we can already fill in some units unobserved potential outcomes:
+
+\begin{table}[!hbt]
+\centering
+    \begin{tabular}{l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ \\ \hline
+    1 & 14 & ? & 14 & 0 & ? & 0 \\
+    0 & 22 & 22 & ? & 0 & 0 & ? \\
+    1 & 21 & ? & 21 & 1 & ? & 1 \\
+    1 & 36 & ? & 36 & 1 & ? & 1 \\
+    0 & 23 & 23 & ? & 0 & 0 & ? \\
+    0 & 12 & 12 & ? & 1 & 1 & ? \\
+    0 & 25 & 25 & ? & 1 & 1 & ? \\
+    1 & 27 & ?  & 27 & 0 & ? & 0\\
+    \end{tabular}
+    \hfill 
+    \begin{tabular}{l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ \\ \hline
+    1 & 14 & 14 & 14 & 0 & 0 & 0 \\
+    0 & 22 & 22 & ? & 0 & 0 & ? \\
+    1 & 21 & ? & 21 & 1 & ? & 1 \\
+    1 & 36 & ? & 36 & 1 & ? & 1 \\
+    0 & 23 & 23 & ? & 0 & 0 & ? \\
+    0 & 12 & 12 & 12 & 1 & 1 & 1 \\
+    0 & 25 & 25 & 25 & 1 & 1 & 1 \\
+    1 & 27 & 27  & 27 & 0 & 0 & 0\\
+    \end{tabular}    
+\end{table}
+
+Now we need a way to provide a single numerical summary of our observed data. We call this single numerical summary an observed test statistic; it is observed because it's calculated only on our observed data, not the data we would have observed under other realizations of assignment if a given null hypothesis were true.
+
+Let's calculate our observed test statistic:
+
+<<>>=
+
+obs_test_stat <- as.numeric((t(obs_z) %*% obs_y) / (t(obs_z) %*% obs_z) -
+                              (t(1 - obs_z) %*% obs_y) / (t(1 - obs_z) %*% (1 - obs_z)))
+
+coef(lm(formula = obs_y ~ obs_z))[["obs_z"]]
+                            
+@
+
+We have our observed test statistic. Now the question is: What is the probability of a test statistic as extreme as the one we observed if the null hypothesis of no complier causal effect were true? To answer this question we need to posit for the purposes of testing the hypothesis of no complier causal effect.
+\begin{table}[!hbt]
+\centering
+    \begin{tabular}{l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ \\ \hline
+    1 & 14 & 14 & 14 & 0 & 0 & 0 \\
+    0 & 22 & 22 & 22 & 0 & 0 & ? \\
+    1 & 21 & 21 & 21 & 1 & ? & 1 \\
+    1 & 36 & 36 & 36 & 1 & ? & 1 \\
+    0 & 23 & 23 & 23 & 0 & 0 & ? \\
+    0 & 12 & 12 & 12 & 1 & 1 & 1 \\
+    0 & 25 & 25 & 25 & 1 & 1 & 1 \\
+    1 & 27 & 27  & 27 & 0 & 0 & 0\\
+    \end{tabular}
+    \caption{What Potential Outcomes Would Look Like under the Null Hypothesis of No Complier Causal Effect}
+\end{table}
+
+Notice that under the assumption of excludability and ``no defiers,'' we do not need to know which units are compliers in order to assert the hypothesis of no complier causal effect. Notice, however, that if we were to postit a hypothesis other than no complier causal effect, then we would need to also posit some hypothesis about which units are compliers and which are not.
+
+Let's calculate the set of all $70$ possible test statistics under the assumption that the null hypothesis is true:
+<<>>=
+
+null_test_stats <- apply(X = Omega,
+                         MARGIN = 2,
+                         FUN = function(x) { as.numeric((t(x) %*% obs_y) / (t(x) %*% x) -
+                                                          (t(1 - x) %*% obs_y) / (t(1 - x) %*% (1 - x))) })
+@
+
+Since we know the probability distribution on this set of $70$ test statistics, we can calculate a p-value:
+
+<<>>=
+
+upper_p_val <- sum((null_test_stats >= obs_test_stat) * assign_vec_probs)
+
+lower_p_val <- sum((null_test_stats <= obs_test_stat) * assign_vec_probs)
+
+two_sided_p_value <- min(1, 2 * min(upper_p_val, lower_p_val))
+
+@
+
+\section{General Properties of P-Values when Testing No Complier Causal Effect}
+
+Why do p-values constitute evidence that can speak to the truth of the null hypothesis of no complier causal effect relative to the alternative hypothesis of a positive complier causal effect?
+
+If p-values are to tell us about whether the null hypothesis we're testing is true or false, then when the null is true it should yield greater p-values compared to when the null is false.
+
+<<>>=
+
+iv_test_stat <- function(.treat_vec,
+                         .obs_out_vec) {
+  return(((as.numeric(t(.treat_vec) %*% .obs_out_vec) / as.numeric(t(.treat_vec) %*% .treat_vec))))
+}
+
+obs_ys_null_false <- apply(X = Omega, MARGIN = 2, FUN = function(x) {
+  x * y_t_null_false + (1 - x) * y_c
+})
+obs_ds <- apply(X = Omega, MARGIN = 2, FUN = function(x) {
+  x * d_t + (1 - x) * d_c
+})
+
+gen_p_value <- function(.z,
+                        .obs_ys,
+                        .obs_ds,
+                        .null_tau,
+                        .Omega,
+                        .Omega_probs,
+                        .test_stat_fun,
+                        .alternative) {
+  null_y_c <- .obs_ys - (.obs_ds * .null_tau)
+
+  null_y_t <- .obs_ys - ((1 - .obs_ds) * .null_tau)
+
+  obs_test_stat <- .test_stat_fun(.treat_vec = .z, .obs_out_vec = .z * null_y_t + (1 - .z) * null_y_c)
+
+  obs_null_outs <- apply(
+    X = .Omega,
+    MARGIN = 2,
+    FUN = function(x) {
+      x * null_y_t + (1 - x) * null_y_c
+    }
+  )
+
+  null_test_stat_dist <- sapply(
+    X = 1:ncol(.Omega),
+    FUN = function(x) {
+      .test_stat_fun(
+        .treat_vec = .Omega[, x],
+        .obs_out_vec = obs_null_outs[, x]
+      )
+    }
+  )
+
+  lower_p_val <- sum((null_test_stat_dist <= obs_test_stat) * .Omega_probs)
+  upper_p_val <- sum((null_test_stat_dist >= obs_test_stat) * .Omega_probs)
+  two_sided_p_val <- min(2 * min(lower_p_val, upper_p_val), 1)
+
+  p_values <- cbind(lower_p_val, upper_p_val, two_sided_p_val)
+
+  colnames(p_values) <- c("lower_p_val", "upper_p_val", "two_sided_p_val")
+
+  if (.alternative == "lesser") {
+    return(p_values[, 1])
+  }
+  if (.alternative == "greater") {
+    return(p_values[, 2])
+  }
+  if (.alternative == "two.sided") {
+    return(p_values[, 3])
+  }
+
+  return(p_values)
+}
+
+p_values_null_false <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    gen_p_value(
+      .z = Omega[, x],
+      .obs_ys = obs_ys_null_false[, x],
+      .obs_ds = obs_ds[, x],
+      .null_tau = rep(x = 0, times = n), ## the sharp null of no complier causal effect, which is no causal effect overall due to exclusion restriction
+      .Omega = Omega,
+      .Omega_probs = assign_vec_probs,
+      .test_stat_fun = iv_test_stat,
+      .alternative = "greater"
+    )
+  }
+)
+
+## check that rejection prob is greater than alpha
+sum((p_values_null_false <= 0.05) * assign_vec_probs)
+
+@
+
+
+<<>>=
+
+## now consider case of testing sharp null when the null is true and the alternative of a positive effect is false
+y_t_null_true <- rep(x = NA, times = n)
+y_t_null_true[which(d_c == 0 & d_t == 1)] <- y_c[which(d_c == 0 & d_t == 1)] + rep(x = 0, times = length(which(d_c == 0 & d_t == 1)))
+y_t_null_true[!(d_c == 0 & d_t == 1)] <- y_c[!(d_c == 0 & d_t == 1)]
+cbind(d_c, d_t, y_c, y_t_null_true)
+
+obs_ys_null_true <- apply(X = Omega, MARGIN = 2, FUN = function(x) {
+  x * y_t_null_true + (1 - x) * y_c
+})
+
+p_values_null_true <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    gen_p_value(
+      .z = Omega[, x],
+      .obs_ys = obs_ys_null_true[, x],
+      .obs_ds = obs_ds[, x],
+      .null_tau = rep(x = 0, times = n),
+      .Omega = Omega,
+      .Omega_probs = assign_vec_probs,
+      .test_stat_fun = iv_test_stat,
+      .alternative = "greater"
+    )
+  }
+)
+
+## should be less than or equal to alpha = 0.05
+sum((p_values_null_true <= 0.05) * assign_vec_probs)
+## it is
+
+cbind(p_values_null_true, p_values_null_false)
+
+@
+
+
+
+
+\newpage
+
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{refs}   % name your BibTeX data base
+\end{singlespace}
+
+\newpage
+
+\end{document}
