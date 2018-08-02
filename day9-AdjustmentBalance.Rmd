@@ -1,0 +1,695 @@
+---
+title: Statistical Adjustment and Assessment of Adjustment in Observational Studies
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2018 Session 2
+bibliography:
+ - refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    incremental: true
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+rm(list=ls())
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before)
+    return(options$size)
+})
+
+knit_hooks$set(plotdefault = function(before, options, envir) {
+    if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
+})
+
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='\\scriptsize',
+  out.width='.8\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA,
+  mysize=TRUE,
+  plotdefault=TRUE)
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(digits=4,
+	scipen=8,
+	width=132,
+	show.signif.stars=FALSE)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(RItools,lib.loc="./lib")
+library(optmatch)
+```
+## Today
+
+\begin{enumerate}
+  \item Agenda:
+The problem of covariance adjustment to reduce "bias"/ confounding. \textbf{How can we answer the question about whether we have adjusted enough.} A simple approach: stratification on one categorical variable (and interaction effects). A more complex approach: find sets that are as similar as possible in terms of a continuous variable (bipartite matching). Balance assessment after stratification.
+\item Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{ho:etal:07}
+\item Questions arising from the reading or assignments or life?
+\end{enumerate}
+
+# Strategies for Causal Inference
+
+## Strategies and Workflow for randomized studies
+
+### Before fielding the study
+ - Plan the design for interpretability and power.
+ - Pre-register your analysis plan and experimental design.
+
+### After outcome data have been collected
+ - Make the case that randomization worked.
+ - Increase precision with design and test statistics (and even models of effects)
+ - Make sure that your estimator is estimating the right thing (i.e. is not biased or at least is consistent)
+ - Make sure that your test has a controlled false positive rate and is as
+   powerful as possible (i.e. the coverage rate of a confidence interval is
+   nominal, the Type I error rate is controlled).
+
+## Strategies for Adjustment of Observational Studies
+
+ - If you have randomized $Z$ but not $D$, then IV. (Not really an observational study.)
+ - Find a discontinuity/A Natural Experiment (RDD: either natural experiment
+   or continuous forcing function)
+ - Multiple controls (i.e. "Choice as an alternative to control"
+   \cite{rosenbaum:1999})
+ - "Controlling For"
+ - Difference in Differences
+ - Matched Stratification (approximating a block-randomized experiment)
+ - Best matched subset selection (approximating a completely or simply
+   randomized experiment)
+ - Weighting
+ - Direct theoretical modeling / Directed Acyclic Graphs (DAGS) to guide other
+   data modeling choices.
+
+# But first, how to assess the randomization process in an experiment.
+
+\begin{frame}
+\frametitle{The Neyman-Rubin Model for (simple) experiments}
+\vfill
+This is what randomization ensures:
+$$ (\alert<4>{Y_t, Y_c},\alert<2>{X}) \perp \alert<3>{Z} $$
+\vfill
+
+I.e., each of $X$, $Y_{c}$ and $Y_{t}$ is balanced between treatment and control groups (in expectation; given variability from randomization).
+
+\begin{itemize}
+\item In controlled experiments, random assignment warrants this.
+\item In natural experiments, justified otherwise, this is an article of faith.
+\item In an experiment, the $x$es aren't necessary for inference (although
+they can be used, carefully, to increase precision in both the design and
+analysis phases of a project).
+\item \textbf{However, the part with the $x$es has testable consequences.}
+\end{itemize}
+
+\end{frame}
+
+ \begin{frame}%<1>[label=covbalexptsFr]
+ \frametitle{Covariate balance in experiments}
+ %\only<2>{\framesubtitle{The importance of using balance in other experiments for comparison}}
+
+\begin{columns}
+\begin{column}{.4\linewidth}
+\begin{itemize}
+\item<1-> \cite{arceneaux:2005}
+\item<1-> Kansas City, November 2003
+\item<1-> Completely randomized design: 14 precincts $\rightarrow$ Tx; 14 $\rightarrow $ Control.
+
+    \item<1-> Substantively large baseline differences
+    \item<2-> Differences not large compared to other possible assignments from same design; compared to other possible experiments with the same design.
+    \item<2-> $\PP(\chi^{2} > x) = .91$ \citep{hansenbowers2008}.
+    \end{itemize}
+    \end{column}
+
+\begin{column}{.6\linewidth}
+\only<1>{\igrphx{KC-baseline}}
+\only<2>{\igrphx{KC-bal+SDs}}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+
+## How did we do this?
+
+```{r}
+acorn <- read.csv("data/acorn03.csv", row.names=1)
+xb1 <- xBalance(z ~ v_p2003 + v_m2003 + v_g2002 + v_p2002 + v_m2002 + v_s2001 +
+         v_g2000 + v_p2000 + v_m2000 + v_s1999 + v_m1999 + v_g1998 +
+         v_m1998 + v_s1998 + v_m1997 + v_s1997 + v_g1996 + v_p1996 +
+         v_m1996 + v_s1996 + size, data=acorn,
+         report = 'all')
+
+xb1$results
+```
+
+## How did we do this?
+
+```{r}
+xb1$overall
+```
+
+
+```{r, out.width=".5\\textwidth"}
+plot(xb1)
+```
+
+
+## DeMystifying xBalance
+
+```{r}
+d.stat<-function(zz, mm, ss){
+  ## this is the d statistic (harmonic mean weighted diff of means statistic)
+  ## from Hansen and Bowers 2008
+  h.fn<-function(n, m){(m*(n-m))/n}
+  myssn<-apply(mm, 2, function(x){sum((zz-unsplit(tapply(zz, ss, mean), ss))*x)})
+  hs<-tapply(zz, ss, function(z){h.fn(m=sum(z), n=length(z))})
+  mywtsum<-sum(hs)
+  myadjdiff<-myssn/mywtsum
+  return(myadjdiff)
+}
+```
+
+## Calculate the reference distribution of the d-stat and the $d^2$ stat
+
+Does $d^2$ follow a $\chi^2$ distribution in this case?
+
+For all vectors $z \in \Omega$ get adj.diffs. This is the distribution of the d statistic
+
+```{r nullddist, cache=TRUE}
+acorncovs<-c("v_p2003","v_m2003","v_g2002","v_p2002","v_m2002","v_s2001","v_g2000","v_p2000","v_m2000","v_s1999","v_m1999","v_g1998","v_m1998","v_s1998","v_m1997","v_s1997","v_g1996","v_p1996","v_m1996","v_s1996","size")
+d.dist<-replicate(10000, d.stat(sample(acorn$z), acorn[,acorncovs], ss=rep(1,nrow(acorn))))
+```
+
+Get the randomization-based $p$-values:
+
+```{r}
+xb1ds <- xb1$results[,"adj.diff",]
+xb1ps <- xb1$results[,"p",]
+obs.d<-d.stat(acorn$z, acorn[, acorncovs], rep(1,nrow(acorn)))
+dps <- matrix(NA,nrow=length(obs.d),ncol=1)
+for(i in 1:length(obs.d)){
+  dps[i,] <- 2*min( mean(d.dist[i,] >= obs.d[i]),mean(d.dist[i,] <= obs.d[i]))
+}
+## You can compare this to the results from xBalance
+round(cbind(randinfps=dps[,1],xbps=xb1ps,obsdstats=obs.d,xbdstats=xb1ds),3)
+```
+
+## Calculate the reference distribution of the d-stat and the $d^2$ stat
+
+The $d^2$ statistic is a linear function of the $d$-statistics that accounts
+for the covariance between those statistics (across the possible assignments
+under the null hypothesis of no effects).
+
+```{r}
+d2.stat <- function(dstats,ddist=NULL,theinvcov=NULL){
+  ## d is the vector of d statistics
+  ## ddist is the matrix of the null reference distributions of the d statistics
+  if(is.null(theinvcov) & !is.null(ddist)){
+    as.numeric( t(dstats) %*% solve(cov(t(ddist))) %*% dstats)
+  } else {
+    as.numeric( t(dstats) %*% theinvcov %*% dstats)
+  }
+}
+```
+
+## Calculate the reference distribution of the d-stat and the $d^2$ stat
+
+The distribution of the $d^2$ statistic arises from the distribution of the d statistics --- for each draw from the set of treatment assignments we can collapse the $d$-statistics into one $d^2$. And so we can calculate the $p$-value for the $d^2$.
+
+```{r}
+## Here we have the inverse of the covariance/variance matrix of the d statistics
+invCovDDist <- solve(cov(t(d.dist)))
+obs.d2<- d2.stat(obs.d,d.dist,invCovDDist)
+
+d2.dist<-apply(d.dist, 2, function(thed){
+                 d2.stat(thed,theinvcov=invCovDDist)
+         })
+## The chi-squared reference distribution only uses a one-sided p-value going in the positive direction
+d2p<-mean(d2.dist>=obs.d2)
+cbind(obs.d2,d2p)
+xb1$overall
+```
+
+
+## Calculate the reference distribution of the d-stat and the $d^2$ stat
+
+The distribution of the $d^2$ statistic arises from the distribution of the d statistics --- for each draw from the set of treatment assignments we can collapse the $d$-statistics into one $d^2$. And so we can calculate the $p$-value for the $d^2$.
+
+```{r, out.width=".7\\textwidth"}
+plot(density(d2.dist))
+rug(d2.dist)
+```
+
+
+## Why differences between xBalance and d2?
+
+I suspect that $N=28$ is too small. `xBalance` uses an asymptotic
+approximation to the randomization distribution.
+
+```{r echo=FALSE, out.width=".8\\textwidth"}
+## Notice that the distribution of d2.dist is not that close to the
+## chi-squared distribution in this case with N=28
+par(mfrow=c(1,2))
+qqplot(rchisq(10000,df=21),d2.dist)
+abline(0,1)
+
+plot(density(d2.dist))
+rug(d2.dist)
+curve(dchisq(x,df=21),from=0,to=40,add=TRUE,col="grey")
+```
+
+## Does xBalance have a controlled false positive rate here?
+
+```{r xberror, cache=TRUE}
+xbfn <- function(){
+	acorn$newz <- sample(acorn$z)
+	xb1 <- xBalance(newz ~ v_p2003 + v_m2003 + v_g2002 + v_p2002 + v_m2002 + v_s2001 +
+			v_g2000 + v_p2000 + v_m2000 + v_s1999 + v_m1999 + v_g1998 +
+			v_m1998 + v_s1998 + v_m1997 + v_s1997 + v_g1996 + v_p1996 +
+			v_m1996 + v_s1996 + size, data=acorn,
+		report = 'chisquare.test')
+	return(xb1$overall[["p.value"]])
+}
+
+res <- replicate(1000,xbfn())
+```
+
+```{r}
+summary(res)
+mean(res <= .05)
+mean(res <= .2)
+```
+
+## Does xBalance have a controlled false positive rate here?
+
+
+```{r}
+plot(ecdf(res))
+abline(0,1)
+
+```
+
+
+## Does the simulation based approach have a controlled false positive rate here?
+
+
+```{r resdirecterror, cache=TRUE}
+d2pfn <- function(z,X){
+	newz <- sample(z)
+
+	d.dist<-replicate(1000, d.stat(sample(newz), X, ss=rep(1,nrow(X))))
+
+	obs.d<-d.stat(newz, X, rep(1,nrow(X)))
+
+	dps <- matrix(NA,nrow=length(obs.d),ncol=1)
+	for(i in 1:length(obs.d)){
+		dps[i,] <- 2*min( mean(d.dist[i,] >= obs.d[i]),mean(d.dist[i,] <= obs.d[i]))
+	}
+
+	invCovDDist <- solve(cov(t(d.dist)))
+	obs.d2<- d2.stat(obs.d,d.dist,invCovDDist)
+
+	d2.dist<-apply(d.dist, 2, function(thed){
+			       d2.stat(thed,theinvcov=invCovDDist)
+		})
+
+	d2p<-mean(d2.dist>=obs.d2)
+
+	return(d2p)
+}
+
+resdirect <- replicate(1000,d2pfn(z=acorn$z,X=acorn[,acorncovs]))
+```
+
+```{r}
+summary(resdirect)
+mean(resdirect <= .05)
+mean(resdirect <= .2)
+```
+
+## Does xBalance have a controlled false positive rate here?
+
+
+```{r}
+plot(ecdf(resdirect))
+abline(0,1)
+
+```
+
+# Did we control for enough?
+
+##  Introducing the Medellin Data
+
+\small
+```{r cache=TRUE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+```
+\normalsize
+
+The data Cerdá collected tell us about the roughly `r nrow(meddat)`
+neighborhoods in the study, `r signif(sum(meddat$nhTrt),2)` of which had
+access to the Metrocable line and `r signif(sum(1-meddat$nhTrt),2)` did not.
+
+We don't have a formal codebook. Here are some guesses about the meanings of
+some of the variables. There are more variables in the data file than those
+listed here.
+
+\scriptsize
+```{r eval=FALSE}
+## The Intervention
+nhTrt        Intervention neighborhood (0=no Metrocable station, 1=Metrocable station)
+
+## Some Covariates (there are others, see the paper itself)
+nh03         Neighborhood id
+nhGroup      Treatment (T) or Control (C)
+nhTrt        Treatment (1) or Control (0)
+nhHom        Mean homicide rate per 100,000 population in 2003
+nhDistCenter Distance to city center (km)
+nhLogHom     Log Homicide (i.e. log(nhHom))
+
+## Outcomes (BE03,CE03,PV03,QP03,TP03 are baseline versions)
+BE      Neighborhood amenities Score 2008
+CE      Collective Efficacy Score 2008
+PV      Perceived Violence Score 2008
+QP      Trust in local agencies Score 2008
+TP      Reliance on police Score 2008
+hom     Homicide rate per 100,000 population Score 2008-2003 (in log odds)
+
+HomCount2003 Number of homicides in 2003
+Pop2003      Population in 2003
+HomCount2008 Number of homicides in 2008
+Pop2008      Population in 2008
+```
+
+Get rates from counts:
+
+```{r}
+meddat<- mutate(meddat, HomRate03=(HomCount2003/Pop2003)*1000,
+                HomRate08=(HomCount2008/Pop2008)*1000)
+```
+
+## What is the effect of the Metrocable on Homicides?
+
+One approach:  Estimate the average treatment effect of Metrocable on
+Homicides after the stations were built.
+
+```{r}
+## code here
+themeans<-group_by(meddat,nhTrt) %>% summarise(ybar=mean(HomRate08))
+diff(themeans$ybar)
+lmOne <- lm(HomRate08~nhTrt,meddat)
+coef(lmOne)["nhTrt"]
+library(estimatr)
+difference_in_means(HomRate08~nhTrt,meddat)
+
+```
+
+In principle, how might we use the testing approach to take a first stab at this question?
+
+```{r}
+## code here
+```
+
+## What are alternative explanations for this effect?
+
+We claim that the policy intervention had some effect. What are alternative explanations?
+
+## Do we have any concerns about confounding?
+
+Sometimes people ask about "bias from observed confounding" or "bias from selection on observables".
+
+How would we interpret the following results? (Recall how we justified the use
+of `xBalance` in terms of randomization above.)
+
+```{r}
+xbMed1 <- xBalance(nhTrt~nhAboveHS,data=meddat,report="all")
+xbMed1$overall
+xbMed1$results
+```
+
+## How would you adjust for Proportion Above HS Degree?
+
+Part of the Metrocable effect is not about Metrocable per se, but rather about
+the education of people in the neighborhood. How should we remove `nhAboveHS`
+from our estimate or test? What strategies can you think of?
+
+
+## One approach to this problem: model-based adjustment
+
+Let's try to just adjust for this covariate in a very common manner:
+
+```{r echo=FALSE}
+lm1 <- lm(HomRate08~nhTrt+nhAboveHS,data=meddat)
+```
+
+```{r echo=FALSE}
+preddat <- expand.grid(nhTrt=c(0,1),nhAboveHS=range(meddat$nhAboveHS))
+preddat$fit <- predict(lm1,newdata=preddat)
+```
+
+\centering
+```{r, out.width=".9\\textwidth", echo=FALSE}
+par(oma=rep(0,4),mgp=c(1.5,.5,0),mar=c(3,3,0,0))
+with(meddat, plot(nhAboveHS,HomRate08,pch=c(1,2)[nhTrt+1]))
+with(subset(preddat,subset=nhTrt==0),lines(nhAboveHS,fit,lty=1))
+with(subset(preddat,subset=nhTrt==1),lines(nhAboveHS,fit,lty=2))
+## locator()
+text(c(0.111807,0.001629), c(1.871,2.204), labels=c("Treat","Control"),pos=1)
+text(c(.3,.5),c( coef(lm1)[1]+coef(lm1)[3]*.3 , coef(lm1)[1]+coef(lm1)[2]+coef(lm1)[3]*.5),
+     labels=c("Control","Treat"))
+```
+
+## Did we adjust enough? Assessing extrapolation/interpolation problems.
+
+Maybe adding some more information to the plot can help us decide whether, and to what extend, we effectively "controlled for" the proportion of the neighborhood with more than High School education.
+
+\centering
+```{r, out.width=".9\\textwidth", echo=FALSE, warning=FALSE, message=FALSE}
+par(oma=rep(0,4),mgp=c(1.5,.5,0),mar=c(3,3,0,0))
+with(meddat, plot(nhAboveHS,HomRate08,pch=c(1,2)[nhTrt+1]))
+with(subset(preddat,subset=nhTrt==0), lines(nhAboveHS,fit,lty=1))
+with(subset(preddat,subset=nhTrt==1),lines(nhAboveHS,fit,lty=2))
+with(subset(meddat,subset=nhTrt==0),lines(loess.smooth(nhAboveHS,HomRate08,deg=1,span=2/3),lty=1))
+with(subset(meddat,subset=nhTrt==1),lines(loess.smooth(nhAboveHS,HomRate08,deg=1,span=2/3),lty=2))
+## locator()
+text(c(0.111807,0.001629), c(1.871,2.204), labels=c("Treat","Control"),pos=1)
+text(c(.3,.5),c( coef(lm1)[1]+coef(lm1)[3]*.3 , coef(lm1)[1]+coef(lm1)[2]+coef(lm1)[3]*.5),
+     labels=c("Control","Treat"))
+with(subset(meddat,subset=nhTrt==0),rug(nhAboveHS))
+with(subset(meddat,subset=nhTrt==1),rug(nhAboveHS,line=-.5))
+```
+
+How should we interpret this adjustment? How should we judge the improvement that we made? What concerns might we have?
+
+
+
+```{r echo=FALSE, eval=FALSE}
+thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+balfmla<-reformulate(thecovs,response="nhTrt")
+
+xbMed<-balanceTest(balfmla,
+	      data=meddat,
+	      report=c("all"),
+        p.adjust.method="none")
+xbMed$overall
+xbMed$results["nhAboveHS",,]
+```
+
+
+```{r echo=FALSE, eval=FALSE}
+outcomefmla <- reformulate(c("nhTrt",thecovs),response="HomRate08")
+lmbig <- lm(outcomefmla,data=meddat)
+```
+
+## Back to the randomized experiment to help make a case for appropriate adjustment
+
+It seems like arguments about plots may be difficult to resolve. How about going back to `xBalance`? The idea of a standard against which we can compare a given design. How might we do this in this case?
+
+
+*Attempt 1: Stratification ... but two estimates rather than one adjusted
+estimate*
+
+```{r}
+lm1a <- lm(HomRate08~nhTrt,data=meddat,subset=nhAboveHS>=.1)
+lm1b <- lm(HomRate08~nhTrt,data=meddat,subset=nhAboveHS<=.1)
+```
+
+*Attempt 2: Stratified adjustment*
+
+```{r}
+lm1c <- lm(HomRate08~nhTrt+I(nhAboveHS>=.1),data=meddat)
+coef(lm1c)["nhTrt"]
+```
+
+And balance assessment after stratification:
+
+```{r}
+xbHS1 <- xBalance(nhTrt~nhAboveHS,strata=list(hs=~I(nhAboveHS>=.1)),data=meddat,report="all")
+xbHS1$overall
+xbHS1$results
+```
+
+## The Curse of Dimensionality and linear adjustment for one more variable.
+
+What about more than one variable? Have we controlled for both population
+density and educational attainment enough? How would we know? 
+
+```{r}
+lm2x <- lm(HomRate08 ~ nhTrt + nhPopD + nhAboveHS, data=meddat)
+coef(lm2x)["nhTrt"]
+```
+
+Maybe another plot?
+
+```{r eval=FALSE}
+meddat$nhTrtF <- factor(meddat$nhTrt)
+library(car)
+scatter3d(HomRate08~nhAboveHS+nhPopD,
+	  groups=meddat$nhTrtF,
+	  data=meddat,surface=TRUE,
+    fit=c("linear")) #additive"))
+```
+
+```{r echo=FALSE, eval=FALSE}
+scatter3d(HomRate08~nhAboveHS+nhPopD,
+	  groups=meddat$nhTrtF,
+	  data=meddat,surface=TRUE,
+    fit=c("additive"))
+
+```
+
+
+## Can we improve stratified adjustment?
+
+Rather than two strata, why not three?
+
+```{r}
+lm1cut3 <- lm(HomRate08~nhTrt+cut(nhAboveHS,3),data=meddat)
+coef(lm1cut3)["nhTrt"]
+```
+But why those cuts? And why not 4? Why not...?
+
+\medskip
+
+One idea: collect observations into strata such that the sum of the
+differences in means of nhAboveHS within strata is smallest? This is the idea
+behind `optmatch` and other matching approaches.
+
+## The optmatch workflow: The distance matrix
+
+Introduction to `optmatch` workflow. To minimize differences requires a matrix
+of those differences (in general terms, a matrix of distances between the
+treated and control units)
+
+```{r}
+tmp <- meddat$nhAboveHS
+names(tmp) <- rownames(meddat)
+absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
+absdist[1:3,1:3]
+abs(meddat$nhAboveHS[meddat$nhTrt==1][1] - meddat$nhAboveHS[meddat$nhTrt==0][1] )
+```
+
+## Do the match
+
+```{r}
+fm1 <- fullmatch(absdist,data=meddat)
+summary(fm1, min.controls=0, max.controls=Inf )
+table(meddat$nhTrt,fm1)
+```
+
+## Evaluate the matched design: Within set differences
+
+Look within sets:
+
+```{r}
+meddat$fm1 <- fm1
+rawmndiffs <- with(meddat, mean(nhAboveHS[nhTrt==1]) - mean(nhAboveHS[nhTrt==0]))
+setdiffs <- meddat %>% group_by(fm1) %>% summarize(mneddiffs =
+						   mean(nhAboveHS[nhTrt==1]) -
+						   mean(nhAboveHS[nhTrt==0]),
+					   mnAboveHS = mean(nhAboveHS),
+					   minAboveHS = min(nhAboveHS),
+					   maxAboveHS = max(nhAboveHS))
+
+setdiffs
+
+summary(setdiffs$mneddiffs)
+quantile(setdiffs$mneddiffs, seq(0,1,.1))
+
+```
+
+
+## Evaluate the matched design: Compare to a randomized experiment.
+
+```{r}
+xbHS2 <- xBalance(nhTrt~nhAboveHS,
+                  strata=list(nostrat=NULL,
+                              hsmatch=~fm1),
+                  data=meddat,report="all")
+xbHS2$results
+xbHS2$overall
+```
+
+## Summary of the Day
+
+ - We can assess the randomization of a randomized experiment easily using
+   covariates ($X$): compare
+   the observed treatment-vs-control differences in $X$ with those consistent
+   with no differences that would emerge from repeating the design.
+
+ - How to justify an adjustment strategy for an observational study? The
+   linear model adjustment strategy is difficult to justify. A stratification
+   based strategy is easier to justify, inspect, learn from. (We can compare
+   our stratification to a block randomized experiment, to a known design, a
+   known standard.)
+
+ - How to choose a stratification? We can do it by hand. Or we can delegate to
+   a computer (i.e. `optmatch`) --- we can think of it as an optimization
+   problem and ask the computer to optimize.
+
+## References
+
