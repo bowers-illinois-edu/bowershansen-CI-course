@@ -1,0 +1,292 @@
+---
+title: Statistical Adjustment and Assessment of Adjustment in Observational Studies --- Matched Stratification for One and Multiple Variables.
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2018 Session 2
+bibliography:
+ - refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    incremental: true
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+rm(list=ls())
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before)
+    return(options$size)
+})
+
+knit_hooks$set(plotdefault = function(before, options, envir) {
+    if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
+})
+
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='\\scriptsize',
+  out.width='.8\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA,
+  mysize=TRUE,
+  plotdefault=TRUE)
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(digits=4,
+	scipen=8,
+	width=132,
+	show.signif.stars=FALSE)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(RItools,lib.loc="./lib")
+library(optmatch)
+```
+## Today
+
+\begin{enumerate}
+  \item Agenda:  Need to adjustment $\rightarrow$ "fair comparison" $\rightarrow$
+  stratification $\rightarrow$ Evaluation/Assessment of the stratification;
+  How to do this with one variable. How to do this with more than one
+  variable.
+\item Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans04} \cite{ho:etal:07}
+\item Questions arising from the reading or assignments or life?
+\end{enumerate}
+
+# But first, review:
+
+## Review of Instrumental Variables
+
+Say you think you have an instrument: "rainfall", "economic liberalization as
+a result of NAFTA", "a housing/school lottery". You then need to convince
+yourself about:
+
+ - SUTVA
+ - "As if randomized"/Ignorability
+ - That the instrument detectibly changes the dose / The instrument is not
+   weak.
+ - That the instrument influences the outcome **only** via the dose
+   (Excludable)
+ - (for estimation of CACE/LATE) That there are no defiers / the instrument
+   changes the dose in one direction and the dose changes the outcome in one
+   direction.
+
+\begin{frame}
+\frametitle{Review of randomization assessment in a randomized experiment}
+
+\end{frame}
+
+How, in principle, might one do this?
+
+
+```{r echo=FALSE, cache=TRUE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+```
+
+## Review of what it means to "control for" in a linear regression model.
+
+Recall the Metrocable project: Did the Metrocable intervention decrease
+violence in those neighborhoods? We have Homicides per 1000 people in 2008 (`HomRate08`) as a function of Metrocable.
+
+```{r}
+meddat<- mutate(meddat, HomRate03=(HomCount2003/Pop2003)*1000,
+                HomRate08=(HomCount2008/Pop2008)*1000)
+
+lmRaw <- lm(HomRate08~nhTrt,data=meddat)
+coef(lmRaw)[["nhTrt"]]
+```
+
+What do we need to believe or know in order to imagine that we have done a good job adjusting for Proportion with more than HS Education below? (concerns about extrapolation, interpolation, linearity, influential points, parallel slopes)
+
+```{r}
+lmAdj1 <- lm(HomRate08 ~ nhTrt + nhAboveHS, data=meddat)
+coef(lmAdj1)["nhTrt"]
+```
+
+What about when we try to adjust for more than one variable? (+the curse of
+dimensionality)
+
+```{r}
+lmAdj2 <- lm(HomRate08 ~ nhTrt + nhAboveHS + nhRent, data=meddat)
+coef(lmAdj2)["nhTrt"]
+```
+
+
+## Another problem with the linear model: How to choose?
+
+Here are 10,000 regression models, each with a different way to adjust for
+between 1 and 4 of the variables below. Restricted to additive functional
+forms, no interaction effects, no smooth non-linearity (no $x^2$).
+
+```{r manyates, cache=TRUE}
+lmadjfn<-function(){
+	covs <- c("nhAboveHS","nhRent","nhMale","nhEmp")
+	ncovs <- sample(1:length(covs),1)
+	somecovs <- sample(covs,size=ncovs)
+	ncuts <- round(runif(ncovs,min=1,max=8))
+	theterms <- ifelse(ncuts==1,somecovs,
+			   paste("cut(",somecovs,",",ncuts,")",sep=""))
+	thefmla <- reformulate(c("nhTrt",theterms),response="HomRate08")
+	thelm <- lm(thefmla,data=meddat)
+	theate <- coef(thelm)[["nhTrt"]]
+	return(theate)
+}
+
+set.seed(12345)
+res <- replicate(10000,lmadjfn())
+```
+
+```{r}
+summary(res)
+```
+
+# Matching on one variable to create strata
+
+## The optmatch workflow: The distance matrix
+
+The goal of optmatch: collect observations into strata which minimize the
+within strata differences (calculate the absolute difference between treated and
+controls within strata, sum across strata, minimize this quantity).
+
+Start with a matrix of those differences (in general terms, a matrix of
+distances between the treated and control units)
+
+```{r}
+tmp <- meddat$nhAboveHS
+names(tmp) <- rownames(meddat)
+absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
+absdist[1:3,1:3]
+abs(meddat$nhAboveHS[meddat$nhTrt==1][1] - meddat$nhAboveHS[meddat$nhTrt==0][1] )
+```
+
+## Do the match
+
+We will talk in more detail later, for now, we merely use the software.
+
+```{r}
+fm1 <- fullmatch(absdist,data=meddat)
+summary(fm1, min.controls=0, max.controls=Inf )
+table(meddat$nhTrt,fm1)
+
+pm1 <- pairmatch(absdist,data=meddat)
+summary(pm1, min.controls=0, max.controls=Inf )
+table(meddat$nhTrt,pm1,exclude=c())
+```
+
+## Evaluate the design: Within set differences
+
+Look within sets:
+
+```{r}
+meddat$fm1 <- fm1
+meddat$pm1 <- pm1
+```
+
+```{r}
+library(gridExtra)
+bpfm1 <- ggplot(meddat,aes(x=fm1,y=nhAboveHS)) +
+	geom_boxplot() +
+	 stat_summary(fun.y=mean, geom="point", shape=20, size=3, color="red", fill="red")
+
+bporig <- ggplot(meddat,aes(y=nhAboveHS))+
+	 geom_boxplot()
+
+grid.arrange(bpfm1,bporig,ncol=2,layout_matrix=matrix(c(1,1,1,1,2),nrow=1))
+```
+
+## Evaluate the design: Within set differences
+
+
+```{r}
+rawmndiffs <- with(meddat, mean(nhAboveHS[nhTrt==1]) - mean(nhAboveHS[nhTrt==0]))
+setdiffsfm1 <- meddat %>% group_by(fm1) %>% summarize(mneddiffs =
+						   mean(nhAboveHS[nhTrt==1]) -
+						   mean(nhAboveHS[nhTrt==0]),
+					   mnAboveHS = mean(nhAboveHS),
+					   minAboveHS = min(nhAboveHS),
+					   maxAboveHS = max(nhAboveHS))
+
+setdiffsfm1
+#summary(setdiffs$mneddiffs)
+#quantile(setdiffs$mneddiffs, seq(0,1,.1))
+setdiffspm1 <- meddat %>% group_by(pm1) %>% summarize(mneddiffs =
+						   mean(nhAboveHS[nhTrt==1]) -
+						   mean(nhAboveHS[nhTrt==0]),
+					   mnAboveHS = mean(nhAboveHS),
+					   minAboveHS = min(nhAboveHS),
+					   maxAboveHS = max(nhAboveHS))
+
+setdiffspm1
+
+
+```
+
+## Evaluate the design: Compare to a randomized experiment.
+
+```{r}
+xbHS2 <- xBalance(nhTrt~nhAboveHS,
+                  strata=list(nostrat=NULL,
+                              fm = ~fm1,
+			      pm = ~pm1),
+                  data=meddat,report="all")
+xbHS2$results
+xbHS2$overall
+```
+
+# What about adjusting for more than one variable?
+
+
+## Introducing the idea of dimension reduction
+
+
+
+## Summary of the Day
+
+ - Statistical adjustment with linear regression models is hard to justify.
+ - Stratification via matching is easier to justify and assess (and describe).
+
+## References
+

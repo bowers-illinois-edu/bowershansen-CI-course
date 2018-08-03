@@ -279,9 +279,10 @@ xb1$overall
 
 The distribution of the $d^2$ statistic arises from the distribution of the d statistics --- for each draw from the set of treatment assignments we can collapse the $d$-statistics into one $d^2$. And so we can calculate the $p$-value for the $d^2$.
 
-```{r, out.width=".7\\textwidth"}
+```{r, out.width=".5\\textwidth"}
 plot(density(d2.dist))
 rug(d2.dist)
+abline(v=obs.d2)
 ```
 
 
@@ -326,11 +327,12 @@ mean(res <= .2)
 
 ## Does xBalance have a controlled false positive rate here?
 
+Ex. are fewer than 5% of the p-values less than .05?
 
 ```{r}
 plot(ecdf(res))
 abline(0,1)
-
+abline(v=c(.01,.05,.1))
 ```
 
 
@@ -367,15 +369,18 @@ d2pfn <- function(z,X){
 resdirect <- replicate(1000,d2pfn(z=acorn$z,X=acorn[,acorncovs]))
 ```
 
-```{r doresdirectparallel, cache=TRUE}
+```{r doresdirectparallel, eval=FALSE, cache=TRUE}
 library(parallel)
 resdirectlst <- mclapply(1:1000,function(i){ d2pfn(z=acorn$z,X=acorn[,acorncovs]) },mc.cores=detectCores())
 resdirect <- unlist(resdirectlst)
+save(resdirect,file="day9-resdirect.rda")
 ```
 
 ## Does the simulation based approach have a controlled false positive rate here?
 
-```{r}
+```{r lazyload}
+#lazyLoad("day9-AdjustmentBalance_cache/beamer/doresdirectparallel_db66496943cd0411d7a3438e68b7fde9")
+load("day9-resdirect.rda")
 summary(resdirect)
 mean(resdirect <= .05)
 mean(resdirect <= .2)
@@ -387,7 +392,7 @@ mean(resdirect <= .2)
 ```{r}
 plot(ecdf(resdirect))
 abline(0,1)
-
+abline(v=c(.01,.05,.1))
 ```
 
 # Did we control for enough?
@@ -512,6 +517,30 @@ text(c(0.111807,0.001629), c(1.871,2.204), labels=c("Treat","Control"),pos=1)
 text(c(.3,.5),c( coef(lm1)[1]+coef(lm1)[3]*.3 , coef(lm1)[1]+coef(lm1)[2]+coef(lm1)[3]*.5),
      labels=c("Control","Treat"))
 ```
+
+## Exactly what does this kind of adjustment do?
+
+Notice that I can get the same coefficient (the effect of Metrocable on
+Homicides adjusted for HS-Education in the neighborhood) either directly (as
+earlier) or via **residualization**:
+
+```{r}
+coef(lm1)["nhTrt"]
+eYX <- residuals(lm(HomRate08~nhAboveHS,data=meddat))
+eZX <- residuals(lm(nhTrt ~ nhAboveHS, data=meddat))
+lm1a <- lm(eYX~eZX)
+coef(lm1a)[2]
+```
+
+## Exactly what does this kind of adjustment do?
+
+So, how would you explain what it means to "control for HS-Education" here? 
+
+```{r}
+plot(eZX,eYX)
+```
+
+
 
 ## Did we adjust enough? 
 
