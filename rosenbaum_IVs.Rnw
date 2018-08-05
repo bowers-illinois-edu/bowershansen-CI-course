@@ -251,6 +251,8 @@ obs_z <- Omega[,sample(x = 1:ncol(Omega), size = 1)]
 obs_y <- obs_z * true_data$y_t + (1 - obs_z) * true_data$y_c
 obs_d <- obs_z * true_data$d_t + (1 - obs_z) * true_data$d_c
 
+cbind(obs_z, obs_d, obs_y)
+
 @
 
 The actual data that we observe based on the randomly selected assignment vector is as follows:
