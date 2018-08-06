@@ -414,7 +414,80 @@ Challenge: Improve the matched design. So far we have:
 plot(xb4)
 ```
 
-# Types of Matching
+
+# Matching Tricks of the Trade: Calipers, Exact Matching
+
+## Calipers
+
+The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we disallow comparisons which differ by more than 2 standard deviations on the propensity score.
+
+```{r}
+quantile(as.vector(psdist),seq(0,1,.1))
+psdistCal <- psdist + caliper(psdist,2)
+as.matrix(psdistCal)[5:10,5:10]
+```
+## Calipers
+
+The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we disallow comparisons which differ by more than 2 standard deviations on the propensity score.
+
+```{r}
+fmCal1 <- fullmatch(psdist+caliper(psdist,2),data=meddat,tol=.00001)
+summary(fmCal1,min.controls=0,max.controls=Inf)
+pmCal1 <- pairmatch(psdist+caliper(psdist,2),data=meddat, remove.unmatchables=TRUE)
+```
+
+## Calipers
+
+Another example: We may want to primarily match on mahalanobis distance but disallow any pairs with extreme propensity distance and/or extreme differences in baseline homicide rates (here using many covariates all together).
+
+
+```{r}
+mhdist <- match_on(balfmla,data=meddat,method="rank_mahalanobis")
+tmp <- meddat$HomRate03
+names(tmp) <- rownames(meddat)
+absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
+absdist[1:3,1:3]
+quantile(as.vector(absdist),seq(0,1,.1))
+distCal <- mhdist + caliper(psdist,2) + caliper(absdist,2)
+as.matrix(distCal)[5:10,5:10]
+```
+
+## Calipers
+
+```{r}
+fmCal2 <- fullmatch(distCal,data=meddat,tol=.00001)
+summary(fmCal2,min.controls=0,max.controls=Inf)
+```
+
+
+## Exact Matching
+
+We often have covariates that are categorical/nominal and on which we really care about strong balance. One approach to solve this problem is match **exactly** on one or more of such covariates. If `fullmatch` or `match_on` is going slow, this is also an approach to speed things up.
+
+```{r echo=FALSE}
+meddat$classLowHi <- ifelse(meddat$nhClass %in% c(2,3),"hi","lo")
+```
+
+```{r}
+dist2 <- mhdist + exactMatch(nhTrt~classLowHi,data=meddat)
+## or mhdist <- match_on(balfmla,within=exactMatch(nhTrt~classLowHi,data=meddat),data=meddat,method="rank_mahalanobis")
+## or fmEx1 <- fullmatch(update(balfmla,.~.+strata(classLowHi)),data=meddat,method="rank_mahalanobis")
+fmEx1 <- fullmatch(dist2,data=meddat,tol=.00001)
+summary(fmEx1,min.controls=0,max.controls=Inf)
+print(fmEx1,grouped=T)
+```
+## Exact Matching
+
+\scriptsize
+```{r}
+ftable(Class=meddat$classLowHi,Trt=meddat$nhTrt,fmEx1,col.vars=c("Class","Trt"))
+```
+
+
+# Types of Matching: Optimal, Full vs Greedy
+
+
+# Information and Balance: Why would we prefer more pairs and fewer lopsided sets? 
 
 
 
