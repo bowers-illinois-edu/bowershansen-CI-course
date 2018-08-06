@@ -1,7 +1,7 @@
 ---
-title: "Assignment 3 --- Investigation of an Existing Study --- ICPSR Causal Inference 2017"
+title: "Assignment 3 --- Investigation of an Existing Study --- ICPSR Causal Inference 2018"
 author: "Jake Bowers, Ben Hansen, Tom Leavitt"
-date: "Due 16 August 2017"
+date: "7 August 2018"
 output:
   pdf_document: default
   html_document: default
@@ -10,12 +10,9 @@ geometry: margin=1in
 fontsize: 11pt
 ---
 
+Due 14 August 2018.
 
-<!-- This marks a comment block.
-compile this file with pandoc -s -S assignment3.md --to latex --from markdown --output assignment3.tex --natbib ; latexmk -pdflatex='xelatex --shell-escape' -pdf assignment3.tex
--- -->
-
-We challenge you to find an existing study (your own or one from someone else, published or not) and to replicate one of the key analyses in that study using tools learned in this class. For example, you might find a study using a linear model for adjustment (i.e. "controlling for") and you might redo that analysis using matching. And/or you might find a study where you could add or apply permutation-based testing. If you would like to do something other than matching and/or permutation-based testing, let us know.
+We challenge you to find an existing study (your own or one from someone else, published or not) and to replicate one of the key analyses in that study using tools learned in this class. For example, you might find a study using a linear model for adjustment (i.e. "controlling for") and you might redo that analysis using matching. And/or you might find a study where you could add or apply permutation-based testing (perhaps you are concerned about the false positive error rate of a study with a weak instrument, a small number of clusters, a skewed outcome, or a small sample size). If you would like to do something other than matching and/or permutation-based testing, let us know.
 
 Data and/or study ideas:
 
