@@ -1,0 +1,368 @@
+---
+title: Matching on more than one covariate
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2018 Session 2
+bibliography:
+ - refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+rm(list=ls())
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before)
+    return(options$size)
+})
+
+knit_hooks$set(plotdefault = function(before, options, envir) {
+    if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
+})
+
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='\\scriptsize',
+  out.width='.8\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA,
+  mysize=TRUE,
+  plotdefault=TRUE)
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(digits=4,
+	scipen=8,
+	width=132,
+	show.signif.stars=FALSE)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(RItools,lib.loc="./lib")
+library(optmatch)
+```
+
+## Today
+
+\begin{enumerate}
+  \item Agenda:  Need to adjustment $\rightarrow$ "fair comparison" $\rightarrow$
+  stratification $\rightarrow$ Evaluation/Assessment of the stratification;
+  How to do this with one variable. How to do this with more than one
+  variable.
+\item Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans04} \cite{ho:etal:07}
+\item Questions arising from the reading or assignments or life?
+\end{enumerate}
+
+# But first, review:
+
+
+## What have we done so far?
+
+
+ - The making the case for adequate adjustment in observational studies
+   - The difficulties of making this case using the linear model
+   - The potential for making this case for one or more variables using
+     stratification.
+   - Using optimal, full matching technology to make and
+     evaluate the stratifications.
+
+```{r echo=FALSE, cache=TRUE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+```
+#  Matching on Many Covariates: Using Mahalnobis Distance
+
+
+## Dimension reduction using the Mahalanobis Distance
+
+The general idea: dimension reduction. When we convert many columns into one column we reduce the dimensions of the dataset (to one column).
+
+
+```{r}
+X <- meddat[,c("nhAboveHS","nhPopD")]
+plot(meddat$nhAboveHS,meddat$nhPopD,xlim=c(-.3,.6),ylim=c(50,700))
+```
+
+
+## Dimension reduction using the Mahalanobis Distance
+
+First, let's look at Euclidean distance: $\sqrt{ (x_1 - x_2)^2 + (y_1 - y_2)^2 }$
+
+```{r echo=FALSE, out.width=".8\\textwidth"}
+par(mgp=c(1.25,.5,0),oma=rep(0,4),mar=c(3,3,0,0))
+plot(meddat$nhAboveHS,meddat$nhPopD,xlim=c(-.3,.6),ylim=c(50,700))
+points(mean(X[,1]),mean(X[,2]),pch=19,cex=1)
+arrows(mean(X[,1]),mean(X[,2]),X["407",1],X["407",2])
+text(.4,200,label=round(dist(rbind(colMeans(X),X["407",])),2))
+```
+
+## Dimension reduction using the Mahalanobis Distance
+
+First, let's look at Euclidean distance: $\sqrt{ (x_1 - x_2)^2 + (y_1 - y_2)^2 }$
+
+```{r echo=FALSE, out.width=".5\\textwidth"}
+par(mgp=c(1.25,.5,0),oma=rep(0,4),mar=c(3,3,0,0))
+plot(meddat$nhAboveHS,meddat$nhPopD,xlim=c(-.3,.6),ylim=c(50,700))
+points(mean(X[,1]),mean(X[,2]),pch=19,cex=1)
+arrows(mean(X[,1]),mean(X[,2]),X["407",1],X["407",2])
+text(.4,200,label=round(dist(rbind(colMeans(X),X["407",])),2))
+```
+
+```{r}
+tmp <- rbind(colMeans(X),X["407",])
+tmp
+sqrt( (tmp[1,1] - tmp[2,1])^2 + (tmp[1,2]-tmp[2,2])^2 )
+```
+
+## Dimension reduction using the Mahalanobis Distance
+
+Now the Euclidean distance (on a standardized scale):$\sqrt{ (x_1/sd(x_1) - x_2/sd(x_2))^2 + (y_1/sd(y_1) - y_2/sd(y_2))^2 }$. 
+
+```{r echo=FALSE}
+Xsd <-scale(X) 
+apply(Xsd,2,sd)
+apply(Xsd,2,mean)
+plot(Xsd[,1],Xsd[,2])
+points(mean(Xsd[,1]),mean(Xsd[,2]),pch=19,cex=1)
+arrows(mean(Xsd[,1]),mean(Xsd[,2]),Xsd["407",1],Xsd["407",2])
+text(2,-1.2,label=round(dist(rbind(colMeans(Xsd),Xsd["407",])),2))
+```
+
+
+## Dimension reduction using the Mahalanobis Distance
+
+The Mahalanobis distance \citep{mahalanobis1930test}, avoids the scale problem in the euclidean distance.^[For more see <https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance>] $dist_M =  \sqrt{ (\bm{x} - \bm{\bar{x}})^T \bm{M}^{-1} (\bm{y} - \bm{\bar{y}}) }$ where $\bm{M}=\begin{bmatrix} var(x) & cov(x,y)  \\ cov(x,y) & var(y) \end{bmatrix}$
+
+
+```{r echo=FALSE}
+library(chemometrics)
+par(mgp=c(1.5,.5,0),oma=rep(0,4),mar=c(3,3,0,0))
+mh <- mahalanobis(X,center=colMeans(X),cov=cov(X))
+drawMahal(X,center=colMeans(X),covariance=cov(X),
+          quantile = c(0.975, 0.75, 0.5, 0.25))
+abline(v=mean(meddat$nhAboveHS),h=mean(meddat$nhPopD))
+pts <-c("401","407","411","202")
+arrows(rep(mean(X[,1]),4),rep(mean(X[,2]),4),X[pts,1],X[pts,2])
+text(X[pts,1],X[pts,2],labels=round(mh[pts],2),pos=1)
+```
+
+
+```{r echo=FALSE}
+Xscaled <- scale(X)
+par(mgp=c(1.5,.5,0),oma=rep(0,4),mar=c(3,3,0,0))
+mhScaled <- mahalanobis(Xscaled,center=colMeans(Xscaled),cov=cov(Xscaled))
+drawMahal(Xscaled,center=colMeans(Xscaled),covariance=cov(Xscaled),
+          quantile = c(0.975, 0.75, 0.5, 0.25))
+abline(v=mean(meddat$nhAboveHS),h=mean(meddat$nhPopD))
+pts <-c("401","407","411","202")
+arrows(rep(mean(Xscaled[,1]),4),rep(mean(Xscaled[,2]),4),Xscaled[pts,1],Xscaled[pts,2])
+text(Xscaled[pts,1],Xscaled[pts,2],labels=round(mhScaled[pts],2),pos=1)
+```
+
+```{r eval=FALSE,echo=FALSE}
+par(mfrow=c(2,1),mgp=c(1.5,.5,0),oma=rep(0,4),mar=c(3,3,0,0),pty="s")
+
+drawMahal(X,center=colMeans(X),covariance=cov(X),
+          quantile = c(0.975, 0.75, 0.5, 0.25))
+abline(v=mean(meddat$nhAboveHS),h=mean(meddat$nhPopD))
+arrows(rep(mean(X[,1]),4),rep(mean(X[,2]),4),X[pts,1],X[pts,2])
+text(X[pts,1],X[pts,2],labels=round(mh[pts],2),pos=1)
+
+
+drawMahal(Xscaled,center=colMeans(Xscaled),covariance=cov(Xscaled),
+          quantile = c(0.975, 0.75, 0.5, 0.25))
+abline(v=mean(meddat$nhAboveHS),h=mean(meddat$nhPopD))
+arrows(rep(mean(Xscaled[,1]),4),rep(mean(Xscaled[,2]),4),Xscaled[pts,1],Xscaled[pts,2])
+text(Xscaled[pts,1],Xscaled[pts,2],labels=round(mhScaled[pts],2),pos=1)
+```
+
+
+
+## Dimension reduction using the Mahalanobis Distance
+
+The Mahalanobis distance \citep{mahalanobis1930test}, avoids the scale problem in the euclidean distance.^[For more see <https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance> Also see <http://mccormickml.com/2014/07/22/mahalanobis-distance/>] $dist_M =  \sqrt{ (\bm{x} - \bm{\bar{x}})^T \bm{M}^{-1} (\bm{y} - \bm{\bar{y}}) }$ where $\bm{M}=\begin{bmatrix} var(x) & cov(x,y)  \\ cov(x,y) & var(y) \end{bmatrix}$
+
+
+```{r}
+X[1:4,]
+apply(X,2,sd)
+mns<-apply(X,2,mean)
+Xsd <- scale(X)
+Xsd[1:4,]
+apply(Xsd,2,sd)
+apply(Xsd,2, mean)
+mdistX <- mahalanobis(X,center=mns,cov=cov(X))
+mdistX["407"]
+tmpXsd<-rbind(c(0,0),Xsd["407",])
+tmpX<-rbind(mns,X["407",])
+covXsd <- cov(Xsd)
+mdisttmp1 <- mahalanobis(tmpX,center=mns,cov=cov(X))
+mdisttmp2 <- mahalanobis(tmpXsd,center=c(0,0),cov=cov(Xsd))
+mdisttmp1
+mdisttmp2
+```
+
+## Dimension reduction using the Mahalanobis distance
+
+A more extreme example. The contour lines show points with the same
+Mahalanobis distance.
+
+```{r}
+library(mvtnorm)
+set.seed(12345)
+newX <- rmvnorm(n=45,mean=mns,sigma=matrix(c(.03,-7,-7,14375),2,2))
+row.names(newX) <- row.names(X)
+#plot(newX)
+cor(newX)
+mhnew <- mahalanobis(newX,center=colMeans(newX),cov=cov(newX))
+drawMahal(newX,center=colMeans(newX),covariance=cov(newX),
+          quantile = c(0.975, 0.75, 0.5, 0.25))
+
+```
+
+
+
+## Matching on the Mahalanobis Distance
+
+Here using the rank based Mahalanobis distance following DOS Chap. 8 (but comparing to the ordinary version).
+```{r}
+mhdistRank <- match_on(nhTrt~nhPopD+nhAboveHS,data=meddat,method="rank_mahalanobis")
+mhdistRank[1:3,1:3]
+mhdist <- match_on(nhTrt~nhPopD+nhAboveHS,data=meddat)
+mhdist[1:3,1:3]
+mhdist[,"407"]
+```
+
+```{r}
+fmMhRank <- fullmatch(mhdistRank,data=meddat)
+summary(fmMhRank,min.controls=0,max.controls=Inf)
+fmMh <- fullmatch(mhdist,data=meddat)
+summary(fmMh,min.controls=0,max.controls=Inf)
+```
+
+
+
+#  Matching on Many Covariates: Using Propensity Scores
+
+## Matching on the propensity score
+
+**Make the score**^[Note that we will be using `brglm` or `bayesglm` in the
+future because of logit separation problems when the number of covariates
+increases.]
+
+```{r}
+theglm <- glm(nhTrt~nhPopD+nhAboveHS,data=meddat,family=binomial(link="logit"))
+thepscore <- theglm$linear.predictor
+thepscore01 <- predict(theglm,type="response")
+````
+
+We tend to match on the linear predictor rather than the version required to
+range only between 0 and 1.
+
+```{r echo=FALSE, out.width=".7\\textwidth"}
+par(mfrow=c(1,2),oma=rep(0,4),mar=c(3,3,2,0),mgp=c(1.5,.5,0))
+boxplot(split(thepscore,meddat$nhTrt),main="Linear Predictor (XB)")
+stripchart(split(thepscore,meddat$nhTrt),add=TRUE,vertical=TRUE)
+
+boxplot(split(thepscore01,meddat$nhTrt),main="Inverse Link Function (g^-1(XB)")
+stripchart(split(thepscore01,meddat$nhTrt),add=TRUE,vertical=TRUE)
+```
+
+## Matching on the propensity score
+
+```{r}
+psdist <- match_on(theglm,data=meddat)
+psdist[1:4,1:4]
+fmPs <- fullmatch(psdist,data=meddat)
+summary(fmPs,min.controls=0,max.controls=Inf)
+```
+
+## Can you do better?
+
+**Challenge:** Improve the matched design by adding covariates or functions of
+covariates using either or both of the propensity score or mahalanobis distance
+(rank- or not-rank based). So far we have:
+
+```{r}
+thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+balfmla<-reformulate(thecovs,response="nhTrt")
+xb4 <- balanceTest(update(balfmla,.~.+strata(fmMh)+strata(fmPs)),
+                   data=meddat,report="all",p.adjust.method="none")
+xb4$overall[,]
+```
+
+## Can you do better?
+
+Challenge: Improve the matched design. So far we have:
+
+```{r}
+plot(xb4)
+```
+
+## Summary:
+
+What do you think?
+
+ - Statistical adjustment with linear regression models is hard to justify.
+ - Stratification via matching is easier to justify and assess (and describe).
+ - Matching solves the problem of making comparisons that are transparent
+   (Question: "Did you adjust enough for X?" Ans: "Here is some evidence about
+   how well I did.")
+ - You can adjust for one variable or more than one (if more than one, you
+   need to choose one or more methods for reducing many columns to one
+   column).
+ - The workflow involves the creation of a distance matrix, asking an
+   algorithm to find the best configuration of sets that minimize the
+   distances within set, and checking balance. (Eventually, it will also be
+   concerned about the effective sample size.)
+  - Next: We will get more into the
+   differences between full matching, optimal matching, greedy matching,
+   matching with and without replacement, etc.. next week. (Also: handling
+   missing data, calipers and other methods of improving design).
+  - Next: How to estimate causal effects and test causal hypotheses with a
+    matched design.
+
+
+
+## References
