@@ -20,7 +20,7 @@ $endif$
 \usepackage{presentation}
 \usepackage{notation}
 \usepackage{caption}
-\usepackage{amssymb,amsmath}
+\usepackage{amssymb,amsmath,bm}
 \usepackage{tikz}
 \usepackage{textpos}
 \usepackage{ifxetex,ifluatex}
