@@ -312,8 +312,28 @@ meddat$classLowHi <- ifelse(meddat$nhClass %in% c(2,3),"hi","lo")
 dist2 <- mhdist + exactMatch(nhTrt~classLowHi,data=meddat)
 ## or mhdist <- match_on(balfmla,within=exactMatch(nhTrt~classLowHi,data=meddat),data=meddat,method="rank_mahalanobis")
 ## or fmEx1 <- fullmatch(update(balfmla,.~.+strata(classLowHi)),data=meddat,method="rank_mahalanobis")
-fmEx1 <- fullmatch(dist2,data=meddat,tol=.00001)
+fmEx1 <- fullmatch(dist2 + caliper(psdist,3),data=meddat,tol=.00001)
 summary(fmEx1,min.controls=0,max.controls=Inf)
+
+xbEx1 <-
+	balanceTest(update(balfmla,.~.+strata(fmEx1)),data=meddat,report="all")
+
+
+xbEx1
+
+meddat$fmEx1 <- fmEx1
+
+setdiffsHR <- meddat %>% filter(!is.na(fmEx1)) %>% group_by(fmEx1) %>% summarize(mneddiffs =
+						       mean(HomRate08[nhTrt==1]) -
+						       mean(HomRate08[nhTrt==0]),
+					       nb = n(),
+					       pr = mean(nhTrt==1),
+					       nTb = sum(pr),
+					       nCb = nb - nTb,
+					       hwt = ( 2*( nCb * nTb ) / (nTb + nCb)))
+
+
+setdiffsHR
 ```
 
 ## Exact Matching
@@ -340,7 +360,7 @@ table(round(meddat$nhAboveHS,4),meddat$nhTrt,exclude=c())
 tmpHS <- meddat$nhAboveHS
 names(tmpHS) <- rownames(meddat)
 absdistHS <- match_on(tmpHS, z = meddat$nhTrt,data=meddat)
-absHSMatch <- fullmatch(absdistHS,data=meddat,tol=.000001)
+absHSMatch <- fullmatch(absdistHS,data=meddat,tol=.0000001)
 summary(absHSMatch,min.controls=0,max.controls=Inf)
 meddat$absHSMatch <- absHSMatch
 setdiffsHS <- meddat %>% group_by(absHSMatch) %>% summarize(mneddiffs =
