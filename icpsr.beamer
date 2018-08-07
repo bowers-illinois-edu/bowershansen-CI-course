@@ -224,7 +224,7 @@ $if(strikeout)$
 \pdfstringdefDisableCommands{\renewcommand{\sout}{}}
 $endif$
 
-\setlength{\emergencystretch}{3em}  % prevent overfull lines
+%\setlength{\emergencystretch}{3em}  % prevent overfull lines
 
 $if(numbersections)$
 $else$
@@ -260,11 +260,29 @@ $endif$
 %% \begin{tikzpicture}[remember picture,overlay]
 %% \node[anchor=south east,yshift=6pt,xshift=-3pt] at (current page.south east) {\includegraphics[height=0.5cm]{SBSTLightBulb}};
 %% \end{tikzpicture}}
-%% 
+%%
 %% \addtobeamertemplate{title page}{}{%
 %% \begin{tikzpicture}[remember picture,overlay]
 %% \node[anchor=south east,yshift=5pt] at (current page.south east) {\includegraphics[height=2cm]{SBSTLogo}};
 %% \end{tikzpicture}}
+
+
+%%%%%%%%%
+%% from https://stackoverflow.com/questions/35734525/reduce-space-between-code-chunks-and-code-output-in-rmarkdown-beamer-presentatio
+% make code-output smaller
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{fontsize=\tiny,commandchars=\\\{\}}
+
+% make console-output smaller:
+\makeatletter
+\def\verbatim{\tiny\@verbatim \frenchspacing\@vobeyspaces \@xverbatim}
+\makeatother
+
+\setlength{\OuterFrameSep}{-1pt}
+\makeatletter
+\preto{\@verbatim}{\topsep=-1pt \partopsep=-1pt }
+\makeatother
+%%%%%%%%%%
+
 
 \begin{document}
 $if(title)$

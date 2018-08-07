@@ -37,12 +37,12 @@ require(knitr)
 ## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
 
 knitr::knit_hooks$set(mysize = function(before, options, envir) {
-  if (before)
-    return(options$size)
+			      if (before)
+				      return(options$size)
 })
 
 knit_hooks$set(plotdefault = function(before, options, envir) {
-    if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
+		       if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
 })
 
 opts_chunk$set(
@@ -100,52 +100,124 @@ library(mvtnorm)
 \begin{frame}[fragile]
 \frametitle{What have we done so far?}
 
+The problem of attrition in randomized studies (simple experiments,
+encouragement designs, etc.)
+
+\medskip
+
 Making the case for adequate adjustment in observational studies
 
 \begin{itemize}
-   \item The potential for making this case for one or more variables using
-     stratification.
-   \item Using optimal, full matching technology to make and evaluate
-     stratifications.
-   \item Mahalanobis distance to compare units on $\bm{X}$.
-   \item The propensity score to compare units on $\hat{Z} \leftarrow \bm{X}$
-     (recall the problem)
-     \end{itemize}
-
-
-\begin{tikzcd}
-     Z \arrow[r] & Y \\
-     X \arrow[u] \arrow[ru]
-\end{tikzcd}
+\item The potential for making this case for one or more variables using
+stratification.
+\item Using optimal, full matching technology to make and evaluate
+stratifications.
+\item Mahalanobis distance to compare units on $\bm{x}$.
+\item The propensity score to compare units on $\hat{Z} \leftarrow \bm{x}$
+\end{itemize}
 
 \end{frame}
+
+#  Matching on Many Covariates: Using Propensity Scores
+
+\begin{frame}
+\frametitle{The propensity score}
+
+Given covariates $\mathbf{x} (=(x_1, \ldots, x_k))$, and a
+treatment variable $Z$, $Z(u) \in \{0, 1\}$,  $\PP (Z \vert \mathbf{x})$ is known as the (true) \textbf{propensity score} (PS).
+$$ \phi( \mathbf{x} ) \equiv \log\left( \PP (Z=1 \vert \mathbf{x})/\PP (Z=0 \vert \mathbf{x}) \right)$$
+is also known as the PS.  In practice, one works
+with an estimated PS, $\hat{\PP} (Z \vert \mathbf{x})$ or
+$\hat{\phi}(\mathbf{x})$.
+
+Theoretically, propensity-score strata or matched sets both
+\begin{enumerate}
+\item reduce extrapolation; and
+\item balance each of $x_1, \ldots, x_k$.
+\end{enumerate}
+They do this by making the comparison more "experiment-like", at least in terms of $x_1, \ldots, x_k$.
+
+Theory \citep{rosrub83} also tells us that in the absence of hidden bias, such a stratification
+item supports unbiased estimation of treatment effects.
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Propensity scoring in practice}
+
+\begin{columns}
+\column{.65\linewidth}
+\begin{itemize}
+\item Fitted propensity scores help identify extrapolation.
+\item In practice, stratification on $\hat{\phi}(\mathbf{x})$
+helps balance each of $x_1, \ldots, x_k$.
+\item There are \emph{lots of cases} in which adjustment with the propensity
+score fails to generate estimates that square with those of
+randomized studies.
+\end{itemize}
+\column{.35\linewidth} \igrphx{meddatpsplot}
+\end{columns}
+
+\begin{itemize}
+\item There are various reasons for this, starting with: lots of observational studies that
+don't measure quite enough $x$es.
+\item (Propensity scores address bias on measured variables, not
+unmeasured ones.)  \textit{hidden bias}.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{More intuition about the propensity score}
+
+A propensity score is the output of a function of covariates as they relate to $Z$ (the "treatment" or "intervention"). Why reduce the dimension of $\bm{x}$ in this way rather than, say, using Mahalanobis distance?
+
+\medskip
+
+Recall that an experiment breaks the relationship between $Z$ and $\bm{x}=\{ x_1,x_2,\ldots \}$ but not between $\bm{x}$ and $Y$ or $y_1,y_0$.
+
+
+
+\begin{tikzcd}[column sep=small]
+  Z  \arrow[from=1-1,to=1-3] &                               & Y \\
+  &   \bm{x} \arrow[from=2-2,to=1-1, "\text{0 if Z rand}"] \arrow[from=2-2,to=1-3] &
+\end{tikzcd}
+
+Making strata of units who are similar on the propensity score reduces (or removes)
+the relationship between $Z$ and the relevant $\bm{x}$ within strata (either the
+units have similar values for $\bm{x}$ or the particular $x$s do not have a
+strong (linear, additive) relationship with $Z$).
+
+\end{frame}
+
 
 ```{r echo=FALSE, cache=TRUE}
 load(url("http://jakebowers.org/Data/meddat.rda"))
 meddat<- mutate(meddat,
 		HomRate03=(HomCount2003/Pop2003)*1000,
-                HomRate08=(HomCount2008/Pop2008)*1000)
+		HomRate08=(HomCount2008/Pop2008)*1000)
 row.names(meddat) <- meddat$nh
 ```
 
-#  Matching on Many Covariates: Using Propensity Scores
+## Matching on the propensity score
+
+Common practice is to use logistic regression to make the scores. (We will be
+using something other than logistic regression in the future because of
+separation problems / overfitting when the number of covariates increases
+relative to sample size.)
+
+```{r}
+theglm <- glm(nhTrt~nhPopD+nhAboveHS,data=meddat,family=binomial(link='logit'))
+thepscore <- theglm$linear.predictor
+thepscore01 <- predict(theglm,type='response')
+```
+
 
 ## Matching on the propensity score
 
-**Make the score**^[\footnotesize{Note that we will be using `brglm` or `bayesglm` in the
-future because of logit separation problems when the number of covariates
-increases.}]
+We tend to match on the linear predictor.
 
-```{r}
-theglm <- glm(nhTrt~nhPopD+nhAboveHS,data=meddat,family=binomial(link="logit"))
-thepscore <- theglm$linear.predictor
-thepscore01 <- predict(theglm,type="response")
-````
-
-We tend to match on the linear predictor rather than the version required to
-range only between 0 and 1.
-
-```{r echo=FALSE, out.width=".7\\textwidth"}
+```{r echo=FALSE, out.width=".6\\textwidth"}
 par(mfrow=c(1,2),oma=rep(0,4),mar=c(3,3,2,0),mgp=c(1.5,.5,0))
 boxplot(split(thepscore,meddat$nhTrt),main="Linear Predictor (XB)")
 stripchart(split(thepscore,meddat$nhTrt),add=TRUE,vertical=TRUE)
@@ -165,7 +237,9 @@ summary(fmPs,min.controls=0,max.controls=Inf)
 
 ## Matching on the propensity score
 
-Optmatch creates a scaled propensity score distance by default:
+Optmatch creates a scaled propensity score distance by default (scaling the
+absolute distance by an outlier-resistent measure of variability (the mean
+absolute deviation, or `mad`).
 
 ```{r}
 simpdist <- outer(thepscore,thepscore,function(x,y){ abs(x-y) })
@@ -177,24 +251,11 @@ psdist["101",c("401","402","403")]
 ```
 
 
-## Can you do better?
-
-**Challenge:** Improve the matched design by adding covariates or functions of
-covariates using either or both of the propensity score or mahalanobis distance
-(rank- or not-rank based). So far we have:
-
-```{r}
-meddat$thepscore <- meddat$thepscore
-thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03","thepscore"))
-balfmla<-reformulate(thecovs,response="nhTrt")
-```
-
-
 # Matching Tricks of the Trade: Calipers, Exact Matching
 
 ## Calipers
 
-The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we disallow comparisons which differ by more than 2 standard deviations on the propensity score.
+The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can also implement penalties by hand by directly setting elements of the matrices to be `Inf`. Or you can implement penalties by just inflating the size of different distance matrix entries.] Here, for example, we disallow comparisons which differ by more than 2 standard deviations on the propensity score.
 
 ```{r}
 quantile(as.vector(psdist),seq(0,1,.1))
@@ -213,17 +274,19 @@ pmCal1 <- pairmatch(psdist+caliper(psdist,2),data=meddat, remove.unmatchables=TR
 
 ## Calipers
 
-Another example: We may want to primarily match on mahalanobis distance but disallow any pairs with extreme propensity distance and/or extreme differences in baseline homicide rates (here using many covariates all together).
-
+Another example: We may want to primarily match on mahalanobis distance but
+disallow any pairs with extreme propensity distance and/or extreme differences
+in baseline homicide rates (here using many covariates all together).
 
 ```{r}
+thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+balfmla<-reformulate(thecovs,response="nhTrt")
 mhdist <- match_on(balfmla,data=meddat,method="rank_mahalanobis")
-
 tmpHom03 <- meddat$HomRate03
 names(tmpHom03) <- rownames(meddat)
 absdistHom03 <- match_on(tmpHom03, z = meddat$nhTrt,data=meddat)
-absdistHom03[1:3,1:3]
 quantile(as.vector(absdistHom03),seq(0,1,.1))
+## Apply the calipers to the distance matrix
 distCal <- mhdist + caliper(psdist,2) + caliper(absdistHom03,2)
 as.matrix(distCal)[5:10,5:10]
 ```
@@ -231,6 +294,7 @@ as.matrix(distCal)[5:10,5:10]
 ## Calipers
 
 ```{r}
+as.matrix(distCal)[5:10,5:10]
 fmCal2 <- fullmatch(distCal,data=meddat,tol=.00001)
 summary(fmCal2,min.controls=0,max.controls=Inf)
 ```
@@ -250,6 +314,11 @@ dist2 <- mhdist + exactMatch(nhTrt~classLowHi,data=meddat)
 ## or fmEx1 <- fullmatch(update(balfmla,.~.+strata(classLowHi)),data=meddat,method="rank_mahalanobis")
 fmEx1 <- fullmatch(dist2,data=meddat,tol=.00001)
 summary(fmEx1,min.controls=0,max.controls=Inf)
+```
+
+## Exact Matching
+
+```{r}
 print(fmEx1,grouped=T)
 ```
 ## Exact Matching
@@ -261,24 +330,16 @@ ftable(Class=meddat$classLowHi,Trt=meddat$nhTrt,fmEx1,col.vars=c("Class","Trt"))
 
 ## Back to matching on a scalar
 
+Why would matching on a scalar like `nhAboveHS` yield so many sets?
+
 ```{r}
+table(round(meddat$nhAboveHS,4),meddat$nhTrt,exclude=c())
+```
 
-absHomMatch <- fullmatch(absdistHom03,data=meddat)
-meddat$absHomMatch <- absHomMatch
-setdiffsHM <- meddat %>% group_by(absHomMatch) %>% summarize(mneddiffs =
-						   mean(HomRate03[nhTrt==1]) -
-						   mean(HomRate03[nhTrt==0]),
-					   mnHomRate03 = mean(HomRate03),
-					   minHomRate03 = min(HomRate03),
-					   maxHomRate03 = max(HomRate03))
-
-setdiffsHM
-
-
+```{r}
 tmpHS <- meddat$nhAboveHS
 names(tmpHS) <- rownames(meddat)
 absdistHS <- match_on(tmpHS, z = meddat$nhTrt,data=meddat)
-
 absHSMatch <- fullmatch(absdistHS,data=meddat,tol=.000001)
 summary(absHSMatch,min.controls=0,max.controls=Inf)
 meddat$absHSMatch <- absHSMatch
@@ -291,15 +352,349 @@ setdiffsHS <- meddat %>% group_by(absHSMatch) %>% summarize(mneddiffs =
 					   setsize=n())
 
 setdiffsHS
-
-
-table(round(meddat$nhAboveHS,4),meddat$nhTrt,exclude=c())
-
-
 ```
 
+## Back to matching on a scalar
 
-# Types of Matching: Optimal, Full vs Greedy
+These sets make sense because the individual neighborhoods have different
+values for baseline homicide rate.
+
+```{r}
+absHomMatch <- fullmatch(absdistHom03,data=meddat)
+meddat$absHomMatch <- absHomMatch
+setdiffsHM <- meddat %>% group_by(absHomMatch) %>% summarize(mneddiffs =
+						   mean(HomRate03[nhTrt==1]) -
+						   mean(HomRate03[nhTrt==0]),
+					   mnHomRate03 = mean(HomRate03),
+					   minHomRate03 = min(HomRate03),
+					   maxHomRate03 = max(HomRate03))
+
+setdiffsHM
+```
+
+# Major Matching modes
+
+##  Optimal (communitarian) vs greedy (individualistic) matching
+
+Compare the greedy to optimal matched designs:
+
+\begin{center}
+    \begin{tabular}{l|cccc}
+      & \multicolumn{4}{c}{Illustrator} \\
+Writer & Mo& John & Terry  & Pat \\ \hline
+Ben    & 0 & 1 & 1 & 10 \\
+Jake   & 10& 0 & 10 & 10 \\
+Tom    &  1& 1 & 20 & $\infty$ \\ \hline
+    \end{tabular}
+  \end{center}
+
+```{r results="hide", warnings=FALSE, messages=FALSE}
+bookmat <- matrix(c(0,1,1,10,10,0,10,10,1,1,20,Inf),nrow=3,byrow=TRUE)
+dimnames(bookmat) <- list(c("Ben","Jake","Tom"),c("Mo","John","Terry","Pat"))
+fullmatch(bookmat)
+```
+
+\only<2->{ Greedy match without replacement has mean distance (0+0+20)/3=6.67. The optimal
+match keeps all the obs, and has mean distance (1+0+1)/3=.67. }
+
+
+\note{
+*Greedy:* Ben-Mo (0) , Jake-John (0), Tom-Terry (20)
+*Optimal:* Ben-Terry (1), Jake-John (0), Tom-Mo (1)
+}
+
+## Matching with and without replacement
+*Example*: Costs of nuclear plants. When expanding, is it cheaper to build on the site of an existing plant?
+
+\begin{columns}
+\column{.5\textwidth}
+\begin{center}
+  \igrphx[width=.5\textwidth]{coxSnell}
+\end{center}
+
+\column{.5\textwidth}
+  \igrphx[width=\textwidth]{Nuclear_plant_at_Grafenrheinfeld}
+\end{columns}
+
+\note{This is a \textit{prospective} design.  Explain.
+
+(Presentation version has Nuclear plant image on 2nd overlay)
+}
+
+
+## New vs refurbished nuclear plants
+\note{
+  \begin{itemize}
+  \item This is what many understand by matching.  [Greedy pair match follows.]
+  \item Sometimes matching means  ``with-replacement'' matching. We'll permit that too, but in a structured way, and keeping track of how many replacements. 
+  \item Why keep track of the replacements?  --B/c they affect standard errors of the matched comparison.  (``Effective sample size'' to be introduced a few slides later.)
+  \end{itemize}
+}
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:53 2013
+\begin{tabular}{lr}
+  \hline
+ & capacity \\ 
+  \hline
+A & {660} {\mlpnode{NA}} \\ 
+  B & {660} {\mlpnode{NB}} \\ 
+  C & {420} {\mlpnode{NC}} \\ 
+  D & {130} {\mlpnode{ND}} \\ 
+  E & {650} {\mlpnode{NE}} \\ 
+  F & {430} {\mlpnode{NF}} \\ 
+  G & {420} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+{\footnotesize  "capacity" is net capacity of the power plant, in MWe above
+400.
+
+\only<9->{\alert{This is matching "without replacement."}}
+\only<10->{\alert{Contrast with matching "with replacement."}}
+}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:53 2013
+\begin{tabular}{lr}
+  \hline
+ & capacity \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & 290 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & 660 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & 660 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & 110 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & 420 \\ 
+  {\mlpnode{NM}\mbox{}} {M} &  60 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & 390 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & 160 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & 390 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & 130 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 650 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 450 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & 380 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 440 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 690 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & 510 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 390 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 140 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 730 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+
+
+\begin{tikzpicture}[overlay]
+  \path[draw,gray]<2-> (NA) edge (NI);
+ \path[draw,gray]<3-> (NB) edge (NJ);
+ \path[draw,gray]<4-> (NC) edge (NL);
+ \path[draw,gray]<5-> (ND) edge (NQ);
+ \path[draw,gray]<6-> (NE) edge (NR);
+ \path[draw,gray]<7-> (NF) edge (NU);
+ \path[draw,gray]<8-> (NG) edge (NN);
+ \end{tikzpicture}\only<10>{
+\begin{tikzpicture}[overlay]
+  \path[draw,red] (NA) edge [out=0, in=-180] (NI);
+ \path[draw,red] (NB) edge [out=0, in=-180] (NJ);
+ \path[draw,red] (NC) edge [out=0, in=-180] (NL);
+ \path[draw,red] (NF) edge [out=0, in=-180] (NL);
+ \path[draw,red] (NG) edge [out=0, in=-180] (NL);
+ \path[draw,red] (ND) edge [out=0, in=-180] (NQ);
+ \path[draw,red] (NE) edge [out=0, in=-180] (NR);
+ \end{tikzpicture}}
+
+
+
+## Role of the matching algorithm: greedy matching
+
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:57 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\ 
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\ 
+  C & -0.4 & {0} {\mlpnode{NC}} \\ 
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\ 
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\ 
+  F & 2.2 & {0} {\mlpnode{NF}} \\ 
+  G & 1.3 & {0} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+\bigskip
+{\footnotesize Here, ``date'' is \emph{rank of} date of
+construction, in years after 1965, and  ``capacity'' is
+\emph{rank of} net capacity of the power plant, in MWe
+above 400.}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:57 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+
+\begin{tikzpicture}[overlay]
+  \path[draw,red]<2-> (NA) edge (NI);
+ \path[draw,red]<3-> (NA) edge (NJ);
+ \path[draw,red]<4-> (NB) edge (NR);
+ \path[draw,red]<5-> (NB) edge (NW);
+ \path[draw,red]<6-> (NC) edge (NN);
+ \path[draw,red]<7-> (NC) edge (NT);
+ \path[draw,red]<8-> (ND) edge (NO);
+ \path[draw,red]<9-> (ND) edge (NQ);
+ \path[draw,red]<10-> (NE) edge (NS);
+ \path[draw,red]<11-> (NE) edge (NV);
+ \path[draw,red]<12-> (NF) edge (NU);
+ \path[draw,red]<13-> (NF) edge (NX);
+ \path[draw,red]<14-> (NG) edge (NM);
+ \path[draw,red]<15-> (NG) edge (NZ);
+ \end{tikzpicture}
+
+## Optimal Matching
+
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:57 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\ 
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\ 
+  C & -0.4 & {0} {\mlpnode{NC}} \\ 
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\ 
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\ 
+  F & 2.2 & {0} {\mlpnode{NF}} \\ 
+  G & 1.3 & {0} {\mlpnode{NG}} \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+
+\textcolor{blue}{Optimal vs. Greedy matching}
+\bigskip
+
+{\footnotesize By evaluating potential matches all together rather than
+  sequentially, optimal matching (\textcolor{blue}{blue lines}) reduces
+  the mean matched distance from 1.17 to
+ 0.56.}
+
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Wed Aug 14 15:26:57 2013
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\ 
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\ 
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\ 
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\ 
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\ 
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\ 
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\ 
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\ 
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\ 
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\ 
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\ 
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\ 
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\ 
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\ 
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\ 
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\ 
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\ 
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\ 
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\ 
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\ 
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+
+\begin{tikzpicture}[overlay]
+  \path[draw,red] (NA) edge (NI);
+ \path[draw,red] (NA) edge (NJ);
+ \path[draw,red] (NB) edge (NR);
+ \path[draw,red] (NB) edge (NW);
+ \path[draw,red] (NC) edge (NN);
+ \path[draw,red] (NC) edge (NT);
+ \path[draw,red] (ND) edge (NO);
+ \path[draw,red] (ND) edge (NQ);
+ \path[draw,red] (NE) edge (NS);
+ \path[draw,red] (NE) edge (NV);
+ \path[draw,red] (NF) edge (NU);
+ \path[draw,red] (NF) edge (NX);
+ \path[draw,red] (NG) edge (NM);
+ \path[draw,red] (NG) edge (NZ);
+ \end{tikzpicture}\begin{tikzpicture}[overlay]
+  \path[draw,blue] (NA) edge [out=0, in=-180] (NI);
+ \path[draw,blue] (NA) edge [out=0, in=-180] (NJ);
+ \path[draw,blue] (NB) edge [out=0, in=-180] (NL);
+ \path[draw,blue] (NB) edge [out=0, in=-180] (NW);
+ \path[draw,blue] (NC) edge [out=0, in=-180] (NN);
+ \path[draw,blue] (NC) edge [out=0, in=-180] (NT);
+ \path[draw,blue] (ND) edge [out=0, in=-180] (NO);
+ \path[draw,blue] (ND) edge [out=0, in=-180] (NQ);
+ \path[draw,blue] (NE) edge [out=0, in=-180] (NR);
+ \path[draw,blue] (NE) edge [out=0, in=-180] (NV);
+ \path[draw,blue] (NF) edge [out=0, in=-180] (NY);
+ \path[draw,blue] (NF) edge [out=0, in=-180] (NZ);
+ \path[draw,blue] (NG) edge [out=0, in=-180] (NU);
+ \path[draw,blue] (NG) edge [out=0, in=-180] (NX);
+ \end{tikzpicture}
+
 
 
 ## The World of Matching Today
@@ -321,7 +716,310 @@ strata or sets or selecting subsets.
  - The work on entropy-balancing approach to causal effects <https://web.stanford.edu/~jhain/software.htm#ebal>.
  - The covariate-balancing propensity score (CBPS) <https://imai.princeton.edu/research/CBPS.html>.
 
-# Information and Balance: Why would we prefer more pairs and fewer lopsided sets?
+# Information and Balance: Matching structure and effective sample size
+
+## Matching with a varying number of controls and full matching
+
+### Fixed vs flexible ratio matching:
+
+\begin{itemize}[<+->]
+\item Pair matching \& sample size
+\item Effective vs real sample size
+\item If we limit ourselves to fixed matching ratios, we gain in
+  simplicity but pay a price in sample size (effective \& real).
+\item How big a price?  Trying is the best way to find out.
+\end{itemize}
+
+```{r echo=FALSE}
+nuke.nopt <- subset(nuclearplants, pt == 0)
+```
+
+## Matching with a varying number of controls
+
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\
+  C & -0.4 & {0} {\mlpnode{NC}} \\
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\
+  F & 2.2 & {0} {\mlpnode{NF}} \\
+  G & 1.3 & {0} {\mlpnode{NG}} \\
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+\begin{tikzpicture}[overlay]
+  \path[draw,gray] (NA) edge (NI);
+ \path[draw,gray] (NB) edge (NJ);
+ \path[draw,gray] (NC) edge (NH);
+ \path[draw,gray] (NC) edge (NL);
+ \path[draw,gray] (NC) edge (NN);
+ \path[draw,gray] (NC) edge (NP);
+ \path[draw,gray] (NC) edge (NS);
+ \path[draw,gray] (NC) edge (NT);
+ \path[draw,gray] (NC) edge (NW);
+ \path[draw,gray] (ND) edge (NK);
+ \path[draw,gray] (ND) edge (NM);
+ \path[draw,gray] (ND) edge (NO);
+ \path[draw,gray] (ND) edge (NQ);
+ \path[draw,gray] (NE) edge (NR);
+ \path[draw,gray] (NE) edge (NV);
+ \path[draw,gray] (NF) edge (NZ);
+ \path[draw,gray] (NG) edge (NU);
+ \path[draw,gray] (NG) edge (NX);
+ \path[draw,gray] (NG) edge (NY);
+ \end{tikzpicture}
+
+```{r}
+fmnukeMC1<-fullmatch(pr~date+cap,data=nuke.nopt,min.controls=1)
+summary(fmnukeMC1, min.controls=0, max.controls=Inf)
+```
+
+
+\note{
+  Observe that now no control plants are left out.  (This is something you can change if you want.)
+
+Discuss effective sample size.
+}
+
+
+
+## Matching so as to maximize effective sample size
+
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\
+  C & -0.4 & {0} {\mlpnode{NC}} \\
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\
+  F & 2.2 & {0} {\mlpnode{NF}} \\
+  G & 1.3 & {0} {\mlpnode{NG}} \\
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+\begin{tikzpicture}[overlay]
+  \path[draw,gray] (NA) edge (NI);
+ \path[draw,gray] (NA) edge (NJ);
+ \path[draw,gray] (NB) edge (NL);
+ \path[draw,gray] (NB) edge (NN);
+ \path[draw,gray] (NB) edge (NW);
+ \path[draw,gray] (NC) edge (NH);
+ \path[draw,gray] (NC) edge (NO);
+ \path[draw,gray] (NC) edge (NT);
+ \path[draw,gray] (ND) edge (NK);
+ \path[draw,gray] (ND) edge (NM);
+ \path[draw,gray] (ND) edge (NQ);
+ \path[draw,gray] (NE) edge (NR);
+ \path[draw,gray] (NE) edge (NS);
+ \path[draw,gray] (NE) edge (NV);
+ \path[draw,gray] (NF) edge (NY);
+ \path[draw,gray] (NF) edge (NZ);
+ \path[draw,gray] (NG) edge (NP);
+ \path[draw,gray] (NG) edge (NU);
+ \path[draw,gray] (NG) edge (NX);
+ \end{tikzpicture}
+```{r}
+fmnuke<-fullmatch(pr~date+cap, min=2, max=3, data=nuke.nopt)
+summary(fmnuke)
+```
+
+## Showing matches
+
+\centering
+```{r out.width=".8\\textwidth", echo=FALSE}
+## perhaps try this https://briatte.github.io/ggnet/#example-2-bipartite-network next time
+library(igraph)
+blah1 <- outer(fmnuke,fmnuke,FUN=function(x,y){ as.numeric(x==y) })
+blah2 <- outer(fmnukeMC1,fmnukeMC1,FUN=function(x,y){ as.numeric(x==y) })
+par(mfrow=c(1,2),mar=c(3,3,3,1))
+plot(graph_from_adjacency_matrix(blah1,mode="undirected",diag=FALSE),
+     vertex.color=c("white","green")[nuke.nopt$pr+1],main="Min Ctrls=2, Max Ctrls=3")
+plot(graph_from_adjacency_matrix(blah2,mode="undirected",diag=FALSE),
+     vertex.color=c("white","green")[nuke.nopt$pr+1],main="Min Ctrls=1, Max Ctrls=Inf")
+```
+
+## Matching so as to maximize effective sample size
+
+\tiny
+```{r}
+effectiveSampleSize(fmnuke)
+nukewts <- cbind(nuke.nopt,fmnuke) %>% 
+  group_by(fmnuke) %>% summarise(nb = n(),
+                                 nTb = sum(pr),
+                                 nCb = nb - nTb,
+                                 hwt = ( 2*( nCb * nTb ) / (nTb + nCb)))
+nukewts
+dim(nukewts)
+sum(nukewts$hwt)
+```
+
+## Matching so as to maximize effective sample size
+
+```{r}
+stratumStructure(fmnuke)
+```
+
+So effective sample size for this match = $2 * 4/3 + 5* 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples.
+
+```{r}
+nukemh <- match_on(pr~date+cap,data=nuke.nopt)
+pmnuke <- pairmatch(nukemh,data=nuke.nopt)
+levels(pmnuke)
+effectiveSampleSize(pmnuke)
+```
+
+##  Tracking effective sample size
+
+In 2-sample comparisons, total sample size can be a misleading as a measure of information content.  Example:
+\begin{itemize}
+\item say $Y$ has same variance, $\sigma^{2}$,in the Tx and the Ctl population.
+\item Ben H. samples 10 Tx and 40 Ctls, and
+\item Jake B. samples 25 Tx and 25 Ctls
+\end{itemize}
+--- so that total sample sizes are the same.  However,
+
+\begin{eqnarray*}
+  V_{BH}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{10} + \frac{\sigma^{2}}{40}=.125\sigma^{2}\mbox{;}\\
+  V_{JB}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{25} + \frac{\sigma^{2}}{25}=.08\sigma^{2}.\\
+\end{eqnarray*}
+
+Similarly, a matched triple is roughly $[(\sigma^{2}/1 + \sigma^{2}/2)/(\sigma^{2}/1 + \sigma^{2}/1)]^{-1}= 1.33$ times as informative as a matched pair.
+
+## Details
+
+Use pooled 2-sample t statistic SE formula to compare 1-1 vs 1-2 matched sets' contribution to variance:
+
+$$
+\begin{array}{c|c}
+  \atob{1}{1} & \atob{1}{2} \\
+M^{-2}\sum_{m=1}^{M} (\sigma^{2}/1 + \sigma^{2}/1) & M^{-2}\sum_{m=1}^{M} (\sigma^{2}/1 + \sigma^{2}/2) \\
+\frac{2\sigma^{2}}{M} & \frac{1.5\sigma^{2}}{M} \\
+\end{array}
+$$
+
+So 20 matched pairs is comparable to 15 matched triples.
+
+(Correspondingly, h-mean of $n_{t},n_{c}$ for a pair is 1, while for a triple it's $[(1/1 + 1/2)/2]^{-1}=4/3$.)
+
+The variance of the `pr`-coeff in `v~pr + match` is
+$$
+ \frac{2 \sigma^{2}}{\sum_{s} h_{s}}, \hspace{3em} h_{s} = \left( \frac{n_{ts}^{-1} + n_{cs}^{-1} }{2}  \right)^{-1} ,
+$$
+
+assuming the OLS model and homoskedastic errors.  (This is b/c the anova formulation is equivalent to harmonic-mean weighting, under which $V(\sum_{s}w_{s}(\bar{v}_{ts} - \bar v_{cs})) = \sum_{s} w_{s}^{2}(n_{ts}^{-1} + n_{cs}^{-1}) \sigma^{2} = \sigma^{2} \sum_{s} w_{s}^{2} 2 h_{s}^{-1} = 2\sigma^{2} \sum_{s}w_{s}/\sum_{s}h_{s} = 2\sigma^{2}/\sum_{s} h_{s}$.)
+
+For matched pairs, of course, $h_{s}=1$.  Harmonic mean of 1, 2 is $4/3$. Etc.
+
+
+## Matching so as to maximize effective sample size
+
+```{r}
+mds <- matched.distances(matchobj=fmnuke,distance=nukemh)
+mds[1:2]
+summary(unlist(mds))
+```
+
+Mean of matched distances is `r mean(unlist(mds))` --- compare to 0.29 for pairs, 0.57 for triples.
+
+Note variance/bias tradeoff. Covariate balance has to do with bias and extrapolation (i.e. confounding). We want balance **and** precision.
+
+## Inspect distances after matching
+
+What kinds of distances remain after matching?
+
+```{r}
+str(mds)
+quantile(unlist(mds))
+```
 
 
 

@@ -14,7 +14,7 @@ These are the day by day plans for the second half of the course. See unit-goals
  - Calculate exact p-values and simulated p-values and then normal approximations under the sharp null.
  - Why is area in the tail evidence against the null?
  - Effect increasing test statistic.
- - Why are p-values a good measure of evidential support? 
+ - Why are p-values a good measure of evidential support?
 
 ## Day 4: Unbiased Estimation (Unit 3)
  - Expected value of the estimates (the 8 choose 4 Omega)
@@ -22,7 +22,7 @@ These are the day by day plans for the second half of the course. See unit-goals
 
 ## Day 5: Standard Error Estimation (Unit 4)
  - Why we care about standard errors. (And estimator of the variance).
- - Conservative variance estimation. 
+ - Conservative variance estimation.
  - And unbaised estimators of var(y_t) and var(y_c).
  - Interval estimation. Normality assumption (the 1.96 finite population CLT). (70 different estimated intervals).
  - Coverage probability.
@@ -31,11 +31,11 @@ These are the day by day plans for the second half of the course. See unit-goals
  - Relationship between finite population CLT.
  - Mention that Observational Studies: same but unknown reference distributions for the assignment.
  - No fisher style confidence sets or testing other hypotheses other than the sharp null.
- 
+
  - Assignment is due Tuesday.
 
 ## Day 6: (Unit 5)
- - Context for last week. 
+ - Context for last week.
  - Some time on the assignment.
  - By now, we have a good sense of the statistics for causal quantities in randomized experiments: when the desired relationship is between treatment assignment  and outcome.
  - Next step: Instrumental variables (Intro)
@@ -45,7 +45,7 @@ These are the day by day plans for the second half of the course. See unit-goals
   - Give out assignment 2 (unit02-Ex)
   - Instrumental Variables
   - Attrition  (??) (notice this strategy).
-  - Start propensity scores and matching. 
+  - Start propensity scores and matching.
 
 
 ## Day 8: IV and IV Testing
@@ -57,20 +57,19 @@ These are the day by day plans for the second half of the course. See unit-goals
   - The problem of using a linear model (like least squares) for adjustment
   - The idea of assessing the randomization in a randomized experiment
   - The idea of assessing balance or "as-if-randomized" claims in an observational study
-  - The basics of matching --- on a single variable. 
+  - The basics of matching --- on a single variable.
 
 ## Day 10:
   - The problem of using a linear model (like least squares) for adjustment
-  - Introduce matching on multiple variables: Mahalanobis distance 
+  - Introduce matching on multiple variables: Mahalanobis distance
 
 ## Day 11:
   - Basic forms of matching: greedy,optimal, replacement, full.
   - Matching on more than one variable, approaches: mahalanobis distance and propensity scores.
 
-
-## Day 12: 
+## Day 12:
   - Hand out last assignment on matching. (assignment 3)
-  - Exact matching; Calipers; Combining matrices; 
+  - Exact matching; Calipers; Combining matrices;
 
 ## Day 13:
    - Effective sample size; SIUP for balance testing; searching for a good match using balance, effective sample size, as well as max dist on important covariate.
