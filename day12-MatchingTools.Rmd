@@ -328,12 +328,19 @@ setdiffsHR <- meddat %>% filter(!is.na(fmEx1)) %>% group_by(fmEx1) %>% summarize
 						       mean(HomRate08[nhTrt==0]),
 					       nb = n(),
 					       pr = mean(nhTrt==1),
-					       nTb = sum(pr),
+					       nTb = sum(nhTrt==1),
 					       nCb = nb - nTb,
 					       hwt = ( 2*( nCb * nTb ) / (nTb + nCb)))
 
 
 setdiffsHR
+
+
+weighted.mean(setdiffsHR$mneddiffs,w=setdiffsHR$hwt)
+thelmversion <-
+	lm(HomRate08~nhTrt+fmEx1,data=droplevels(meddat[!is.na(meddat$fmEx1),]))
+
+coef(thelmversion)[2]
 ```
 
 ## Exact Matching
