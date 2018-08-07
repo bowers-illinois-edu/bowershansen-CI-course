@@ -1,0 +1,335 @@
+---
+title: Matching Tools and Approaches
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2018 Session 2
+bibliography:
+ - refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+rm(list=ls())
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before)
+    return(options$size)
+})
+
+knit_hooks$set(plotdefault = function(before, options, envir) {
+    if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
+})
+
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='\\scriptsize',
+  out.width='.8\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA,
+  mysize=TRUE,
+  plotdefault=TRUE)
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(digits=4,
+	scipen=8,
+	width=132,
+	show.signif.stars=FALSE)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(RItools,lib.loc="./lib")
+library(optmatch)
+library(chemometrics) ## for drawMahal
+library(mvtnorm)
+```
+
+## Today
+
+\begin{enumerate}
+  \item Agenda:
+  \item Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans:04} \cite{ho:etal:07}
+  \item Questions arising from the reading or assignments or life?
+\end{enumerate}
+
+# But first, review:
+
+
+\begin{frame}[fragile]
+\frametitle{What have we done so far?}
+
+Making the case for adequate adjustment in observational studies
+
+\begin{itemize}
+   \item The potential for making this case for one or more variables using
+     stratification.
+   \item Using optimal, full matching technology to make and evaluate
+     stratifications.
+   \item Mahalanobis distance to compare units on $\bm{X}$.
+   \item The propensity score to compare units on $\hat{Z} \leftarrow \bm{X}$
+     (recall the problem)
+     \end{itemize}
+
+
+\begin{tikzcd}
+     Z \arrow[r] & Y \\
+     X \arrow[u] \arrow[ru]
+\end{tikzcd}
+
+\end{frame}
+
+```{r echo=FALSE, cache=TRUE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat<- mutate(meddat,
+		HomRate03=(HomCount2003/Pop2003)*1000,
+                HomRate08=(HomCount2008/Pop2008)*1000)
+row.names(meddat) <- meddat$nh
+```
+
+#  Matching on Many Covariates: Using Propensity Scores
+
+## Matching on the propensity score
+
+**Make the score**^[\footnotesize{Note that we will be using `brglm` or `bayesglm` in the
+future because of logit separation problems when the number of covariates
+increases.}]
+
+```{r}
+theglm <- glm(nhTrt~nhPopD+nhAboveHS,data=meddat,family=binomial(link="logit"))
+thepscore <- theglm$linear.predictor
+thepscore01 <- predict(theglm,type="response")
+````
+
+We tend to match on the linear predictor rather than the version required to
+range only between 0 and 1.
+
+```{r echo=FALSE, out.width=".7\\textwidth"}
+par(mfrow=c(1,2),oma=rep(0,4),mar=c(3,3,2,0),mgp=c(1.5,.5,0))
+boxplot(split(thepscore,meddat$nhTrt),main="Linear Predictor (XB)")
+stripchart(split(thepscore,meddat$nhTrt),add=TRUE,vertical=TRUE)
+
+boxplot(split(thepscore01,meddat$nhTrt),main="Inverse Link Function (g^-1(XB))")
+stripchart(split(thepscore01,meddat$nhTrt),add=TRUE,vertical=TRUE)
+```
+
+## Matching on the propensity score
+
+```{r}
+psdist <- match_on(theglm,data=meddat)
+psdist[1:4,1:4]
+fmPs <- fullmatch(psdist,data=meddat)
+summary(fmPs,min.controls=0,max.controls=Inf)
+```
+
+## Matching on the propensity score
+
+Optmatch creates a scaled propensity score distance by default:
+
+```{r}
+simpdist <- outer(thepscore,thepscore,function(x,y){ abs(x-y) })
+mad(thepscore[meddat$nhTrt==1])
+mad(thepscore[meddat$nhTrt==0])
+optmatch:::match_on_szn_scale(thepscore,Tx=meddat$nhTrt)
+simpdist["101",c("401","402","403")]/.9137
+psdist["101",c("401","402","403")]
+```
+
+
+## Can you do better?
+
+**Challenge:** Improve the matched design by adding covariates or functions of
+covariates using either or both of the propensity score or mahalanobis distance
+(rank- or not-rank based). So far we have:
+
+```{r}
+meddat$thepscore <- meddat$thepscore
+thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03","thepscore"))
+balfmla<-reformulate(thecovs,response="nhTrt")
+```
+
+
+# Matching Tricks of the Trade: Calipers, Exact Matching
+
+## Calipers
+
+The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we disallow comparisons which differ by more than 2 standard deviations on the propensity score.
+
+```{r}
+quantile(as.vector(psdist),seq(0,1,.1))
+psdistCal <- psdist + caliper(psdist,2)
+as.matrix(psdistCal)[5:10,5:10]
+```
+## Calipers
+
+The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we disallow comparisons which differ by more than 2 standard deviations on the propensity score.
+
+```{r}
+fmCal1 <- fullmatch(psdist+caliper(psdist,2),data=meddat,tol=.00001)
+summary(fmCal1,min.controls=0,max.controls=Inf)
+pmCal1 <- pairmatch(psdist+caliper(psdist,2),data=meddat, remove.unmatchables=TRUE)
+```
+
+## Calipers
+
+Another example: We may want to primarily match on mahalanobis distance but disallow any pairs with extreme propensity distance and/or extreme differences in baseline homicide rates (here using many covariates all together).
+
+
+```{r}
+mhdist <- match_on(balfmla,data=meddat,method="rank_mahalanobis")
+
+tmpHom03 <- meddat$HomRate03
+names(tmpHom03) <- rownames(meddat)
+absdistHom03 <- match_on(tmpHom03, z = meddat$nhTrt,data=meddat)
+absdistHom03[1:3,1:3]
+quantile(as.vector(absdistHom03),seq(0,1,.1))
+distCal <- mhdist + caliper(psdist,2) + caliper(absdistHom03,2)
+as.matrix(distCal)[5:10,5:10]
+```
+
+## Calipers
+
+```{r}
+fmCal2 <- fullmatch(distCal,data=meddat,tol=.00001)
+summary(fmCal2,min.controls=0,max.controls=Inf)
+```
+
+
+## Exact Matching
+
+We often have covariates that are categorical/nominal and on which we really care about strong balance. One approach to solve this problem is match **exactly** on one or more of such covariates. If `fullmatch` or `match_on` is going slow, this is also an approach to speed things up.
+
+```{r echo=FALSE}
+meddat$classLowHi <- ifelse(meddat$nhClass %in% c(2,3),"hi","lo")
+```
+
+```{r}
+dist2 <- mhdist + exactMatch(nhTrt~classLowHi,data=meddat)
+## or mhdist <- match_on(balfmla,within=exactMatch(nhTrt~classLowHi,data=meddat),data=meddat,method="rank_mahalanobis")
+## or fmEx1 <- fullmatch(update(balfmla,.~.+strata(classLowHi)),data=meddat,method="rank_mahalanobis")
+fmEx1 <- fullmatch(dist2,data=meddat,tol=.00001)
+summary(fmEx1,min.controls=0,max.controls=Inf)
+print(fmEx1,grouped=T)
+```
+## Exact Matching
+
+\scriptsize
+```{r}
+ftable(Class=meddat$classLowHi,Trt=meddat$nhTrt,fmEx1,col.vars=c("Class","Trt"))
+```
+
+## Back to matching on a scalar
+
+```{r}
+
+absHomMatch <- fullmatch(absdistHom03,data=meddat)
+meddat$absHomMatch <- absHomMatch
+setdiffsHM <- meddat %>% group_by(absHomMatch) %>% summarize(mneddiffs =
+						   mean(HomRate03[nhTrt==1]) -
+						   mean(HomRate03[nhTrt==0]),
+					   mnHomRate03 = mean(HomRate03),
+					   minHomRate03 = min(HomRate03),
+					   maxHomRate03 = max(HomRate03))
+
+setdiffsHM
+
+
+tmpHS <- meddat$nhAboveHS
+names(tmpHS) <- rownames(meddat)
+absdistHS <- match_on(tmpHS, z = meddat$nhTrt,data=meddat)
+
+absHSMatch <- fullmatch(absdistHS,data=meddat,tol=.000001)
+summary(absHSMatch,min.controls=0,max.controls=Inf)
+meddat$absHSMatch <- absHSMatch
+setdiffsHS <- meddat %>% group_by(absHSMatch) %>% summarize(mneddiffs =
+						   mean(nhAboveHS[nhTrt==1]) -
+						   mean(nhAboveHS[nhTrt==0]),
+					   mnnhAboveHS = mean(nhAboveHS),
+					   minnhAboveHS = min(nhAboveHS),
+					   maxnhAboveHS = max(nhAboveHS),
+					   setsize=n())
+
+setdiffsHS
+
+
+table(round(meddat$nhAboveHS,4),meddat$nhTrt,exclude=c())
+
+
+```
+
+
+# Types of Matching: Optimal, Full vs Greedy
+
+
+## The World of Matching Today
+
+This is an active and productive research area (i.e. lots of new ideas, not everyone agrees
+about everything). Here are just a few of the different approaches to creating
+strata or sets or selecting subsets.
+
+ - The work on cardinality matching and fine balance
+   <http://jrzubizarreta.com/>
+   <https://cran.rstudio.com/web/packages/designmatch/> )
+ - The work on speedier approximate full matching <http://fredriksavje.com/>
+   <https://github.com/fsavje/quickmatch>
+ - The work on using genetic algorithms to (1) find approximate strata
+   with-replacement <http://sekhon.berkeley.edu/matching/> and (2) to find
+   an approximation to a completely randomized study (i.e. best subset
+   selection) <http://cho.pol.illinois.edu/wendy/papers/bossor.pdf>
+ - The work on coarsened exact matching <https://gking.harvard.edu/cem>
+ - The work on entropy-balancing approach to causal effects <https://web.stanford.edu/~jhain/software.htm#ebal>.
+ - The covariate-balancing propensity score (CBPS) <https://imai.princeton.edu/research/CBPS.html>.
+
+# Information and Balance: Why would we prefer more pairs and fewer lopsided sets?
+
+
+
+
+## Summary:
+
+What do you think?
+
+
+
+## References

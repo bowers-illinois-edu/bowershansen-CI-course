@@ -22,6 +22,7 @@ $endif$
 \usepackage{caption}
 \usepackage{amssymb,amsmath,bm}
 \usepackage{tikz}
+\usepackage{tikz-cd}
 \usepackage{textpos}
 \usepackage{ifxetex,ifluatex}
 \usepackage{fixltx2e} % provides \textsubscript
