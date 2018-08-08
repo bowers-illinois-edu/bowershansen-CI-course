@@ -1,5 +1,5 @@
 ---
-title: Matching Tools and Approaches
+title: Matching Tools and Information in a Block-Randomized Experiment
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: ICPSR 2018 Session 2
 bibliography:
@@ -89,8 +89,9 @@ library(mvtnorm)
 ## Today
 
 \begin{enumerate}
-  \item Agenda:
-  \item Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans:04} \cite{ho:etal:07}
+  \item Agenda: How to avoid overfit propensity score functions; How to characterize the information in a matched design (use
+  what we know about the variance of estimators from block-randomized experiments).
+  \item Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans:04} (on full matching versus fixed ratio matching versus pair matching), \cite{gelman2008weakly} on "separation" problems in logistic regression other references on the problem of "overfitting" in general.
   \item Questions arising from the reading or assignments or life?
 \end{enumerate}
 
@@ -109,84 +110,21 @@ Making the case for adequate adjustment in observational studies
 
 \begin{itemize}
 \item The potential for making this case for one or more variables using
-stratification.
+stratification and the problems with making this case using the linear model
+to "control for" covariates.
 \item Using optimal, full matching technology to make and evaluate
-stratifications.
-\item Mahalanobis distance to compare units on $\bm{x}$.
-\item The propensity score to compare units on $\hat{Z} \leftarrow \bm{x}$
-\end{itemize}
-
-\end{frame}
-
-#  Matching on Many Covariates: Using Propensity Scores
-
-\begin{frame}
-\frametitle{The propensity score}
-
-Given covariates $\mathbf{x} (=(x_1, \ldots, x_k))$, and a
-treatment variable $Z$, $Z(u) \in \{0, 1\}$,  $\PP (Z \vert \mathbf{x})$ is known as the (true) \textbf{propensity score} (PS).
-$$ \phi( \mathbf{x} ) \equiv \log\left( \PP (Z=1 \vert \mathbf{x})/\PP (Z=0 \vert \mathbf{x}) \right)$$
-is also known as the PS.  In practice, one works
-with an estimated PS, $\hat{\PP} (Z \vert \mathbf{x})$ or
-$\hat{\phi}(\mathbf{x})$.
-
-Theoretically, propensity-score strata or matched sets both
-\begin{enumerate}
-\item reduce extrapolation; and
-\item balance each of $x_1, \ldots, x_k$.
-\end{enumerate}
-They do this by making the comparison more "experiment-like", at least in terms of $x_1, \ldots, x_k$.
-
-Theory \citep{rosrub83} also tells us that in the absence of hidden bias, such a stratification
-item supports unbiased estimation of treatment effects.
-
-\end{frame}
-
-\begin{frame}
-\frametitle{Propensity scoring in practice}
-
-\begin{columns}
-\column{.65\linewidth}
+stratifications with a distance-matrix as input.
 \begin{itemize}
-\item Fitted propensity scores help identify extrapolation.
-\item In practice, stratification on $\hat{\phi}(\mathbf{x})$
-helps balance each of $x_1, \ldots, x_k$.
-\item There are \emph{lots of cases} in which adjustment with the propensity
-score fails to generate estimates that square with those of
-randomized studies.
+\item Mahalanobis distance matrices compare units on the covariates in the $ n \times p$ matrix $\bm{x} = \{ \bm{x}_1, \bm{x}_2,
+\ldots \}$.
+\item The propensity score distance matrices compare units on $\hat{Z} \leftarrow \bm{x}$ or $\hat{Z}=\hat{\bm{\beta}}\bm{x}$ (the elements of $\bm{x}$ as it relates to treatment or intervention).
+\item Calipers to restrict set membership based on substantively important
+variables and/or extreme differences on the score matrices.
+\item Exact matching to restrict set membership based on groups or categories
+that are substantively important (as a side effect this speeds up the matching
+process).
 \end{itemize}
-\column{.35\linewidth} \igrphx{meddatpsplot}
-\end{columns}
-
-\begin{itemize}
-\item There are various reasons for this, starting with: lots of observational studies that
-don't measure quite enough $x$es.
-\item (Propensity scores address bias on measured variables, not
-unmeasured ones.)  \textit{hidden bias}.
 \end{itemize}
-
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{More intuition about the propensity score}
-
-A propensity score is the output of a function of covariates as they relate to $Z$ (the "treatment" or "intervention"). Why reduce the dimension of $\bm{x}$ in this way rather than, say, using Mahalanobis distance?
-
-\medskip
-
-Recall that an experiment breaks the relationship between $Z$ and $\bm{x}=\{ x_1,x_2,\ldots \}$ but not between $\bm{x}$ and $Y$ or $y_1,y_0$.
-
-
-
-\begin{tikzcd}[column sep=small]
-  Z  \arrow[from=1-1,to=1-3] &                               & Y \\
-  &   \bm{x} \arrow[from=2-2,to=1-1, "\text{0 if Z rand}"] \arrow[from=2-2,to=1-3] &
-\end{tikzcd}
-
-Making strata of units who are similar on the propensity score reduces (or removes)
-the relationship between $Z$ and the relevant $\bm{x}$ within strata (either the
-units have similar values for $\bm{x}$ or the particular $x$s do not have a
-strong (linear, additive) relationship with $Z$).
 
 \end{frame}
 
@@ -199,205 +137,80 @@ meddat<- mutate(meddat,
 row.names(meddat) <- meddat$nh
 ```
 
-## Matching on the propensity score
 
-Common practice is to use logistic regression to make the scores. (We will be
-using something other than logistic regression in the future because of
-separation problems / overfitting when the number of covariates increases
-relative to sample size.)
-
-```{r}
-theglm <- glm(nhTrt~nhPopD+nhAboveHS,data=meddat,family=binomial(link='logit'))
-thepscore <- theglm$linear.predictor
-thepscore01 <- predict(theglm,type='response')
-```
-
-
-## Matching on the propensity score
-
-We tend to match on the linear predictor.
-
-```{r echo=FALSE, out.width=".6\\textwidth"}
-par(mfrow=c(1,2),oma=rep(0,4),mar=c(3,3,2,0),mgp=c(1.5,.5,0))
-boxplot(split(thepscore,meddat$nhTrt),main="Linear Predictor (XB)")
-stripchart(split(thepscore,meddat$nhTrt),add=TRUE,vertical=TRUE)
-
-boxplot(split(thepscore01,meddat$nhTrt),main="Inverse Link Function (g^-1(XB))")
-stripchart(split(thepscore01,meddat$nhTrt),add=TRUE,vertical=TRUE)
-```
-
-## Matching on the propensity score
-
-```{r}
-psdist <- match_on(theglm,data=meddat)
-psdist[1:4,1:4]
-fmPs <- fullmatch(psdist,data=meddat)
-summary(fmPs,min.controls=0,max.controls=Inf)
-```
-
-## Matching on the propensity score
-
-Optmatch creates a scaled propensity score distance by default (scaling the
-absolute distance by an outlier-resistent measure of variability (the mean
-absolute deviation, or `mad`).
-
-```{r}
-simpdist <- outer(thepscore,thepscore,function(x,y){ abs(x-y) })
-mad(thepscore[meddat$nhTrt==1])
-mad(thepscore[meddat$nhTrt==0])
-optmatch:::match_on_szn_scale(thepscore,Tx=meddat$nhTrt)
-simpdist["101",c("401","402","403")]/.9137
-psdist["101",c("401","402","403")]
-```
-
-
-# Matching Tricks of the Trade: Calipers, Exact Matching
-
-## Calipers
-
-The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can also implement penalties by hand by directly setting elements of the matrices to be `Inf`. Or you can implement penalties by just inflating the size of different distance matrix entries.] Here, for example, we disallow comparisons which differ by more than 2 standard deviations on the propensity score.
-
-```{r}
-quantile(as.vector(psdist),seq(0,1,.1))
-psdistCal <- psdist + caliper(psdist,2)
-as.matrix(psdistCal)[5:10,5:10]
-```
-## Calipers
-
-The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we disallow comparisons which differ by more than 2 standard deviations on the propensity score.
-
-```{r}
-fmCal1 <- fullmatch(psdist+caliper(psdist,2),data=meddat,tol=.00001)
-summary(fmCal1,min.controls=0,max.controls=Inf)
-pmCal1 <- pairmatch(psdist+caliper(psdist,2),data=meddat, remove.unmatchables=TRUE)
-```
-
-## Calipers
-
-Another example: We may want to primarily match on mahalanobis distance but
-disallow any pairs with extreme propensity distance and/or extreme differences
-in baseline homicide rates (here using many covariates all together).
-
-```{r}
-thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
-balfmla<-reformulate(thecovs,response="nhTrt")
-mhdist <- match_on(balfmla,data=meddat,method="rank_mahalanobis")
-tmpHom03 <- meddat$HomRate03
-names(tmpHom03) <- rownames(meddat)
-absdistHom03 <- match_on(tmpHom03, z = meddat$nhTrt,data=meddat)
-quantile(as.vector(absdistHom03),seq(0,1,.1))
-## Apply the calipers to the distance matrix
-distCal <- mhdist + caliper(psdist,2) + caliper(absdistHom03,2)
-as.matrix(distCal)[5:10,5:10]
-```
-
-## Calipers
-
-```{r}
-as.matrix(distCal)[5:10,5:10]
-fmCal2 <- fullmatch(distCal,data=meddat,tol=.00001)
-summary(fmCal2,min.controls=0,max.controls=Inf)
-```
-
-
-## Exact Matching
-
-We often have covariates that are categorical/nominal and on which we really care about strong balance. One approach to solve this problem is match **exactly** on one or more of such covariates. If `fullmatch` or `match_on` is going slow, this is also an approach to speed things up.
+## The separation problem in logistic regression and the benefits of shrinkage/penalization
 
 ```{r echo=FALSE}
-meddat$classLowHi <- ifelse(meddat$nhClass %in% c(2,3),"hi","lo")
+thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+balfmla<-reformulate(thecovs,response="nhTrt")
+library(splines)
+psfmla <- update(balfmla,.~.+ns(HomRate03,2)+ns(nhPopD,2)+ns(nhHS,2))
+glm0 <- glm(balfmla,data=meddat,family=binomial(link="logit"))
+glm1 <- glm(psfmla,data=meddat,family=binomial(link="logit"))
+
+# install.packages("arm")
+library(arm) 
+## See also https://github.com/stan-dev/rstanarm
+
+bayesglm0 <- bayesglm(balfmla,data=meddat,family=binomial(link="logit"))
+bayesglm1 <- bayesglm(psfmla,data=meddat,family=binomial(link="logit"))
+
+psg1 <- predict(glm1,type="response")
+psg0 <- predict(glm0,type="response")
+psb1 <- predict(bayesglm1,type="response")
+psb0 <- predict(bayesglm0,type="response")
 ```
 
-```{r}
-dist2 <- mhdist + exactMatch(nhTrt~classLowHi,data=meddat)
-dist3 <- dist2 + caliper(psdist,3)
-## or mhdist <- match_on(balfmla,within=exactMatch(nhTrt~classLowHi,data=meddat),data=meddat,method="rank_mahalanobis")
-## or fmEx1 <- fullmatch(update(balfmla,.~.+strata(classLowHi)),data=meddat,method="rank_mahalanobis")
-fmEx1 <- fullmatch(dist3,data=meddat,tol=.00001)
-summary(fmEx1,min.controls=0,max.controls=Inf)
+Logistic regression is excellent at discriminating between groups \ldots often **too excellent** for us \autocite{gelman2008weakly}. First evidence of this is big and/or missing coefficients in the propensity score model. See the coefficients below:
 
-xbEx1 <-
-	balanceTest(update(balfmla,.~.+strata(fmEx1)),data=meddat,report="all")
-
-
-xbEx1
-
-meddat$fmEx1 <- fmEx1
-
-setdiffsHR <- meddat %>% filter(!is.na(fmEx1)) %>% group_by(fmEx1) %>% summarize(mneddiffs =
-						       mean(HomRate08[nhTrt==1]) -
-						       mean(HomRate08[nhTrt==0]),
-					       nb = n(),
-					       pr = mean(nhTrt==1),
-					       nTb = sum(nhTrt==1),
-					       nCb = nb - nTb,
-					       hwt = ( 2*( nCb * nTb ) / (nTb + nCb)))
-
-
-setdiffsHR
-
-
-weighted.mean(setdiffsHR$mneddiffs,w=setdiffsHR$hwt)
-thelmversion <-
-	lm(HomRate08~nhTrt+fmEx1,data=droplevels(meddat[!is.na(meddat$fmEx1),]))
-
-coef(thelmversion)[2]
+```{r echo=FALSE}
+thecoefs <- rbind(glm0=coef(glm0),
+      glm1=coef(glm1),
+      bayesglm0=coef(bayesglm0),
+      bayesglm1=coef(bayesglm1)
+      )
+thecoefs[,1:5]
 ```
 
-## Exact Matching
+
+## The separation problem in logistic regression and the benefits of shrinkage/penalization
+
 
 ```{r}
-print(fmEx1,grouped=T)
-```
-## Exact Matching
-
-\scriptsize
-```{r}
-ftable(Class=meddat$classLowHi,Trt=meddat$nhTrt,fmEx1,col.vars=c("Class","Trt"))
+matplot(t(thecoefs),axes=FALSE)
+axis(2)
+axis(1,at=0:26,labels=colnames(thecoefs),las=2)
 ```
 
-## Back to matching on a scalar
 
-Why would matching on a scalar like `nhAboveHS` yield so many sets?
+## The separation problem in logistic regression
 
-```{r}
-table(round(meddat$nhAboveHS,4),meddat$nhTrt,exclude=c())
+```{r out.width=".8\\textwidth", echo=FALSE}
+par(mfrow=c(2,2),mar=c(3,3,2,.1))
+boxplot(psg0~meddat$nhTrt,main=paste("Logit",length(coef(glm0))," parms",sep=" "))
+stripchart(psg0~meddat$nhTrt,vertical=TRUE,add=TRUE)
+boxplot(psg1~meddat$nhTrt,main=paste("Logit",length(coef(glm1))," parms",sep=" "))
+stripchart(psg1~meddat$nhTrt,vertical=TRUE,add=TRUE)
+boxplot(psb0~meddat$nhTrt,main=paste("Shrinkage Logit",length(coef(bayesglm0))," parms",sep=" "))
+stripchart(psb0~meddat$nhTrt,vertical=TRUE,add=TRUE)
+boxplot(psb1~meddat$nhTrt,main=paste("Shrinkage Logit",length(coef(bayesglm1))," parms",sep=" "))
+stripchart(psb1~meddat$nhTrt,vertical=TRUE,add=TRUE)
 ```
 
-```{r}
-tmpHS <- meddat$nhAboveHS
-names(tmpHS) <- rownames(meddat)
-absdistHS <- match_on(tmpHS, z = meddat$nhTrt,data=meddat)
-absHSMatch <- fullmatch(absdistHS,data=meddat,tol=.0000001)
-summary(absHSMatch,min.controls=0,max.controls=Inf)
-meddat$absHSMatch <- absHSMatch
-setdiffsHS <- meddat %>% group_by(absHSMatch) %>% summarize(mneddiffs =
-						   mean(nhAboveHS[nhTrt==1]) -
-						   mean(nhAboveHS[nhTrt==0]),
-					   mnnhAboveHS = mean(nhAboveHS),
-					   minnhAboveHS = min(nhAboveHS),
-					   maxnhAboveHS = max(nhAboveHS),
-					   setsize=n())
-
-setdiffsHS
-```
-
-## Back to matching on a scalar
-
-These sets make sense because the individual neighborhoods have different
-values for baseline homicide rate.
+## Matching on the propensity score
 
 ```{r}
-absHomMatch <- fullmatch(absdistHom03,data=meddat)
-meddat$absHomMatch <- absHomMatch
-setdiffsHM <- meddat %>% group_by(absHomMatch) %>% summarize(mneddiffs =
-						   mean(HomRate03[nhTrt==1]) -
-						   mean(HomRate03[nhTrt==0]),
-					   mnHomRate03 = mean(HomRate03),
-					   minHomRate03 = min(HomRate03),
-					   maxHomRate03 = max(HomRate03))
+psdist <- match_on(bayesglm1,data=meddat)
+psdist[1:4,1:4]
+fmPS <- fullmatch(psdist,data=meddat)
+summary(fmPS,min.controls=0,max.controls=Inf,propensity.model=bayesglm1)
+stopifnot(all.equal(names(fmPS),row.names(meddat)))
+meddat$fmPS <- fmPS ## because same order
+meddat$pscore <- predict(bayesglm1) ## because no missing data
+setdiffs <- meddat %>% group_by(fmPS) %>% summarize(minHR03=min(HomRate03),
+						    maxHR03=max(HomRate03))
 
-setdiffsHM
+
 ```
 
 # Major Matching modes
