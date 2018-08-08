@@ -55,7 +55,7 @@ opts_chunk$set(
   highlight=TRUE,
   width.cutoff=132,
   size='\\scriptsize',
-  out.width='.8\\textwidth',
+  out.width='.7\\textwidth',
   fig.retina=FALSE,
   message=FALSE,
   comment=NA,
@@ -140,7 +140,7 @@ row.names(meddat) <- meddat$nh
 
 ## The separation problem in logistic regression and the benefits of shrinkage/penalization
 
-```{r echo=FALSE}
+```{r echo=TRUE}
 thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
 balfmla<-reformulate(thecovs,response="nhTrt")
 library(splines)
@@ -164,10 +164,10 @@ psb0 <- predict(bayesglm0,type="response")
 Logistic regression is excellent at discriminating between groups \ldots often **too excellent** for us \autocite{gelman2008weakly}. First evidence of this is big and/or missing coefficients in the propensity score model. See the coefficients below:
 
 ```{r echo=FALSE}
-thecoefs <- rbind(glm0=coef(glm0),
-      glm1=coef(glm1),
-      bayesglm0=coef(bayesglm0),
-      bayesglm1=coef(bayesglm1)
+thecoefs <- rbind(glm0=coef(glm0)[1:20],
+      glm1=coef(glm1)[1:20],
+      bayesglm0=coef(bayesglm0)[1:20],
+      bayesglm1=coef(bayesglm1)[1:20]
       )
 thecoefs[,1:5]
 ```
@@ -176,16 +176,21 @@ thecoefs[,1:5]
 ## The separation problem in logistic regression and the benefits of shrinkage/penalization
 
 
-```{r}
+```{r, echo=FALSE, out.width=".7\\textwidth"}
+par(mfrow=c(1,2))
 matplot(t(thecoefs),axes=FALSE)
 axis(2)
-axis(1,at=0:26,labels=colnames(thecoefs),las=2)
+axis(1,at=0:19,labels=colnames(thecoefs),las=2)
+
+matplot(t(thecoefs),axes=FALSE,ylim=c(-15,10))
+axis(2)
+axis(1,at=0:19,labels=colnames(thecoefs),las=2)
 ```
 
 
 ## The separation problem in logistic regression
 
-```{r out.width=".8\\textwidth", echo=FALSE}
+```{r out.width=".9\\textwidth", echo=FALSE}
 par(mfrow=c(2,2),mar=c(3,3,2,.1))
 boxplot(psg0~meddat$nhTrt,main=paste("Logit",length(coef(glm0))," parms",sep=" "))
 stripchart(psg0~meddat$nhTrt,vertical=TRUE,add=TRUE)
@@ -208,9 +213,18 @@ stopifnot(all.equal(names(fmPS),row.names(meddat)))
 meddat$fmPS <- fmPS ## because same order
 meddat$pscore <- predict(bayesglm1) ## because no missing data
 setdiffs <- meddat %>% group_by(fmPS) %>% summarize(minHR03=min(HomRate03),
-						    maxHR03=max(HomRate03))
+						    maxHR03=max(HomRate03),
+						    meanHR03=mean(HomRate03),
+						    nset=n(),
+						    nT=sum(nhTrt==1),
+						    nC=nset - nT)
+setdiffs
 
+xbFMPS <- balanceTest(update(balfmla,.~.+pscore + strata(fmPS)),
+		      data=meddat,report="all")
 
+xbFMPS
+xbFMPS$results["HomRate03",,]
 ```
 
 # Major Matching modes
@@ -789,7 +803,7 @@ sum(nukewts$hwt)
 stratumStructure(fmnuke)
 ```
 
-So effective sample size for this match = $2 * 4/3 + 5* 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples.
+So effective sample size for this match = $2 \times (2 \times (2 \times 1)/(2+1)) + 5 \times  (2 \times (3 \times 1)/(3+1))  = 2 \times 4/3 + 5 \times 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples.
 
 ```{r}
 nukemh <- match_on(pr~date+cap,data=nuke.nopt)
@@ -851,7 +865,7 @@ summary(unlist(mds))
 
 Mean of matched distances is `r mean(unlist(mds))` --- compare to 0.29 for pairs, 0.57 for triples.
 
-Note variance/bias tradeoff. Covariate balance has to do with bias and extrapolation (i.e. confounding). We want balance **and** precision.
+Note variance/bias tradeoff (effective sample sizes of 10.17, 7, 9.33). Covariate balance has to do with bias and extrapolation (i.e. confounding). We want balance **and** precision.
 
 ## Inspect distances after matching
 
@@ -863,27 +877,310 @@ quantile(unlist(mds))
 ```
 
 
-## Playing with Caliper Matching
+# Balance
 
-```{r eval=FALSE}
 
-install.packages("/Library/gurobi702/mac64/R/gurobi_7.0-2.tgz",repos=NULL)
-library(gurobi)
-library(designmatch)
-distmat <- as.matrix(dist3)
-distmat[is.infinite(distmat)]<-1000
-res <- bmatch(t_ind=meddat$nhTrt,dist_mat=distmat,
-	      n_controls=1,
-	      solver=list(name='gurobi',approximate=0))
+ Hansen and Sales (2015) suggest one way to stop iterating between
+	\texttt{fullmatch} and \texttt{xBalance} when you have one caliper. The idea
+	is that if you would reject the null of balance with one caliper, you would
+	also certainly reject it with a wider caliper. That is, the idea is that
+	hypothesis tests about balance using calipers can be understood as nested,
+	or ordered. Rosenbaum (2008) talks about this in his paper ``Testing
+	Hypotheses in Order'' and Hansen and Sales (2008) how these ideas can
+	help us choose a matched design:
 
+  ``The SIUP[sequential intersection union principle] states that if a
+  researcher pre-specifies a sequence of hypotheses and corresponding
+  level-$\alpha$ tests, tests those hypotheses in order, and stops testing
+  after the first non-rejected hypothesis, then the probability of incorrectly
+  rejecting at least one correct hypothesis is at most $\alpha$.'' (page 2)
+
+	Let us try this out and also try to assess it. Say, we start by saying that
+	we will reject the null of balance at $\alpha=.50$.
+
+
+Imagine, for example we had this matched design:
+
+```{r}
+balfmla <- nhTrt ~ nhPopD + nhAboveHS + HomRate03
+mhdist <- match_on(balfmla,data=meddat)
+psmod <- arm::bayesglm(balfmla,data=meddat,family=binomial(link="logit"))
+psdist <- match_on(psmod,data=meddat)
+tmp <- meddat$HomRate03
+names(tmp) <- rownames(meddat)
+absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
+
+summary(psdist)
+summary(mhdist)
+summary(absdist)
+
+fmMh <- fullmatch(mhdist,data=meddat,tol=.00001)
+summary(fmMh,min.controls=0,max.controls=Inf)
+```
+
+## Principled Balance Search using SIUP
+
+If we just want to find the set of calipers and optmatch options which maximize
+balance, why not do a search?
+
+> The SIUP[sequential intersection union principle] states that if a researcher pre-specifies a sequence of hypotheses and corresponding level-$\alpha$ tests, tests those hypotheses in order, and stops testing after the first non-rejected hypothesis, then the probability of incorrectly rejecting at least one correct hypothesis is at most $\alpha$.'' \autocite{saleshansen2014}(page 2)
+
+
+```{r}
+matchAndBalance<-function(x,balfmla,distmat,thedata){
+	#x is a caliper width
+	thefm<-fullmatch(distmat+caliper(distmat,x),data=thedata,tol=.00001)
+  ## This next is very annoying but there are scope problems with balanceTest and balfmla
+  ## And I don't want to add thefm to meddat at each iteration, which would really slow things down.
+	thexb<-balanceTest(update(balfmla,.~.+strata(thefm)),
+			data=cbind(thedata,thefm),
+			report=c("chisquare.test"))
+	return(c(x=x,d2p=thexb$overall["thefm","p.value"]))
+}
+```
+
+
+## Balance Search using SIUP
+
+
+```{r cache=FALSE}
+## Start with the the largest distance between a treated and control unit.
+maxpsdist<-max(as.vector(psdist))
+minpsdist<-min(as.vector(psdist))
+psdistsum <- summary(psdist)
+quantile(as.vector(psdist),seq(0,1,.1))
+```
+
+```{r cache=TRUE}
+results1<-sapply(seq(3,minpsdist,length=100),function(thecal){
+                   matchAndBalance(thecal,balfmla,distmat=psdist,thedata=meddat)})
+
+apply(results1,1,summary)
+apply(results1[,results1["d2p",]>.8],1,summary)
+```
+
+
+```{r echo=FALSE}
+## Reorder the data from low to high to make cummax work better
+results1 <- data.frame(t(results1))
+results1o <- results1[order(results1$x,decreasing=TRUE),]
+results1o$maxp <- cummax(results1o$d2p)
+```
+
+## Balance Search using SIUP
+
+So, you can see that keeping the maximum produces a set of nested tests so
+that if I reject some caliper at some $p$, I know that any caliper tighter
+than the chosen one would have less balance (a smaller $p$, more information
+against the null that our design is like a well randomized block randomized
+study).
+
+
+```{r echo=FALSE, out.width=".8\\textwidth"}
+with(results1o,{
+       plot(x,d2p,xlab="PS Caliper",ylab="d2 p",cex=.6)
+       points(x,maxp,col="blue")
+})
+```
+
+\note{
+  Sometimes we want our matched designs to relate well not only to an
+	equivalent block-randomized experiment, but also to help us make the
+	argument that our comparisons are comparing specific kinds of like
+	with like and/or that our comparisons are statistically powerful.
+	That is, among matched designs that we might call "balanced", we might
+	one which drops the fewest observations, and perhaps one that has
+	specially good balance on certain special covariates (like baseline
+	outcomes). So, here is one example, of doing such a search.
+
+	In this case, we are not doing strictly nested hypothesis testing, but are
+	using the $p$ values to tell us about information against the null of
+	balance rather than using them strictly speaking to reject this null, or
+	not-reject it.
+  }
+
+## Design Search for both precision and balance
+
+Here I demonstrate searching for two calipers.
+
+```{r gridsearch, cache=FALSE}
+
+findbalance<-function(x){
+	##message(paste(x,collapse=" "))
+	thefm<-try(fullmatch(psdist+caliper(mhdist,x[2])+caliper(psdist,x[1]),data=meddat,tol=.00001))
+
+	if(inherits(thefm,"try-error")){
+		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA,effn=NA))
+	}
+
+	thexb<-try(balanceTest(update(balfmla,.~.+strata(thefm)),
+			    data=cbind(meddat,thefm),
+			    report=c("chisquare.test","p.values")),silent=TRUE)
+
+	if(inherits(thexb,"try-error")){
+		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA,effn=NA))
+	}
+
+	maxHomRate03diff<-max(unlist(matched.distances(thefm,distance=absdist)))
+
+	return(c(x=x,d2p=thexb$overall["thefm","p.value"],
+           maxHR03diff=maxHomRate03diff,
+           n=sum(!is.na(thefm)),
+           effn=summary(thefm)$effective.sample.size))
+
+}
 
 ```
 
+```{r echo=FALSE, cache=TRUE}
+## Test the function
+## findbalance(c(3,3))
+## Don't worry about errors for certain combinations of parameters
+maxmhdist<-max(as.vector(mhdist))
+minmhdist<-min(as.vector(mhdist))
+set.seed(123455)
+system.time({
+	results<-replicate(1000,findbalance(c(runif(1,minpsdist,maxpsdist),
+					      runif(1,minmhdist,maxmhdist))))
+}
+)
+
+```
+
+```{r eval=FALSE, echo=FALSE}
+## If you have a mac or linux machine you can speed this up:
+library(parallel)
+system.time({
+	resultsList<-mclapply(1:5000,function(i){
+				      findbalance(c(runif(1,minpsdist,maxpsdist),
+						    runif(1,minmhdist,maxmhdist)))},
+			      mc.cores=detectCores())
+	resultsListNA<-sapply(resultsList,function(x){ any(is.na(x)) })
+	resultsArr<-simplify2array(resultsList[!resultsListNA])
+}
+)
+
+```
+
+
+## Which matched design might we prefer?
+
+Now, how might we interpret the results of this search for matched designs?
+Here are a few ideas.
+
+```{r }
+if(class(results)=="list"){
+resAnyNA<-sapply(results,function(x){ any(is.na(x)) })
+resNoNA<-simplify2array(results[!resAnyNA])
+} else {
+resAnyNA<-apply(results,2,function(x){ any(is.na(x)) })
+resNoNA<-simplify2array(results[,!resAnyNA])
+}
+apply(resNoNA,1,summary)
+highbalres<-resNoNA[,resNoNA["d2p",]>.5]
+apply(highbalres,1,summary)
+```
+
+## Which matched design might we prefer?
+
+```{r eval=TRUE, echo=FALSE}
+# color points more dark for smaller differences
+plot(resNoNA["d2p",],resNoNA["n",],
+     xlab='d2p',ylab='n',
+     col=gray(1- ( resNoNA["maxHR03diff",]/max(resNoNA["maxHR03diff",]))),
+     pch=19)
+
+## identify(resNoNA["d2p",],resNoNA["n",],labels=round(resNoNA["maxHR03diff",],3),cex=.7)
+```
+
+```{r eval=TRUE,echo=TRUE}
+interestingDesigns<- (resNoNA["d2p",]>.5 & resNoNA["n",]>=10 &
+		      resNoNA["maxHR03diff",]<=1 & resNoNA["effn",] > 6)
+candDesigns <- resNoNA[,interestingDesigns,drop=FALSE]
+str(candDesigns)
+apply(candDesigns,1,summary)
+candDesigns<-candDesigns[,order(candDesigns["d2p",],decreasing=TRUE)]
+```
+
+## How would we use this information in \texttt{fullmatch}?
+
+```{r bigmatch}
+stopifnot(nrow(candDesigns)==1)
+fm4<-fullmatch(psdist+caliper(psdist,candDesigns["x1"])+caliper(mhdist,candDesigns["x2"]),data=meddat,tol=.00001)
+
+summary(fm4,min.controls=0,max.controls=Inf)
+
+meddat$fm4<-NULL ## this line exists to prevent confusion with new fm4 objects
+meddat[names(fm4),"fm4"]<-fm4
+
+xb3<-balanceTest(update(balfmla,.~.+strata(fm4)),
+	      data=meddat, report=c("all"))
+xb3$overall[,1:3]
+zapsmall(xb3$results["HomRate03",,])
+```
+
+## Another approach: more fine tuned optimization
+
+```{r eval=TRUE,cache=FALSE}
+matchAndBalance2<-function(x,distmat,alpha){
+	#x is a caliper widths
+	if(x>max(as.vector(distmat)) | x<min(as.vector(distmat))){ return(99999) }
+	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
+	thexb<-xBalance(balfmla,
+			strata=data.frame(thefm=thefm),
+			data=meddat,
+			report=c("chisquare.test"))
+	return(thexb$overall[,"p.value"])
+}
+
+maxpfn<-function(x,distmat,alpha){
+	## here x is the targeted caliper width and x2 is the next wider
+	## caliper width
+	p1<-matchAndBalance2(x=x[1],distmat,alpha)
+	p2<-matchAndBalance2(x=x[2],distmat,alpha)
+	return(abs( max(p1,p2) - alpha) )
+}
+
+maxpfn(c(minpsdist,minpsdist+1),distmat=psdist,alpha=.25)
+quantile(as.vector(psdist),seq(0,1,.1))
+sort(as.vector(psdist))[1:10]
+```
+
+## Another approach: more fine tuned optimization
+
+```{r solnp, cache=TRUE}
+library(Rsolnp)
+### This takes a long time
+results3<-gosolnp(fun=maxpfn,
+		ineqfun=function(x,distmat,alpha){ x[2] - x[1] },
+		ineqLB = 0,
+		ineqUB = maxpsdist,
+		LB=c(minpsdist,minpsdist+.01),
+		UB=c(maxpsdist-.01,maxpsdist),
+		n.restarts=2,
+		alpha=.25,distmat=psdist,
+		n.sim=500,
+		rseed=12345,
+		control=list(trace=1)
+		)
+```
+
+## Another approach: more fine tuned optimization
+
+```{r}
+maxpfn(results3$pars,distmat=psdist,alpha=.25)
+matchAndBalance2(results3$pars[1],distmat=psdist,alpha=.25)
+matchAndBalance(results3$par[1],balfmla=balfmla,distmat=psdist,thedata=meddat)
+```
 
 
 ## Summary:
 
 What do you think?
+
+### Next:
+
+Estimating causal effects, testing hypotheses about causal effects.
 
 
 
