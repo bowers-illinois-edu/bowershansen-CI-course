@@ -224,6 +224,7 @@ xbFMPS <- balanceTest(update(balfmla,.~.+pscore + strata(fmPS)),
 		      data=meddat,report="all")
 
 xbFMPS
+xbFMPS$overall[,]
 xbFMPS$results["HomRate03",,]
 ```
 

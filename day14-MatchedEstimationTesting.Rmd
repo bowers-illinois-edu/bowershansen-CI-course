@@ -1,0 +1,390 @@
+---
+title: Estimation and Testing for Stratified Matched Designs
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2018 Session 2
+bibliography:
+ - refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+rm(list=ls())
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+			      if (before)
+				      return(options$size)
+})
+
+knit_hooks$set(plotdefault = function(before, options, envir) {
+		       if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
+})
+
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='\\scriptsize',
+  out.width='.7\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA,
+  mysize=TRUE,
+  plotdefault=TRUE)
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(digits=4,
+	scipen=8,
+	width=132,
+	show.signif.stars=FALSE)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(RItools,lib.loc="./lib")
+library(optmatch)
+library(sandwich)
+library(lmtest)
+library(estimatr)
+```
+
+## Today
+
+\begin{enumerate}
+  \item Agenda:  Estimation and Testing given a Matched Stratified Design. 
+  \item Reading: Review Gerber and Green on Block-Randomized Experiments.
+  \item Questions arising from the reading or assignments or life?
+\end{enumerate}
+
+# But first, review:
+
+
+\begin{frame}[fragile]
+\frametitle{What have we done so far?}
+
+\begin{itemize}
+\item "Interpretable comparison" \citep{kinder1993experimental) versus "No causation
+without manipulation." \citep{holland1986}
+\item The problem of overfitting in logistic regression; what this means
+for propensity scores; what to do about it.
+\item What does "Effective sample size" mean in the optmatch output?
+\item Strategies for choosing a matched design to maximize information and
+balance and substantive grounds for argument.
+\end{itemize}
+
+\end{frame}
+
+
+```{r echo=FALSE, cache=TRUE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat<- mutate(meddat,
+		HomRate03=(HomCount2003/Pop2003)*1000,
+		HomRate08=(HomCount2008/Pop2008)*1000)
+row.names(meddat) <- meddat$nh
+```
+
+# Estimation and Testing
+
+## Example match for the day
+
+Imagine, for example we had this matched design:
+
+```{r}
+## Make one of the covariates have missing data to 
+## demonstrate how to match on it
+set.seed(12345)
+whichmissing <- sample(1:45,5)
+meddat$nhPopD[whichmissing] <- NA
+
+datNoNA <- fill.NAs(nhTrt ~ nhPopD + nhAboveHS + HomRate03,
+		    data=meddat)
+stopifnot(all.equal(row.names(datNoNA),row.names(meddat)))
+datNoNA$id <- meddat$id
+datNoNA$HomRate08 <- datNoNA$HomRate03
+covs <- c("nhPopD","nhPopD.NA","nhAboveHS","HomRate03")
+
+balfmla <- reformulate(covs,response="nhTrt")
+mhdist <- match_on(balfmla,data=datNoNA, method="rank_mahalanobis")
+psmod <- arm::bayesglm(balfmla,data=datNoNA,family=binomial(link="logit"))
+stopifnot(any(abs(coef(psmod))<10))
+psdist <- match_on(psmod,data=datNoNA)
+## Make a scalar distance
+tmp <- datNoNA$HomRate03
+names(tmp) <- rownames(datNoNA)
+absdist <- match_on(tmp, z = datNoNA$nhTrt,data=datNoNA)
+## Inspect the distance matrices to choose calipers if desired
+quantile(as.vector(psdist),seq(0,1,.1))
+quantile(as.vector(mhdist),seq(0,1,.1))
+quantile(as.vector(absdist),seq(0,1,.1))
+## Match and require no more than 2 treated per control, 
+## And no more than 4 control per treated
+fmMh <- fullmatch(psdist + caliper(psdist,2) + caliper(absdist,1)
+		  +caliper(mhdist,10),
+		  min.controls=1/3,
+		  max.controls=5,
+		  data=datNoNA,tol=.00001)
+summary(fmMh,min.controls=0,max.controls=Inf,propensity.model=psmod)
+```
+
+## Overview: Estimate and Test "as if block-randomized"
+
+This means we have to *define* our estimands in weighted terms (because different blocks provide different amounts of information).  Here are some matched sets and their associated weights:
+
+```{r echo=TRUE}
+datNoNA[names(fmMh),"fmMh"] <- fmMh
+setmeanDiffs <- datNoNA %>% filter(!is.na(fmMh)) %>% group_by(fmMh) %>%
+  summarise(Y=mean(HomRate08[nhTrt==1])-mean(HomRate08[nhTrt==0]),
+            nb=n(),
+            nTb = sum(nhTrt),
+            nCb = sum(1-nhTrt),
+            hwt = ( 2*( nCb * nTb ) / (nTb + nCb))
+            )
+setmeanDiffs
+```
+
+## Using the weights: Set size weights
+
+First, we could calculate the set-size weighted ATE:
+
+```{r}
+## The set-size weighted version
+with(setmeanDiffs, sum(Y*nb/sum(nb)))
+```
+
+## Using the weights: Set size weights
+
+Sometimes it is convenient to use `lm` because there are R functions for standard errors and confidence intervals. This requires a bit more work:
+
+```{r}
+## See Gerber and Green section 4.5 and also Chapter 3 on block randomized experiments. Also Hansen and Bowers 2008.
+wdat <- datNoNA %>% filter(!is.na(fmMh)) %>% group_by(fmMh) %>% mutate(trtprob=mean(nhTrt),
+                                               nbwt=nhTrt/trtprob + (1-nhTrt)/(1-trtprob),
+                                               gghbwt= 2*( n()/nrow(datNoNA) )*(trtprob*(1-trtprob)), ## GG version,
+                                               nb = n(),
+                                               nTb = sum(nhTrt),
+                                               nCb = nb - nTb,
+                                               hbwt = ( 2*( nCb * nTb ) / (nTb + nCb))
+                                               )
+row.names(wdat) <- wdat$id ## dplyr strips row.names
+lm0b<-lm(HomRate08~nhTrt,data=wdat,weight=nbwt)
+coef(lm0b)["nhTrt"]
+coeftest(lm0b,vcov=vcovHC(lm0b,type="HC2"))[1:2,]
+theci0 <- coefci(lm0b,parm="nhTrt",vcov.=vcovHC(lm0b,type="HC2"))
+theci0
+```
+
+
+## Using the weights: Set size weights
+
+We will illustrate an even more elaborate version of this below (from Winston Lin via the Green Lab SOP).
+
+```{r}
+wdat <- wdat %>% group_by(fmMh) %>% mutate(fmwt=n()/nrow(wdat),nb=n())
+X <- model.matrix(~fmMh-1,data=wdat)
+XminusXbar <- apply(X,2,function(x){ x - mean(x) })
+wrkdat <- cbind.data.frame(wdat,data.frame(XminusXbar))
+tmpfmla <- reformulate(grep("fmMh1",names(wrkdat),value=TRUE)[-1],response="HomRate08")
+lmfmla <- update(tmpfmla,.~nhTrt*(.))
+lm0 <- lm(lmfmla,data=wrkdat)
+coef(lm0)["nhTrt"]
+## But, in this case, the HC2 Standard Error is undefined because some of our blocks have too few observations.
+coeftest(lm0,vcov=vcovHC(lm0,type="HC2"))[1:2,]
+
+## See Gerber and Green 4.5
+wdat$Zf <- factor(wdat$trtprob)
+Z <- model.matrix(~Zf-1,data=wdat)
+ZminusZbar <- apply(Z,2,function(z){ z - mean(z) })
+wrkdat <- cbind.data.frame(wrkdat,ZminusZbar)
+tmpfmla <- reformulate(grep("Zf0",names(wrkdat),value=TRUE)[-1],response="HomRate08")
+lmfmlaZ <- update(tmpfmla,.~nhTrt*(.))
+lm0a <- lm(lmfmlaZ,data=wrkdat)
+coef(lm0a)["nhTrt"]
+coeftest(lm0a,vcov=vcovHC(lm0a,type="HC2"))[1:2,]
+```
+
+```{r}
+lmE0 <-  difference_in_means(HomRate08~nhTrt,data=wdat,blocks = fmMh)
+lmE2 <- lm_lin(HomRate08~nhTrt,covariates=~fmMh,data=wdat)
+
+```
+
+
+## Using the weights: precision weights
+
+Set size weighting is easy to explain. But set size weighting leaves information on the table. (For example, if we used a set-size weighted mean difference as a test statistic, the null reference distribution would be wider than if we used a harmonic weighted mean difference test statistic.) See this for example:
+
+```{r}
+## The mean diff used as the observed value in the testing
+## or from lm
+with(setmeanDiffs, sum(Y*hwt/sum(hwt)))
+lm1 <- lm(HomRate08~nhTrt+fmMh,data=wdat)
+xbOutcome <- balanceTest(nhTrt~HomRate08+strata(fmMh),data=wdat,report="all")
+## lm1a <- lm(HomRate08~nhTrt,data=wdat,weights=1/hbwt)
+coeftest(lm1,parm="nhTrt",vcov=vcovHC(lm1,type="HC2"))["nhTrt",]
+coeftest(lm0b,parm="nhTrt",vcov=vcovHC(lm0b,type="HC2"))["nhTrt",]
+theci1 <- confint.HC(lm1,parm="nhTrt",thevcov=vcovHC(lm1,type="HC2"))
+theci1
+diff(theci1[1,])
+diff(theci0[1,]) ## set size weighting
+```
+
+## `balanceTest`
+
+`balanceTest` reports the ATT (the set mean differences weighted by number of treated) but uses the precision-weighted mean for the $p$-value.
+
+```{r echo=FALSE,eval=FALSE}
+## The descriptive adj.mean diff from balanceTest
+with(setmeanDiffs, sum(Y*nTb/sum(nTb)))
+xbOutcome$results[,,"fmMh"]
+```
+
+## The direct permutation approach
+
+```{r}
+library(permute)
+
+newExp <- function(z,b){
+  n <- length(z)
+  h1 <- how(blocks=b)
+  z[shuffle(n,control=h1)]
+}
+
+hwtfn <- function(data){
+  tapply(data$Tx.grp,data$stratum.code,function(x){ 2* sum((x-mean(x))^2) })
+}
+
+setsizewtfn<- function(data){
+  tapply(data$Tx.grp,data$stratum.code,function(x){ length(x) })
+}
+
+trtsizewtfn<- function(data){
+  ## Assumes Tx.grp \in \{0,1\} and 1=assigned to treatment
+  tapply(data$Tx.grp,data$stratum.code,function(x){ sum(x) })
+}
+
+wtMeanDiffTZ<-function(y,z,b,wtfn){
+  tzb <- mapply(function(yb,zb){ mean(yb[zb==1]) - mean(yb[zb==0]) },
+                yb=split(y,b),
+                zb=split(z,b))
+  wts <- wtfn(data.frame(Tx.grp=z,stratum.code=b))
+  sum(tzb*wts/sum(wts))
+}
+
+## Testing (compare to above)
+obsHTZ<-wtMeanDiffTZ(wdat$HomRate08,wdat$nhTrt,fmMh,hwtfn)
+obsNTZ<-wtMeanDiffTZ(wdat$HomRate08,wdat$nhTrt,fmMh,setsizewtfn)
+obsTTZ<-wtMeanDiffTZ(wdat$HomRate08,wdat$nhTrt,fmMh,trtsizewtfn)
+```
+
+Test the null hypothesis of no effects:
+
+```{r cache=TRUE}
+
+set.seed(12345)
+nulldistHwt <- replicate(10000,wtMeanDiffTZ(wdat$HomRate08,newExp(wdat$nhTrt,fmMh),fmMh,hwtfn))
+set.seed(12345)
+nulldistNwt <- replicate(10000,wtMeanDiffTZ(wdat$HomRate08,newExp(wdat$nhTrt,fmMh),fmMh,setsizewtfn))
+
+## Notice more precision with the Harmonic weight in thes p-values.
+2*min(mean(nulldistHwt>=obsHTZ),mean(nulldistHwt<=obsHTZ))
+2*min(mean(nulldistNwt>=obsNTZ),mean(nulldistNwt<=obsNTZ))
+
+```
+
+Comparing the reference distributions to each other and to their Normal approximations.
+
+```{r}
+plot(density(nulldistHwt),ylim=c(0,3))
+lines(density(nulldistNwt),lty=2)
+curve(dnorm(x,sd=sd(nulldistHwt)),from=-1,to=1,col="gray",add=TRUE)
+curve(dnorm(x,sd=sd(nulldistNwt)),from=-1,to=1,col="gray",lty=2,add=TRUE)
+```
+
+
+```{r echo=FALSE,eval=FALSE}
+## balanceTest does not yet take functions.
+hwtfn <- function(data){
+  tapply(data$Tx.grp,data$stratum.code,function(x){ 2* sum((x-mean(x))^2) })
+}
+
+setsizewtfn<- function(data){
+  tapply(data$Tx.grp,data$stratum.code,function(x){ length(x) })
+}
+
+wtMeanDiffTZ<-function(y,z,b,wtfn){
+  temp <- balanceTest(z~y+strata(b),data=data.frame(y,z,b),
+                      report="adj.mean.diffs",
+                      stratum.weights=wtfn)
+  return(temp$results[1,"adj.diff",1])
+}
+
+## Test the function
+## table(newExp(wdat$nhTrt,wdat$fmMh),wdat$fmMh)
+
+```
+
+# Your reports
+
+## Your reports?
+
+What did you do? What kind of overall balance did you achieve so far? What did you do? What kinds of confidence intervals and/or hypothesis tests did you produce?
+
+## Anything Else?
+
+ - Recall the utility of `fill.NAs()`: You can and should match on missingness. No reason to throw away observations only because of covariate missingness.
+
+ - EXTRA: How would we assess the claim that the sequential intersection union principle controls the family-wise error rate for balance tests?
+
+
+
+
+## Summary:
+
+What do you think?
+
+### Next:
+
+Estimating causal effects, testing hypotheses about causal effects.
+
+
+
+## References
