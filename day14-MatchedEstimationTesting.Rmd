@@ -375,12 +375,12 @@ pvalue(testHwtPerm)
 
 Although we have adjusted for contemporaneous differences between neighborhoods and also
 adjusted somewhat for time-varying differences within neighborhoods by
-matching on baseline outcome, we might increase precision and diminish bias by
+matching on baseline outcome, we *might* increase precision and diminish bias by
 further adjusting after matching.
 
 ```{r}
 bal1 <- balanceTest(update(balfmla,.~.+strata(fmMh)),data=datNoNA,report="all")
-bal1$results["HomRate03",,]
+t(bal1$results["HomRate03",,])
 ```
 
 ```{r}
@@ -389,7 +389,35 @@ ddnbwt <- lm(HDiff ~ nhTrt,data=wdat,weights=nbwt)
 coef(ddnbwt)[2]
 ## compare to non-differenced version
 atewnb
+ddnbwt2 <- lm(HomRate08 ~ nhTrt + HomRate03,data=wdat,weights=nbwt)
+coef(ddnbwt2)[2]
+```
 
+## Difference in Differences
+
+```{r echo=FALSE}
+newdat <- bind_rows(list(yr08=wdat[,c("nhTrt","fmMh","HomRate08","nbwt")],
+		    yr03=wdat[,c("nhTrt","fmMh","HomRate03","nbwt")]),
+		    .id="year")
+newdat$post <- as.numeric(newdat$year=="yr08")
+newdat$Y <- ifelse(newdat$year=="yr08",newdat$HomRate08,newdat$HomRate03)
+newdat$Z <- factor(newdat$nhTrt)
+newdat$fm <- factor(newdat$fmMh)
+
+g <- ggplot(data=newdat,aes(x=post,y=Y,color=Z,shape=fm)) +
+	scale_shape_manual(values=1:10) +
+	#geom_point() +
+	geom_jitter(width=.1) +
+	geom_smooth(method="lm",aes(x=post,y=Y,group=Z),se=FALSE)
+
+print(g)
+
+```
+
+
+## Difference in Differences
+
+```{r}
 ddhbwt1 <- lm(HDiff ~ nhTrt + fmMh,data=wdat)
 coef(ddhbwt1)[2]
 atewhb
