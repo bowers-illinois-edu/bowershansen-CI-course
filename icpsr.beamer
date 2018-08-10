@@ -279,7 +279,7 @@ $endif$
 
 \setlength{\OuterFrameSep}{-1pt}
 \makeatletter
-\preto{\@verbatim}{\topsep=-1pt \partopsep=-1pt }
+\preto{\@verbatim}{\topsep=-.5pt \partopsep=-.5pt }
 \makeatother
 %%%%%%%%%%
 

@@ -158,6 +158,19 @@ quantile(as.vector(psdist),seq(0,1,.1))
 quantile(as.vector(mhdist),seq(0,1,.1))
 quantile(as.vector(absdist),seq(0,1,.1))
 ## Match and require no more than 3 treated per control, and no more than 5 control per treated
+fmMhA <- fullmatch(psdist + caliper(psdist,1) + caliper(absdist,1)
+		  + caliper(mhdist,12),
+		  min.controls=1/3,
+		  max.controls=3,
+		  data=datNoNA)
+
+fmMhA <- fullmatch(psdist +  caliper(psdist,3),
+		   min.controls=1/4,
+		   max.controls=4,
+		   data=meddat)
+summary(fmMhA,data=meddat,propensity.model=psmod)
+summary(fmMhA,min.controls=0,max.controls=Inf,data=meddat,propensity.model=psmod)
+
 fmMh <- fullmatch(psdist + caliper(psdist,1) + caliper(absdist,1)
 		  + caliper(mhdist,12), min.controls=1/3, #0 # default
 		  max.controls=5, #Inf # default
@@ -408,7 +421,7 @@ g <- ggplot(data=newdat,aes(x=post,y=Y,color=Z,shape=fm)) +
 	scale_shape_manual(values=1:10) +
 	#geom_point() +
 	geom_jitter(width=.1) +
-	geom_smooth(method="lm",aes(x=post,y=Y,group=Z),se=FALSE)
+	geom_smooth(method="lm",aes(x=post,y=Y,group=Z),se=FALSE,method.args=list(weights=newdat$nbwt),weights=newdat$nbwt)
 
 print(g)
 
