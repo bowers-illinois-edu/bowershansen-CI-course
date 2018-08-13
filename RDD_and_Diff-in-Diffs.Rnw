@@ -70,6 +70,7 @@
 
 \makeatletter
 % align all math after the command
+\newcommand\given[1][]{\:#1\vert\:}
 \newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
 \newcommand{\mathcenter}{\@fleqnfalse}
 % tilde with text over it
@@ -142,7 +143,8 @@ p_load(dplyr,
        parallel,
        knitr,
        lmtest,
-       sandwich)
+       sandwich,
+       rdd)
 
 
 opts_chunk$set(tidy = TRUE,
@@ -459,6 +461,24 @@ rdd_data %<>% filter(DifDPct > lower_bound[47] & DifDPct < upper_bound[47])
 rdd_data %>% nrow
 
 coef(lm(formula = DPctNxt ~ DemWin, data = rdd_data))[["DemWin"]]
+source("http://jakebowers.org/ICPSR/confintHC.R")
+confint.HC(lm(formula = DPctNxt ~ DemWin, data = rdd_data),
+           parm = "DemWin",
+           thevcov = vcovHC(lm(formula = DPctNxt ~ DemWin, data = rdd_data),
+                            type="HC2"))
+
+@
+
+We coud also perform permutation inference within the window around the cutpoint under the assumption that local randomization holds:
+
+<<>>=
+set.seed(1:5)
+sharp_null_dist <- replicate(n = 10^3,
+                             expr = coef(lm(formula = DPctNxt ~ sample(DemWin), data = rdd_data))[[2]])
+
+upper_p_val <- mean(sharp_null_dist >= coef(lm(formula = DPctNxt ~ DemWin, data = rdd_data))[["DemWin"]])
+lower_p_val <- mean(sharp_null_dist <= coef(lm(formula = DPctNxt ~ DemWin, data = rdd_data))[["DemWin"]])
+two_sided_p_val <- min(1, 2 * min(upper_p_val, lower_p_val))
 
 @
 
@@ -477,7 +497,6 @@ tmp_lm <- lm(DPctNxt ~ DifDPct, data = rdd_data)
 rdd_data %<>% mutate(resid_DPctNxt = resid(tmp_lm))
 
 @
-
 
 \vspace{5mm}
 \begin{mdframed}
@@ -533,6 +552,52 @@ confint.HC(lm(formula = rlm_resid_DPctNxt ~ DemWin, data = rdd_data),
            parm = "DemWin",
            thevcov = vcovHC(lm(formula = rlm_resid_DPctNxt ~ DemWin, data = rdd_data),
                             type="HC2"))
+
+@
+
+An alternative approach to regression discontinuity, common in the econometrics literature \citep[see][]{angristpischke2008,imbenslemieux2008} is as follows:
+
+Estimate $\E\left[Y \given R = r\right]$ on both sides of the cutpoint and then take the difference of the two regressions evaluated at the cutpoint. That is,
+\begin{align*}
+\lim \limits_{r \downarrow 0}\E\left[Y \given R = r\right] - \lim \limits_{r \uparrow 0}\E\left[Y \given R = r\right]
+\end{align*}
+
+<<>>=
+
+rdd_data %<>% arrange(DifDPct)
+
+rdd_data_cp <- dplyr::select(.data = rdd_data, DifDPct, DPctNxt, DemWin) %>%
+  mutate(cp = ifelse(test = DifDPct < 0, yes = "Below Cutpoint",
+         no = "Above Cutpoint"))
+
+ggplot(data = rdd_data_cp,
+       mapping = aes(x = DifDPct,
+                     y = DPctNxt)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE) +
+  geom_smooth(se = FALSE, colour= "red") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(size = 4)) +
+  xlab("Democratic Margin of Victory (Running Variable)") +
+  ylab("Democratic Vote Percentage in Next Election (Outcome Variable)") +
+  ggtitle("Relationship between Running Variable and Outcome") +
+  facet_wrap(facets =  ~ cp,
+             nrow = 1,
+             ncol = 2)
+
+@
+
+Let's first use a simple linear model to estimate the relationship on both sides of the cutpoint:
+
+<<>>=
+
+cutpoint_predic_below <- predict(object = lm(formula = DPctNxt ~ DifDPct, data = rdd_data, subset = DifDPct < 0),
+                           newdata = data.frame(DifDPct = 0))
+
+cutpoint_predic_above <- predict(object = lm(formula = DPctNxt ~ DifDPct, data = rdd_data, subset = DifDPct > 0),
+                                 newdata = data.frame(DifDPct = 0))
+
+cutpoint_predic_above - cutpoint_predic_below
 
 @
 
