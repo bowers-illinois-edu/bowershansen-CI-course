@@ -132,14 +132,17 @@
 if (!require("pacman")) { install.packages("pacman") }
 
 p_load(dplyr,
-  magrittr,
-  tidyr,
-  haven,
-  optmatch,
-  RItools,
-  ggplot2,
-  parallel,
-  knitr)
+       MASS,
+       magrittr,
+       tidyr,
+       haven,
+       optmatch,
+       RItools,
+       ggplot2,
+       parallel,
+       knitr,
+       lmtest,
+       sandwich)
 
 
 opts_chunk$set(tidy = TRUE,
@@ -434,20 +437,20 @@ kable(band_df)
 
 \subsection{Local Random Assignment Does \textit{Not} Imply Exclusion Restriction}
 
-Now let's assume that within a certain bandwidth around the cutpoint, $W_0$, the assumption of a local randomized experiment---described in \eqref{eq: Assumption 1} above---obtains. Yet even if this assumption obtains, the running variable, $R_i$, might still relate to potential outcomes through a mechanism other than $Z_{iW_0}$.
+Now let's assume that within a certain bandwidth around the cutpoint, $W_0$, the assumption of a local randomized experiment---described in \eqref{eq: Assumption 1} above---obtains. Yet even if this assumption obtains, the running variable, $R_i$, might still relate to potential outcomes through a mechanism other than $Z_{i} \given W_0$.
 
 \vspace{5mm}
 \begin{mdframed}
 \textbf{Question for Students:}
 \vspace{-5mm}
 \begin{itemize}\itemsep1pt
-\item Explain why we refer to a violation of the sort described directly above (and in \eqref{eq: Assumption 2}) as a violation of the \textit{exclusion restriction}?
+\item Explain why this would be a violation of the \textit{exclusion restriction}?
 \end{itemize}
 \end{mdframed}
 
-\eqref{eq: Assumption 2} is a strong assumption because treatment assignment, $Z_{iW_0}$, is a deterministic function of the running variable, $R_i$, which implies that treatment and control groups, by construction, will be imbalanced on the running variable. Thus, if $R_i$ relates to $(y_{ic}, y_{it})$, through a mechanism other than $Z_{iW_0}$, then the exlcusion restriction is violated.
+The exclusion restriction is a strong assumption in the RDD context since $Z_i$ is a deterministic function of the running variable, $R_i$, which implies that treatment and control groups, by construction, will be imbalanced on the running variable. Thus, if $R_i$ relates to $(y_{ic}, y_{it})$, through a mechanism other than $Z_{iW_0}$, then the exlcusion restriction is violated.
 
-What can we do if the exclusion restriction is violated? One approach is to model potential outcomes as a function of the running variable, and then to ``de-trend'' (or ``transform'') the outcome variable and to subsequently make the claim of ``residual ignorability.''
+If we think the exclusion restriction holds, then we can simply perform outcome analysis within a window around the cutpoint where local randomization presumably holds:
 
 << >>=
 
@@ -455,11 +458,26 @@ rdd_data %<>% filter(DifDPct > lower_bound[47] & DifDPct < upper_bound[47])
 
 rdd_data %>% nrow
 
-tmplm<-lm(DPctNxt ~ DifDPct, data = rdd_data)
-
-rdd_data %<>% mutate(resid_DPctNxt = resid(tmplm))
+coef(lm(formula = DPctNxt ~ DemWin, data = rdd_data))[["DemWin"]]
 
 @
+
+What can we do if the exclusion restriction is violated? One approach is to model potential outcomes as a function of the running variable, and then to ``de-trend'' (or ``transform'') the outcome variable and to subsequently make the claim of ``residual ignorability.''
+
+More specifically, we postulate that:
+\begin{align*}
+Y_{c_i} & = \alpha_0 + \beta R_i + \epsilon_{c_i}, \ \epsilon_{c_i} \sim \mathcal{N}\left(0, \sigma^2\right) \\
+Y_{t_i} & = \alpha_0 + \left(\alpha_1 - \alpha_0\right)Z_i \beta R_i + \epsilon_{c_i}, \ \epsilon_{c_i} \sim \mathcal{N}\left(0, \sigma^2\right) \\
+\end{align*}
+
+<<>>=
+
+tmp_lm <- lm(DPctNxt ~ DifDPct, data = rdd_data)
+
+rdd_data %<>% mutate(resid_DPctNxt = resid(tmp_lm))
+
+@
+
 
 \vspace{5mm}
 \begin{mdframed}
@@ -467,8 +485,6 @@ rdd_data %<>% mutate(resid_DPctNxt = resid(tmplm))
 \vspace{-5mm}
 \begin{itemize}\itemsep1pt
 \item Do we think modeling the outcome variable as a linear function of the running variable is appropriate?
-\item What information might we garner from the plot below?
-\item And what could we do besides a linear model?
 \end{itemize}
 \end{mdframed}
 
@@ -485,128 +501,40 @@ ggplot(rdd_data, aes(DifDPct, DPctNxt)) + geom_point() +
 
 \subsection{Outcome Analysis}
 
-Consider modeling the relationship between the running variable and the outcome differently, and then perform outcome analysis in a manner similar to below.
+We can now perform outcome analysis on the detrended outcome variable:
 
 << >>=
 
-est_ate <- coef(lm(resid_DPctNxt ~ DemWin, data = rdd_data))[["DemWin"]]
+coeftest(x = lm(formula = resid_DPctNxt ~ DemWin, data = rdd_data),
+         vcov. = vcovHC(x = lm(formula = resid_DPctNxt ~ DemWin, data = rdd_data),
+                        type = "HC2"))[2,1]
 
-permute_sharp_null <- function(z, y){
-  Z = sample(z)
-  est_ate_null = coef(lm(y ~ Z))[["Z"]]
-  return(est_ate_null)
-  }
-
-rand_dist <- replicate(10^4, permute_sharp_null(z = rdd_data$DemWin,
-                                                y = rdd_data$resid_DPctNxt))
-
-qplot(rand_dist, geom = "histogram") +
-  labs(title = "Null Randomization Distribution",
-       x = "Estimated ATEs",
-       y = "Count") + geom_vline(xintercept = est_ate,
-                                 colour="red",
-                                 linetype = "longdash")
-
-## One-sided p-value
-
-p_value_one_sided <- mean(rand_dist >= est_ate)
-
-p_value_two_sided <- 2* min(mean(rand_dist >= est_ate), mean(rand_dist <= est_ate))
+source("http://jakebowers.org/ICPSR/confintHC.R")
+confint.HC(lm(formula = resid_DPctNxt ~ DemWin, data = rdd_data),
+           parm = "DemWin",
+           thevcov = vcovHC(lm(formula = resid_DPctNxt ~ DemWin, data = rdd_data),
+                            type="HC2"))
 
 @
 
-\vspace{5mm}
-\begin{mdframed}
-\textbf{Questions for Students:}
-\vspace{-5mm}
-\begin{itemize}\itemsep1pt
-\item Are we able to reject the sharp null hypothesis of no effect with an $\alpha = 0.05$?
-\item What could we have done to do to make the randomization distribution under the sharp null hypothesis tighter?
-\end{itemize}
-\end{mdframed}
+\citet{saleshansen2018}, however, propose robust regression, which is less sensitive to violations of the regression model's assumptions.
 
-Notice that in the outcome analysis above we only tested one null hypothesis, which was Fisher's sharp null \citep{fisher1935}. What if we wanted to test other hypothetical models of effects?
+<<>>=
 
-<< >>=
+tmp_rlm <- rlm(DPctNxt ~ DifDPct, data = rdd_data)
 
-ggplot(rdd_data, aes(factor(DemWin), resid_DPctNxt)) +
-  geom_boxplot() + xlab("Democrat Wins Election (Treatment)") +
-  ylab("Residualized Dem Vote Percentage in Next Election")
+rdd_data %<>% mutate(rlm_resid_DPctNxt = resid(tmp_rlm))
 
-@
+coeftest(x = lm(formula = rlm_resid_DPctNxt ~ DemWin, data = rdd_data),
+         vcov. = vcovHC(x = lm(formula = rlm_resid_DPctNxt ~ DemWin, data = rdd_data),
+                        type = "HC2"))[2,1]
 
-
-For now, let's stick to the constant, additive effect model. Looking only at units within the window, $W_0$, we will
-
-\begin{center}
-\begin{enumerate}
-
-\item Reconstruct outcomes according to the function $Y_{i0} = Y_i - \tau_i Z_i$;
-
-\item residualize $Y_{i0}$ by regressing it on $R_i$;
-
-\item calculate the observed test-statistic;
-
-\item Test the sharp null hypothesis of no effect on the reconstructed outcomes $Y_{i0}$;
-
-\item Retain all hypothetical $\tau_i$s with a p-value that is at least as large as $\alpha$.
-
-\end{enumerate}
-\end{center}
-
-<< >>=
-
-source("Hl_Est_and_Confidence_Set_RDD.R")
+confint.HC(lm(formula = rlm_resid_DPctNxt ~ DemWin, data = rdd_data),
+           parm = "DemWin",
+           thevcov = vcovHC(lm(formula = rlm_resid_DPctNxt ~ DemWin, data = rdd_data),
+                            type="HC2"))
 
 @
-
-<< eval = FALSE >>=
-
-HL_CS <- Confidence_Set_and_HL_Est_RDD(.Y = rdd_data$DPctNxt,
-                              .Z = rdd_data$DemWin,
-                              .R = rdd_data$DifDPct,
-                              .block = NULL,
-                              ## Max:
-                              #rdd_data %$% {max(DPctNxt[DemWin==1]) -
-                              #min(rdd_data$DPctNxt[rdd_data$DemWin==0])}
-                              ## Min:
-                              #rdd_data %$% {min(DPctNxt[DemWin==1]) -
-                              #max(rdd_data$DPctNxt[rdd_data$DemWin==0])}
-                              .tau_range = c(-55, 100),
-                              .tau_length = length(seq(from = -15,
-                                                to = 15,
-                                                by = .1)),
-                              .sims = 10^4,
-                              .alpha = 0.05,
-                              .cores = parallel::detectCores())
-
-save(HL_CS, file = "HL_CS.RData")
-
-@
-
-<< >>=
-
-load("HL_CS.RData")
-
-HL_CS[c(1:3)]
-
-@
-
-\vspace{5mm}
-\begin{mdframed}
-\textbf{Question for Students:}
-\vspace{-5mm}
-\begin{itemize}\itemsep1pt
-\item Interpret the results above.
-\end{itemize}
-\end{mdframed}
-
-\textbf{Exercise for Students:}
-
-\begin{itemize}\itemsep1pt
-\item Now, construct a $(1 - \alpha)100$\% confidence interval using the HC2 standard errors discussed in previous classes. Or construct a $(1 - \alpha)100$\% confidence set using the function above making sure to use the ``gain score'' as the outcome.
-\end{itemize}
-
 
 
 \newpage
