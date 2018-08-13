@@ -118,7 +118,7 @@
 \definecolor{eqred}{RGB}{217,95,2}
 
 
-\title{Regression Discontinuity Designs and Difference-in-Differences}
+\title{Regression Discontinuity Designs}
 \author{Jake Bowers, Ben Hansen \& Tom Leavitt}
 \date{\today}
 
@@ -439,7 +439,7 @@ kable(band_df)
 
 \subsection{Local Random Assignment Does \textit{Not} Imply Exclusion Restriction}
 
-Now let's assume that within a certain bandwidth around the cutpoint, $W_0$, the assumption of a local randomized experiment---described in \eqref{eq: Assumption 1} above---obtains. Yet even if this assumption obtains, the running variable, $R_i$, might still relate to potential outcomes through a mechanism other than $Z_{i} \given W_0$.
+Now let's assume that within a certain bandwidth around the cutpoint, $W_0$, the assumption of a local randomized experiment obtains. In other words, probabilties are uniformly distributed on $R_i \in W_0$ for all $i$. Yet even if this assumption obtains, the running variable, $R$, might still relate to potential outcomes through a mechanism other than $Z \given R \in W_0$.
 
 \vspace{5mm}
 \begin{mdframed}
@@ -450,7 +450,7 @@ Now let's assume that within a certain bandwidth around the cutpoint, $W_0$, the
 \end{itemize}
 \end{mdframed}
 
-The exclusion restriction is a strong assumption in the RDD context since $Z_i$ is a deterministic function of the running variable, $R_i$, which implies that treatment and control groups, by construction, will be imbalanced on the running variable. Thus, if $R_i$ relates to $(y_{ic}, y_{it})$, through a mechanism other than $Z_{iW_0}$, then the exlcusion restriction is violated.
+The exclusion restriction is a strong assumption in the RDD context since $Z$ is a deterministic function of the running variable, $R$, which implies that treatment and control groups, by construction, will be imbalanced on the running variable. Thus, if $R$ relates to $(y_{c}, y_{t})$, through a mechanism other than $Z \given R \in W_0$, then the exlcusion restriction is violated.
 
 If we think the exclusion restriction holds, then we can simply perform outcome analysis within a window around the cutpoint where local randomization presumably holds:
 
@@ -472,6 +472,7 @@ confint.HC(lm(formula = DPctNxt ~ DemWin, data = rdd_data),
 We coud also perform permutation inference within the window around the cutpoint under the assumption that local randomization holds:
 
 <<>>=
+
 set.seed(1:5)
 sharp_null_dist <- replicate(n = 10^3,
                              expr = coef(lm(formula = DPctNxt ~ sample(DemWin), data = rdd_data))[[2]])
@@ -482,12 +483,12 @@ two_sided_p_val <- min(1, 2 * min(upper_p_val, lower_p_val))
 
 @
 
-What can we do if the exclusion restriction is violated? One approach is to model potential outcomes as a function of the running variable, and then to ``de-trend'' (or ``transform'') the outcome variable and to subsequently make the claim of ``residual ignorability.''
+What can we do if the exclusion restriction is violated? Or worse, if the running variable, $R$, confounds the relationship between $Z$ and $Y$? One approach is to model potential outcomes as a function of the running variable, and then to ``de-trend'' (or ``transform'') the outcome variable and to subsequently make the claim of ``residual ignorability.''
 
 More specifically, we postulate that:
 \begin{align*}
 Y_{c_i} & = \alpha_0 + \beta R_i + \epsilon_{c_i}, \ \epsilon_{c_i} \sim \mathcal{N}\left(0, \sigma^2\right) \\
-Y_{t_i} & = \alpha_0 + \left(\alpha_1 - \alpha_0\right)Z_i + \beta R_i + \epsilon_{c_i}, \ \epsilon_{c_i} \sim \mathcal{N}\left(0, \sigma^2\right) \\
+Y_{t_i} & = \alpha_0 + \left(\alpha_1 - \alpha_0\right)Z_i + \beta R_i + \epsilon_{t_i}, \ \epsilon_{t_i} \sim \mathcal{N}\left(0, \sigma^2\right) \\
 \end{align*}
 
 <<>>=
@@ -622,7 +623,7 @@ loess_predict_above - loess_predict_below
 
 @
 
-We could also use a $p$th order polynomial:
+We could also use a $p$th order polynomial. For example:
 
 <<>>=
 
@@ -637,10 +638,6 @@ lm_poly_predict_above <- predict(object = lm(formula = DPctNxt ~ I(DifDPct^3) + 
 lm_poly_predict_above - lm_poly_predict_below
 
 @
-
-
-
-
 
 \newpage
 
