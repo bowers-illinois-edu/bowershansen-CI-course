@@ -487,7 +487,7 @@ What can we do if the exclusion restriction is violated? One approach is to mode
 More specifically, we postulate that:
 \begin{align*}
 Y_{c_i} & = \alpha_0 + \beta R_i + \epsilon_{c_i}, \ \epsilon_{c_i} \sim \mathcal{N}\left(0, \sigma^2\right) \\
-Y_{t_i} & = \alpha_0 + \left(\alpha_1 - \alpha_0\right)Z_i \beta R_i + \epsilon_{c_i}, \ \epsilon_{c_i} \sim \mathcal{N}\left(0, \sigma^2\right) \\
+Y_{t_i} & = \alpha_0 + \left(\alpha_1 - \alpha_0\right)Z_i + \beta R_i + \epsilon_{c_i}, \ \epsilon_{c_i} \sim \mathcal{N}\left(0, \sigma^2\right) \\
 \end{align*}
 
 <<>>=
@@ -514,7 +514,7 @@ ggplot(rdd_data, aes(DifDPct, DPctNxt)) + geom_point() +
   xlab("Democratic Margin of Victory (Running Variable)") +
   ylab("Democratic Vote Percentage in Next Election (Outcome Variable)") +
   ggtitle("Relationship between Running Variable and Outcome") +
-  geom_vline(xintercept = c(-.4, .4))
+  geom_vline(xintercept = 0, linetype = "dashed")
 
 @
 
@@ -591,22 +591,62 @@ Let's first use a simple linear model to estimate the relationship on both sides
 
 <<>>=
 
-cutpoint_predic_below <- predict(object = lm(formula = DPctNxt ~ DifDPct, data = rdd_data, subset = DifDPct < 0),
+lm_predict_below <- predict(object = lm(formula = DPctNxt ~ DifDPct, data = rdd_data, subset = DifDPct < 0),
                            newdata = data.frame(DifDPct = 0))
 
-cutpoint_predic_above <- predict(object = lm(formula = DPctNxt ~ DifDPct, data = rdd_data, subset = DifDPct > 0),
+lm_predict_above <- predict(object = lm(formula = DPctNxt ~ DifDPct, data = rdd_data, subset = DifDPct > 0),
                                  newdata = data.frame(DifDPct = 0))
 
-cutpoint_predic_above - cutpoint_predic_below
+lm_predict_above - lm_predict_below
 
 @
+
+\newpage
+We could also do the same thing with LOESS regression:
+
+<< >>=
+
+loess_predict_below <- predict(object = loess(formula = DPctNxt ~ DifDPct,
+                                                       data = rdd_data,
+                                                       subset = DifDPct < 0,
+                                                       surface = "direct"),
+                                        newdata = data.frame(DifDPct = 0))
+
+loess_predict_above <- predict(object = loess(formula = DPctNxt ~ DifDPct,
+                                                       data = rdd_data,
+                                                       subset = DifDPct > 0,
+                                                       surface = "direct"),
+                                        newdata = data.frame(DifDPct = 0))
+
+loess_predict_above - loess_predict_below
+
+@
+
+We could also use a $p$th order polynomial:
+
+<<>>=
+
+lm_poly_predict_below <- predict(object = lm(formula = DPctNxt ~ I(DifDPct^3) + I(DifDPct^2) + DifDPct,
+                                             data = rdd_data, subset = DifDPct < 0),
+                                 newdata = data.frame(DifDPct = 0))
+
+lm_poly_predict_above <- predict(object = lm(formula = DPctNxt ~ I(DifDPct^3) + I(DifDPct^2) + DifDPct,
+                                             data = rdd_data, subset = DifDPct > 0),
+                                 newdata = data.frame(DifDPct = 0))
+
+lm_poly_predict_above - lm_poly_predict_below
+
+@
+
+
+
 
 
 \newpage
 
 \bibliographystyle{chicago}
 \begin{singlespace}
-\bibliography{refs}   % name your BibTeX data base
+\bibliography{master_bibliography}   % name your BibTeX data base
 \end{singlespace}
 
 \newpage
