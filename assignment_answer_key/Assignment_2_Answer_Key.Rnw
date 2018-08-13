@@ -1,0 +1,377 @@
+\documentclass[11pt]{article}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts}          % AMS Fonts
+\usepackage{amsthm}
+\usepackage{amsmath}           % Mathtype; To align to the left use option [fleqn]
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{amssymb}           % AMS Symbols
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{rotating}
+\usepackage{pdflscape}
+\usepackage{float}             % Force floats around
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+
+\usepackage[final]{pdfpages}
+% \usepackage{lmodern}
+% \usepackage{libertine} \usepackage[libertine]{newtxmath}
+\usepackage{stix}
+% \usepackage[osf,sc]{mathpazo}     % alternative math
+\usepackage[T1]{fontenc}
+% \usepackage{fontspec}
+% \setmainfont{Times New Roman}
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage[makeroom]{cancel}
+\usepackage{verbatim}
+\usepackage{geometry}
+\geometry{verbose,margin=1in,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{mathtools}
+ \usepackage{tikz}
+  \def\firstcircle{(90:1.75cm) circle (2.5cm)}
+  \def\secondcircle{(210:1.75cm) circle (2.5cm)}
+  \def\thirdcircle{(330:1.75cm) circle (2.5cm)}
+
+\usepackage{tkz-euclide}
+
+% arrow and line for 'tkzPointShowCoord'
+\makeatletter
+\tikzset{arrow coord style/.style={%
+    densely dashed,
+    \tkz@euc@linecolor,
+    %>=stealth',
+    %->,
+    }}
+    \tikzset{xcoord style/.style={%
+    \tkz@euc@labelcolor,
+    font=\normalsize,text height=1ex,
+    inner sep = 0pt,
+    outer sep = 0pt,
+    fill=\tkz@fillcolor,
+    below=6pt
+    }} 
+\tikzset{ycoord style/.style={%
+    \tkz@euc@labelcolor,
+    font=\normalsize,text height=1ex, 
+    inner sep = 0pt,
+    outer sep = 0pt, 
+    fill=\tkz@fillcolor,
+    left=6pt
+    }}  
+\makeatother
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=false,
+            colorlinks=true,
+            hypertexnames=false]{hyperref}
+\hypersetup{pdfstartview={XYZ null null 1},
+            citecolor=blue!50,
+            linkcolor=red,
+            urlcolor=green!70!black}
+
+\usepackage{multirow}
+\usepackage{tikz}
+\usetikzlibrary{trees, positioning, arrows, automata, calc}
+
+\tikzset{
+  treenode/.style = {align=center, inner sep=0pt, text centered,
+    font=\sffamily},
+  arn_n/.style = {treenode, rectangle, black, fill=white, text width=6em},
+  arn_r/.style = {treenode, circle, red, draw=red, text width=1.5em, thick}
+}
+
+\usepackage{pgfplots}
+% argument #1: any options
+\newenvironment{customlegend}[1][]{%
+    \begingroup
+    % inits/clears the lists (which might be populated from previous
+    % axes):
+    \csname pgfplots@init@cleared@structures\endcsname
+    \pgfplotsset{#1}%
+}{%
+    % draws the legend:
+    \csname pgfplots@createlegend\endcsname
+    \endgroup
+}%
+
+% makes \addlegendimage available (typically only available within an
+% axis environment):
+\def\addlegendimage{\csname pgfplots@addlegendimage\endcsname}
+
+%%--------------------------------
+
+% definition to insert numbers
+\pgfkeys{/pgfplots/number in legend/.style={%
+        /pgfplots/legend image code/.code={%
+            \node at (0.125,-0.0225){#1}; % <= changed x value
+        },%
+    },
+}
+\pgfplotsset{
+every legend to name picture/.style={west}
+}
+
+
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+\usepackage[small,bf]{caption}  % Captions
+
+\usepackage[obeyFinal,textwidth=0.8in, colorinlistoftodos,prependcaption,textsize=tiny]{todonotes} % \fxnote*[options]{note}{text} to make sticky notes
+\usepackage{xargs}
+\newcommandx{\unsure}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+\newcommandx{\change}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}}
+\newcommandx{\info}[2][1=]{\todo[linecolor=OliveGreen,backgroundcolor=OliveGreen!25,bordercolor=OliveGreen,#1]{#2}}
+\newcommandx{\improvement}[2][1=]{\todo[linecolor=Plum,backgroundcolor=Plum!25,bordercolor=Plum,#1]{#2}}
+
+\parskip=10pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\newcommand{\qedknitr}{\hfill\rule{1.2ex}{1.2ex}}
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{} %Aboveskip
+{} %Below skip
+{\mdseries} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\newcommand\given[1][]{\:#1\vert\:}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\N}{\mathbb{N}}
+\DeclareMathOperator{\Z}{\mathbb{Z}}
+\DeclareMathOperator{\Q}{\mathbb{Q}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\e}{\rm{e}}
+\DeclareMathOperator{\logit}{\rm{logit}}
+\DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
+
+
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+
+\begin{document}
+\begin{titlepage}
+\title{Causal Inference for the Social Sciences: \\
+Assignment 2 Answer Key}
+\author{Tom Leavitt}
+\date{\today}
+\maketitle
+
+\end{titlepage}
+\tableofcontents
+\clearpage
+
+\doublespacing
+
+\maketitle
+
+<< >>=
+
+rm(list=ls())
+
+if(!require(pacman)) { install.packages("pacman") }
+
+p_load(MASS,
+       plyr,
+       dplyr,
+       magrittr,
+       haven,
+       ggplot2,
+       randomizr,
+       reshape2)
+
+@
+
+\section{A}
+
+\citet[276--277]{albertsonlawrence2009} write that ``[b]y using a random sample, we avoid the external validity problems associated with samples of convenience that are generally used in laboratory experiments. In addition, by assigning respondents at random to viewing and nonviewing conditions, these studies benefit from experimental control. Yet unlike laboratory experiments, this design allows respondents to view programs in their own homes, thus more closely approximating regular viewing conditions.''
+
+\subsection{\texttt{unit02-Ex.pdf} Question 1}
+
+If we assume that the IV assumptions are valid for the Round 2 respondents in the \citet{albertsonlawrence2009} study, we can estimate the average causal effect of encouragement, $\mathbf{Z}$, on dose, $\mathbf{D}$, via the estimator of the $ITT_D$, which is as follows:
+\begin{align*}
+\widehat{ITT_D} & = \frac{\mathbf{Z}^{\prime}\mathbf{D}}{\mathbf{Z}^{\prime}\mathbf{Z}} - \frac{\left(\mathbf{1} - \mathbf{Z}\right)^{\prime}\mathbf{D}}{\left(\mathbf{1} - \mathbf{Z}\right)^{\prime}\left(\mathbf{1} - \mathbf{Z}\right)} \\ 
+& = \left(\frac{1}{\sum_{i = 1}^n Z_i}\right) \sum_{i = 1}^n Z_i D_i - \left(\frac{1}{\sum_{i = 1}^n \left(1 - Z_i\right)}\right) \sum_{i = 1}^n \left(1 - Z_i\right) D_i
+\end{align*}
+
+For the first study, the estimate of the effect of encouragement on program viewing is:
+\begin{align*}
+\frac{244}{510} - \frac{74}{579} & \approx 0.3506.
+\end{align*}
+For the second study, the estimate is:
+\begin{align*}
+\frac{117}{259} - \frac{11}{248} & \approx 0.4074.
+\end{align*}
+
+\subsection{\texttt{unit02-Ex.pdf} Question 2}
+
+A hypothetical outcome variable one could collect is ``Views on Addiction Policy,'' measured on a scale from 0 -- 10 in which 0 represents no support for public treatment programs and 10 is full support. Let's imagine that we have the following results:
+\begin{align*}
+\frac{3723}{510} - \frac{2895}{579} & = 7.3 - 5 \\
+& = 2.3.
+\end{align*}
+
+The CACE estimator is $\frac{\widehat{\text{ITT}}}{\widehat{\text{ITT}_D}}$, where the $\widehat{\text{ITT}_D}$ is defined as above and the $\widehat{\text{ITT}}$ is defined as follows:
+\begin{align*}
+\widehat{ITT_D} & = \frac{\mathbf{Z}^{\prime}\mathbf{Y}}{\mathbf{Z}^{\prime}\mathbf{Z}} - \frac{\left(\mathbf{1} - \mathbf{Z}\right)^{\prime}\mathbf{Y}}{\left(\mathbf{1} - \mathbf{Z}\right)^{\prime}\left(\mathbf{1} - \mathbf{Z}\right)} \\ 
+& = \left(\frac{1}{\sum_{i = 1}^n Z_i}\right) \sum_{i = 1}^n Z_i Y_i - \left(\frac{1}{\sum_{i = 1}^n \left(1 - Z_i\right)}\right) \sum_{i = 1}^n \left(1 - Z_i\right) Y_i
+\end{align*}
+
+Using the hypothetical results described earlier, out CACE estimate is simply the ratio of our estimate of the ITT and the $ITT_D$, which is:
+\begin{align*}
+\frac{2.3}{0.3506} & = 6.559718.
+\end{align*}
+
+\subsection{\texttt{unit02-Ex.pdf} Question 3}
+
+The Round 1 sample recruitment consisted of a survey conducted on a random sample of individuals from five metropolitan areas. If the researcher wants to make causal inferences among only the individuals who responded to the initial sample recruitment, then knowledge of the response rates are not necessary.
+
+\subsection{\texttt{unit02-Ex.pdf} Question 4}
+
+We would, however, want to know about the random digit dialing (RDD) recruitment effort in round $1$ if we wanted to generalize the experimental results to the general population from which the ``study population'' was sampled.
+
+\subsection{\texttt{unit02-Ex.pdf} Question 5}
+
+\citet{albertsonlawrence2009} state that the study they analyzed used random sampling from five metropolitan areas to recruit individuals into the study. Among individuals who were successfully recruited, the researchers assigned units to treatment and control groups. Among the individuals in this study population, the researchers were able to contact only 80\% of them to measure outcomes in Round 2 \citep[284]{albertsonlawrence2009}.
+
+Since we know that there were $1089$ individuals who responded in Round 2 and that these individuals make up 80\% of the round 1 study popuation, we can reason backwards to infer that there were $\frac{1089}{0.8} \approx 1361$ individuals in the study, only $1089$ of which responded in Round 2.
+
+Let $r_{ti}$ be an indicator for whether subject $i$ would respond in Round 2 if assigned to treatment and let $r_{ci}$ be an indicator for whether subject $i$ would respond in Round 2 if assigned to control.
+
+Potential outcomes are translated into observed outcomes according to the following equation:
+
+\begin{equation}
+\label{eq:obs_outcomes}
+Y_i = \begin{cases} y_{c_i} + [y_{t_i} - y_{c_i}] Z_i & \text{if } R_i = 1 \\
+\text{NA} & \text{if } R_i = 0, \end{cases}
+\end{equation}
+where $R_i = Z_i r_{t_i} + \left(1 - Z_i\right) r_{c_i}$.
+
+From Equation \ref{eq:obs_outcomes} above, we can see that if $R_i = 1$, then the researcher will observe $y_{ci}$ for unit $i$ if $Z_i = 0$ and $y_{t_i}$ for unit $i$ if $Z_i = 1$. By contrast, if $R_i = 0$, then $Y_i$ will be unobserved---i.e., NA.
+
+Now we can define four distinct types of subjects with regard to attrition:
+
+\begin{table}[h]
+\centering
+    \begin{tabular}{lll}
+    \toprule
+    $z_i = 0$ & $z_i = 1$ & Type of Subject       \\
+    \midrule
+    $r_{ci} = 1$ & $r_{ti} = 1$ & \textit{Always-Reporter} \\
+    $r_{ci} = 0$ & $r_{ti} = 1$ & \textit{If-Treated-Reporter} \\
+    $r_{ci} = 1$ & $r_{ti} = 0$ & \textit{If-Untreated-Reporter} \\
+    $r_{ci} = 0$ & $r_{ti} = 0$ & \textit{Never-Reporter} \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\citet{albertsonlawrence2009} measure $D_i$ and $Y_i$ among only 80\% of the individuals who were assigned to treatment and control. The individuals who report their $D_i$ and $Y_i$ outcomes could be ``Always-Reporters,'' ``If-Treated-Reporters'' and ``If-Untreated-Reporters.'' \citet{albertsonlawrence2009} restrict their analysis to only the individuals whose $D_i$ and $Y_i$ outcomes they did observe. The random assignment assumption will be violated if it is common that $r_t = 1$ while $r_c = 0$.
+
+To demonstrate this point, let's recall from assignment 1 exactly what random assignment means: Remember that $Z_i \in \left\{0, 1\right\}$ is a random variable that indicates whether unit $i$ is assigned to treatment, $Z_i = 1$, or control, $Z_i = 0$. Random assignment states that $\forall i, j \neq i \in \left\{1, \dots , n\right\}: \Pr\left(Z_i = 1\right) = \Pr\left(Z_j = 1\right)$, which also implies that $\forall i, j \neq i \in \left\{1, \dots , n\right\}: \Pr\left(Z_i = 0\right) = \Pr\left(Z_j = 0\right)$. In other words, the respective probabilities of assignment to treatment and control are idential for all units in the study population.
+
+Notice that it is sufficient for randomization to be violated if $\exists i, j \neq i \in \left\{1, \dots , n\right\}: \Pr\left(Z_i = 1\right) \neq \Pr\left(Z_j = 1\right)$. To show how randomization is violated when attrition depends on treatment assignment, let's consider just three units, $i$ and $j$:
+
+When there is no attrition, we can define observed outcomes for $i$ and $j$ as follows:
+\begin{align*}
+Y_i = y_{t_i}Z_i + \left(1 - Z_i\right)r_{c_i} \\ 
+Y_j = y_{t_j}Z_j + \left(1 - Z_j\right)r_{c_j}
+\end{align*}
+Since $\Pr\left(Z_i = 1\right) = \Pr\left(Z_j = 1\right)$, then it follows that $\Pr\left(Y_i = y_{t_i}\right) = \Pr\left(Y_j = y_{t_j}\right)$ and $\Pr\left(Y_i = y_{c_i}\right) = \Pr\left(Y_j = y_{c_j}\right)$.
+
+But, if there is attrition that is \textit{not} independent of treatment assignment, then the probability distribution on $Y_i$ and $Y_j$ will not be equal. For example, assume that $r_{t_i} = 1$ and $r_{c_i} = 0$ and $r_{t_j} = 1$ and $r_{c_j} = 1$. Now for unit $i$, the probability that $Y_i = y_{t_i}$ remains equal to $\Pr\left(Z_i = 1\right)$, but the probability of $\left(Y_i = y_{c_i}\right) = 0 \neq \Pr\left(Z_i = 0\right)$ since if unit $i$ is assigned to control, then its outcome $y_{c_i}$ is missing. For unit $j$, however, $\Pr\left(Y_j = y_{c_j}\right) = \Pr\left(Z_j = 0\right)$. Therefore, the probability distribution on $Y_i \in \left\{y_{c_i}, y_{t_i}\right\}$ differs from the probability distribution on $Y_j \in \left\{y_{c_j}, y_{t_j}\right\}$. In short, attrition that is not independent of treatment assignment has effectively derandomized our outcome data.
+
+On the other hand, if $\forall i: r_{t_i} = r_{c_i}$, then random assignment does indeed hold. For example, if $r_{t_i}, r_{t_j} = 1$ and $r_{c_i}, r_{c_j} = 1$, then the probability distribution on $Y_i$ and $Y_j$ is identical since both units' potential outcomes will always be observed. In fact, so long as $r_{c_i} = r_{t_i}$, if the researcher simply omits the units whose outcomes were not, as \citet{albertsonlawrence2009} do, then the random assignment remains valid among the units whose outcomes are \textit{not} missing under the assumption that their outcomes woudl have also been observed had treated units been assigned to control and vice versa. Notice, though, that now one's inferences pertain only to the subset of the study population that consists of ``Always-Reporters,'' as defined in the table above.
+
+\section{B}
+
+For the \citet{arceneaux2005} study, we can determine the number of people who were successfully contacted in each precinct by multiplying the contact rate by the size of each precinct:
+
+<<>>=
+
+acorn <- read.csv2("acorn03.csv", sep = ",") 
+
+acorn_indiv <- data.frame(unit = acorn$unit,
+                          size = acorn$size,
+                          z = acorn$z,
+                          contact = as.numeric(acorn$contact) * acorn$size,
+                          vote = as.numeric(acorn$vote03) * acorn$size)
+
+@
+
+We can estimate the ITT of this study with the $\widehat{ITT}$ estimator described above. Our estimate of the ITT is $0.0440186$. That is, our estimate of the increase in the percentage of voters if all units had received the voter mobilization intervention compared to if all units had not is almost 5\%.
+
+<<>>=
+
+ITT_hat <- (sum(acorn_indiv$vote[acorn_indiv$z == 1]) / sum(acorn_indiv$size[acorn_indiv$z == 1])) -
+  (sum(acorn_indiv$vote[acorn_indiv$z == 0]) / sum(acorn_indiv$size[acorn_indiv$z == 0]))
+
+@
+
+The estimate of the complier average causal effect using the $\widehat{CACE}$ estimator defiend above as $\frac{\widehat{ITT}}{\widehat{ITT_D}}$ is roughly $0.07015953$, which means that among the subset of experimental units who are compliers, the increase in voter turnout due to the voter mobilization intervention is roughly 7\%.
+
+<<>>=
+
+ITT_D_hat <- (sum(acorn_indiv$contact[acorn_indiv$z == 1]) / sum(acorn_indiv$size[acorn_indiv$z == 1])) -
+  (sum(acorn_indiv$contact[acorn_indiv$z == 0]) / sum(acorn_indiv$size[acorn_indiv$z == 0]))
+
+CACE_hat <- ITT_hat / ITT_D_hat
+
+
+@
+
+\section{C}
+
+The strength of an instrument is equivalent to the proportion of compliers, where the greater is the proportion of compliers, then the greater is the strength of the instrument. There are $1089$ round 2 respondents in the \citet{albertsonlawrence2009} study and $9712$ individuals in the \citet{arceneaux2005} study, although in the latter study units were assigned to experimental conditions as members of groups (specifically precincts), not as individuals.
+
+In the \citet{albertsonlawrence2009} study, of the 510 units who were assigned to the encouragement condition, 244 units actually watched the television show, while 74 of the 579 units who were assigned to the control condition did watch the show. Among the units assigned to control, the 74 whow atched the show must be Always-Takers under the assumption of no defiers. Among the 510 units who were encouraged to watch the show, the 244 units who did can be either Always-Takers or Compliers. Since in expectation the proprotion of Always-Takers should be identical among treatment nd control conditions, the difference of $\frac{244}{510} - \frac{74}{579}$ is our best guess of the proportion of compliers, which is roughly $0.35$. By contrast, in the \citet{arceneaux2005} study, the estimated proportion of compliers is $\frac{3095}{4933} - \frac{0}{4779}$, which is roughly $0.63$.
+
+We cannot actually know which study has the stronger instrument, but since the estimated prortion of compliers is greater in the \citet{arceneaux2005} study than in the \citet{albertsonlawrence2009} study (and these two estimates come from an estimator that tracks the true proportion of compliers), we can thereby infer that the \citet{arceneaux2005} study has a stronger instrument than does the \citet{albertsonlawrence2009} study.
+
+\newpage
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{../Master_Bibliography}
+\end{singlespace}
+\end{document}

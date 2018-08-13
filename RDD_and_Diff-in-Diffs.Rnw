@@ -129,27 +129,17 @@
 
 << setup, echo=FALSE, results='hide',include = FALSE, eval = TRUE >>=
 
-if (!require("pacman")) {install.packages("pacman")}
+if (!require("pacman")) { install.packages("pacman") }
 
-pacman::p_load(
-  plyr,
-  dplyr,
+p_load(dplyr,
   magrittr,
   tidyr,
   haven,
-  broom,
-  randomizr,
-  lmtest,
-  ggplot2,
-  knitr,
-  xtable,
-  devtools,
   optmatch,
   RItools,
-  sandwich,
+  ggplot2,
   parallel,
-  doParallel
-)
+  knitr)
 
 
 opts_chunk$set(tidy = TRUE,
@@ -181,9 +171,7 @@ Today we are going to use the data on close US House of Representatives races
 	\href{http://sekhon.berkeley.edu/rep/RDReplication.zip}{here}. But we
 	read it directly below.} \citet{caugheysekhon2011} engage in a debate
 whose participants seek to identify the causal effect of the so-called
-``incumbency advantage.'' That is, what effect does a candidate's status as an
-incumbent have on whether or not that candidate wins an election? Obviously,
-whether or not a candidate is an incumbent is \textit{not} randomly assigned.
+``incumbency advantage.'' That is, what effect does a candidate's status as an incumbent have on whether or not that candidate wins an election? Obviously, whether or not a candidate is an incumbent is \textit{not} randomly assigned.
 
 Let's first load the data:
 
@@ -193,8 +181,6 @@ rm(list=ls())
 
 rdd_data <- read_dta("http://jakebowers.org/Matching/RDReplication.dta") %>%
 	filter(Use == 1) ## Use is indicator for whether unit is included in RD incumbency advantage sample
-
-rdd_data[] <- lapply(rdd_data[], unclass)
 
 @
 
@@ -318,50 +304,22 @@ kable(covs)
 
 @
 
-\subsection{Core RDD Assumptions}
+\subsection{RDD Framework}
 
-Let $W_0 = [\underline{r}, \overline{r}]$, where $\underline{r} < r_0 < \overline{r}$, denote the window around the cutpoint (or threshold value), $r_o$, that sorts units into treatment or control.
+Let the index $i \in \left\{1, \dots , n\right\}$ run over the $n$ experimental units. In the context of a regression discontinuity design, let $R_i$ denote the random ``score variable'' (also known as ``running variable''). The random assignment variable, $Z_i \in \left\{0, 1\right\}$, which indicates whether subject $i$ is assigned to treatment, $Z_i = 1$, or to control, $Z_i = 0$, is a deterministic function of $R_i$. In the context of the incumbency advantage study, we can define $Z_i$ as follows:
+\begin{align*}
+Z_i \equiv \mathbf{I}\left[R_i > 0 \right],
+\end{align*}
+where $\mathbf{I}\left[\cdot\right]$ is an indicator function that is $1$ if the argument to the function is true and $0$ if false. In this particular study, if the margin of victory is greater than $0$, then candidate $i$ is treated ($Z_i = 1$), and if not, then candidate $i$ is assigned to control ($Z_i = 0$).
 
-And, let $F_{R_i|R_i \in W_0}(r)$ denote the conditional distribution function of the running variable $R_i$ given $R_i \in W_0$ for each unit $i$.
+Let $W_0 = [\underline{r}, \overline{r}]$, where $\underline{r} < r_0 < \overline{r}$, denote the window around the cutpoint (or threshold value), $r_0$, that sorts units into treatment or control.
 
-The primary assumption of the regression discontinuity design is:
-
-\begin{equation} \label{eq: Assumption 1}
-\text{\textbf{Assumption 1}: }F_{R_i|R_i \in W_0}(r) = F(r).
-\end{equation}
-
-In other words, within a window around the cutpoint, $r_0$, the probability distribution of the running variable is the same for all units. In other words, the running variable is ``as-if'' randomly assigned within the window, $W_0$.
-
-A second core assumption is that the running variable is related to potential outcomes, $(y_c, y_t)$, through only $\mathbf{Z}_{W_0}$:
-
-\begin{equation} \label{eq: Assumption 2}
-\text{\textbf{Assumption 2}: } y_i(\mathbf{r}) = y_i(\mathbf{z}_{W_0}) \ \forall \ \mathbf{r}.
-\end{equation}
-
-\vspace{5mm}
-\begin{mdframed}
-\textbf{Question for Students:}
-\vspace{-5mm}
-\begin{itemize}\itemsep1pt
-\item Translate \eqref{eq: Assumption 2} above into words.
-\end{itemize}
-\end{mdframed}
 
 \subsection{Optimal Bandwidth Selection}
 
 We know from \citet{hansensales2015, rosenbaum2008, berger1988} that ``if a researcher pre-specifies a sequence of hypotheses and corresponding level-$\alpha$ tests, tests those hypotheses in order, and stops testing after the first non-rejected hypothesis, then the probability of incorrectly rejecting at least one correct hypothesis is at most $\alpha$'' \citep[p. 185]{hansensales2015}.
 
 As applied to bandwidth selection in the RDD context, the SIUP implies that one should start with a set of candidate bandwidths and sequentially test for covariate balance (beginning from either the largest candidate bandwidth or the smallest candidate bandwidth).
-
-\vspace{5mm}
-\begin{mdframed}
-\textbf{Questions for Students:}
-\vspace{-5mm}
-\begin{itemize}\itemsep1pt
-\item Give one reason why we might want to begin testing from the \textit{largest} candidate bandwidth?
-\item Give one reason why we might want to begin testing from the \textit{smallest} candidate bandwidth?
-\end{itemize}
-\end{mdframed}
 
 Let's specify a set of candidate bandwidths and then sequentially test covariate balance. Before actually testing, though, we want to specify a balance criterion and then maximize effective sample size subject to that criterion.
 
@@ -418,6 +376,7 @@ chi_squared_balance <- function(i,
 
   # Preliminaries
   suppressMessages(stopifnot(require(dplyr, quietly = TRUE)))
+  suppressMessages(stopifnot(require(parallel, quietly = TRUE)))
   suppressMessages(stopifnot(require(magrittr, quietly = TRUE)))
   suppressMessages(stopifnot(require(RItools, quietly = TRUE)))
 
@@ -641,56 +600,6 @@ HL_CS[c(1:3)]
 \item Interpret the results above.
 \end{itemize}
 \end{mdframed}
-
-\section{Difference-in-Differences}
-
-Now let's see if we can perform the same analysis using a difference-in-differences approach. Difference-in-differences entails constructing the ``gain score''---in this case, the change in the percentage of votes before the treatment relative to after the treatment---and performing outcome analysis on the ``gain score.''
-
-This method should increase precision. But, also, insofar as there are no time-varying covariates, then the difference-in-differences approach can also serve as an identification strategy.
-
-<< >>=
-
-rdd_data %<>% mutate(gain_pct = DPctNxt - DPctPrv)
-
-tmplm <- lm(gain_pct ~ DifDPct, data = rdd_data)
-rdd_data %<>% mutate(gain_pct_resid = resid(tmplm))
-
-est_gain_score_ate <- coef(lm(gain_pct_resid ~ DemWin, data = rdd_data))[["DemWin"]]
-
-c(est_ate, est_gain_score_ate)
-
-@
-
-
-\textbf{Question for Students:}
-\begin{itemize}\itemsep1pt
-\item How different is the estimated average treatment effect for the ``gain score'' relative to the estimated ate for the Democratic percentage of votes in the next election?
-\end{itemize}
-
-Let's test the sharp null hypothesis of no effect:
-
-<< >>=
-
-rand_dist <- replicate(10^4, permute_sharp_null(z = rdd_data$DemWin,
-                                                y = rdd_data$gain_pct_resid))
-
-qplot(rand_dist, geom = "histogram") +
-  labs(title = "Null Randomization Distribution",
-       x = "Estimated ATEs",
-       y = "Count") + geom_vline(xintercept = est_ate,
-                                 colour="red",
-                                 linetype = "longdash")
-
-## One-sided p-value
-
-p_value_one_sided <- mean(rand_dist >= est_ate)
-
-p_value_two_sided <- 2* min(mean(rand_dist >= est_ate), mean(rand_dist <= est_ate))
-
-c(p_value_one_sided, p_value_two_sided)
-
-@
-
 
 \textbf{Exercise for Students:}
 
