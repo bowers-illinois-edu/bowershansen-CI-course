@@ -81,10 +81,10 @@ These are the day by day plans for the second half of the course. See unit-goals
 Non-bipartite matching (cross-sectional)
 
 ## Day 15:
-Non-bipartite matching (longitudinal)
+RDD
 
 ## Day 16:
-? Sensitivity analysis I (Rosenbaum Style)?
+Sensitivity analysis I (Rosenbaum Style)
 
 ## Day 17:
 ?Sensitivity Analysis? ?RDD? (Ben takes this class)

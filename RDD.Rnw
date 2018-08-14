@@ -399,7 +399,7 @@ chi_squared_balance <- function(i,
                       data = data,
                       report = "chisquare.test")$overall[[3]]
 
-  bands <- cbind(ess, p_value)
+  bands <- cbind(ess, p_value, lower_bound[i], upper_bound[i])
 
   return(bands)
 
