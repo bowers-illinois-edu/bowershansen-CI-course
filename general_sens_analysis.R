@@ -170,7 +170,7 @@ gen_Omega_and_probs <- function(.total_n,
     
     p_value_l = 2 * min(sum((null_dist >= obs_stat) * all_probs_l), sum((null_dist <= obs_stat) * all_probs_l)) 
     
-    return(list(p_value_u, p_value_l)) }
+    return(list(upperp=p_value_u, lowerp=p_value_l)) }
     
     if(.p_value == "lower"){
       
@@ -178,7 +178,7 @@ gen_Omega_and_probs <- function(.total_n,
       
       p_value_l = sum((null_dist <= obs_stat) * all_probs_l)
       
-      return(list(p_value_u, p_value_l)) }
+      return(list(upperp=p_value_u, lowerp=p_value_l)) }
     
     if(.p_value == "upper"){
       
@@ -186,7 +186,7 @@ gen_Omega_and_probs <- function(.total_n,
       
       p_value_l = sum((null_dist >= obs_stat) * all_probs_l)
       
-      return(list(p_value_u, p_value_l)) }
+      return(list(upperp=p_value_u, lowerp=p_value_l)) }
     
     }
   
@@ -249,7 +249,7 @@ gen_Omega_and_probs <- function(.total_n,
         
         p_value_l = 2 * min(sum((null_dist_l >= obs_stat) * all_probs_l), sum((null_dist_l <= obs_stat) * all_probs_l)) 
         
-        return(list(p_value_u, p_value_l)) }
+        return(list(upperp=p_value_u, lowerp=p_value_l)) }
       
       if(.p_value == "lower"){
         
@@ -257,7 +257,7 @@ gen_Omega_and_probs <- function(.total_n,
         
         p_value_l = sum((null_dist_l <= obs_stat) * all_probs_l)
         
-        return(list(p_value_u, p_value_l)) }
+        return(list(upperp=p_value_u, lowerp=p_value_l)) }
       
       if(.p_value == "upper"){
         
@@ -265,7 +265,7 @@ gen_Omega_and_probs <- function(.total_n,
         
         p_value_l = sum((null_dist_l >= obs_stat) * all_probs_l)
         
-        return(list(p_value_u, p_value_l)) }
+        return(list(upperp=p_value_u, lowerp=p_value_l)) }
       
        }
     
@@ -320,7 +320,7 @@ gen_Omega_and_probs <- function(.total_n,
         
         p_value_l = 2 * min(sum((null_dist_l >= obs_stat) * all_probs_l), sum((null_dist_l <= obs_stat) * all_probs_l)) 
         
-        return(list(p_value_u, p_value_l)) }
+        return(list(upperp=p_value_u, lowerp=p_value_l)) }
       
       if(.p_value == "lower"){
         
@@ -328,7 +328,7 @@ gen_Omega_and_probs <- function(.total_n,
         
         p_value_l = sum((null_dist_l <= obs_stat) * all_probs_l)
         
-        return(list(p_value_u, p_value_l)) }
+        return(list(upperp=p_value_u, lowerp=p_value_l)) }
       
       if(.p_value == "upper"){
         
@@ -336,38 +336,37 @@ gen_Omega_and_probs <- function(.total_n,
         
         p_value_l = sum((null_dist_l >= obs_stat) * all_probs_l)
         
-        return(list(p_value_u, p_value_l)) }
+        return(list(upperp=p_value_u, lowerp=p_value_l)) }
       
     }
   }
 }
-
-
-unit_index <- 1:8
-
-block_index <- c(1, 1, 1, 2, 2, 2, 3, 3)
-
-total_n = length(unit_index)
-
-hyp_z <- c(1, 0, 0, 0, 1, 0, 1, 0)
-
-y = c(8, 11, 21, 27, 27, 33,  6, 34)
-
-total_n_t <- sum(hyp_z)
-
-pis <- c(rep(x = 0.5,
-             times = length(hyp_z)))
-
-gen_Omega_and_probs(.total_n = total_n,
-                    .total_n_t = total_n_t,
-                    .y = y,
-                    .z = hyp_z,
-                    .block = NULL,
-                    .probs = pis,
-                    .gamma = 2,
-                    .p_value = "two.sided",
-                    .exact = TRUE,
-                    .seed = 1:5,
-                    .n_sims = 10000)
+#' @examples
+#' unit_index <- 1:8
+#' 
+#' block_index <- c(1, 1, 1, 2, 2, 2, 3, 3)
+#' 
+#' total_n = length(unit_index)
+#' 
+#' hyp_z <- c(1, 0, 0, 0, 1, 0, 1, 0)
+#' 
+#' y = c(8, 11, 21, 27, 27, 33,  6, 34)
+#' 
+#' total_n_t <- sum(hyp_z)
+#' 
+#' pis <- c(rep(x = 0.5,
+#'              times = length(hyp_z)))
+#' 
+#' gen_Omega_and_probs(.total_n = total_n,
+#'                     .total_n_t = total_n_t,
+#'                     .y = y,
+#'                     .z = hyp_z,
+#'                     .block = NULL,
+#'                     .probs = pis,
+#'                     .gamma = 2,
+#'                     .p_value = "two.sided",
+#'                     .exact = TRUE,
+#'                     .seed = 1:5,
+#'                     .n_sims = 10000)
 
 

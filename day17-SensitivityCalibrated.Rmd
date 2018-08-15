@@ -223,6 +223,63 @@ res2$root
 ## A more general, computational, approach
 
 Show the approach that directly simulates the effects of different $\Gamma$s.
+(Using a difference of means test statistic and non-asymptotic $p$-values).
+
+```{r}
+source("general_sens_analysis.R")
+```
+
+```{r}
+unit_index <- 1:8
+block_index <- c(1, 1, 1, 2, 2, 2, 3, 3)
+total_n = length(unit_index)
+hyp_z <- c(1, 0, 0, 0, 1, 0, 1, 0)
+y = c(8, 11, 21, 27, 27, 33,  6, 34)
+cbind(unit_index,block_index,hyp_z,y)
+total_n_t <- sum(hyp_z)
+pis <- c(rep(x = 0.5,
+	     times = length(hyp_z)))
+
+resG2 <- gen_Omega_and_probs(.total_n = total_n,
+			   .total_n_t = total_n_t,
+			   .y = y,
+			   .z = hyp_z,
+			   .block = NULL,
+			   .probs = pis,
+			   .gamma = 2,
+			   .p_value = "two.sided",
+			   .exact = TRUE,
+			   .seed = 1:5,
+			   .n_sims = 1000)
+```
+
+
+## A more general, computational, approach
+
+Show the approach that directly simulates the effects of different $\Gamma$s.
+(Using a difference of means test statistic and non-asymptotic $p$-values).
+
+
+```{r echo=TRUE}
+someG <- seq(1,10,1)
+res <- sapply(someG,function(G){ gen_Omega_and_probs(.total_n = total_n,
+			   .total_n_t = total_n_t,
+			   .y = y,
+			   .z = hyp_z,
+			   .block = NULL,
+			   .probs = pis,
+			   .gamma = G,
+			   .p_value = "two.sided",
+			   .exact = TRUE,
+			   .seed = 1:5,
+			   .n_sims = 1000) })
+
+res <- rbind(someG,res)
+```
+
+```{r}
+res
+```
 
 
 
@@ -230,16 +287,16 @@ Show the approach that directly simulates the effects of different $\Gamma$s.
 
 
 \begin{frame}
-  \frametitle{Background: omitted variables}
-  
+\frametitle{Background: omitted variables}
+
   Almost all findings from observational studies could in principle be
   explained by an unmeasured variable. But how strong a confounder
   would be needed?  Rosenbaum (1987,\ldots) quantifies confounding in
   terms of propensity scores.
-  
+
   \begin{center}
   \igrphx[height=.6\textheight]{rb2010p77}
-\end{center}
+  \end{center}
 
   An analytically easier approach uses regression to quantify confounding. 
 \end{frame}
@@ -290,10 +347,11 @@ $$
 We can quantify the relationship of $b$ to $\beta$, and of $\mathrm{se}(b)$ to
 $\mathrm{se}(\beta)$, in terms of 2 ``speculation parameters'':
 \begin{enumerate}
-\item $t_{w}$, the $t$-statistic associated with $W$'s coefficient in the (OLS) regression of $Z$ on $W$ and $\mathbf{X}$;
+\item $t_{w}$, the $t$-statistic associated with $W$'s coefficient in the (OLS) regression of $Z$ on $W$ and $\mathbf{X}$ (the selection effect, the effect of $W$ on treatment)
 \item $R^2_{y\cdot z\mathbf{x} w}$, the
 coefficient of multiple determination of the regression of $Y$ on $Z$,
-$\mathbf{X}$, and $W$.
+$\mathbf{X}$, and $W$. (the prognostic effect of $W$, the relationship with
+the outcome).
 \end{enumerate}
 
 More specifically, we can bound the upper and lower limits of conventional confidence intervals in terms of $t_{w}$ alone, or (often more sharply) in terms of $t_{w}$ and $R^2_{y\cdot z\mathbf{x} w}$.
@@ -312,21 +370,32 @@ $$
 \end{prop}
 \end{frame}
 
+\begin{frame}
+\frametitle{The relationship between $\hat{b}$ and $\hat{\beta}$ as a function
+of $\teeW$ and $\pcor$}
 
-Now let's think about the method \citet{hosman2010} propose for
-	sensitivity analysis. Their approach uses two parameters: $\teeW$ and
-	$\pcor$: $\teeW$ is the relationship between treatment assignment and the
-	imagined covariate in question (it is like Rosenbaum's $\Gamma$ but on the
-	$t$-scale); $\pcor$ is  the extent to which this covariate is prognostic or
-	predictive of outcomes. It relates the unobserved covariate to outcomes.
-	Why have two sensitivity analysis parameters?
+In \citep{hhh2010} they show that:
 
-Let's try the HHH method. We would like to calculate  $\teeW$ and $\pcor$ for
-	each variable used in the matching (and/or maybe some others). In the
-	article, they distinguish between numeric variables (where we can just
-	grab the $t$-statistic from a linear model) and multicategory/factor
-	variables (for which a simple $t$-statistic from a linear model is not
-	available and is approximated by an $F$-statistic).
+$$ \hat{b}-\hat{\beta}=SE(\hat{b})\teeW \pcor $$
+
+This allows them to represent confidence intervals for different speculative values of $\teeW$ and $\pcor$. 
+
+\medskip
+
+Note that $\teeW > 0$ but $0 \le \pcor \ge 1$, so selection bias will be a much bigger deal than prognostic power.
+
+\end{frame}
+
+
+## The intuition behind the HHH method:
+
+Use observed covariates to represent the possible behavior of unobserved covariates.
+
+ - 
+
+## Trying the HHH Method
+
+Load the functions:
 
 ```{r defspecpar,eval=TRUE,echo=TRUE}
 source(url("http://jakebowers.org/ICPSR/hhhsensfns.R"))
@@ -363,8 +432,9 @@ myfmmaker<-function(newdat,newcovs,keepcov,treatment){
 
 	 return(thefm)
 }
+```
 
-
+```{r}
 ## first turn all logical variables into numeric variables
 ## because of funny problems with the formula handling
 adjcovs<-all.vars(covfmla2)[-c(1,22)] ## don't need the NA indicator
@@ -425,15 +495,14 @@ What does this plot suggest about the potential influence of unobserved
 covariates which are like the ones that we have used in this dataset?
 
 
-```{r echo=FALSE,eval=TRUE,tidy=FALSE,out.width=".5\\textwidth"}
+```{r echo=FALSE,eval=TRUE,tidy=FALSE,out.width=".8\\textwidth"}
 plot(specps.res["r.par",],abs(specps.res["t.w",]))
 ## this next command allows you to click on points to get a label
 ## I think a double click or an escape stops the identification process
-## identify(specps.res["r.par",],abs(specps.res["t.w",]),
-##	 labels=colnames(specps.res),cex=.6)
-thevars <- c("nhPopD","nhClass","nhAboveHS")
+#identify(specps.res["r.par",],abs(specps.res["t.w",]),labels=colnames(specps.res),cex=.6)
+thevars <- c("nhPopD","nhClass","nhAboveHS","HomRate03","nhSepDiv","nhTP03")
 text(specps.res["r.par",thevars],abs(specps.res["t.w",thevars]),
-	 labels=thevars,cex=.6)
+	 labels=thevars,cex=.8,pos=3)
 ```
 
 ## Sensitivity Intervals
@@ -445,7 +514,7 @@ theci
 ```
 
 What might be the effect of an excluded variable like $x$ on the confidence
-intervals calculated on the ATE? The CI assuming no confounding is [`r theci[1]`,`r theci[2]`].
+intervals calculated on the ATE? The CI assuming no confounding is [`r theci[1]`,`r theci[2]`] CI width: `r theci[2] - theci[1]`.
 
 ```{r echo=FALSE}
 adf<-mean(specps.res["df",])
@@ -460,7 +529,8 @@ rownames(sensintervals)<-c("t.w","r.par","l.bound","u.bound")
 
 ## make the table long rather than wide
 theintervals<-t(round(sensintervals,4))
-
+theintervals <- cbind(theintervals,ciwidth=theintervals[,"u.bound"] -
+		      theintervals[,"l.bound"])
 theintervals[order(theintervals[,"t.w"],theintervals[,"r.par"],decreasing=TRUE),]##[1:10,]
 ```
 
