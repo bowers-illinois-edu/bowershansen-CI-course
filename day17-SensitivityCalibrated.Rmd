@@ -391,7 +391,19 @@ Note that $\teeW > 0$ but $0 \le \pcor \ge 1$, so selection bias will be a much 
 
 Use observed covariates to represent the possible behavior of unobserved covariates.
 
- - 
+ - What might be some reasonable values for $\teeW$? (Find out by regressing
+   an observed covariate $x$ on treatment $Z$ according to the design (i.e.
+   with fixed effects for matched sets. Record the $t$ statistic from this
+   regression.) (Where the matched sets are created without $x$). 
+
+ - What might be some reasonable values for $\pcor$? (Find out by regressing
+   $Y$ on $Z$ (according to the design) **with and without $x$**. Compare the
+   $R^2$ for the two models to get $\pcor$. (Without $x$ means that the
+   propensity score and matching happen without $x$).
+
+ - Given a $\teeW$, $\pcor$, and $\widehat{SE}(\hat{b})$, we can calculate the
+   bounds on the confidence interval that we would seen if $W$ had been
+   included.
 
 ## Trying the HHH Method
 
@@ -402,7 +414,7 @@ source(url("http://jakebowers.org/ICPSR/hhhsensfns.R"))
 ```
 
 
-```{r usespecpars,cache=TRUE}
+```{r usespecpars,echo=FALSE,cache=TRUE}
 myfmmaker<-function(newdat,newcovs,keepcov,treatment){
 	## newdat is a new data frame
 	## newcovs is a vector of covariate names
@@ -435,8 +447,6 @@ myfmmaker<-function(newdat,newcovs,keepcov,treatment){
 ```
 
 ```{r}
-## first turn all logical variables into numeric variables
-## because of funny problems with the formula handling
 adjcovs<-all.vars(covfmla2)[-c(1,22)] ## don't need the NA indicator
 datNoNA$HomRate0803 <- meddat$HomRate0803
 
@@ -468,25 +478,30 @@ rownames(specps.res) = c("r.par", "t.w", "b", "se.b", "df", "add.b", "add.se.b")
 tmp<-round(specps.res[,"nhPopD"],4)
 ```
 
+## Trying the HHH Method
 
 
-So, let us consider the results for population density. The elements of the
+Consider the results for population density. The elements of the
 table are: $\pcor$, $\teeW$, the treatment effect (i.e. coef on nhTrt) when
 this variable is \emph{not} included in the propensity model/matching; the
-finite-sample (HC2approx) standard error on this coef; the df for that
+finite-sample standard error on this coef; the df for that
 regression (mainly relevant for factor variables); and the coef for nhTrt
 when this term is included in the matching/fixed-effects and corresponding
 standard error.
 
+\medskip
+
 The most important pieces are the two sensitivity parameters. We can see that
 we decrease "unexplained" variation in 2008 Homicide Rate by about
-\Sexpr{tmp["r.par"]} when we include this term versus when we do not include
+`r tmp["r.par"]` when we include this term versus when we do not include
 this term. And we see that this term is strongly  related to the
 neighborhood received the Metrocable intervention ($t$-statistic of about
-\Sexpr{tmp["t.w"]}).
+`r tmp["t.w"]`).
 
-So, does this suggest that this design is very sensitive to unobserved
-variables like population density? Why or why not?
+```{r}
+round(specps.res[,"nhPopD"],4)
+```
+
 
 
 ## Looking at the sensitivity parameters
