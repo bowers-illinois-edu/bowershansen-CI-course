@@ -225,6 +225,8 @@ res2$root
 Show the approach that directly simulates the effects of different $\Gamma$s.
 (Using a difference of means test statistic and non-asymptotic $p$-values).
 
+First setup:
+
 ```{r}
 source("general_sens_analysis.R")
 ```
@@ -239,7 +241,13 @@ cbind(unit_index,block_index,hyp_z,y)
 total_n_t <- sum(hyp_z)
 pis <- c(rep(x = 0.5,
 	     times = length(hyp_z)))
+```
 
+## A more general, computational, approach
+
+Then assess $\Gamma=2$.
+
+```{r}
 resG2 <- gen_Omega_and_probs(.total_n = total_n,
 			   .total_n_t = total_n_t,
 			   .y = y,
@@ -251,6 +259,7 @@ resG2 <- gen_Omega_and_probs(.total_n = total_n,
 			   .exact = TRUE,
 			   .seed = 1:5,
 			   .n_sims = 1000)
+resG2
 ```
 
 
@@ -449,6 +458,7 @@ myfmmaker<-function(newdat,newcovs,keepcov,treatment){
 ```{r}
 adjcovs<-all.vars(covfmla2)[-c(1,22)] ## don't need the NA indicator
 datNoNA$HomRate0803 <- meddat$HomRate0803
+datNoNA$nhClass <- factor(meddat$nhClass)
 
 ## Try it for one continuous covariate
 specpars.ps(dat=datNoNA,covs=adjcovs,dropcov="nhPopD",
@@ -459,9 +469,14 @@ specpars.ps(dat=datNoNA,covs=adjcovs,dropcov="nhPopD",
 specpars.ps(dat=datNoNA,covs=adjcovs,dropcov="nhClass",
 	    type=2, outcome="HomRate0803", treatment="nhTrt",
 	    fmmaker=myfmmaker,keepcov=datNoNA$HomRate03)
+```
 
+## Trying the HHH Method
 
-## Do it for all of the covariates that we worry about.
+Do it for all of the covariates that we worry about (we will present these
+results in two slides).
+
+```{r}
 specps.res<-sapply(adjcovs,function(thecov){
 			   message(thecov) ## just to see what it is doing
 			   specpars.ps(dat=datNoNA,covs=adjcovs,dropcov=thecov,
@@ -472,6 +487,7 @@ specps.res<-sapply(adjcovs,function(thecov){
 
 rownames(specps.res) = c("r.par", "t.w", "b", "se.b", "df", "add.b", "add.se.b")
 
+## head(specps.res)
 ```
 
 ```{r echo=FALSE}
@@ -494,7 +510,7 @@ standard error.
 The most important pieces are the two sensitivity parameters. We can see that
 we decrease "unexplained" variation in 2008 Homicide Rate by about
 `r tmp["r.par"]` when we include this term versus when we do not include
-this term. And we see that this term is strongly  related to the
+this term. And we see that this term is strongly  related whether the
 neighborhood received the Metrocable intervention ($t$-statistic of about
 `r tmp["t.w"]`).
 
