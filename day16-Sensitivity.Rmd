@@ -445,8 +445,7 @@ lambdas <- seq(round(res1$root,1)+.1,2*res1$root,length=100)
 ampres1<-amplify(round(res1$root,1), lambda=lambdas)
 ampres2<-amplify(2, lambda=lambdas)
 ```
-
-```{r echo=FALSE, out.width=".5\\textwidth"}
+```{r echo=FALSE, out.width=".95\\textwidth"}
 par(mar=c(3,3,1,1),mgp=c(1.5,.5,0))
 plot(as.numeric(names(ampres1)),ampres1,
      xlab=expression(paste(Lambda," (maximum selection effect of confounder)")),
@@ -454,6 +453,7 @@ plot(as.numeric(names(ampres1)),ampres1,
      main=expression(paste("Decomposition of ", Gamma, "=4.4")))
 ##lines(as.numeric(names(ampres2)),ampres2,type="b")
 ```
+
 
 ## How sensitive to hidden biases was your design?
 

@@ -80,7 +80,7 @@ These are the day by day plans for the second half of the course. See unit-goals
 ## Day 14:
 Non-bipartite matching (cross-sectional)
 
-## Day 15:
+## Day 15: Monday
 RDD
 
 ## Day 16:
