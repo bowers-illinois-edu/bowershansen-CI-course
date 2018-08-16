@@ -126,9 +126,6 @@ $for(bibliography)$
 $endfor$
 $endif$
 
-$if(verbatim-in-note)$
-\usepackage{fancyvrb}
-$endif$
 \hypersetup{
 $if(title-meta)$
             pdftitle={$title-meta$},
@@ -162,9 +159,9 @@ $endif$
 $if(highlighting-macros)$
 $highlighting-macros$
 $endif$
-$if(verbatim-in-note)$
+
 \usepackage{fancyvrb}
-$endif$
+\usepackage{framed}
 
 \usepackage{longtable,booktabs,multirow}
 \usepackage{caption}
@@ -283,6 +280,11 @@ $endif$
 \makeatother
 %%%%%%%%%%
 
+
+%%% Trying to hide some latex from pandoc
+%%% https://github.com/jgm/pandoc/issues/3145
+\let\Begin\begin
+\let\End\end
 
 \begin{document}
 $if(title)$

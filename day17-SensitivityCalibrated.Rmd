@@ -220,6 +220,29 @@ res2<-uniroot(f=findSensG,method="t",lower=1,upper=6,a=.05)
 res2$root
 ```
 
+## Some other approaches
+
+```{r}
+## https://cran.r-project.org/web/packages/senstrat/index.html
+library(senstrat)
+
+library(sensitivityfull)
+senfm(-respmat,treated1=rep(TRUE,nrow(respmat)))
+senmv(-respmat)
+
+```
+
+
+
+ - https://cran.r-project.org/web/packages/treatSens/index.html -- for parametric
+models
+ - https://cran.r-project.org/web/packages/sensitivityPStrat/index.html
+
+
+
+See perhaps this for our approach: https://cran.r-project.org/web/packages/BiasedUrn/index.html
+ 
+
 ## A more general, computational, approach
 
 Show the approach that directly simulates the effects of different $\Gamma$s.

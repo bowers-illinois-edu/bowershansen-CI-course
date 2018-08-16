@@ -1,4 +1,5 @@
-\begin{tikzcd}[column sep=large]
-  Z  \arrow[from=1-1,to=1-4] &    &                           & Y \\
- \bm{x}=\{x_1,x_2,\ldots\} \arrow[from=2-1,to=1-1] \arrow[from=2-1,to=1-4] & & \bm{u} \arrow[from=2-3,to=1-1] \arrow[from=2-3,to=1-4] &
+\begin{tikzcd}[column sep=large, row sep=large]
+  \bm{x}=\{x_1,x_2,\ldots\} \arrow[from=1-1,to=2-1, "\text{0 by adjustment}" description] \arrow[from=1-1,to=2-4]  & & &\\
+  Z  \arrow[from=2-1,to=2-4, "\beta" description] &    &                           & Y \\
+  \bm{u} \arrow[from=3-1,to=2-1, "\Gamma \text{ or } \teeW" description] \arrow[from=3-1,to=2-4, "\pcor" description] 
 \end{tikzcd}
