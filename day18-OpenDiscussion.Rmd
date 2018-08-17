@@ -56,7 +56,9 @@ output:
 ## Topics:
 
  - Multiple imputation and matching (recall that missing data on covariates is
-   different from missing data on outcomes)
+   different from missing data on outcomes; also could do MH matching on
+   multiple PS scores created from multiply imputed data so that you have only
+   one single matched set.)
  - Meta-analyses in combination with one-study testing and estimation.
  - General principles for the design of randomized experiments (for example,
    power)
