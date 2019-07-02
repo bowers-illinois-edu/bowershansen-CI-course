@@ -1,0 +1,392 @@
+\documentclass[12pt]{article}
+
+%\usepackage{epsf,graphicx}
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}
+\usepackage[top=1in, bottom=1in, right=1in, left=1in]{geometry}
+\usepackage{natbib}
+\usepackage{bibentry} %% to do bib in syllabus
+\newcommand{\bibverse}[1]{\begin{verse} \bibentry{#1}. \end{verse}}
+\usepackage{hyperref}
+\usepackage{parskip}
+
+\usepackage{setspace}
+\setcounter{secnumdepth}{0}
+
+\title{Causal Inference for the Social Sciences}
+
+\input{../courseedition} %misnomer, as of now file only carries date
+\author{ Jake Bowers\thanks{ Political Science and Statistics
+    Departments, U. of Illinois, Champaign-Urbana; jwbowers@illinois.edu}
+\and Ben Hansen\thanks{Statistics Department and Survey Research
+  Center, U. of Michigan; ben.hansen@umich.edu} \and Tom
+Leavitt\thanks{Political Science, Columbia U.; \mbox{tl2624@columbia.edu}}\,}
+
+
+\begin{document}
+
+\maketitle
+\begin{abstract}
+  This course introduces methods and concepts used to infer causal
+  effects from comparisons of intervention and control groups.  We'll
+  use the potential outcomes framework of causality to analyze both
+  randomized and observational studies, distinguishing different forms
+  of random assignment and separating observational studies that
+  involve instruments, discontinuities and other devices, highlighting
+  the interplay of study design for statistical analysis.  Propensity
+  score matching is treated in depth, with explicit instruction in the
+  use of ``optmatch'' and related packages in R; other areas of
+  methodological focus include assessment of covariate balance by
+  specification tests and other methods; inference methods that are a
+  robust to small sample sizes, weak instruments, spillover and
+  interaction effects, heterogeneous treatment effects, and/or
+  misspecification of response surfaces; and omitted variable
+  sensitivity
+  analysis.  %The content is geared specifically toward students and researchers in the social sciences, with examples are drawn from economics, political science, public health, and sociology, among other fields.
+
+The course presupposes knowledge of multiple regression at the level
+of the ICPSR course Regression: II, as well as multiple regression
+with binary dependent variables (as taught in the ICPSR courses
+Regression: III or Maximum Likelihood).  The part of the course presenting
+matching requires the use of R for computation, but other methods presented in
+the course are readily implemented either in R or in Stata.
+\end{abstract}
+
+% \section{Meetings}
+
+%\input{meetings}
+
+\clearpage
+
+\nobibliography*
+
+
+\section{Overview}
+We may all warn our freshmen that association is not causation, but inferring causation has always been a central aim both for statisticians and for their collaborators. Until recently, however, inference of causation from statistical evidence depended on murky, scarcely attainable requirements; in practice, the weight of casual arguments was largely determined by the scientific authority of the people making them.
+
+Requirements for causal inference become more clear when they are
+framed in terms of \emph{potential outcomes}.  This was first done by
+Neyman, who in the 1920s used potential outcomes to model agricultural
+experiments.  Fisher independently proposed a related but distinct,
+ultimately more influential, analysis of experiments in 1935, and a
+rich strain of causal analysis developed among his intellectual
+progeny.  It clarified the differing requirements for causal inference
+with experiments and with observational data, isolating the distinct
+contributions required of the statistician and of his disciplinary
+collaborators; generated more satisfying methods with which to address
+potential confounding due to measured variables; qualitatively and
+quantitatively advanced our grasp of unmeasured confounding and its
+potential ramifications; furnished statistical methods with which to
+eke more out of the strongest study designs, under fewer assumptions;
+and articulated principles with which to understand study designs as a
+spectrum, rather than a dichotomy between ``good" experiments and
+``bad" observational studies. Understanding the methods and outlook of
+the school founded by Fisher's student W.G. Cochran will be the
+central task of this course.
+
+The course begins by applying the Fisher and Neyman-Rubin models of
+causality to randomized experiments, touching on considerations
+specific to clustered treatment assignment, ``small'' sample sizes and
+treatment effect heterogeneity.  The next segment addresses conceptual
+and methodogical challenges of applying the same models to analysis of
+non-experimental data. This course segment covers ignorability,
+selection, ``common support,'' covariate balance, paired comparisons,
+optimal matching and propensity scores. A short separate section
+introduces another method aiming to identify experiment-like
+structures in observational data, namely regression discontinuity,
+before a return to experiments.
+
+With these foundations in place, the course's second half adds
+conceptual depth and methodological flexibility. 
+% JAKE DO YOU AGREE?  1ST STAB HERE AT CODIFYING WHAT WE WERE TALKING
+% ABOUT THE OTHER DAY...
+Central topics include instrumental variables and local average
+treatment effects, stratified designs with clustering, interference,
+omitted variable sensitivity analysis and adapting workhorse
+techniques such as multiple regression to the demands of causal
+inference.  Over the course of the four weeks the course becomes
+progressively less lecture-oriented and more hands-on, with increasing
+emphasis on computing strategies in R.
+
+\section{Administrative}
+
+\subsection{Textbook(s)}
+
+The main text for the course is 
+
+\bibverse{rosenbaum10book}
+(Hereafter ``\textit{DOS}''.)   Although we won't follow it closely,
+its goals and methods align with the course's, and it will be useful
+as a reference and supplement. Chapters of the book will be made
+available in PDF form through the course Box site. 
+
+Other texts that we draw on include
+
+\bibverse{gerber2012field}
+
+\bibverse{dunning2012natural}
+
+\bibverse{imbensRubin15}
+
+% If you'll be using experiments, propensity scores, regression
+% discontinuity, or instrumental variables in your work, then each of
+% these is a worthwhile investment.
+
+Several other graduate-level monographs focus or touch
+on causal inference.  Texts that we've found to contain helpful
+discussion include:\\
+
+\bibverse{angrist2009mostly}
+
+\bibverse{berk2004regression}
+
+\bibverse{gelman2006dau}
+
+\bibverse{morgan2007counterfactuals}
+
+\bibverse{murnane2010methods}
+
+
+Other readings will be assigned and distributed electronically through
+a password-protected ``M+Box'' Web site.   
+
+
+If you're new to R, we suggest getting hold of:
+
+\bibverse{fox2019r}
+
+R software will be required for several specific segments of the course.  With
+some independent effort, students not familiar with R in advance should be
+able to learn enough R during the course to complete these assignments. We
+also recommend some work with R --- for example, via working through some
+online R courses --- before the course for students who have never
+used it before.
+
+
+\subsection{Assignments}
+%Computer or pencil and paper exercises will be assigned periodically and collected on Mondays and on Thursdays at the beginning of class. 
+Assignments are due each Tuesday, at the beginning of
+class. Parts of the assignment will be given at the beginning of the
+week, but other parts will be given during class, over the course of
+the week.  Many of these daily assignments will be given with the
+expectation that they'll be completed by the next course meeting,
+although they'll only be collected at the end of the week.
+Late homework will not be accepted without cause (or prior arrangement
+with the teaching assistant).   
+
+You're welcome to submit a paper at the end of the course, whether or not you're taking the course for credit.  In that case we'll return it with comments within a month or so of the course's completion.  (If you're taking the course for a grade, the paper won't contribute to the grade unless you're on  the borderline between two grades.) 
+
+Participation is expected.  It can take various forms:
+\begin{enumerate}
+\item Doing in-class exercises and discuss them with your peers;
+\item From time to time, making a clarification or raising a clarifying questions;
+\item Contributing to in-class discussions.
+\item \label{it:part0} Using a github pull request to suggest a clarification or other enhancement to
+  a course slide or worksheet.
+\item \label{it:part1} Drop by one of the professor's office hours to share a point
+  that you \textit{and at least one classmate} would like to have clarified or
+  amplified, or to point out a connection to your field; 
+\item \label{it:part2} Give a 5-10 minute in-class presentation of a paper in your
+  field that uses methods or designs we're discussing in the course.
+\end{enumerate}
+If you are taking the course for a grade, make a point of doing at
+least one of \ref{it:part0}, \ref{it:part1} and \ref{it:part2}.  There'll be an
+electronic sign-up for \ref{it:part2}.
+
+% Course participants will be expected either to give a presentation or to submit a short paper about assigned readings related to their fields of study.  Presentations will be given alone or in pairs, and last 10-20 minutes; short papers should be 5-8 pages long.  Students must decide no later than the end of the second week whether they’ll present or submit a paper, and on what topic; presentations will be given at times designated by the instructor, whereas papers must be submitted by the beginning of the fourth week.
+
+
+\section{Course contents}
+
+\subsection{Random assignment as a basis for inference}
+
+\subsubsection{Experiments and the foundations of causal inference}
+
+Medical- and social-science data generating processes can be difficult to
+capture accurately in a single regression equation, for various reasons.  
+The statistical foundations of randomized experiments are much more
+satisfying, particularly when they are taken on their own
+terms. Fisher and Neyman did this earlier in the 1920s and 30s, in
+work that Rubin, Holland and others reinvigorated beginning in the
+1970s.  The course begins by surveying the circle of ideas to emerge
+from this. 
+
+% In partial compensation for this early focus on experiments to the
+% expense of observational studies, for the course's
+% first meeting please read  \textit{DOS,}  pages 3--4.  It's short and it
+% contains a rationale for beginning by understanding experiments, even
+% if you'll be working exclusively with observational data. 
+
+Some readings for this course segment:
+%\begin{itemize}
+\begin{verse} Section~1.2, ``Experimentation defined,''  of 
+\bibentry{kinder1993experimental}.  (Particularly pp. 5--10.) \end{verse}
+
+\begin{verse}\bibentry{holland:1986a}, Sections~1--4. (The article that brought the ``Rubin 
+  Causal Model'' to  statisticians' attention.)\end{verse}
+
+\begin{verse}
+  Chapter 1 of DOS.
+\end{verse}
+
+
+\subsubsection{Inference for causal effects: the Neyman tradition}
+
+\begin{verse}
+  Chapters~1, 2 of \bibentry{gerber2012field}.
+\end{verse}
+
+\begin{verse} Endnote spanning pages A-32 and 33,
+  \bibentry{freedman:purv:pisa:1998}.  (This can be read as a pr{\'e}cis
+  of: \bibentry{neyman:1990}.)\end{verse}
+
+
+\subsubsection{Inference for causal effects: the Fisherian tradition}
+\begin{verse}
+  Chapter 2 of \bibentry{rosenbaum2010design}.
+\end{verse}
+
+\bibverse{rosenbaum:1996:onAIR} (A Fisherian approach to instrumental variables.) 
+
+
+
+Additional reading:
+
+\begin{verse}
+  Section 5.3, ``Instruments,'' of \bibentry{rosenbaum2010design}.
+\end{verse}
+
+\begin{verse}
+  Section 2.3 of \bibentry{rosenbaum:2002a}.
+\end{verse}
+
+\begin{verse} Chapter~1, ``Introduction,'' of \bibentry {fisher:1935}.\end{verse}
+
+
+
+\subsection{Found experiments}
+
+
+\subsubsection{Principled search for designs with ignorable assignment}
+
+\begin{verse}
+  Chapter 1 of DOS.
+\end{verse}
+
+\begin{verse}
+  Chapter 6 of \bibentry{dunning2012natural}.
+\end{verse}
+
+\bibverse{hansenSales2015cochran}
+\bibverse{hansen:bowers:2008}
+
+
+
+\subsubsection{Propensity score methods}
+
+Motivation and background:
+
+\bibverse{rubin:1979}
+
+\bibverse{rubinWaterman06}% PS matches as "clones" notion 
+
+\bibverse{ho:etal:07}
+
+
+\bibverse{rosenbaum:2001b}% Correcting the cloning mistake
+
+\bibverse{imbens:rubin:2008palgrave}
+
+A success and a failure:
+
+\bibverse{bifulco2012can}
+
+\bibverse{arceneaux2010cautionary}
+
+
+
+\subsubsection{Matching a focal group to controls}
+%\begin{itemize} 
+\begin{verse}\textit{DOS}, Chap 8--9, 13.\end{verse} 
+\begin{verse}\bibentry{rosenbaum:rubi:1985a}.\end{verse}
+\begin{verse}\bibentry{ho:etal:07}.\end{verse}
+\begin{verse}\bibentry{hansen2009b}.\end{verse}
+%\end{itemize}
+
+
+\subsubsection{Regression Discontinuity Designs}
+
+\bibverse{lee08}
+\bibverse{mccrary2008manipulation}
+\bibverse{causek11}
+\bibverse{cattaneo2014randomization}
+\bibverse{salesHansen2015RIforRD}
+
+\subsection{Causal inference from assignment mechanism models}
+
+
+\subsubsection{Instrumental Variables}
+\bibverse{AIR:96}
+\bibverse{lityau98}
+\bibverse{baiocchi2010building} 
+\bibverse{nickerson2008voting}
+\bibverse{gerber2010baseline}
+
+
+\subsubsection{Modeling the assignment mechanism}
+
+Why we might need a special story or additional steps in order to use familiar models:
+\bibverse{freedman2008} 
+but see also
+\bibverse{lin2013agnostic}
+
+A special story and a few additional steps that enable you to use familiar models:
+\bibverse{rosenbaum:2002a} 
+
+
+\textbf{In addition:}
+
+Example involving hierarchical data and a rather elaborate logistic regression model.  See in particular methodological appendix.
+\bibverse{cerdaetal2011} 
+
+Large samples enable some useful trickery.  Example also demonstrates use of clustering.
+\bibverse{bowers:hans:2008}
+
+Instrumental variables.
+\bibverse{rosenbaum:1996:onAIR}
+
+\bibverse{imbens:rose:2005}
+
+
+
+\subsection{Last but not least}
+\subsubsection{Sensitivity analysis}
+
+\begin{verse} \textit{DOS}, Chap 3 \end{verse}
+
+\bibverse{hosmanetal2010}
+
+\subsubsection{Interference}
+
+\bibverse{Sobel:what:2006}
+
+\bibverse{hudgens2008toward}
+
+\bibverse{rosenbaum2007ibu}
+
+\bibverse{bowersFP2013}
+
+\bibverse{ichino2012deterring}
+
+%\section{Additional Notes}
+\clearpage  
+\bibliographystyle{plain}
+\nobibliography{ci}
+%\nobibliography{master,abbrev_long,causalinference,biomedicalapplications,misc}
+%\nobibliography{../2013/BIB/master,../2013/BIB/abbrev_long,../2013/BIB/causalinference,../2013/BIB/biomedicalapplications,../2013/BIB/misc}
+%"master" is Ryan Moore's file (as of summer 2012).
+%"causalinference" is Ben's, and lives (as of summer 2013) in
+% http://dept.stat.lsa.umich.edu/~bbh/texmf/bibtex/bib/
+
+
+\end{document}
