@@ -24,14 +24,9 @@
 
 {\usebeamercolor[fg]{titlelike} Announcements:}\\
 
-  \input{announcement-of-the-day}  % announcement-of-the-day.tex not
+\input{announcement-of-the-day}  % announcement-of-the-day.tex not
                                 % announcement-of-the-day.tex not part of repo
 \end{frame}
-\itnote{
-\item Day 2: Starting in part 2, I'll demo use of R to do some Fisher test calcs for the Salk polio trial. 
-\item Then transition into them trying out some of these calculations in R
-\item Then we'll look at observational studies
-}
 
 \section{Overview}
 
@@ -132,35 +127,69 @@ analysis in social science, by century:
 
 \begin{frame}{The hypothesis of absolutely no effect}
 
-    \vfill
+  \begin{itemize}
+  \item In Placebo group, 162 reported cases ($n_{0}=201K$).  Among
+    Vaccinated, 82 (of $n_{1}=201K$).
+   \item The hypothesis of absolutely no effect says that however
+     randomization had turned out, polio would have
+     been reported for the same $162 +
+     82 = 244$ children (and no others).
+   \item Impossible?  No.  Improbable?  Let's see.  Under $H_{0}$:
+     \begin{itemize}
+     \item $\mathbf{y} = (0, \ldots, 0; 1, \ldots 1)$, w/ 244= 1's.
+       Not random. 
+     \item $\mathbf{Z} =$ random shuffle of $n_{0}$ 0s and $n_{1}$
+      1s, where $(n_{0}; n_{1}) = (201,229 ; 200,745)$.  
+     \item A \textit{random variable}  (r.v.) representing what the mean of
+       the vaccine group might have been is 
+       $n_{1}^{-1}\sum_{i=1}^{n} Z_{i}y_{i}$, $n = n_{0} + n_{1}$, or
+       $n_{1}^{-1}\mathbf{Z}'\mathbf{y}$.
+     \item Basic probability gives
+       $\mathrm{E}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}) = \bar y =
+       244/402K \approx 6\times 10^{-4}$. 
+     \item Statistical theory
+       adds $\mathrm{Var}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}) = n_{1}^{-1}
+  \frac{n_{0}}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar
+    y)^{2}}{n-1}$, evaluating to
+  $\left(4\times 10^{-5}\right)^{2}$.
+     \item Stat. theory also says $n_{1}^{-1}\mathbf{Z}'\mathbf{y}$ is
+       approximately Normal.
+     \item We observed $n_{1}^{-1}\mathbf{z}'\mathbf{y} =4 \times
+       10^{-4}$ --- 5 s.d.'s less than
+       $\mathrm{E}(n_{1}^{-1}\mathbf{Z}'\mathbf{y})$.  
+     \item But \texttt{pnorm(-5)} is \texttt{2.87e-07}.
+     \end{itemize}
+  \end{itemize}
   \end{frame}
 
-\itnote{
-
-\item Then break to discuss testing of hypotheses of no effect, i.e. start worksheet.
-\medskip
-
-\item[2016] at the
-blackboard I walked them through strict null for the Salk trial,
-tested it approximately using N-approx, $\mathrm{sd}_{0}(\hat p)
-\approx \sqrt{p_{0}q_{0}/n_{1}}$.  This seemed to work well.
-}
+% \itnote{
+% \item[2016] at the
+% blackboard I walked them through strict null for the Salk trial,
+% tested it approximately using N-approx, $\mathrm{sd}_{0}(\hat p)
+% \approx \sqrt{p_{0}q_{0}/n_{1}}$.  This seemed to work well.
+% }
 
 \begin{frame}{Potential outcomes}
   
   \begin{itemize}[<+->]
-  \item Distributions of response under treatment and control: $\mu_{t},
-    \mu_{c}$; $\mu_{t}(x), \mu_{c}(x)$.
-  \item Counterfactual conditional.
-  \item Unit-level potential outcomes (Rubin, 1970s): $y_{t}, y_{c}$.
+  \item The type of probability calculations we just saw originates
+    with Fisher (1935). It entertains counter-to-fact
+    \textit{assignments} of treatment conditions to experimental
+    subjects, holding responses fixed at their observed values.
+  \item Neyman (1923) and Rubin (1970s) also posited
+    unobserved, counter-to-fact \textit{potential outcomes} for each
+    $i$, bringing mathematic precision to ``treatment effect''.
+   \item Rosenbaum's \textit{DOS} covers this material in detail
+       (Ch.2, ``Causal inference in randomized experiments''). And we'll
+       see more of it as we go.
+   \item For now, let's ask Fisher's question --- What evidence does
+     the experiment provide \textit{against} the notion that the
+     treatment is entirely without effect --- in a few different contexts.
   \end{itemize}
 
-\uncover<+->{Rosenbaum's \textit{DOS} covers this material in detail (Ch.2, ``Causal inference in randomized experiments'').}
 \end{frame}
-\itnote{
-\item[2017] (Skipped dispensible material about
-  $x$/$\mathbf{x}$/$\mu_{\cdot}(\mathbf{x})$.) 
-}
+\note{Fisher tea-tasting now}
+
 \subsection{Conceptual framework}
 \begin{frame}{Goals of experimental design}
 
