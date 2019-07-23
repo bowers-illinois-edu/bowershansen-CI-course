@@ -1,11 +1,11 @@
 %  For slides only
-%\input{slidesonly}
+\input{slidesonly}
 
 % % For handout
 %\input{handout}
 
 %For handout + mynotes
-\input{handout+mynotes}
+%\input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -72,7 +72,7 @@
 \Note{Don't linger, I come back to this slide after Causal Inference
   in Experiments section}
 
-\begin{frame}{Three traditions in quantitative analysis}
+\begin{frame}[handout:0]{Three traditions in quantitative analysis}
 \framesubtitle{A brief, tendentious review}
 
 Modern causal inference in the 19th c., emerges over the 20th c, hits
@@ -172,13 +172,13 @@ analysis in social science, by century:
 \begin{frame}{Potential outcomes}
   
   \begin{itemize}[<+->]
-  \item The type of probability calculations we just saw originates
+  \item The type of probability calculation we just saw originates
     with Fisher (1935). It entertains counter-to-fact
     \textit{assignments} of treatment conditions to experimental
     subjects, holding responses fixed at their observed values.
   \item Neyman (1923) and Rubin (1970s) also posited
     unobserved, counter-to-fact \textit{potential outcomes} for each
-    $i$, bringing mathematic precision to ``treatment effect''.
+    $i$, bringing mathematical precision to ``treatment effect''.
    \item Rosenbaum's \textit{DOS} covers this material in detail
        (Ch.2, ``Causal inference in randomized experiments''). And we'll
        see more of it as we go.
@@ -224,7 +224,8 @@ don't, you'll tend not to.
 
 \begin{itemize}[<+->]
 \item \textrm{Random
-    assignment}  sure helps. Units 1-3 theorize this point along lines
+    assignment} may not be necessary, but it sure helps.
+  This week and next will theorize this point along lines
   of Fisher, Neyman and their current-day followers.
 \item In comparative assessments of study designs, random assignment also benefits
   from its association with other design characteristics of
@@ -250,11 +251,154 @@ don't, you'll tend not to.
 \begin{frame}[handout:0]{Example 2: overconfidence \& theories of intelligence}
 
 \begin{tabular}{c}
-\igrphx{ehrlingeretal16-4-1-2-0}\\
+  \igrphx{ehrlingeretal16-4-1-2-0}\\
 \igrphx{ehrlingeretal16-4-1-2-1}\\
 \end{tabular}
 
 \end{frame}
+
+\subsection{The randomization distribution }
+
+\begin{frame}{Fisher's tea-tasting experiment}
+  \framesubtitle{The data}
+
+The observed results of the experiment --- Fisher and the lady's, not
+ours --- can be summarized as follows:
+  
+\begin{center}
+    \begin{tabular}{l|l|ll|}
+    Unit & $\mathbf{z}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ \\ \hline
+    1    & 1          & ?                & 1 \\
+    2    & 1          & ?                & 1  \\
+    3    & 1          & ?                & 1  \\
+    4    & 1          & ?                & 1  \\
+    5    & 0          & 0                & ?  \\
+    6    & 0          & 0                & ?  \\
+    7    & 0          & 0                & ?  \\
+    8    & 0          & 0                & ?  \\
+    \end{tabular}
+\end{center}  
+
+(This summary involves potential outcomes, which were Neyman's idea
+not Fisher's.)
+\end{frame}
+
+
+\begin{frame}{Fisher's tea-tasting experiment}
+
+  \framesubtitle{An abstract representation of the states of the world
+    it aims to distinguish}
+
+\begin{columns}
+    \begin{Column}
+      \usebeamerfont{title}\usebeamercolor{title}{\color{fg} No effect}
+
+      \begin{tabular}{l|l|l}
+    Unit & $\mathbf{y}_c$ & $\mathbf{y}_t$ \\ \hline
+    1    & 1                & 1 \\
+    2    & 1                & 1  \\
+    3    & 1                & 1  \\
+    4    & 1                & 1  \\
+    5    & 0                & 0  \\
+    6    & 0                & 0  \\
+    7    & 0                & 0  \\
+    8    & 0                & 0  \\
+    \end{tabular}      
+    \end{Column}
+    \begin{Column}
+\usebeamerfont{title}\usebeamercolor{title}{\color{fg} Perfect
+  discrimination}
+
+\begin{tabular}{l|l|l}
+    Unit & $\mathbf{y}_c$ & $\mathbf{y}_t$ \\ \hline
+    1    & 0                & 1 \\
+    2    & 0                & 1  \\
+    3    & 0                & 1  \\
+    4    & 0                & 1  \\
+    5    & 0                & 1  \\
+    6    & 0                & 1  \\
+    7    & 0                & 1  \\
+    8    & 0                & 1  \\
+    \end{tabular}
+    \end{Column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Fisher's tea-tasting experiment}
+  \framesubtitle{Probabilities of assignment}
+  \begin{itemize}
+  \item In the experiment, $\mathbf{Z} = (Z_{1}, Z_{2}, \ldots,
+    Z_{8})$ is selected at random from ${8 \choose 4} = 70$ candidates
+    (see \texttt{day2-fishercombs.pdf}).
+  \item \textit{Temporarily assuming} the null hypothesis of no effect to
+    be true, only one of these has $\mathbf{Z}'\mathbf{y}$ as large as
+    4. So, $\PP_{0}(\mathbf{Z}'\mathbf{y} \geq 4) = 1/70 = .014$.
+  \item Under the alternative hypothesis of perfect discrimination,  $\PP_{0}(\mathbf{Z}'\mathbf{y} \geq 4) = 1$.
+  \item Fisher's conceptualization at its best w/ a single sharply
+    distinct alternative hypothesis. (Despite ``alternative hypothesis'' being Neyman's notion, not
+    Fisher's.)  To adapt it to questions of degree, we'll blend in
+    other concepts of Neyman.  
+  \end{itemize}
+\end{frame}
+
+\section{Observational studies}
+
+
+\begin{frame}<1-3>[label=quasivstrueFr]{Nonrandomized studies as
+    ``experiments''?}
+  \begin{itemize}[<+->]
+  \item Controlled experiments vs found ``experiments''
+  \item Found randomization as a hypothesis
+  \item Theoretical vs empirical scrutiny of hypothesis
+  \item Informal empirical scrutiny
+  \item Formal hypothesis testing (instructor agenda alert!)
+  \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}{A paired observational study}
+  
+  \begin{columns}
+    \begin{Column}
+  \begin{itemize}
+  \item Example: Vehicular accidents on Friday the
+      13ths\footnotemark
+  \item An \textit{observational} paired comparison.  (Rosenbaum's
+    \textit{DOS} starts w/
+    a randomized paired study.)
+  \item (Some refer to this study design as ``fixed effects.'')
+  \end{itemize}      
+    \end{Column}
+    \begin{Column}
+      \igrphx{scalonetal93-tab3}
+    \end{Column}
+  \end{columns}
+  \pause
+  
+  \begin{itemize}
+  \item
+  Difficulty of ``randomizing'' Fri. the 13th makes analogy to an
+  experiment slightly odd. That feeling may go away.  If not, it may
+  points to a genuine weakness of the study (cf. \textit{DOS} ch. 1)\ldots    
+  \end{itemize}
+  \footnotetext{T.J. Scanlon et al. (1993), ``Is Friday the 13th
+        Bad For Your Health?'', BMJ 307 1584--86.}
+\end{frame}
+
+\itnote{
+\item Numbers of emergency admissions to a UK hospital due to
+  vehicular accidents, on consecutive fridays the second of which is a
+  Friday the 13th. 
+\item (\S~2.1--2.2.1 of \textit{DOS} creates a small paired expt from
+  the NSW data.)
+\item It's a weakness of the study that the treatment is not sharply
+  defined and potentially applicable to any day.  Accordingly,
+  e.g. high reports of anxiety on Thurs 12ths would be difficult to
+  categorize as confounding variables or treatment effects.  
+\item Sharper conceptualization of the study can sometimes help.
+  Orienting it on the timeline helps as well.  
+}
 
 \begin{frame}<1>[label=timelineFr]{Timeline, with entry points for biases}
   % commands I'll want to renew, to get slides right in different versions
@@ -292,7 +436,38 @@ treatment delivered & outcomes  measured\\ \hline
 findings as summarized by Rosenbaum, \textit{DOS} ch1?}
 
 
-\section{Observational studies}
+\begin{frame}{Aside: Potential outcomes for in the Fri the 13th study}
+
+  \begin{center}
+    \begin{tabular}{ll|l|r|l|l|r|l|l}
+\hline
+$i$ &year & month & Fri6th & $y_{i1C}$ & 4y_{i1T}$ & Fri13th & $y_{i2C}$ & $y_{i2T}$\\
+\hline
+1 & '89 & Oct. & 9 & 9  & ? & 13 & ? & 13  \\
+\hline                                  
+2 & '90 & Jul. & 6 & 6  & ? & 12 & ? & 12  \\
+\hline                                  
+3 & '91 & Sep. & 11 & 11 & ? & 14 & ? & 14  \\
+\hline                                  
+4 & '91 & Dec. & 11 & 11 & ? & 10 & ? & 10  \\
+\hline                                  
+5 & '92 & Mar. & 3 & 3  & ? & 4 &  ? &4\\
+\hline                                  
+6 & '92 & Nov. & 5 & 5  & ? & 12 & ? & 12  \\
+\hline
+\end{tabular}
+
+\end{center}
+
+\begin{itemize}
+\item Potential outcomes similarly defined in other experiments and
+  observational studies with paired structure.  
+\item (We're following Rosenbaum's (2010, ch2) subscript notation.)
+\item  The structure of the ``experiment'' precludes observing $y_{i1T}$
+ and $y_{i2T}$ simultaneously, but we assume both to exist and permit
+ them to be distinct.
+\end{itemize}  
+\end{frame}
 
 
 \begin{frame}{Example 1b: Salk vaccine trial (the other one)}
@@ -315,75 +490,13 @@ findings as summarized by Rosenbaum, \textit{DOS} ch1?}
 
 
 
-\begin{frame}<1-3>[label=quasivstrueFr]{Quasi-experiments as
-    experiments?}
-  \begin{itemize}[<+->]
-  \item Controlled experiments vs found ``experiments''
-  \item Found randomization as a hypothesis
-  \item Theoretical vs empirical scrutiny of hypothesis
-  \item Informal empirical scrutiny
-  \item Formal hypothesis testing (instructor agenda alert!)
-  \end{itemize}
-\end{frame}
-
-
-
-\begin{frame}{Paired comparisons}
-  
-  \begin{columns}
-    \begin{Column}
-  \begin{itemize}
-  \item Example: Vehicular accidents on Friday the
-      13ths\footnotemark
-  \item An \textit{observational} paired comparison.  (Rosenbaum's
-    \texttt{Design of Observational Studies} w/
-    a randomized paired study.)
-  \item This study design is sometimes called ``fixed effects.''
-  \end{itemize}      
-    \end{Column}
-    \begin{Column}
-      \igrphx{scalonetal93-tab3}
-    \end{Column}
-  \end{columns}
-\footnotetext{T.J. Scanlon et al. (1993), ``Is Friday the 13th
-        Bad For Your Health?'', BMJ 307 1584--86.}
-\end{frame}
-
-\itnote{
-\item Numbers of emergency admissions to a UK hospital due to
-  vehicular accidents, on consecutive fridays the second of which is a
-  Friday the 13th. 
-\item (\S~2.1--2.2.1 of \textit{DOS} creates a small paired expt from
-  the NSW data.)
-}
 
 \againframe{timelineFr}
-
-\begin{frame}{The hypothesis of no effect (again)}
-
-  \begin{center}
-    \begin{tabular}{l|l|r|l|l|r|l|l}
-\hline
-year & month & Fri6th & y\_11C & y\_11T & Fri13th & y\_12C & y\_12T\\
-\hline
-'89 & Oct. & 9 &  &  & 13 &  & \\
-\hline
-'90 & Jul. & 6 &  &  & 12 &  & \\
-\hline
-'91 & Sep. & 11 &  &  & 14 &  & \\
-\hline
-'91 & Dec. & 11 &  &  & 10 &  & \\
-\hline
-'92 & Mar. & 3 &  &  & 4 &  & \\
-\hline
-'92 & Nov. & 5 &  &  & 12 &  & \\
-\hline
-\end{tabular}
-
-  \end{center}
-
-  
-\end{frame}
+\itnote{
+\item Compare "Ohio State" vaccine study, Fri 13th study against this
+  timeline
+\item Time permitting start on unit01-Rex.pdf }
+\end{document}
 \section*{Closing remarks}
 
 %\againframe{CIFr}
