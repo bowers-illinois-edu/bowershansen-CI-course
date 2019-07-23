@@ -4,8 +4,13 @@ These are the day by day plans for the second half of the course. See unit-goals
 
 ## Day 1 and Day 2: (Unit 1)
  - The idea of a sharp null test.
+    + Fisher's hypothesis of absolutely no effect
+    + Appraising evidence vs a sharp null by comparing realized value to its distribution
+    + For large sample RCTs, these distributions characterized by CLT + probability reasoning, stat'l formulas
+    + For small sample RCTs, distributions can be characterized by probability calculations and/or simulation 
  - Potential outcomes
  - Coffee Experiment
+ - Comparative studies timeline 
 
 ## Day 3: P-values. (Unit 2)
  - Review of Expectations, Probability

@@ -38,7 +38,6 @@ N/A, but course prereqs:
 - Hypothesis of absolutely no effect
  - timeline of comparative studies & associated distinctions (covariates vs "baseline" vs outcomes variables)
  - rerandomization test of a strict null hypothesis
- - $\mu$ vs $\mu_{t}/\mu_{c}$ vs $y_{ti}/y_{ci}$
  
 
 #### broader concepts
