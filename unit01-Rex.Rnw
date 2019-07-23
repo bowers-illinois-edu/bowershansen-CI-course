@@ -17,7 +17,7 @@ concordance=TRUE
 \maketitle
 
 \section{Two ways to read in data}
-Two running examples: The results of (last year's) coffee experiment, and data from \cite{arceneaux:2005}.
+Two running examples: The results of our coffee experiment, and data from \cite{arceneaux:2005}.
 
 To enter the coffee data directly into R, do:
 \begin{verbatim}
@@ -34,7 +34,7 @@ and be greeted by a fresh ``\texttt{>}'' prompt at the next line.
 Once you reach that point, continue with:
 \begin{verbatim}
 > y = scan(nlines=1)
-1:  1 1 1 1 0 0 0 0
+1:  1 1 1 0 1 0 0 0
 > coffee = data.frame(z, y)
 \end{verbatim}
 The variables \texttt{z} and \texttt{y} are now bound together in the \texttt{coffee} data frame. 
@@ -44,10 +44,10 @@ The above sequence of commands won't work if you select and copy them from this 
 However, each block of R code \textit{below} can be cut-and-pasted into your R session.
 
 <<echo=FALSE>>=
-coffee = data.frame(z=rep(1:0, each=4), y=rep(1:0, each=4))
+coffee = data.frame(z=rep(1:0, each=4), y=c(rep(1,3), 0, 1, rep(0,3)))
 ## same result as
 ## coffee = data.frame(z=c(1,1,1,1,0,0,0,0),
-##                     y=c(1,1,1,1,0,0,0,0) )
+##                     y=c(1,1,1,0,1,0,0,0) )
 ## but with a little less risk of data entry error
 @ 
 <<>>=
@@ -146,7 +146,6 @@ with(coffee, sum(sample(z)*y))
 with(coffee, sum(sample(z)*y))
 with(coffee, replicate(3, sum(sample(z)*y)))
 simT = with(coffee, replicate(1000, sum(sample(z)*y)))
-
 @
 
 (If you re-run this code expect to see somewhat different output, due to the difference between your computer's random shuffles and mine.)  This says that the null distribution of $T = \mathbf{Z}'\mathbf{y}$ can be approximated as
