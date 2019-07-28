@@ -1,6 +1,6 @@
 These are the day by day plans for the second half of the course. See unit-goals-presumptions.md for broader visions of the first half of the course.
 
-# 2018
+# 2019
 
 ## Day 1 and Day 2: (Unit 1)
  - The idea of a sharp null test.
@@ -24,18 +24,15 @@ These are the day by day plans for the second half of the course. See unit-goals
 ## Day 4: Unbiased Estimation (Unit 3)
  - Expected value of the estimates (the 8 choose 4 Omega)
  - Proof of unbiasedness.
-
-## Day 5: Standard Error Estimation (Unit 4)
+ 
+## Day 5: Consistency and Precision of the Difference-Of-Means estimator of the ATE
  - Why we care about standard errors. (And estimator of the variance).
  - Conservative variance estimation.
  - And unbaised estimators of var(y_t) and var(y_c).
- - Interval estimation. Normality assumption (the 1.96 finite population CLT). (70 different estimated intervals).
- - Coverage probability.
+ - Normality assumption (the 1.96 finite population CLT). (70 different estimated intervals).
  - Hypothesis testing: posit weak null and assume estimator / test statistic is normal. (estimator as test statistic).
- - Fisher versus Neyman (sharp null vs weak null): for Fisher we know E(t) and Var(t), for Neyman we now E(t), but V(t) we estimate and rely on a normal approximation.
+ - Fisher versus Neyman (sharp null vs weak null): for Fisher we know E(t) and Var(t), for Neyman we Know E(t), but V(t) we estimate and rely on a normal approximation.
  - Relationship between finite population CLT.
- - Mention that Observational Studies: same but unknown reference distributions for the assignment.
- - No fisher style confidence sets or testing other hypotheses other than the sharp null.
 
  - Assignment is due Tuesday.
 
