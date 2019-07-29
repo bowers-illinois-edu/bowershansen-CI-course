@@ -86,6 +86,10 @@
 
 \newenvironment{Column}[1][.5\linewidth]{\begin{column}{#1}}{\end{column}}
 
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usepackage{textpos}
+
 \usetikzlibrary{arrows} % also see \tikzstyle spec below after \begin{doc}
 
 \newcommand{\mlpnode}[1]{\tikz[baseline=-.5ex] \coordinate (#1) {};}
@@ -95,12 +99,11 @@
 \usepackage{xspace}
 
 \includeversion{pedantic} % \excludeversion
-
 \tikzstyle{every picture}+=[remember picture]
 
 
 % copied from CSCAR svn repo, `dissdefs.tex`
-\usepackage{xspace}
+%\usepackage{xspace}
 \newcommand{\satm}{\mbox{\textsc{sat-m}}\xspace}
 \newcommand{\satv}{\mbox{\textsc{sat-v}}\xspace}
 \newcommand{\upm}{\mbox{\textsc{urm}}\xspace}
