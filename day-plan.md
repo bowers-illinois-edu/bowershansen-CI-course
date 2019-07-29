@@ -1,4 +1,4 @@
-These are the day by day plans for the second half of the course. See unit-goals-presumptions.md for broader visions of the first half of the course.
+These are the day by day plans for the course. See unit-goals-presumptions.md for broader visions.
 
 # 2019
 
@@ -34,14 +34,21 @@ These are the day by day plans for the second half of the course. See unit-goals
  - Fisher versus Neyman (sharp null vs weak null): for Fisher we know E(t) and Var(t), for Neyman we Know E(t), but V(t) we estimate and rely on a normal approximation.
  - Relationship between finite population CLT.
 
- - Assignment is due Tuesday.
+ - **Assignment 1** is due Tuesday.
 
 ## Day 6: (Unit 5)
  - Context for last week.
+  - What does it mean to make a counterfactual causal inference?
+  - When you selected this course, what did you expect that we would
+    cover/discuss?
+  - Why do you think we are talking about randomized studies? Or about
+    $p$-values and estimators?
  - Some time on the assignment.
- - By now, we have a good sense of the statistics for causal quantities in randomized experiments: when the desired relationship is between treatment assignment  and outcome.
- - Next step: Instrumental variables (Intro)
-
+ - By now, we have a good sense of the statistics for causal quantities in
+   randomized experiments: when the desired relationship is between treatment
+assignment  and outcome. There is more to learn, especially about block
+randomized experiments, but we will come back to the statistics for now and instead begin to move toward the question of creating and justifying interpretable comparisons from creating a justifying statistical procedures to help us formalize intuitions about causal inferences.
+ - Next step away from experiments: Instrumental variables (Intro)
 
 ## Day 7: IV, Blooms Estimator
   - Give out assignment 2 (unit02-Ex)
@@ -66,6 +73,8 @@ These are the day by day plans for the second half of the course. See unit-goals
   - Introduce matching on multiple variables: Mahalanobis distance
 
 ## Day 11:
+  - Recap of last week.
+  - Maybe sometime on Assignment 2
   - Basic forms of matching: greedy,optimal, replacement, full.
   - Matching on more than one variable, approaches: mahalanobis distance and propensity scores.
 
@@ -78,67 +87,20 @@ These are the day by day plans for the second half of the course. See unit-goals
 
    - Estimation and Testing after matching; Plus more on  Navigating implementation tradeoffs in matching: Information and blocked designs (some blockings have more information about treatment effects than others); Balance tests and the Sequential Intersection Union Principle
 
-
 ## Day 14:
-Non-bipartite matching (cross-sectional)
+ - Non-bipartite matching (cross-sectional)
 
 ## Day 15: Monday
-RDD
+ - Recap of last week
+ - Questions arising from the assignment
+ - RDD
 
 ## Day 16:
-Sensitivity analysis I (Rosenbaum Style)
+ - Sensitivity analysis I (Rosenbaum Style)
 
 ## Day 17:
-?Sensitivity Analysis? ?RDD? (Ben takes this class)
+ - Sensitivity Analysis II
 
 ## Day 18:
-Interference?
-
-## Day 19:
-Free Discussion
-
-
-
-# 2017
-
-## Day 11: 7-8-2017
-
-Weak instruments; Precision from gain scores in experiments; Balance testing in experiments; Overview of rest of the course.
-
-## Day 12: 8-8-2017
-
-The problem of covariance adjustment to reduce "bias"/ confounding. How can we answer the question about whether we have adjusted enough. A simple approach: stratification on one categorical variable (and interaction effects). More complex: find sets that are as similar as possible in terms of a continuous variable (bipartite matching). Balance assessment after stratification.
-
-Reading: Gelman and Hill \S~9.5 on overlap/common support.
-
-## Day 13: 9-8-2017
-
-Basic forms of matching: greedy,optimal, replacement, full.
-Matching on more than one variable, approaches: mahalanobis distance and propensity scores.
-
-Agenda: Matching on one covariate using optmatch; Matching on more than one covariate: mahalnobis distances, propensity scores using optmatch. Practice. Skipping discussion of fullmatching vs fixed ratio matching (like pairs), and optimal vs greedy.
-
-
-## Day 14: 10-8-2017
-Agenda: Exact matching; Calipers; Combining matrices; Discussion of with and without-replacement matching and optimal vs greedy matching; Maybe use those tools to improve your best matched design.
-
-
-## Day 15: 11-8-2017
-
-Effective sample size; SIUP for balance testing; searching for a good match using balance, effective sample size, as well as max dist on important covariate.
-
-Estimation and Testing after matching; Plus more on  Navigating implementation tradeoffs in matching: Information and blocked designs (some blockings have more information about treatment effects than others); Balance tests and the Sequential Intersection Union Principle
-
-## Day 16: 14-8-2017
-Non-bipartite matching (cross-sectional)
-
-## Day 17: 15-8-2017
-? Sensitivity analysis I (Rosenbaum Style)?
-
-## Day 18: 16-8-2017
-?Sensitivity Analysis? ?RDD? (Ben takes this class)
-
-## Day 19: 17-8-2017
-Interference?
-
+ - Interference
 
