@@ -7,10 +7,10 @@ These are the day by day plans for the second half of the course. See unit-goals
     + Fisher's hypothesis of absolutely no effect
     + Appraising evidence vs a sharp null by comparing realized value to its distribution
     + For large sample RCTs, these distributions characterized by CLT + probability reasoning, stat'l formulas
-    + For small sample RCTs, distributions can be characterized by probability calculations and/or simulation 
+    + For small sample RCTs, distributions can be characterized by probability calculations and/or simulation
  - Potential outcomes
  - Coffee Experiment
- - Comparative studies timeline 
+ - Comparative studies timeline
 
 ## Day 3: P-values. (Unit 2)
  - Review of Expectations, Probability
@@ -24,7 +24,7 @@ These are the day by day plans for the second half of the course. See unit-goals
 ## Day 4: Unbiased Estimation (Unit 3)
  - Expected value of the estimates (the 8 choose 4 Omega)
  - Proof of unbiasedness.
- 
+
 ## Day 5: Consistency and Precision of the Difference-Of-Means estimator of the ATE
  - Why we care about standard errors. (And estimator of the variance).
  - Conservative variance estimation.
@@ -43,7 +43,7 @@ These are the day by day plans for the second half of the course. See unit-goals
  - Next step: Instrumental variables (Intro)
 
 
-## Day 7: IV, Blooms Estimator
+## Day 7: IV, Blooms Estimator (Ben comes start the class) .
   - Give out assignment 2 (unit02-Ex)
   - Instrumental Variables
   - Attrition  (??) (notice this strategy).
