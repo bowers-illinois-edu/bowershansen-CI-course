@@ -1,5 +1,5 @@
 %  For slides only
-%\input{slidesonly}
+\input{slidesonly}
 
 % % For handout
 %\input{handout}
@@ -704,9 +704,6 @@ $\bar{y}_{1} - \bar{y}_0   \pm \sqrt{\mathrm{SE}(\bar{y}_{1})^{2} +
   
 \end{frame}
 \section{Caveats and extensions}
-\begin{frame}
-  
-\end{frame}
 \begin{frame}{Cluster-level assignment}
 \framesubtitle{Slippery distinctions among estimators}
   \begin{enumerate}
@@ -913,8 +910,9 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
   \begin{itemize}
   \item intention-to-treat effect ($\delta$) vs
     complier average causal effect (CACE; $\delta_{c}$).
- \item Although complier/always-taker/never-taker/defier status isn't
-   observed, $\delta = p_{c}\delta_{c} + p_{a} \delta_{a} + p_{n} \delta_{n}
+ \item In terms of latent variable
+   \{\underline{c}omplier/\underline{a}lways-taker/\underline{n}ever-taker/\underline{d}efier\},
+   $\delta = p_{c}\delta_{c} + p_{a} \delta_{a} + p_{n} \delta_{n}
    + p_{d} \delta_{d}$.
   \item Assuming no effects for always-takers or never-takers
     (exclusivity), $\delta = p_{c} \delta_{c} + p_{d} \delta_{d} $.
@@ -924,6 +922,8 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
  \end{itemize}
 
 \end{frame}
+\itnote{
+\item Sketch $2 \times 2$ table }
 
 \begin{frame} \frametitle{The Adams-Smith (1980) telephone GOTV
     experiment}
