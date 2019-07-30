@@ -11,26 +11,26 @@
 \maketitle
 
 \begin{enumerate}
-\item Can the simulation method approximate exact, permutation-based
-  calculation to as much accuracy as is practically meaningful?
-  State a limit on the absolute error of a p-value,
-  $|p_{\text{approx}} - p_{\text{exact}}|$, that seems reasonable to
-  you to tolerate; then use the formula presented in
-  \texttt{unit01-Rex.pdf} to determine how many simulation replicates
-  are need to obtain simulation $p$-values deviating from their exact
-  counterparts by no more than this amount.
-\item For the coffee experiment, does the chi-square procedure report
-  a similar p-value as the fisher test?  (In R,
-  it's \texttt{chisq.test()}. For documentation, enter \texttt{?chisq.test}.)
-\item For this data set, are the chi-square test and the fisher test
-  both admissible? (Hint: what are the sample size requirements of the
-  chi-square procedure? As review, read R's warnings and documentation.)
+%\item Can the simulation method approximate exact, permutation-based
+%  calculation to as much accuracy as is practically meaningful?
+%  State a limit on the absolute error of a p-value,
+%  $|p_{\text{approx}} - p_{\text{exact}}|$, that seems reasonable to
+%  you to tolerate; then use the formula presented in
+%  \texttt{unit01-Rex.pdf} to determine how many simulation replicates
+%  are need to obtain simulation $p$-values deviating from their exact
+%  counterparts by no more than this amount.
+%\item For the coffee experiment, does the chi-square procedure report
+%  a similar p-value as the fisher test?  (In R,
+%  it's \texttt{chisq.test()}. For documentation, enter \texttt{?chisq.test}.)
+%\item For this data set, are the chi-square test and the fisher test
+%  both admissible? (Hint: what are the sample size requirements of the
+%  chi-square procedure? As review, read R's warnings and documentation.)
 \item Refer to the analysis of the \texttt{acorn} data set, in
-  \texttt{unit01-Rex}.  Using the mean of turnout proportions in
-  treatment group precincts, $n_{1}^{-1}\mathbf{Z}'\mathbf{y}$, as
-  test statistic, simulate its rerandomization distribution under the
-  null hypothesis of strictly no effect, reporting: \label{q:simmoments}
-  \begin{enumerate}
+\texttt{unit01-Rex}.  Using the mean of turnout proportions in
+treatment group precincts, $n_{1}^{-1}\mathbf{Z}'\mathbf{y}$, as
+test statistic, simulate its rerandomization distribution under the
+null hypothesis of strictly no effect, reporting: \label{q:simmoments}
+\begin{enumerate}
   \item your simulation $p$-value; 
   \item the accuracy of your simulation $p$-value; 
   \item your simulation approximation of $\mathrm{E}_{0}[
