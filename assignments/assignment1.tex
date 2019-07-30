@@ -26,24 +26,24 @@
 %  both admissible? (Hint: what are the sample size requirements of the
 %  chi-square procedure? As review, read R's warnings and documentation.)
 \item Refer to the analysis of the \texttt{acorn} data set, in
-\texttt{unit01-Rex}.  Using the mean of turnout proportions in
+\texttt{day2-Rexercises}.  Using the mean of turnout proportions in
 treatment group precincts, $n_{1}^{-1}\mathbf{Z}'\mathbf{y}$, as
 test statistic, simulate its rerandomization distribution under the
 null hypothesis of strictly no effect, reporting: \label{q:simmoments}
 \begin{enumerate}
   \item your simulation $p$-value; 
   \item the accuracy of your simulation $p$-value; 
-  \item your simulation approximation of $\mathrm{E}_{0}[
+  \item your simulation approximation of $\mathrm{E}[
     n_{1}^{-1}\mathbf{Z}'\mathbf{y}]$, the null expected value of the test
     statistic; 
   \item your simulation approximation of
-    $\mathrm{Var}_{0}[n_{1}^{-1}\mathbf{Z}'\mathbf{y}]$, this test
+    $\mathrm{Var}[n_{1}^{-1}\mathbf{Z}'\mathbf{y}]$, this test
     statistic's variance under the null.
   \end{enumerate}
-\item Calculate $\mathrm{E}_{0} [ n_{1}^{-1}\mathbf{Z}'\mathbf{y} ]$, the expected value of the
+\item Calculate $\mathrm{E} [ n_{1}^{-1}\mathbf{Z}'\mathbf{y} ]$, the expected value of the
   sample mean under the strict null hypothesis of no effect, from first principles --- i.e., without simulations ---  using data in $\mathbf{y}$.  \label{q:exactEV}
-\item In this setup, $\mathrm{Var}_{0}\, [\bar{y}_{1}]  = \frac{1}{n_{1}}
-  \frac{n_{0}}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n-1} $,
+\item In this setup, $\mathrm{Var}\, [\bar{y}_{1}]  = \frac{1}{n_{1}}
+  \frac{n}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n-1} $,
   where $\bar{y}_{1} = n_{1}^{-1}\mathbf{Z}'\mathbf{y}$ is the mean of
   $y$s among the group assigned to treatment ($\{i: Z_{i} =1\}$) while
   $\bar{y} = n^{-1}\mathbf{1}'\mathbf{y}$ is the mean of $y$ over
@@ -57,19 +57,19 @@ null hypothesis of strictly no effect, reporting: \label{q:simmoments}
   \mathrm{Var} \left[\bar{y}_{1}\right] = \frac{\sigma_{y}^{2}}{n_{1}} = \frac{1}{n_{1}}
   \frac{\sum_{i=1}^{n} (y_{i} - \bar{y})^{2}}{n}.
   $$
-Which gives a larger value, our new $\mathrm{Var}_{0}\,
+Which gives a larger value, our new $\mathrm{Var}\,
 [\bar{y}_{1}]$-formula or the  $\mathrm{Var} \left[\bar{y}_{1}\right]$
 formula immediately above?  Explain why it makes
 sense that the formula we've given would differ the direction it does
 from this other formula, in terms of the difference between this
 sampling situation and the sampling model that more commonly
 accompanies the Central Limit Theorem.
-\item Calculate $\mathrm{Var}_{0}\, [n_{1}^{-1}\mathbf{Z}'\mathbf{y}]$ using the appropriate
+\item Calculate $\mathrm{Var}\, [n_{1}^{-1}\mathbf{Z}'\mathbf{y}]$ using the appropriate
   formula.   Determine the error of the simulation-based
   approximation to this quantity that you reported in question~\ref{q:simmoments},
-  expressing it as a percentage of $\mathrm{Var}_{0}\,[ n_{1}^{-1}\mathbf{Z}'\mathbf{y}]$. \label{q:exactvar}
+  expressing it as a percentage of $\mathrm{Var}\,[ n_{1}^{-1}\mathbf{Z}'\mathbf{y}]$. \label{q:exactvar}
 \item Determine the Normal theory approximation to
-  $\mathrm{Pr}_{0}(n_{1}^{-1}\mathbf{Z}'\mathbf{y} \geq
+  $\mathrm{Pr}(n_{1}^{-1}\mathbf{Z}'\mathbf{y} \geq
   n_{1}^{-1}\mathbf{z}'\mathbf{y} ) $.  (Hints: Use the variance and
   expected values calculated in~\ref{q:exactvar} and \ref{q:exactEV} to transform your
   observed treatment group mean into a corresponding ``$z$-score.'' 
