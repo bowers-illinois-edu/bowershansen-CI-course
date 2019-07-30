@@ -247,7 +247,7 @@ lines(seq(-1.6,1.6,.1),d_md_asymp)
 ```{r}
 
 est1 <- difference_in_means(Y~Z,data=smdat)
-
+est1
 ```
 
 ## Design Based Approach 2: Estimate Averages of Potential Outcomes
