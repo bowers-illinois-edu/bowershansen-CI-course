@@ -907,13 +907,30 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
   the treated to controls.}
 
 \begin{frame}{The complier average causal effect via Bloom's(1984) method}
-  \begin{itemize}
+
+\begin{columns}
+  \begin{Column}[.6\linewidth]    
+    \begin{itemize}
   \item intention-to-treat effect ($\delta$) vs
     complier average causal effect (CACE; $\delta_{c}$).
  \item In terms of latent variable
-   \{\underline{c}omplier/\underline{a}lways-taker/\underline{n}ever-taker/\underline{d}efier\},
+   \{\underline{a}lways-taker/\underline{c}omplier/\underline{d}efier/\underline{n}ever-taker\},
    $\delta = p_{c}\delta_{c} + p_{a} \delta_{a} + p_{n} \delta_{n}
    + p_{d} \delta_{d}$.
+    \end{itemize}
+  \end{Column}
+  \begin{Column}[.4\linewidth]
+    \begin{tabular}{|r|c|c|}  \hline
+      & \multicolumn{2}{c|}{$D_{z=1}$}\\
+      $D_{z=0}$ & \multicolumn{1}{c}{1} &  \multicolumn{1}{c|}{0}\\ \hline
+      1                &  a   &  d \\
+      0                 & c   &  n \\ \hline
+    \end{tabular}
+  \end{Column}
+\end{columns}
+\vfill \pause
+
+  \begin{itemize}
   \item Assuming no effects for always-takers or never-takers
     (exclusivity), $\delta = p_{c} \delta_{c} + p_{d} \delta_{d} $.
   \item Assuming no defiers (monotonicity), $\delta = p_{c}
