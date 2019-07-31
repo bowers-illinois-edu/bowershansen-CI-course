@@ -1,5 +1,5 @@
 %  For slides only
-%\input{slidesonly}
+\input{slidesonly}
 
 % % For handout
 %\input{handout}
@@ -704,9 +704,6 @@ $\bar{y}_{1} - \bar{y}_0   \pm \sqrt{\mathrm{SE}(\bar{y}_{1})^{2} +
   
 \end{frame}
 \section{Caveats and extensions}
-\begin{frame}
-  
-\end{frame}
 \begin{frame}{Cluster-level assignment}
 \framesubtitle{Slippery distinctions among estimators}
   \begin{enumerate}
@@ -910,12 +907,30 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
   the treated to controls.}
 
 \begin{frame}{The complier average causal effect via Bloom's(1984) method}
-  \begin{itemize}
+
+\begin{columns}
+  \begin{Column}[.6\linewidth]    
+    \begin{itemize}
   \item intention-to-treat effect ($\delta$) vs
     complier average causal effect (CACE; $\delta_{c}$).
- \item Although complier/always-taker/never-taker/defier status isn't
-   observed, $\delta = p_{c}\delta_{c} + p_{a} \delta_{a} + p_{n} \delta_{n}
+ \item In terms of latent variable
+   \{\underline{a}lways-taker/\underline{c}omplier/\underline{d}efier/\underline{n}ever-taker\},
+   $\delta = p_{c}\delta_{c} + p_{a} \delta_{a} + p_{n} \delta_{n}
    + p_{d} \delta_{d}$.
+    \end{itemize}
+  \end{Column}
+  \begin{Column}[.4\linewidth]
+    \begin{tabular}{|r|c|c|}  \hline
+      & \multicolumn{2}{c|}{$D_{z=1}$}\\
+      $D_{z=0}$ & \multicolumn{1}{c}{1} &  \multicolumn{1}{c|}{0}\\ \hline
+      1                &  a   &  d \\
+      0                 & c   &  n \\ \hline
+    \end{tabular}
+  \end{Column}
+\end{columns}
+\vfill \pause
+
+  \begin{itemize}
   \item Assuming no effects for always-takers or never-takers
     (exclusivity), $\delta = p_{c} \delta_{c} + p_{d} \delta_{d} $.
   \item Assuming no defiers (monotonicity), $\delta = p_{c}
@@ -924,6 +939,8 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
  \end{itemize}
 
 \end{frame}
+\itnote{
+\item Sketch $2 \times 2$ table }
 
 \begin{frame} \frametitle{The Adams-Smith (1980) telephone GOTV
     experiment}
