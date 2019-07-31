@@ -1,3 +1,7 @@
+library(dplyr)
+library(magrittr)
+library(knitr)
+
 rm(list = ls())
 n <- 8
 n_1 <- 4
@@ -57,6 +61,8 @@ obs_z <- Omega[,sample(x = 1:ncol(Omega), size = 1)]
 
 obs_y <- obs_z * true_data$y_t + (1 - obs_z) * true_data$y_c
 obs_d <- obs_z * true_data$d_t + (1 - obs_z) * true_data$d_c
+
+cbind(obs_z, obs_d, obs_y)
 
 tau <- 0
 
@@ -124,11 +130,29 @@ cbind(null_test_stat_dist_a, null_test_stat_dist_b)
 
 ## Applied Example
 
-data.frame(call = c(rep(x = 0, times = 1325), rep(x = 1, times = 1325)),
-           contact = c(rep(x = 0, times = 1325 + 375), rep(x = 1, times = 950)),
-           vote = c(rep(x = 0, times = 1010), rep(x = 1, times = 375),
-           rep(x = 0, times = 293), rep(x = 1, times = 82),
-           rep(x = 1, times = 310), rep(x = 0, times = 640)))
+adams_smith_data <- data.frame(call = c(rep(x = 0, times = 1325), rep(x = 1, times = 1325)),
+                               contact = c(rep(x = 0, times = 1325 + 375), rep(x = 1, times = 950)),
+                               vote= c(rep(x = 0, times = 1010), rep(x = 1, times = 315),
+                                          rep(x = 0, times = 293), rep(x = 1, times = 82),
+                                          rep(x = 1, times = 310), rep(x = 0, times = 640)))
+
+mean(adams_smith_data$vote[which(adams_smith_data$call == 1)]) -
+  mean(adams_smith_data$vote[which(adams_smith_data$call == 0)])
+coef(lm(formula = vote ~ call, data = adams_smith_data))[["call"]]/coef(lm(formula = contact ~ call, data = adams_smith_data))[["call"]]
+
+
+choose(n = nrow(adams_smith_data), k = sum(adams_smith_data$call))
+
+null_dist <- replicate(n = 1000,
+                       expr = coef(lm(formula = vote ~ sample(call),
+                                      data = adams_smith_data))[["sample(call)"]])
+
+hist(null_dist)
+
+obs_test_stat <- coef(lm(formula = adams_smith_data$vote ~ adams_smith_data$call))[2]
+
+mean(as.integer(null_dist >= obs_test_stat))
+
 
 
 
