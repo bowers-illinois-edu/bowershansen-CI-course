@@ -375,6 +375,14 @@ po_fun <- function(data){
 thepo <- declare_potential_outcomes(handler=po_fun)
 
 reveal_outcomes <- declare_reveal(outcome_variables=Y,assignment_variables=c("Z","D")) ## how does assignment reveal potential outcomes
+
+## From  DeclareDesign blog  about IV
+##  declare_step(
+##    U1_complier = X_U1_0_Z_0 == 0 & X_U1_0_Z_1 == 0 & X_U1_1_Z_0 == 1 & X_U1_1_Z_1 == 1,
+ ##   Z_complier  = X_U1_0_Z_0 == 0 & X_U1_1_Z_0 == 0 & X_U1_0_Z_1 == 1 & X_U1_1_Z_1 == 1, 
+  ##  handler = fabricate) +
+
+
 thedesign <- thepop + theassign + thepo + reveal_outcomes
 
 oneexp <- draw_data(thedesign)
