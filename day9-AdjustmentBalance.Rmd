@@ -607,12 +607,11 @@ Metrocable per se, but rather the education of people in the
 neighborhood. How should we remove `nhAboveHS` from our estimate or test? What
 strategies can you think of?
 
-\medskip
-
 Features of a good adjustment process:
-   - Blind to outcome analysis (to preserve false positive rate and deter critics). Could be pre-registered.
-   - Easy to interpret ("controlling for"  versus "holding constant")
-   - Easy to diagnoses (Easy to answere the question "Did we adjust enough?")
+
+  - Blind to outcome analysis (to preserve false positive rate and deter critics). Could be pre-registered.
+  - Easy to interpret ("controlling for"  versus "holding constant")
+  - Easy to diagnoses (Easy to answere the question "Did we adjust enough?")
 
 ## Stratification V 1.0
 
@@ -691,6 +690,31 @@ scatter3d(HomRate08~nhAboveHS+nhPopD,
 
 ```
 
+## The Problem of Using  the Linear Model for  Adjustment
+
+ - Problem of Interepretability: "Controlling for" is  "removing (additive) linear relationships" it is  not "holding constant" 
+ - Problem of Diagnosis and Assessment: What is the  standard against which we can compare a given linear covariance adjustment specification?
+ - Problem of extrapolation and interpolation: Often known as "common support", too.
+ - Problems of overly influential points and curse of  dimensionality: As dimensions increase, odds of influential  point increase (ex. bell curve in one dimension, one very influential point in 2 dimensions); also real limits on number of covariates (roughly $\sqrt{n}$ for OLS).
+ - Problems of  bias: 
+
+\begin{equation}
+Y_i = \beta_0 + \beta_1 Z_i + e_i (\#eq:olsbiv)
+\end{equation}
+
+This is a common practice because, we know that the formula to estimate $\beta_1$ in equation \@ref(eq:olsbiv) is the same as the difference of means in $Y$ between treatment and control groups:
+
+\begin{equation}
+\hat{\beta}_1 = \overline{Y|Z=1} - \overline{Y|Z=0} = \frac{cov(Y,Z)}{var(Z)}.
+\end{equation}
+
+\begin{equation}
+Y_i = \beta_0 + \beta_1 Z_i + \beta_2 X_i + e_i (\#eq:olscov)
+\end{equation}
+
+What is $\beta_1$ in this case? We know the matrix representation here $(\bX^{T}\bX)^{-1}\bX^{T}\by$, but here is the scalar formula for this particular case in \@ref(eq:olsbiv):
+
+$$ \hat{\beta}_1 = \frac{\var(X)\cov(Z,Y) - \cov(X,Z)\cov(X,Y)}{\var(Z)\var(X) - \cov(Z,X)^2} $$
 
 ## Can we improve stratified adjustment?
 
