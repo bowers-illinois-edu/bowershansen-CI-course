@@ -5,10 +5,10 @@ author: |
   | ICPSR 2019 Session 2
   | Jake Bowers, Ben Hansen, Tom Leavitt
 bibliography:
- - refs.bib
+ - BIB/refs.bib
  - BIB/master.bib
  - BIB/misc.bib
- - ci.bib
+ - BIB/ci.bib
 fontsize: 10pt
 geometry: margin=1in
 graphics: yes
@@ -182,6 +182,7 @@ Balance tests and the Sequential Intersection Union Principle
  - Sensitivity analysis I (Rosenbaum Style)
 
 ### Readings on sensitivity analysis
+ - @rosenbaum2017observation, Chap 9
  - @rosenbaum10book, Chap 3
  - @hhh2010
  - @rosenbaumtwo

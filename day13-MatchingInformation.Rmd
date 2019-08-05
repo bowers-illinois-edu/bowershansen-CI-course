@@ -1,7 +1,7 @@
 ---
 title: Matching Tools and Information in a Block-Randomized Experiment
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-author: ICPSR 2018 Session 2
+author: ICPSR 2019 Session 2
 bibliography:
  - refs.bib
  - BIB/master.bib

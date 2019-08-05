@@ -1,9 +1,9 @@
 ---
 title: Matching Tools and Approaches
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-author: ICPSR 2018 Session 2
+author: ICPSR 2019 Session 2
 bibliography:
- - refs.bib
+ - BIB/refs.bib
  - BIB/master.bib
  - BIB/misc.bib
 fontsize: 10pt
@@ -22,6 +22,15 @@ output:
     includes:
         in_header:
            - defs-all.sty
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
+  revealjs::revealjs_presentation:
+    slide_level: 2
+    incremental: true
+    transition: none
+    fig_caption: true
+    self_contained: false
+    reveal_plugins: ["notes","search","zoom","chalkboard"]
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
 ---
 
 <!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
@@ -37,8 +46,10 @@ require(knitr)
 ## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
 
 knitr::knit_hooks$set(mysize = function(before, options, envir) {
-			      if (before)
+			        if (before){
 				      return(options$size)
+			      } else {
+				      return("\\normalsize")}
 })
 
 knit_hooks$set(plotdefault = function(before, options, envir) {
@@ -88,11 +99,9 @@ library(mvtnorm)
 
 ## Today
 
-\begin{enumerate}
-  \item Agenda:
-  \item Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans:04} \cite{ho:etal:07}
-  \item Questions arising from the reading or assignments or life?
-\end{enumerate}
+  1. Agenda:
+  2. Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans:04} \cite{ho:etal:07}
+  3. Questions arising from the reading or assignments or life?
 
 # But first, review:
 
