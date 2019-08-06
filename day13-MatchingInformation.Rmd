@@ -1,9 +1,10 @@
 ---
-title: Matching Tools and Information in a Block-Randomized Experiment
+title: 'Matching Tools\: Propensity scores, Balance.'
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: ICPSR 2019 Session 2
 bibliography:
- - refs.bib
+ - BIB/abbrev-long.bib
+ - BIB/refs.bib
  - BIB/master.bib
  - BIB/misc.bib
 fontsize: 10pt
@@ -37,8 +38,10 @@ require(knitr)
 ## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
 
 knitr::knit_hooks$set(mysize = function(before, options, envir) {
-			      if (before)
+			       if (before){
 				      return(options$size)
+			      } else {
+				      return("\\normalsize")}
 })
 
 knit_hooks$set(plotdefault = function(before, options, envir) {
@@ -88,48 +91,18 @@ library(mvtnorm)
 
 ## Today
 
-\begin{enumerate}
-  \item Agenda: How to avoid overfit propensity score functions; How to characterize the information in a matched design (use
+  1.  Agenda: How to avoid overfit propensity score functions; How to characterize the information in a matched design (use
   what we know about the variance of estimators from block-randomized experiments).
-  \item Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans:04} (on full matching versus fixed ratio matching versus pair matching), \cite{gelman2008weakly} on "separation" problems in logistic regression other references on the problem of "overfitting" in general.
-  \item Questions arising from the reading or assignments or life?
-\end{enumerate}
+  2. Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans:04} (on full matching versus fixed ratio matching versus pair matching), \cite{gelman2008weakly} on "separation" problems in logistic regression other references on the problem of "overfitting" in general.
+  3. Questions arising from the reading or assignments or life?
 
 # But first, review:
 
+## What have we done so far?
 
-\begin{frame}[fragile]
-\frametitle{What have we done so far?}
+ - We now have the decision points for a matched research design
 
-The problem of attrition in randomized studies (simple experiments,
-encouragement designs, etc.)
-
-\medskip
-
-Making the case for adequate adjustment in observational studies
-
-\begin{itemize}
-\item The potential for making this case for one or more variables using
-stratification and the problems with making this case using the linear model
-to "control for" covariates.
-\item Using optimal, full matching technology to make and evaluate
-stratifications with a distance-matrix as input.
-\begin{itemize}
-\item Mahalanobis distance matrices compare units on the covariates in the $ n \times p$ matrix $\bm{x} = \{ \bm{x}_1, \bm{x}_2,
-\ldots \}$.
-\item The propensity score distance matrices compare units on $\hat{Z} \leftarrow \bm{x}$ or $\hat{Z}=\hat{\bm{\beta}}\bm{x}$ (the elements of $\bm{x}$ as it relates to treatment or intervention).
-\item Calipers to restrict set membership based on substantively important
-variables and/or extreme differences on the score matrices.
-\item Exact matching to restrict set membership based on groups or categories
-that are substantively important (as a side effect this speeds up the matching
-process).
-\end{itemize}
-\end{itemize}
-
-\end{frame}
-
-
-```{r echo=FALSE, cache=TRUE}
+```{r include=FALSE,   echo=FALSE, cache=TRUE}
 load(url("http://jakebowers.org/Data/meddat.rda"))
 meddat<- mutate(meddat,
 		HomRate03=(HomCount2003/Pop2003)*1000,
@@ -138,7 +111,9 @@ row.names(meddat) <- meddat$nh
 ```
 
 
-## The separation problem in logistic regression and the benefits of shrinkage/penalization
+# More topics: Separation in logistic regression
+
+## The separation problem
 
 ```{r echo=TRUE}
 thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
@@ -173,10 +148,10 @@ thecoefs[,1:5]
 ```
 
 
-## The separation problem in logistic regression and the benefits of shrinkage/penalization
+## The separation problem
 
 
-```{r, echo=FALSE, out.width=".7\\textwidth"}
+```{r, echo=FALSE, out.width=".9\\textwidth"}
 par(mfrow=c(1,2))
 matplot(t(thecoefs),axes=FALSE)
 axis(2)
@@ -228,676 +203,26 @@ xbFMPS$overall[,]
 xbFMPS$results["HomRate03",,]
 ```
 
-# Major Matching modes
-
-##  Optimal (communitarian) vs greedy (individualistic) matching
-
-Compare the greedy to optimal matched designs:
-
-\begin{center}
-    \begin{tabular}{l|cccc}
-      & \multicolumn{4}{c}{Illustrator} \\
-Writer & Mo& John & Terry  & Pat \\ \hline
-Ben    & 0 & 1 & 1 & 10 \\
-Jake   & 10& 0 & 10 & 10 \\
-Tom    &  1& 1 & 20 & $\infty$ \\ \hline
-    \end{tabular}
-  \end{center}
-
-```{r results="hide", warnings=FALSE, messages=FALSE}
-bookmat <- matrix(c(0,1,1,10,10,0,10,10,1,1,20,Inf),nrow=3,byrow=TRUE)
-dimnames(bookmat) <- list(c("Ben","Jake","Tom"),c("Mo","John","Terry","Pat"))
-fullmatch(bookmat)
-```
-
-\only<2->{ Greedy match without replacement has mean distance (0+0+20)/3=6.67. The optimal
-match keeps all the obs, and has mean distance (1+0+1)/3=.67. }
-
-
-\note{
-*Greedy:* Ben-Mo (0) , Jake-John (0), Tom-Terry (20)
-*Optimal:* Ben-Terry (1), Jake-John (0), Tom-Mo (1)
-}
-
-## Matching with and without replacement
-*Example*: Costs of nuclear plants. When expanding, is it cheaper to build on the site of an existing plant?
-
-\begin{columns}
-\column{.5\textwidth}
-\begin{center}
-  \igrphx[width=.5\textwidth]{coxSnell}
-\end{center}
-
-\column{.5\textwidth}
-  \igrphx[width=\textwidth]{Nuclear_plant_at_Grafenrheinfeld}
-\end{columns}
-
-\note{This is a \textit{prospective} design.  Explain.
-
-(Presentation version has Nuclear plant image on 2nd overlay)
-}
-
-
-## New vs refurbished nuclear plants
-\note{
-  \begin{itemize}
-  \item This is what many understand by matching.  [Greedy pair match follows.]
-  \item Sometimes matching means  ``with-replacement'' matching. We'll permit that too, but in a structured way, and keeping track of how many replacements. 
-  \item Why keep track of the replacements?  --B/c they affect standard errors of the matched comparison.  (``Effective sample size'' to be introduced a few slides later.)
-  \end{itemize}
-}
-\begin{minipage}[t]{2in}
-\begin{center}
-Existing site\\
-{\small
-% latex table generated in R 3.0.1 by xtable 1.7-1 package
-% Wed Aug 14 15:26:53 2013
-\begin{tabular}{lr}
-  \hline
- & capacity \\ 
-  \hline
-A & {660} {\mlpnode{NA}} \\ 
-  B & {660} {\mlpnode{NB}} \\ 
-  C & {420} {\mlpnode{NC}} \\ 
-  D & {130} {\mlpnode{ND}} \\ 
-  E & {650} {\mlpnode{NE}} \\ 
-  F & {430} {\mlpnode{NF}} \\ 
-  G & {420} {\mlpnode{NG}} \\ 
-   \hline
-\end{tabular}}
-\end{center}
-\bigskip
-\bigskip
-{\footnotesize  "capacity" is net capacity of the power plant, in MWe above
-400.
-
-\only<9->{\alert{This is matching "without replacement."}}
-\only<10->{\alert{Contrast with matching "with replacement."}}
-}
-\end{minipage}
-\begin{minipage}[t]{2in}
-\begin{center}
-New site\\
-{\scriptsize
-% latex table generated in R 3.0.1 by xtable 1.7-1 package
-% Wed Aug 14 15:26:53 2013
-\begin{tabular}{lr}
-  \hline
- & capacity \\ 
-  \hline
-{\mlpnode{NH}\mbox{}} {H} & 290 \\ 
-  {\mlpnode{NI}\mbox{}} {I} & 660 \\ 
-  {\mlpnode{NJ}\mbox{}} {J} & 660 \\ 
-  {\mlpnode{NK}\mbox{}} {K} & 110 \\ 
-  {\mlpnode{NL}\mbox{}} {L} & 420 \\ 
-  {\mlpnode{NM}\mbox{}} {M} &  60 \\ 
-  {\mlpnode{NN}\mbox{}} {N} & 390 \\ 
-  {\mlpnode{NO}\mbox{}} {O} & 160 \\ 
-  {\mlpnode{NP}\mbox{}} {P} & 390 \\ 
-  {\mlpnode{NQ}\mbox{}} {Q} & 130 \\ 
-  {\mlpnode{NR}\mbox{}} {R} & 650 \\ 
-  {\mlpnode{NS}\mbox{}} {S} & 450 \\ 
-  {\mlpnode{NT}\mbox{}} {T} & 380 \\ 
-  {\mlpnode{NU}\mbox{}} {U} & 440 \\ 
-  {\mlpnode{NV}\mbox{}} {V} & 690 \\ 
-  {\mlpnode{NW}\mbox{}} {W} & 510 \\ 
-  {\mlpnode{NX}\mbox{}} {X} & 390 \\ 
-  {\mlpnode{NY}\mbox{}} {Y} & 140 \\ 
-  {\mlpnode{NZ}\mbox{}} {Z} & 730 \\ 
-   \hline
-\end{tabular}}
-\end{center}
-\end{minipage}
-
-
-\begin{tikzpicture}[overlay]
-  \path[draw,gray]<2-> (NA) edge (NI);
- \path[draw,gray]<3-> (NB) edge (NJ);
- \path[draw,gray]<4-> (NC) edge (NL);
- \path[draw,gray]<5-> (ND) edge (NQ);
- \path[draw,gray]<6-> (NE) edge (NR);
- \path[draw,gray]<7-> (NF) edge (NU);
- \path[draw,gray]<8-> (NG) edge (NN);
- \end{tikzpicture}\only<10>{
-\begin{tikzpicture}[overlay]
-  \path[draw,red] (NA) edge [out=0, in=-180] (NI);
- \path[draw,red] (NB) edge [out=0, in=-180] (NJ);
- \path[draw,red] (NC) edge [out=0, in=-180] (NL);
- \path[draw,red] (NF) edge [out=0, in=-180] (NL);
- \path[draw,red] (NG) edge [out=0, in=-180] (NL);
- \path[draw,red] (ND) edge [out=0, in=-180] (NQ);
- \path[draw,red] (NE) edge [out=0, in=-180] (NR);
- \end{tikzpicture}}
-
-
-
-## Role of the matching algorithm: greedy matching
-
-\begin{minipage}[t]{2in}
-\begin{center}
-Existing site\\
-{\small
-% latex table generated in R 3.0.1 by xtable 1.7-1 package
-% Wed Aug 14 15:26:57 2013
-\begin{tabular}{lrr}
-  \hline
- & z.date & z.cap \\ 
-  \hline
-A & -1.6 & {1.2} {\mlpnode{NA}} \\ 
-  B & -0.9 & {1.2} {\mlpnode{NB}} \\ 
-  C & -0.4 & {0} {\mlpnode{NC}} \\ 
-  D & -0.4 & {-1.4} {\mlpnode{ND}} \\ 
-  E & 0.1 & {1.1} {\mlpnode{NE}} \\ 
-  F & 2.2 & {0} {\mlpnode{NF}} \\ 
-  G & 1.3 & {0} {\mlpnode{NG}} \\ 
-   \hline
-\end{tabular}}
-\end{center}
-\bigskip
-\bigskip
-\bigskip
-{\footnotesize Here, ``date'' is \emph{rank of} date of
-construction, in years after 1965, and  ``capacity'' is
-\emph{rank of} net capacity of the power plant, in MWe
-above 400.}
-\end{minipage}
-\begin{minipage}[t]{2in}
-\begin{center}
-New site\\
-{\scriptsize
-% latex table generated in R 3.0.1 by xtable 1.7-1 package
-% Wed Aug 14 15:26:57 2013
-\begin{tabular}{lrr}
-  \hline
- & z.date & z.cap \\ 
-  \hline
-{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\ 
-  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\ 
-  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\ 
-  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\ 
-  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\ 
-  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\ 
-  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\ 
-  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\ 
-  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\ 
-  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\ 
-  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\ 
-  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\ 
-  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\ 
-  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\ 
-  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\ 
-  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\ 
-  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\ 
-  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\ 
-  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\ 
-   \hline
-\end{tabular}}
-\end{center}
-\end{minipage}
-
-\begin{tikzpicture}[overlay]
-  \path[draw,red]<2-> (NA) edge (NI);
- \path[draw,red]<3-> (NA) edge (NJ);
- \path[draw,red]<4-> (NB) edge (NR);
- \path[draw,red]<5-> (NB) edge (NW);
- \path[draw,red]<6-> (NC) edge (NN);
- \path[draw,red]<7-> (NC) edge (NT);
- \path[draw,red]<8-> (ND) edge (NO);
- \path[draw,red]<9-> (ND) edge (NQ);
- \path[draw,red]<10-> (NE) edge (NS);
- \path[draw,red]<11-> (NE) edge (NV);
- \path[draw,red]<12-> (NF) edge (NU);
- \path[draw,red]<13-> (NF) edge (NX);
- \path[draw,red]<14-> (NG) edge (NM);
- \path[draw,red]<15-> (NG) edge (NZ);
- \end{tikzpicture}
-
-## Optimal Matching
-
-\begin{minipage}[t]{2in}
-\begin{center}
-Existing site\\
-{\small
-% latex table generated in R 3.0.1 by xtable 1.7-1 package
-% Wed Aug 14 15:26:57 2013
-\begin{tabular}{lrr}
-  \hline
- & z.date & z.cap \\ 
-  \hline
-A & -1.6 & {1.2} {\mlpnode{NA}} \\ 
-  B & -0.9 & {1.2} {\mlpnode{NB}} \\ 
-  C & -0.4 & {0} {\mlpnode{NC}} \\ 
-  D & -0.4 & {-1.4} {\mlpnode{ND}} \\ 
-  E & 0.1 & {1.1} {\mlpnode{NE}} \\ 
-  F & 2.2 & {0} {\mlpnode{NF}} \\ 
-  G & 1.3 & {0} {\mlpnode{NG}} \\ 
-   \hline
-\end{tabular}}
-\end{center}
-\bigskip
-
-\textcolor{blue}{Optimal vs. Greedy matching}
-\bigskip
-
-{\footnotesize By evaluating potential matches all together rather than
-  sequentially, optimal matching (\textcolor{blue}{blue lines}) reduces
-  the mean matched distance from 1.17 to
- 0.56.}
-
-\end{minipage}
-\begin{minipage}[t]{2in}
-\begin{center}
-New site\\
-{\scriptsize
-% latex table generated in R 3.0.1 by xtable 1.7-1 package
-% Wed Aug 14 15:26:57 2013
-\begin{tabular}{lrr}
-  \hline
- & z.date & z.cap \\ 
-  \hline
-{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\ 
-  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\ 
-  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\ 
-  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\ 
-  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\ 
-  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\ 
-  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\ 
-  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\ 
-  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\ 
-  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\ 
-  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\ 
-  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\ 
-  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\ 
-  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\ 
-  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\ 
-  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\ 
-  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\ 
-  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\ 
-  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\ 
-   \hline
-\end{tabular}}
-\end{center}
-\end{minipage}
-
-\begin{tikzpicture}[overlay]
-  \path[draw,red] (NA) edge (NI);
- \path[draw,red] (NA) edge (NJ);
- \path[draw,red] (NB) edge (NR);
- \path[draw,red] (NB) edge (NW);
- \path[draw,red] (NC) edge (NN);
- \path[draw,red] (NC) edge (NT);
- \path[draw,red] (ND) edge (NO);
- \path[draw,red] (ND) edge (NQ);
- \path[draw,red] (NE) edge (NS);
- \path[draw,red] (NE) edge (NV);
- \path[draw,red] (NF) edge (NU);
- \path[draw,red] (NF) edge (NX);
- \path[draw,red] (NG) edge (NM);
- \path[draw,red] (NG) edge (NZ);
- \end{tikzpicture}\begin{tikzpicture}[overlay]
-  \path[draw,blue] (NA) edge [out=0, in=-180] (NI);
- \path[draw,blue] (NA) edge [out=0, in=-180] (NJ);
- \path[draw,blue] (NB) edge [out=0, in=-180] (NL);
- \path[draw,blue] (NB) edge [out=0, in=-180] (NW);
- \path[draw,blue] (NC) edge [out=0, in=-180] (NN);
- \path[draw,blue] (NC) edge [out=0, in=-180] (NT);
- \path[draw,blue] (ND) edge [out=0, in=-180] (NO);
- \path[draw,blue] (ND) edge [out=0, in=-180] (NQ);
- \path[draw,blue] (NE) edge [out=0, in=-180] (NR);
- \path[draw,blue] (NE) edge [out=0, in=-180] (NV);
- \path[draw,blue] (NF) edge [out=0, in=-180] (NY);
- \path[draw,blue] (NF) edge [out=0, in=-180] (NZ);
- \path[draw,blue] (NG) edge [out=0, in=-180] (NU);
- \path[draw,blue] (NG) edge [out=0, in=-180] (NX);
- \end{tikzpicture}
-
-
-
-## The World of Matching Today
-
-This is an active and productive research area (i.e. lots of new ideas, not everyone agrees
-about everything). Here are just a few of the different approaches to creating
-strata or sets or selecting subsets.
-
- - The work on cardinality matching and fine balance
-   <http://jrzubizarreta.com/>
-   <https://cran.rstudio.com/web/packages/designmatch/> )
- - The work on speedier approximate full matching <http://fredriksavje.com/>
-   <https://github.com/fsavje/quickmatch>
- - The work on using genetic algorithms to (1) find approximate strata
-   with-replacement <http://sekhon.berkeley.edu/matching/> and (2) to find
-   an approximation to a completely randomized study (i.e. best subset
-   selection) <http://cho.pol.illinois.edu/wendy/papers/bossor.pdf>
- - The work on coarsened exact matching <https://gking.harvard.edu/cem>
- - The work on entropy-balancing approach to causal effects <https://web.stanford.edu/~jhain/software.htm#ebal>.
- - The covariate-balancing propensity score (CBPS) <https://imai.princeton.edu/research/CBPS.html>.
-
-# Information and Balance: Matching structure and effective sample size
-
-## Matching with a varying number of controls and full matching
-
-### Fixed vs flexible ratio matching:
-
-\begin{itemize}[<+->]
-\item Pair matching \& sample size
-\item Effective vs real sample size
-\item If we limit ourselves to fixed matching ratios, we gain in
-  simplicity but pay a price in sample size (effective \& real).
-\item How big a price?  Trying is the best way to find out.
-\end{itemize}
-
-```{r echo=FALSE}
-nuke.nopt <- subset(nuclearplants, pt == 0)
-```
-
-## Matching with a varying number of controls
-
-\begin{minipage}[t]{2in}
-\begin{center}
-Existing site\\
-{\small
-% latex table generated in R 3.0.2 by xtable 1.7-3 package
-% Thu Jul 31 13:51:34 2014
-\begin{tabular}{lrr}
-  \hline
- & z.date & z.cap \\
-  \hline
-A & -1.6 & {1.2} {\mlpnode{NA}} \\
-  B & -0.9 & {1.2} {\mlpnode{NB}} \\
-  C & -0.4 & {0} {\mlpnode{NC}} \\
-  D & -0.4 & {-1.4} {\mlpnode{ND}} \\
-  E & 0.1 & {1.1} {\mlpnode{NE}} \\
-  F & 2.2 & {0} {\mlpnode{NF}} \\
-  G & 1.3 & {0} {\mlpnode{NG}} \\
-   \hline
-\end{tabular}}
-\end{center}
-\end{minipage}
-\begin{minipage}[t]{2in}
-\begin{center}
-New site\\
-{\scriptsize
-% latex table generated in R 3.0.2 by xtable 1.7-3 package
-% Thu Jul 31 13:51:34 2014
-\begin{tabular}{lrr}
-  \hline
- & z.date & z.cap \\
-  \hline
-{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\
-  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\
-  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\
-  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\
-  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\
-  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\
-  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\
-  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\
-  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\
-  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\
-  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\
-  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\
-  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\
-  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\
-  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\
-  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\
-  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\
-  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\
-  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\
-   \hline
-\end{tabular}}
-\end{center}
-\end{minipage}
-\begin{tikzpicture}[overlay]
-  \path[draw,gray] (NA) edge (NI);
- \path[draw,gray] (NB) edge (NJ);
- \path[draw,gray] (NC) edge (NH);
- \path[draw,gray] (NC) edge (NL);
- \path[draw,gray] (NC) edge (NN);
- \path[draw,gray] (NC) edge (NP);
- \path[draw,gray] (NC) edge (NS);
- \path[draw,gray] (NC) edge (NT);
- \path[draw,gray] (NC) edge (NW);
- \path[draw,gray] (ND) edge (NK);
- \path[draw,gray] (ND) edge (NM);
- \path[draw,gray] (ND) edge (NO);
- \path[draw,gray] (ND) edge (NQ);
- \path[draw,gray] (NE) edge (NR);
- \path[draw,gray] (NE) edge (NV);
- \path[draw,gray] (NF) edge (NZ);
- \path[draw,gray] (NG) edge (NU);
- \path[draw,gray] (NG) edge (NX);
- \path[draw,gray] (NG) edge (NY);
- \end{tikzpicture}
-
-```{r}
-fmnukeMC1<-fullmatch(pr~date+cap,data=nuke.nopt,min.controls=1)
-summary(fmnukeMC1, min.controls=0, max.controls=Inf)
-```
-
-
-\note{
-  Observe that now no control plants are left out.  (This is something you can change if you want.)
-
-Discuss effective sample size.
-}
-
-
-
-## Matching so as to maximize effective sample size
-
-\begin{minipage}[t]{2in}
-\begin{center}
-Existing site\\
-{\small
-% latex table generated in R 3.0.2 by xtable 1.7-3 package
-% Thu Jul 31 13:51:34 2014
-\begin{tabular}{lrr}
-  \hline
- & z.date & z.cap \\
-  \hline
-A & -1.6 & {1.2} {\mlpnode{NA}} \\
-  B & -0.9 & {1.2} {\mlpnode{NB}} \\
-  C & -0.4 & {0} {\mlpnode{NC}} \\
-  D & -0.4 & {-1.4} {\mlpnode{ND}} \\
-  E & 0.1 & {1.1} {\mlpnode{NE}} \\
-  F & 2.2 & {0} {\mlpnode{NF}} \\
-  G & 1.3 & {0} {\mlpnode{NG}} \\
-   \hline
-\end{tabular}}
-\end{center}
-\bigskip
-\bigskip
-\bigskip
-\bigskip
-\end{minipage}
-\begin{minipage}[t]{2in}
-\begin{center}
-New site\\
-{\scriptsize
-% latex table generated in R 3.0.2 by xtable 1.7-3 package
-% Thu Jul 31 13:51:34 2014
-\begin{tabular}{lrr}
-  \hline
- & z.date & z.cap \\
-  \hline
-{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\
-  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\
-  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\
-  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\
-  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\
-  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\
-  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\
-  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\
-  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\
-  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\
-  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\
-  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\
-  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\
-  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\
-  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\
-  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\
-  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\
-  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\
-  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\
-   \hline
-\end{tabular}}
-\end{center}
-\end{minipage}
-\begin{tikzpicture}[overlay]
-  \path[draw,gray] (NA) edge (NI);
- \path[draw,gray] (NA) edge (NJ);
- \path[draw,gray] (NB) edge (NL);
- \path[draw,gray] (NB) edge (NN);
- \path[draw,gray] (NB) edge (NW);
- \path[draw,gray] (NC) edge (NH);
- \path[draw,gray] (NC) edge (NO);
- \path[draw,gray] (NC) edge (NT);
- \path[draw,gray] (ND) edge (NK);
- \path[draw,gray] (ND) edge (NM);
- \path[draw,gray] (ND) edge (NQ);
- \path[draw,gray] (NE) edge (NR);
- \path[draw,gray] (NE) edge (NS);
- \path[draw,gray] (NE) edge (NV);
- \path[draw,gray] (NF) edge (NY);
- \path[draw,gray] (NF) edge (NZ);
- \path[draw,gray] (NG) edge (NP);
- \path[draw,gray] (NG) edge (NU);
- \path[draw,gray] (NG) edge (NX);
- \end{tikzpicture}
-```{r}
-fmnuke<-fullmatch(pr~date+cap, min=2, max=3, data=nuke.nopt)
-summary(fmnuke)
-```
-
-## Showing matches
-
-\centering
-```{r out.width=".8\\textwidth", echo=FALSE}
-## perhaps try this https://briatte.github.io/ggnet/#example-2-bipartite-network next time
-library(igraph)
-blah1 <- outer(fmnuke,fmnuke,FUN=function(x,y){ as.numeric(x==y) })
-blah2 <- outer(fmnukeMC1,fmnukeMC1,FUN=function(x,y){ as.numeric(x==y) })
-par(mfrow=c(1,2),mar=c(3,3,3,1))
-plot(graph_from_adjacency_matrix(blah1,mode="undirected",diag=FALSE),
-     vertex.color=c("white","green")[nuke.nopt$pr+1],main="Min Ctrls=2, Max Ctrls=3")
-plot(graph_from_adjacency_matrix(blah2,mode="undirected",diag=FALSE),
-     vertex.color=c("white","green")[nuke.nopt$pr+1],main="Min Ctrls=1, Max Ctrls=Inf")
-```
-
-## Matching so as to maximize effective sample size
-
-\tiny
-```{r}
-effectiveSampleSize(fmnuke)
-nukewts <- cbind(nuke.nopt,fmnuke) %>% 
-  group_by(fmnuke) %>% summarise(nb = n(),
-                                 nTb = sum(pr),
-                                 nCb = nb - nTb,
-                                 hwt = ( 2*( nCb * nTb ) / (nTb + nCb)))
-nukewts
-dim(nukewts)
-sum(nukewts$hwt)
-```
-
-## Matching so as to maximize effective sample size
-
-```{r}
-stratumStructure(fmnuke)
-```
-
-So effective sample size for this match = $2 \times (2 \times (2 \times 1)/(2+1)) + 5 \times  (2 \times (3 \times 1)/(3+1))  = 2 \times 4/3 + 5 \times 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples.
-
-```{r}
-nukemh <- match_on(pr~date+cap,data=nuke.nopt)
-pmnuke <- pairmatch(nukemh,data=nuke.nopt)
-levels(pmnuke)
-effectiveSampleSize(pmnuke)
-```
-
-##  Tracking effective sample size
-
-In 2-sample comparisons, total sample size can be a misleading as a measure of information content.  Example:
-\begin{itemize}
-\item say $Y$ has same variance, $\sigma^{2}$,in the Tx and the Ctl population.
-\item Ben H. samples 10 Tx and 40 Ctls, and
-\item Jake B. samples 25 Tx and 25 Ctls
-\end{itemize}
---- so that total sample sizes are the same.  However,
-
-\begin{eqnarray*}
-  V_{BH}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{10} + \frac{\sigma^{2}}{40}=.125\sigma^{2}\mbox{;}\\
-  V_{JB}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{25} + \frac{\sigma^{2}}{25}=.08\sigma^{2}.\\
-\end{eqnarray*}
-
-Similarly, a matched triple is roughly $[(\sigma^{2}/1 + \sigma^{2}/2)/(\sigma^{2}/1 + \sigma^{2}/1)]^{-1}= 1.33$ times as informative as a matched pair.
-
-## Details
-
-Use pooled 2-sample t statistic SE formula to compare 1-1 vs 1-2 matched sets' contribution to variance:
-
-$$
-\begin{array}{c|c}
-  \atob{1}{1} & \atob{1}{2} \\
-M^{-2}\sum_{m=1}^{M} (\sigma^{2}/1 + \sigma^{2}/1) & M^{-2}\sum_{m=1}^{M} (\sigma^{2}/1 + \sigma^{2}/2) \\
-\frac{2\sigma^{2}}{M} & \frac{1.5\sigma^{2}}{M} \\
-\end{array}
-$$
-
-So 20 matched pairs is comparable to 15 matched triples.
-
-(Correspondingly, h-mean of $n_{t},n_{c}$ for a pair is 1, while for a triple it's $[(1/1 + 1/2)/2]^{-1}=4/3$.)
-
-The variance of the `pr`-coeff in `v~pr + match` is
-$$
- \frac{2 \sigma^{2}}{\sum_{s} h_{s}}, \hspace{3em} h_{s} = \left( \frac{n_{ts}^{-1} + n_{cs}^{-1} }{2}  \right)^{-1} ,
-$$
-
-assuming the OLS model and homoskedastic errors.  (This is b/c the anova formulation is equivalent to harmonic-mean weighting, under which $V(\sum_{s}w_{s}(\bar{v}_{ts} - \bar v_{cs})) = \sum_{s} w_{s}^{2}(n_{ts}^{-1} + n_{cs}^{-1}) \sigma^{2} = \sigma^{2} \sum_{s} w_{s}^{2} 2 h_{s}^{-1} = 2\sigma^{2} \sum_{s}w_{s}/\sum_{s}h_{s} = 2\sigma^{2}/\sum_{s} h_{s}$.)
-
-For matched pairs, of course, $h_{s}=1$.  Harmonic mean of 1, 2 is $4/3$. Etc.
-
-
-## Matching so as to maximize effective sample size
-
-```{r}
-mds <- matched.distances(matchobj=fmnuke,distance=nukemh)
-mds[1:2]
-summary(unlist(mds))
-```
-
-Mean of matched distances is `r mean(unlist(mds))` --- compare to 0.29 for pairs, 0.57 for triples.
-
-Note variance/bias tradeoff (effective sample sizes of 10.17, 7, 9.33). Covariate balance has to do with bias and extrapolation (i.e. confounding). We want balance **and** precision.
-
-## Inspect distances after matching
-
-What kinds of distances remain after matching?
-
-```{r}
-str(mds)
-quantile(unlist(mds))
-```
-
-
 # Balance
 
+## Balance Hunt
 
  Hansen and Sales (2015) suggest one way to stop iterating between
-	\texttt{fullmatch} and \texttt{xBalance} when you have one caliper. The idea
-	is that if you would reject the null of balance with one caliper, you would
-	also certainly reject it with a wider caliper. That is, the idea is that
-	hypothesis tests about balance using calipers can be understood as nested,
-	or ordered. Rosenbaum (2008) talks about this in his paper ``Testing
-	Hypotheses in Order'' and Hansen and Sales (2008) how these ideas can
-	help us choose a matched design:
+ \texttt{fullmatch} and \texttt{xBalance} when you have one caliper. The idea
+ is that if you would reject the null of balance with one caliper, you would
+ also certainly reject it with a wider caliper. That is, the idea is that
+ hypothesis tests about balance using calipers can be understood as nested, or
+ ordered. Rosenbaum (2008) talks about this in his paper ``Testing Hypotheses
+ in Order'' and Hansen and Sales (2008) how these ideas can help us choose a
+ matched design:
 
-  ``The SIUP[sequential intersection union principle] states that if a
-  researcher pre-specifies a sequence of hypotheses and corresponding
-  level-$\alpha$ tests, tests those hypotheses in order, and stops testing
-  after the first non-rejected hypothesis, then the probability of incorrectly
-  rejecting at least one correct hypothesis is at most $\alpha$.'' (page 2)
+>  ``The SIUP[sequential intersection union principle] states that if a
+>  researcher pre-specifies a sequence of hypotheses and corresponding
+>  level-$\alpha$ tests, tests those hypotheses in order, and stops testing
+>  after the first non-rejected hypothesis, then the probability of incorrectly
+>  rejecting at least one correct hypothesis is at most $\alpha$.'' (page 2)
 
-	Let us try this out and also try to assess it. Say, we start by saying that
-	we will reject the null of balance at $\alpha=.50$.
+Let us try this out and also try to assess it. Say, we start by saying that we will reject the null of balance at $\alpha=.50$.
 
 
 Imagine, for example we had this matched design:
@@ -1103,7 +428,7 @@ apply(candDesigns,1,summary)
 candDesigns<-candDesigns[,order(candDesigns["d2p",],decreasing=TRUE)]
 ```
 
-## How would we use this information in \texttt{fullmatch}?
+## How would we use this information in `fullmatch`?
 
 ```{r bigmatch}
 stopifnot(nrow(candDesigns)==1)

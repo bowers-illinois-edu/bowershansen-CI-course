@@ -765,6 +765,15 @@ New site\\
 ```{r}
 fmnuke<-fullmatch(pr~date+cap, min=2, max=3, data=nuke.nopt)
 summary(fmnuke)
+
+fmnuke2<-fullmatch(pr~date+cap, min.controls=2, max.controls=4, data=nuke.nopt)
+summary(fmnuke2)
+
+fmnuke3<-fullmatch(pr~date+cap, min.controls=0, max.controls=Inf, data=nuke.nopt)
+summary(fmnuke3,min.controls=0,max.controls=Inf)
+
+xbBlah <-  xBalance(pr~date+cap,strata=list(fmnuke=~fmnuke,fmnuke3=~fmnuke3),data=nuke.nopt,report="all")
+
 ```
 
 ## Showing matches
@@ -784,7 +793,7 @@ plot(graph_from_adjacency_matrix(blah2,mode="undirected",diag=FALSE),
 
 ## Matching so as to maximize effective sample size
 
-Effective sample size for this match = $2 * 4/3 + 5* 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples.
+Effective sample size for this match = $2 \times (2 \times (2 \times 1)/(2+1)) + 5 \times  (2 \times (3 \times 1)/(3+1))  = 2 \times 4/3 + 5 \times 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples.
 
 \tiny
 ```{r tidy=FALSE}
@@ -870,6 +879,18 @@ str(mds)
 quantile(unlist(mds))
 ```
 
+## Decision Points
+
+ - Which covariates and their scaling and coding. (For example, exclude covariates with no variation!)
+ - Which distance matrices (scalar distances for one or two important variables, Mahalanobis distances (rank  transformed or not), Propensity distances (using linear predictors)).
+ - (Possibly) which calipers (and how many, if any, observations to drop. Note about ATT as a random quantity and ATE/ACE as fixed.)
+ - (Possibly) which exact matching or strata
+ - (Possibly) which structure of sets (how many treated per control, how many controls per treated)
+ - Which remaining differences are  tolerable from a substantive perspective?
+ - How well does the resulting research design compare to an equivalent block-randomized study?
+ - (Possibly) How much statistical power does this design provide for the quantity of interest?
+ - Other questions to ask about a research design aiming to help clarify comparisons.
+
 # Work in Class
 
 
@@ -902,8 +923,8 @@ momlist <- list(covs=mom_covs,tols=mom_tols)
 fine_covs <-  matrix(meddat$nhClass,ncol=1)
 finelist  <-  list(covs=fine_covs)
 
-# solverlist <- list(name='gurobi',approximate=0,t_max=1000,round_cplex=0,trace=1)
-solverlist <- list(name='glpk',approximate=1,t_max=1000,round_cplex=0,trace=1)
+ solverlist <- list(name='gurobi',approximate=0,t_max=1000,round_cplex=0,trace=1)
+#solverlist <- list(name='glpk',approximate=1,t_max=1000,round_cplex=0,trace=1)
 
 res <- bmatch(t_ind=z,dist_mat=NULL, ##distmat,
 	      mom=momlist,
