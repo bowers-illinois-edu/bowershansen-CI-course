@@ -32,6 +32,8 @@ output:
     reveal_plugins: ["notes","search","zoom","chalkboard"]
     pandoc_args: [ "--csl", "chicago-author-date.csl" ]
     css: icpsr-revealjs.css
+    includes:
+      in_header: icpsr-revealjs.html
 ---
 
 <!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
@@ -144,6 +146,7 @@ $\\newcommand{\\permsd}{\\ensuremath{\\sigma_{\\Pdistsym}}}$
 $\\newcommand{\\dZ}[1]{\\ensuremath{d_{Z}[{#1}]}}$
 $\\newcommand{\\tz}[1]{\\ensuremath{t_{{z}}[#1]}}$
 $\\newcommand{\\tZ}[1]{\\ensuremath{t_{{Z}}[#1]}} $
+$\\newcommand{\\bX}[1]{\\ensuremath{\\mathbf{X}[#1]}} $
 '`
 
 ## Today
@@ -252,7 +255,7 @@ text(2,-1.2,label=round(dist(rbind(colMeans(Xsd),Xsd["407",])),2))
 
 
 
-The Mahalanobis distance \citep{mahalanobis1930test}, avoids the scale and correlation problem in the euclidean distance.^[For more see <https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance>] $dist_M =  \sqrt{ (\bm{x} - \bm{\bar{x}})^T \bm{M}^{-1} (\bm{y} - \bm{\bar{y}}) }$ where $\bm{M}=\begin{bmatrix} var(x) & cov(x,y)  \\ cov(x,y) & var(y) \end{bmatrix}$
+The Mahalanobis distance \citep{mahalanobis1930test}, avoids the scale and correlation problem in the euclidean distance.^[For more see <https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance>] $dist_M =  \sqrt{ (\mathbf{x} - \mathbf{\bar{x}})^T \mathbf{M}^{-1} (\mathbf{y} - \mathbf{\bar{y}}) }$ where $\mathbf{M}=\begin{bmatrix} var(x) & cov(x,y)  \\ cov(x,y) & var(y) \end{bmatrix}$
 
 
 Here, using simulated data: The contour lines show points with the same
@@ -396,6 +399,63 @@ setdiffsfm1
 
 ```
 
+Balance testing by hand
+
+```{r}
+d.stat<-function(zz, mm, ss){
+  ## this is the d statistic (harmonic mean weighted diff of means statistic)
+  ## from Hansen and Bowers 2008
+  h.fn<-function(n, m){(m*(n-m))/n}
+  myssn<-apply(mm, 2, function(x){sum((zz-unsplit(tapply(zz, ss, mean), ss))*x)})
+  hs<-tapply(zz, ss, function(z){h.fn(m=sum(z), n=length(z))})
+  mywtsum<-sum(hs)
+  myadjdiff<-myssn/mywtsum
+  return(myadjdiff)
+}
+
+newexp <- function(zz,ss){
+	newzz <- unsplit(lapply(split(zz,ss),sample),ss)
+	return(newzz)
+}
+
+## Test
+
+thetab <- table(meddat$nhTrt,meddat$fmMhRank,exclude=c())
+test1 <- newexp(meddat$nhTrt,meddat$fmMhRank)
+thetabtest <- table(test1,meddat$fmMhRank)
+all.equal(thetab, thetabtest)
+
+d.dist<-replicate(100, d.stat(zz=newexp(zz=meddat$nhTrt,ss=meddat$fmPs),
+			      meddat[,c("nhPopD","nhAboveHS")], ss=meddat$fmPs))
+
+
+obsds <- d.stat(zz=meddat$nhTrt,mm=meddat[,c("nhPopD","nhAboveHS")],ss=meddat$fmPs)
+
+d2.stat <- function(dstats,ddist=NULL,theinvcov=NULL){
+  ## d is the vector of d statistics
+  ## ddist is the matrix of the null reference distributions of the d statistics
+  if(is.null(theinvcov) & !is.null(ddist)){
+    as.numeric( t(dstats) %*% solve(cov(t(ddist))) %*% dstats)
+  } else {
+    as.numeric( t(dstats) %*% theinvcov %*% dstats)
+  }
+}
+
+invCovDDist <- solve(cov(t(d.dist)))
+obs.d2<- d2.stat(obsds,d.dist,invCovDDist)
+
+d2.dist<-apply(d.dist, 2, function(thed){
+                 d2.stat(thed,theinvcov=invCovDDist)
+         })
+## The chi-squared reference distribution only uses a one-sided p-value going in the positive direction
+d2p<-mean(d2.dist>=obs.d2)
+cbind(obs.d2,d2p)
+xb2$overall[,]
+
+
+```
+
+
 
 ## Matching on the Mahalanobis Distance
 
@@ -444,6 +504,10 @@ psdist <- match_on(theglm,data=meddat)
 psdist[1:4,1:4]
 fmPs <- fullmatch(psdist,data=meddat)
 summary(fmPs,min.controls=0,max.controls=Inf)
+xb2 <- balanceTest(nhTrt~nhPopD+nhAboveHS + strata(fmMh) + strata(fmMhRank) + strata(fmPs), data=meddat,
+		    report="all")
+xb2$overall[,]
+meddat$fmPs  <- factor(fmPs)
 ```
 
 ## Matching on the propensity score
@@ -455,6 +519,7 @@ simpdist <- outer(thepscore,thepscore,function(x,y){ abs(x-y) })
 mad(thepscore[meddat$nhTrt==1])
 mad(thepscore[meddat$nhTrt==0])
 optmatch:::match_on_szn_scale(thepscore,Tx=meddat$nhTrt)
+simpdist["101",c("401","402","403")]
 simpdist["101",c("401","402","403")]/.9137
 psdist["101",c("401","402","403")]
 ```
@@ -474,6 +539,36 @@ xb4 <- balanceTest(update(balfmla,.~.+strata(fmMh)+strata(fmMhRank)+ strata(fmPs
                    data=meddat,report="all",p.adjust.method="none")
 xb4$overall[,]
 xb4$results[,"p",]
+
+xb2$results[,,"fmPs"]
+setdiffs <- meddat  %>% group_by(fmPs) %>% summarize(md=mean(nhPopD[nhTrt==1]) - mean(nhPopD[nhTrt==0]),
+    nb=n(),
+            nTb = sum(nhTrt),
+            nCb = sum(1-nhTrt),
+            hwt = ( 2*( nCb * nTb ) / (nTb + nCb))
+)
+
+with(setdiffs,sum(md*nTb/sum(nTb)))
+
+xb2a <- xBalance(nhTrt ~ nhPopD + nhAboveHS,strata=list(fmPs=~fmPs),data=meddat,report="all")
+xb2a$results
+obststat <- with(setdiffs, sum(md*hwt/sum(hwt)))
+
+
+newexp <- function(zz,ss){
+	newzz <- unsplit(lapply(split(zz,ss),sample),ss)
+	return(newzz)
+}
+
+
+with(meddat,newexp(zz=nhTrt,ss=fmPs))
+
+weighted.mean(setdiffsHR$mneddiffs,w=setdiffsHR$hwt)
+thelmversion <-
+	lm(HomRate08~nhTrt+fmEx1,data=droplevels(meddat[!is.na(meddat$fmEx1),]))
+
+
+
 ```
 
 ## Can you do better?
@@ -494,6 +589,7 @@ The optmatch package allows calipers (which forbids certain pairs from being mat
 ```{r}
 quantile(as.vector(psdist),seq(0,1,.1))
 psdistCal <- psdist + caliper(psdist,2)
+as.matrix(psdist)[5:10,5:10]
 as.matrix(psdistCal)[5:10,5:10]
 ```
 ## Calipers

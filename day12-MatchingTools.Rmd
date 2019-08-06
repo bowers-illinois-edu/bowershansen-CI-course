@@ -3,6 +3,7 @@ title: Matching Tools and Approaches
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: ICPSR 2019 Session 2
 bibliography:
+ - BIB/abbrev-long.bib
  - BIB/refs.bib
  - BIB/master.bib
  - BIB/misc.bib
@@ -22,14 +23,6 @@ output:
     includes:
         in_header:
            - defs-all.sty
-    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
-  revealjs::revealjs_presentation:
-    slide_level: 2
-    incremental: true
-    transition: none
-    fig_caption: true
-    self_contained: false
-    reveal_plugins: ["notes","search","zoom","chalkboard"]
     pandoc_args: [ "--csl", "chicago-author-date.csl" ]
 ---
 
@@ -99,38 +92,40 @@ library(mvtnorm)
 
 ## Today
 
-  1. Agenda:
-  2. Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans:04} \cite{ho:etal:07}
-  3. Questions arising from the reading or assignments or life?
+  1. Agenda: Spiral back to optimal, full matching versus greedy matching,
+     with-replacement, without-replacement, fixed ratio, etc..; spiral back to
+     details of propensity scores; give you some practice time so that new
+     questions can be raised.
+  2. Reading for tomorrow and next week: DOS 8--9, 13 and
+     \cite[\S~9.5]{gelman2006dau}, and \cite{hans:04}, \cite{ho:etal:07}
+  3. Additional reading for today \cite{hans:klop:06} and citations therein for
+     technical details on optimal, full matching.
+  4. Questions arising from the reading or assignments or life?
 
 # But first, review:
 
-
-\begin{frame}[fragile]
-\frametitle{What have we done so far?}
-
-The problem of attrition in randomized studies (simple experiments,
-encouragement designs, etc.)
-
-\medskip
+## What have we done so far?
 
 Making the case for adequate adjustment in observational studies
 
-\begin{itemize}
-\item The potential for making this case for one or more variables using
-stratification.
-\item Using optimal, full matching technology to make and evaluate
-stratifications.
-\item Mahalanobis distance to compare units on $\bm{x}$.
-\item The propensity score to compare units on $\hat{Z} \leftarrow \bm{x}$
-\end{itemize}
-
-\end{frame}
+  - The potential for making this case for one or more variables using
+    stratification.
+  - Using optimal, full matching technology to make and evaluate
+    stratifications --- stratification reduces extrapolation and interpolation
+    without requiring models of adjustment (models relating $\bm{x}$ to $Z$ and
+    $Y$.
+  - Scalar distance --- to represent substantive knowledge about key
+    alternative explanations.
+  - Mahalanobis distance to compare units on $\bm{x}$ --- to try to include all
+    covariates equally.
+  - The propensity score to compare units on $\hat{Z} \leftarrow \bm{x}$ --- to
+    downweight covariates not relevant for confounding.
+  - Assessing stratifications using the block-randomized design as a standard
+    of comparison. (What does this mean in practice? What does  `xBalance` or `balanceTest` do?)
 
 #  Matching on Many Covariates: Using Propensity Scores
 
-\begin{frame}
-\frametitle{The propensity score}
+## The propensity score
 
 Given covariates $\mathbf{x} (=(x_1, \ldots, x_k))$, and a
 treatment variable $Z$, $Z(u) \in \{0, 1\}$,  $\PP (Z \vert \mathbf{x})$ is known as the (true) \textbf{propensity score} (PS).
@@ -140,80 +135,74 @@ with an estimated PS, $\hat{\PP} (Z \vert \mathbf{x})$ or
 $\hat{\phi}(\mathbf{x})$.
 
 Theoretically, propensity-score strata or matched sets both
-\begin{enumerate}
-\item reduce extrapolation; and
-\item balance each of $x_1, \ldots, x_k$.
-\end{enumerate}
+
+ 1. reduce extrapolation; and
+ 2. balance each of $x_1, \ldots, x_k$.
+
 They do this by making the comparison more "experiment-like", at least in terms of $x_1, \ldots, x_k$.
 
-Theory \citep{rosrub83} also tells us that in the absence of hidden bias, such a stratification
-item supports unbiased estimation of treatment effects.
+Theory @rosrub83 also tells us that in the **absence of hidden bias**, such a stratification
+supports unbiased estimation of treatment effects.
 
-\end{frame}
 
-\begin{frame}
-\frametitle{Propensity scoring in practice}
+## Propensity scoring in practice
 
-\begin{columns}
-\column{.65\linewidth}
-\begin{itemize}
-\item Fitted propensity scores help identify extrapolation.
-\item In practice, stratification on $\hat{\phi}(\mathbf{x})$
-helps balance each of $x_1, \ldots, x_k$.
-\item There are \emph{lots of cases} in which adjustment with the propensity
-score fails to generate estimates that square with those of
-randomized studies.
-\end{itemize}
-\column{.35\linewidth} \igrphx{meddatpsplot}
-\end{columns}
+ - Fitted propensity scores help identify extrapolation.
+ - In practice, stratification on $\hat{\phi}(\mathbf{x})$
+helps balance each of $x_1, \ldots, x_k$ compared to no stratification.
 
-\begin{itemize}
-\item There are various reasons for this, starting with: lots of observational studies that
-don't measure quite enough $x$es.
-\item (Propensity scores address bias on measured variables, not
-unmeasured ones.)  \textit{hidden bias}.
-\end{itemize}
 
-\end{frame}
+There are \emph{lots of cases} in which adjustment with the propensity score alone fails to generate estimates that agree with those of randomized studies.
 
-\begin{frame}[fragile]
-\frametitle{More intuition about the propensity score}
+There are various reasons for this, starting with:
 
-A propensity score is the output of a function of covariates as they relate to $Z$ (the "treatment" or "intervention"). Why reduce the dimension of $\bm{x}$ in this way rather than, say, using Mahalanobis distance?
+ - lots of observational studies that don't measure quite enough $x$es or the right $x$es or the right $x$es in the right way
+ - **hidden biases** --- propensity scores address bias on measured variables, not unmeasured ones.
+
+
+
+
+## More intuition about the propensity score
+
+A propensity score is the output of a function of covariates as they relate to
+$Z$ (the "treatment" or "intervention"). Why reduce the dimension of $\bm{x}$
+in this way rather than, say, using Mahalanobis distance?
 
 \medskip
 
 Recall that an experiment breaks the relationship between $Z$ and $\bm{x}=\{ x_1,x_2,\ldots \}$ but not between $\bm{x}$ and $Y$ or $y_1,y_0$.
 
 
+\includegraphics[width=.25\textwidth]{xyzdiagram.pdf}
 
-\begin{tikzcd}[column sep=small]
+```{r tikzarrows, eval=FALSE, include=FALSE, engine='tikz', engine.opts=list(template="icpsr-tikz2pdf.tex")}
+\usetikzlibrary{arrows}
+\begin{tikzcd}[ampersand replacement=\&, column sep=small]
   Z  \arrow[from=1-1,to=1-3] &                               & Y \\
-  &   \bm{x} \arrow[from=2-2,to=1-1, "\text{0 if Z rand}"] \arrow[from=2-2,to=1-3] &
+  &   \mathbf{x} \arrow[from=2-2,to=1-1, "\text{0 if Z rand}"] \arrow[from=2-2,to=1-3] &
 \end{tikzcd}
+```
 
 Making strata of units who are similar on the propensity score reduces (or removes)
-the relationship between $Z$ and the relevant $\bm{x}$ within strata (either the
-units have similar values for $\bm{x}$ or the particular $x$s do not have a
+the relationship between $Z$ and the relevant $\mathbf{x}$ within strata (either the
+units have similar values for $\bm{x}$ or the particular $x$s which do not have a
 strong (linear, additive) relationship with $Z$).
 
-\end{frame}
 
+## Matching on the propensity score
 
-```{r echo=FALSE, cache=TRUE}
+Common practice uses logistic regression to make the scores. (We will be
+using something other than logistic regression in the future because of
+separation problems / overfitting when the number of covariates increases
+relative to sample size.)
+
+```{r loadmeddat, include=FALSE, echo=FALSE, cache=TRUE}
 load(url("http://jakebowers.org/Data/meddat.rda"))
 meddat<- mutate(meddat,
 		HomRate03=(HomCount2003/Pop2003)*1000,
 		HomRate08=(HomCount2008/Pop2008)*1000)
 row.names(meddat) <- meddat$nh
 ```
-
-## Matching on the propensity score
-
-Common practice is to use logistic regression to make the scores. (We will be
-using something other than logistic regression in the future because of
-separation problems / overfitting when the number of covariates increases
-relative to sample size.)
 
 ```{r}
 theglm <- glm(nhTrt~nhPopD+nhAboveHS,data=meddat,family=binomial(link='logit'))
@@ -258,157 +247,6 @@ optmatch:::match_on_szn_scale(thepscore,Tx=meddat$nhTrt)
 simpdist["101",c("401","402","403")]/.9137
 psdist["101",c("401","402","403")]
 ```
-
-
-# Matching Tricks of the Trade: Calipers, Exact Matching
-
-## Calipers
-
-The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can also implement penalties by hand by directly setting elements of the matrices to be `Inf`. Or you can implement penalties by just inflating the size of different distance matrix entries.] Here, for example, we disallow comparisons which differ by more than 2 standard deviations on the propensity score.
-
-```{r}
-quantile(as.vector(psdist),seq(0,1,.1))
-psdistCal <- psdist + caliper(psdist,2)
-as.matrix(psdistCal)[5:10,5:10]
-```
-## Calipers
-
-The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we disallow comparisons which differ by more than 2 standard deviations on the propensity score.
-
-```{r}
-fmCal1 <- fullmatch(psdist+caliper(psdist,2),data=meddat,tol=.00001)
-summary(fmCal1,min.controls=0,max.controls=Inf)
-pmCal1 <- pairmatch(psdist+caliper(psdist,2),data=meddat, remove.unmatchables=TRUE)
-```
-
-## Calipers
-
-Another example: We may want to primarily match on mahalanobis distance but
-disallow any pairs with extreme propensity distance and/or extreme differences
-in baseline homicide rates (here using many covariates all together).
-
-```{r}
-thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
-balfmla<-reformulate(thecovs,response="nhTrt")
-mhdist <- match_on(balfmla,data=meddat,method="rank_mahalanobis")
-tmpHom03 <- meddat$HomRate03
-names(tmpHom03) <- rownames(meddat)
-absdistHom03 <- match_on(tmpHom03, z = meddat$nhTrt,data=meddat)
-quantile(as.vector(absdistHom03),seq(0,1,.1))
-## Apply the calipers to the distance matrix
-distCal <- mhdist + caliper(psdist,2) + caliper(absdistHom03,2)
-as.matrix(distCal)[5:10,5:10]
-```
-
-## Calipers
-
-```{r}
-as.matrix(distCal)[5:10,5:10]
-fmCal2 <- fullmatch(distCal,data=meddat,tol=.00001)
-summary(fmCal2,min.controls=0,max.controls=Inf)
-```
-
-
-## Exact Matching
-
-We often have covariates that are categorical/nominal and on which we really care about strong balance. One approach to solve this problem is match **exactly** on one or more of such covariates. If `fullmatch` or `match_on` is going slow, this is also an approach to speed things up.
-
-```{r echo=FALSE}
-meddat$classLowHi <- ifelse(meddat$nhClass %in% c(2,3),"hi","lo")
-```
-
-```{r}
-dist2 <- mhdist + exactMatch(nhTrt~classLowHi,data=meddat)
-dist3 <- dist2 + caliper(psdist,3)
-## or mhdist <- match_on(balfmla,within=exactMatch(nhTrt~classLowHi,data=meddat),data=meddat,method="rank_mahalanobis")
-## or fmEx1 <- fullmatch(update(balfmla,.~.+strata(classLowHi)),data=meddat,method="rank_mahalanobis")
-fmEx1 <- fullmatch(dist3,data=meddat,tol=.00001)
-summary(fmEx1,min.controls=0,max.controls=Inf)
-
-xbEx1 <-
-	balanceTest(update(balfmla,.~.+strata(fmEx1)),data=meddat,report="all")
-
-
-xbEx1
-
-meddat$fmEx1 <- fmEx1
-
-setdiffsHR <- meddat %>% filter(!is.na(fmEx1)) %>% group_by(fmEx1) %>% summarize(mneddiffs =
-						       mean(HomRate08[nhTrt==1]) -
-						       mean(HomRate08[nhTrt==0]),
-					       nb = n(),
-					       pr = mean(nhTrt==1),
-					       nTb = sum(nhTrt==1),
-					       nCb = nb - nTb,
-					       hwt = ( 2*( nCb * nTb ) / (nTb + nCb)))
-
-
-setdiffsHR
-
-
-weighted.mean(setdiffsHR$mneddiffs,w=setdiffsHR$hwt)
-thelmversion <-
-	lm(HomRate08~nhTrt+fmEx1,data=droplevels(meddat[!is.na(meddat$fmEx1),]))
-
-coef(thelmversion)[2]
-```
-
-## Exact Matching
-
-```{r}
-print(fmEx1,grouped=T)
-```
-## Exact Matching
-
-\scriptsize
-```{r}
-ftable(Class=meddat$classLowHi,Trt=meddat$nhTrt,fmEx1,col.vars=c("Class","Trt"))
-```
-
-## Back to matching on a scalar
-
-Why would matching on a scalar like `nhAboveHS` yield so many sets?
-
-```{r}
-table(round(meddat$nhAboveHS,4),meddat$nhTrt,exclude=c())
-```
-
-```{r}
-tmpHS <- meddat$nhAboveHS
-names(tmpHS) <- rownames(meddat)
-absdistHS <- match_on(tmpHS, z = meddat$nhTrt,data=meddat)
-absHSMatch <- fullmatch(absdistHS,data=meddat,tol=.0000001)
-summary(absHSMatch,min.controls=0,max.controls=Inf)
-meddat$absHSMatch <- absHSMatch
-setdiffsHS <- meddat %>% group_by(absHSMatch) %>% summarize(mneddiffs =
-						   mean(nhAboveHS[nhTrt==1]) -
-						   mean(nhAboveHS[nhTrt==0]),
-					   mnnhAboveHS = mean(nhAboveHS),
-					   minnhAboveHS = min(nhAboveHS),
-					   maxnhAboveHS = max(nhAboveHS),
-					   setsize=n())
-
-setdiffsHS
-```
-
-## Back to matching on a scalar
-
-These sets make sense because the individual neighborhoods have different
-values for baseline homicide rate.
-
-```{r}
-absHomMatch <- fullmatch(absdistHom03,data=meddat)
-meddat$absHomMatch <- absHomMatch
-setdiffsHM <- meddat %>% group_by(absHomMatch) %>% summarize(mneddiffs =
-						   mean(HomRate03[nhTrt==1]) -
-						   mean(HomRate03[nhTrt==0]),
-					   mnHomRate03 = mean(HomRate03),
-					   minHomRate03 = min(HomRate03),
-					   maxHomRate03 = max(HomRate03))
-
-setdiffsHM
-```
-
 # Major Matching modes
 
 ##  Optimal (communitarian) vs greedy (individualistic) matching
@@ -425,7 +263,7 @@ Tom    &  1& 1 & 20 & $\infty$ \\ \hline
     \end{tabular}
   \end{center}
 
-```{r results="hide", warnings=FALSE, messages=FALSE}
+```{r results="hide", warning=FALSE, messages=FALSE}
 bookmat <- matrix(c(0,1,1,10,10,0,10,10,1,1,20,Inf),nrow=3,byrow=TRUE)
 dimnames(bookmat) <- list(c("Ben","Jake","Tom"),c("Mo","John","Terry","Pat"))
 fullmatch(bookmat)
@@ -463,7 +301,7 @@ match keeps all the obs, and has mean distance (1+0+1)/3=.67. }
 \note{
   \begin{itemize}
   \item This is what many understand by matching.  [Greedy pair match follows.]
-  \item Sometimes matching means  ``with-replacement'' matching. We'll permit that too, but in a structured way, and keeping track of how many replacements. 
+  \item Sometimes matching means  ``with-replacement'' matching. We'll permit that too, but in a structured way, and keeping track of how many replacements.
   \item Why keep track of the replacements?  --B/c they affect standard errors of the matched comparison.  (``Effective sample size'' to be introduced a few slides later.)
   \end{itemize}
 }
@@ -733,26 +571,6 @@ New site\\
  \end{tikzpicture}
 
 
-
-## The World of Matching Today
-
-This is an active and productive research area (i.e. lots of new ideas, not everyone agrees
-about everything). Here are just a few of the different approaches to creating
-strata or sets or selecting subsets.
-
- - The work on cardinality matching and fine balance
-   <http://jrzubizarreta.com/>
-   <https://cran.rstudio.com/web/packages/designmatch/> )
- - The work on speedier approximate full matching <http://fredriksavje.com/>
-   <https://github.com/fsavje/quickmatch>
- - The work on using genetic algorithms to (1) find approximate strata
-   with-replacement <http://sekhon.berkeley.edu/matching/> and (2) to find
-   an approximation to a completely randomized study (i.e. best subset
-   selection) <http://cho.pol.illinois.edu/wendy/papers/bossor.pdf>
- - The work on coarsened exact matching <https://gking.harvard.edu/cem>
- - The work on entropy-balancing approach to causal effects <https://web.stanford.edu/~jhain/software.htm#ebal>.
- - The covariate-balancing propensity score (CBPS) <https://imai.princeton.edu/research/CBPS.html>.
-
 # Information and Balance: Matching structure and effective sample size
 
 ## Matching with a varying number of controls and full matching
@@ -966,26 +784,20 @@ plot(graph_from_adjacency_matrix(blah2,mode="undirected",diag=FALSE),
 
 ## Matching so as to maximize effective sample size
 
+Effective sample size for this match = $2 * 4/3 + 5* 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples.
+
 \tiny
-```{r}
+```{r tidy=FALSE}
 effectiveSampleSize(fmnuke)
-nukewts <- cbind(nuke.nopt,fmnuke) %>% 
-  group_by(fmnuke) %>% summarise(nb = n(),
-                                 nTb = sum(pr),
-                                 nCb = nb - nTb,
+nukewts <- cbind(nuke.nopt,fmnuke) %>% group_by(fmnuke) %>% summarise(nb = n(),
+                                 nTb = sum(pr), nCb = nb - nTb,
                                  hwt = ( 2*( nCb * nTb ) / (nTb + nCb)))
 nukewts
-dim(nukewts)
 sum(nukewts$hwt)
-```
-
-## Matching so as to maximize effective sample size
-
-```{r}
 stratumStructure(fmnuke)
 ```
 
-So effective sample size for this match = $2 * 4/3 + 5* 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples.
+## Matching so as to maximize effective sample size
 
 ```{r}
 nukemh <- match_on(pr~date+cap,data=nuke.nopt)
@@ -1058,29 +870,67 @@ str(mds)
 quantile(unlist(mds))
 ```
 
+# Work in Class
+
+
+## Can you do better?
+
+**Challenge:** What is your best matched design for the question about the
+effect of the Metrocable intervention on Homicides in 2008? ("Best" in that it
+(1) might be  defensible in substantive  terms  and (2) compares most favorably
+with a block-randomized experiment  (in  regards  observed covariates).
+
+# Other Matching  Technology
 
 ## Playing with Caliper Matching
 
-```{r eval=FALSE}
-
-install.packages("/Library/gurobi702/mac64/R/gurobi_7.0-2.tgz",repos=NULL)
+```{r designmatchtry, eval=TRUE}
+## install.packages("/Library/gurobi810/mac64/R/gurobi_8.1-0_R_3.5.0.tgz",repos=NULL)
 library(gurobi)
 library(designmatch)
-distmat <- as.matrix(dist3)
-distmat[is.infinite(distmat)]<-1000
-res <- bmatch(t_ind=meddat$nhTrt,dist_mat=distmat,
-	      n_controls=1,
-	      solver=list(name='gurobi',approximate=0))
+thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+balfmla<-reformulate(thecovs,response="nhTrt")
 
+distmat <- as.matrix(psdist)
+distmat[is.infinite(distmat)]<-1000*max(distmat)
 
+z  <-  as.vector(meddat$nhTrt)
+mom_covs <- fill.NAs(update(balfmla,.~-nhClass+.),data=meddat)
+mom_tols <- round(absstddif(mom_covs,z,20),2)
+momlist <- list(covs=mom_covs,tols=mom_tols)
+
+fine_covs <-  matrix(meddat$nhClass,ncol=1)
+finelist  <-  list(covs=fine_covs)
+
+# solverlist <- list(name='gurobi',approximate=0,t_max=1000,round_cplex=0,trace=1)
+solverlist <- list(name='glpk',approximate=1,t_max=1000,round_cplex=0,trace=1)
+
+res <- bmatch(t_ind=z,dist_mat=NULL, ##distmat,
+	      mom=momlist,
+	      #fine=finelist,
+	      solver=solverlist)
 ```
 
 
+## RCBalance
 
-## Summary:
+```{r}
+unloadNamespace("dplyr")
+unloadNamespace("plyr")
+library(plyr)
+library(dplyr)
+library(rcbalance)
 
-What do you think?
+mydist <- build.dist.struct(z=z,X=meddat[,thecovs])
 
+rcb <-  rcbalance(mydist,fb.list=list("nhClass"),
+		  treated.info=meddat[meddat$nhTrt==1,],
+		  control.info=meddat[meddat$nhTrt==0,],
+exclude.treated=TRUE)
+
+rcb$matches
+
+```
 
 
 ## References

@@ -3,7 +3,7 @@ title: Statistical Adjustment and Assessment of Adjustment in Observational Stud
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: ICPSR 2019 Session 2
 bibliography:
- - refs.bib
+ - BIB/refs.bib
  - BIB/master.bib
  - BIB/misc.bib
 fontsize: 10pt
@@ -21,8 +21,8 @@ output:
     template: icpsr.beamer
     incremental: true
     includes:
-        in_header:
-           - defs-all.sty
+      in_header:
+        - defs-all.sty
     pandoc_args: [ "--csl", "chicago-author-date.csl" ]
   revealjs::revealjs_presentation:
     slide_level: 2
@@ -32,6 +32,8 @@ output:
     self_contained: false
     reveal_plugins: ["notes","search","zoom","chalkboard"]
     pandoc_args: [ "--csl", "chicago-author-date.csl" ]
+    includes:
+      in_header: icpsr-revealjs.html
 ---
 
 
@@ -149,12 +151,10 @@ library(optmatch)
 ```
 ## Today
 
-\begin{enumerate}
-  \item Agenda:
+  1. Agenda:
 The problem of covariance adjustment to reduce "bias"/ confounding. \textbf{How can we answer the question about whether we have adjusted enough.} A simple approach: stratification on one categorical variable (and interaction effects). A more complex approach: find sets that are as similar as possible in terms of a continuous variable (bipartite matching). Balance assessment after stratification.
-\item Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{ho:etal:07}
-\item Questions arising from the reading or assignments or life?
-\end{enumerate}
+  2. Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and @ho:etal:07.
+  3. Questions arising from the reading or assignments or life?
 
 # Strategies for Causal Inference
 
@@ -193,10 +193,8 @@ The problem of covariance adjustment to reduce "bias"/ confounding. \textbf{How 
 
 ## The Neyman-Rubin Model for (simple) experiments
 
-\vfill
 This is what randomization ensures:
-$$ (\alert<4>{y_t, y_c},\alert<2>{X}) \perp \alert<3>{Z} $$
-\vfill
+$$ ({y_t, y_c},{X}) \perp {Z} $$
 
 I.e., each of $X$, $y_{c}$ and $y_{t}$ is balanced between treatment and control groups (in expectation; given variability from randomization).
 
@@ -607,7 +605,7 @@ coef(lm1a)[2]
 
 ## Exactly what does this kind of adjustment do?
 
-So, how would you explain what it means to "control for HS-Education" here? 
+So, how would you explain what it means to "control for HS-Education" here?
 
 ```{r}
 plot(eZX,eYX)
@@ -615,7 +613,7 @@ plot(eZX,eYX)
 
 
 
-## Did we adjust enough? 
+## Did we adjust enough?
 
 Maybe adding some more information to the plot can help us decide whether, and to what extend, we effectively "controlled for" the proportion of the neighborhood with more than High School education. Specifically, we might be interested in assessing extrapolation/interpolation problems arising from our linear assumptions.
 
@@ -750,11 +748,11 @@ scatter3d(HomRate08~nhAboveHS+nhPopD,
 
 ## The Problem of Using  the Linear Model for  Adjustment
 
- - Problem of Interepretability: "Controlling for" is  "removing (additive) linear relationships" it is  not "holding constant" 
+ - Problem of Interepretability: "Controlling for" is  "removing (additive) linear relationships" it is  not "holding constant"
  - Problem of Diagnosis and Assessment: What is the  standard against which we can compare a given linear covariance adjustment specification?
  - Problem of extrapolation and interpolation: Often known as "common support", too.
  - Problems of overly influential points and curse of  dimensionality: As dimensions increase, odds of influential  point increase (ex. bell curve in one dimension, one very influential point in 2 dimensions); also real limits on number of covariates (roughly $\sqrt{n}$ for OLS).
- - Problems of  bias: 
+ - Problems of  bias:
 
 \begin{equation}
 Y_i = \beta_0 + \beta_1 Z_i + e_i (\#eq:olsbiv)
