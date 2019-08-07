@@ -20,6 +20,7 @@ output:
     latex_engine: xelatex
     citation_package: biblatex
     template: icpsr.beamer
+    incremental: true
     includes:
         in_header:
            - defs-all.sty
@@ -49,7 +50,7 @@ knit_hooks$set(plotdefault = function(before, options, envir) {
 })
 
 opts_chunk$set(
-  tidy=FALSE,     # display code as typed
+  tidy='styler',     # display code as typed
   echo=TRUE,
   results='markup',
   strip.white=TRUE,
@@ -87,6 +88,10 @@ library(RItools,lib.loc="./lib")
 library(optmatch)
 library(chemometrics) ## for drawMahal
 library(mvtnorm)
+library(splines)
+library(Rsolnp)
+library(parallel)
+library(arm) ## See also https://github.com/stan-dev/rstanarm
 ```
 
 ## Today
@@ -94,13 +99,35 @@ library(mvtnorm)
   1.  Agenda: How to avoid overfit propensity score functions; How to characterize the information in a matched design (use
   what we know about the variance of estimators from block-randomized experiments).
   2. Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans:04} (on full matching versus fixed ratio matching versus pair matching), \cite{gelman2008weakly} on "separation" problems in logistic regression other references on the problem of "overfitting" in general.
-  3. Questions arising from the reading or assignments or life?
+  3. Updated day-plan.pdf
+  4. Questions arising from the reading or assignments or life?
 
 # But first, review:
 
 ## What have we done so far?
 
- - We now have the decision points for a matched research design
+  - Science is a social process: we persuade ourselves and each other about
+    theoretical explanations using logic and observation.
+  - Common questions:  "Why should I believe this?", "Why did I do this?",
+    "What about another explanation for the observed comparison?"
+  - Our answers: (1)  Anticipate alternative explanations; (2)  Develop
+    standards (tests should have controlled false positive rate and powerful,
+    estimators should be unbiased, precise, if not also consistent, observed
+    comparisons should compare favorably  to a randomized comparisons, etc.)
+
+## Decision Points in using algorithmic matching to  create research designs
+
+ - Which covariates and their scaling and coding. (For example, exclude covariates with no variation!)
+ - Which distance matrices (scalar distances for one or two important variables, Mahalanobis distances (rank  transformed or not), Propensity distances (using linear predictors)).
+ - (Possibly) which calipers (and how many, if any, observations to drop. Note about ATT as a random quantity and ATE/ACE as fixed.)
+ - (Possibly) which exact matching or strata
+ - (Possibly) which structure of sets (how many treated per control, how many controls per treated)
+ - Which remaining differences are  tolerable from a substantive perspective?
+ - How well does the resulting research design compare to an equivalent block-randomized study?
+ - (Possibly) How much statistical power does this design provide for the quantity of interest?
+ - Other questions to ask about a research design aiming to help clarify comparisons.
+
+
 
 ```{r include=FALSE,   echo=FALSE, cache=TRUE}
 load(url("http://jakebowers.org/Data/meddat.rda"))
@@ -118,23 +145,17 @@ row.names(meddat) <- meddat$nh
 ```{r echo=TRUE}
 thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
 balfmla<-reformulate(thecovs,response="nhTrt")
-library(splines)
 psfmla <- update(balfmla,.~.+ns(HomRate03,2)+ns(nhPopD,2)+ns(nhHS,2))
 glm0 <- glm(balfmla,data=meddat,family=binomial(link="logit"))
 glm1 <- glm(psfmla,data=meddat,family=binomial(link="logit"))
-
-# install.packages("arm")
-library(arm) 
-## See also https://github.com/stan-dev/rstanarm
-
 bayesglm0 <- bayesglm(balfmla,data=meddat,family=binomial(link="logit"))
 bayesglm1 <- bayesglm(psfmla,data=meddat,family=binomial(link="logit"))
-
 psg1 <- predict(glm1,type="response")
 psg0 <- predict(glm0,type="response")
 psb1 <- predict(bayesglm1,type="response")
 psb0 <- predict(bayesglm0,type="response")
 ```
+## The separation problem
 
 Logistic regression is excellent at discriminating between groups \ldots often **too excellent** for us \autocite{gelman2008weakly}. First evidence of this is big and/or missing coefficients in the propensity score model. See the coefficients below:
 
@@ -160,6 +181,8 @@ axis(1,at=0:19,labels=colnames(thecoefs),las=2)
 matplot(t(thecoefs),axes=FALSE,ylim=c(-15,10))
 axis(2)
 axis(1,at=0:19,labels=colnames(thecoefs),las=2)
+
+legend("topright",col=1:4,lty=1:4,legend=c("glm0","glm1","bayesglm0","bayesglm1"))
 ```
 
 
@@ -184,6 +207,11 @@ psdist <- match_on(bayesglm1,data=meddat)
 psdist[1:4,1:4]
 fmPS <- fullmatch(psdist,data=meddat)
 summary(fmPS,min.controls=0,max.controls=Inf,propensity.model=bayesglm1)
+```
+
+## Matching on the propensity score
+
+```{r}
 stopifnot(all.equal(names(fmPS),row.names(meddat)))
 meddat$fmPS <- fmPS ## because same order
 meddat$pscore <- predict(bayesglm1) ## because no missing data
@@ -205,22 +233,28 @@ xbFMPS$results["HomRate03",,]
 
 # Balance
 
-## Balance Hunt
+## Balance Hunt using the SIUP 
 
  Hansen and Sales (2015) suggest one way to stop iterating between
- \texttt{fullmatch} and \texttt{xBalance} when you have one caliper. The idea
+ \texttt{fullmatch} and \texttt{xBalance} when you have one caliper. 
+ 
+<!-- The idea
  is that if you would reject the null of balance with one caliper, you would
  also certainly reject it with a wider caliper. That is, the idea is that
  hypothesis tests about balance using calipers can be understood as nested, or
  ordered. Rosenbaum (2008) talks about this in his paper ``Testing Hypotheses
  in Order'' and Hansen and Sales (2008) how these ideas can help us choose a
- matched design:
+ matched design: -->
 
 >  ``The SIUP[sequential intersection union principle] states that if a
 >  researcher pre-specifies a sequence of hypotheses and corresponding
 >  level-$\alpha$ tests, tests those hypotheses in order, and stops testing
 >  after the first non-rejected hypothesis, then the probability of incorrectly
->  rejecting at least one correct hypothesis is at most $\alpha$.'' (page 2)
+>  rejecting at least one correct hypothesis is at most $\alpha$.'' (@hansensales2015, page 2)
+
+
+
+## Balance Hunt using the SIUP
 
 Let us try this out and also try to assess it. Say, we start by saying that we will reject the null of balance at $\alpha=.50$.
 
@@ -239,7 +273,12 @@ absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
 summary(psdist)
 summary(mhdist)
 summary(absdist)
+```
 
+## Principled Balance Search using SIUP
+
+
+```{r}
 fmMh <- fullmatch(mhdist,data=meddat,tol=.00001)
 summary(fmMh,min.controls=0,max.controls=Inf)
 ```
@@ -295,8 +334,7 @@ results1o$maxp <- cummax(results1o$d2p)
 
 ## Balance Search using SIUP
 
-So, you can see that keeping the maximum produces a set of nested tests so
-that if I reject some caliper at some $p$, I know that any caliper tighter
+Keeping the maximum produces a set of nested tests:  rejecting balance at some caliper implies that any caliper tighter
 than the chosen one would have less balance (a smaller $p$, more information
 against the null that our design is like a well randomized block randomized
 study).
@@ -358,7 +396,9 @@ findbalance<-function(x){
 
 ```
 
-```{r echo=FALSE, cache=TRUE}
+## Design Search for both precision and balance
+
+```{r echo=FALSE, cache=TRUE, warning=FALSE}
 ## Test the function
 ## findbalance(c(3,3))
 ## Don't worry about errors for certain combinations of parameters
@@ -375,7 +415,6 @@ system.time({
 
 ```{r eval=FALSE, echo=FALSE}
 ## If you have a mac or linux machine you can speed this up:
-library(parallel)
 system.time({
 	resultsList<-mclapply(1:5000,function(i){
 				      findbalance(c(runif(1,minpsdist,maxpsdist),
@@ -396,11 +435,11 @@ Here are a few ideas.
 
 ```{r }
 if(class(results)=="list"){
-resAnyNA<-sapply(results,function(x){ any(is.na(x)) })
-resNoNA<-simplify2array(results[!resAnyNA])
+	resAnyNA<-sapply(results,function(x){ any(is.na(x)) })
+	resNoNA<-simplify2array(results[!resAnyNA])
 } else {
-resAnyNA<-apply(results,2,function(x){ any(is.na(x)) })
-resNoNA<-simplify2array(results[,!resAnyNA])
+	resAnyNA<-apply(results,2,function(x){ any(is.na(x)) })
+	resNoNA<-simplify2array(results[,!resAnyNA])
 }
 apply(resNoNA,1,summary)
 highbalres<-resNoNA[,resNoNA["d2p",]>.5]
@@ -418,6 +457,8 @@ plot(resNoNA["d2p",],resNoNA["n",],
 
 ## identify(resNoNA["d2p",],resNoNA["n",],labels=round(resNoNA["maxHR03diff",],3),cex=.7)
 ```
+
+## Which matched design might we prefer?
 
 ```{r eval=TRUE,echo=TRUE}
 interestingDesigns<- (resNoNA["d2p",]>.5 & resNoNA["n",]>=10 &
@@ -468,27 +509,26 @@ maxpfn<-function(x,distmat,alpha){
 }
 
 maxpfn(c(minpsdist,minpsdist+1),distmat=psdist,alpha=.25)
-quantile(as.vector(psdist),seq(0,1,.1))
-sort(as.vector(psdist))[1:10]
+#quantile(as.vector(psdist),seq(0,1,.1))
+#sort(as.vector(psdist))[1:10]
 ```
 
 ## Another approach: more fine tuned optimization
 
-```{r solnp, cache=TRUE}
-library(Rsolnp)
+```{r solnp, warning=FALSE, message=FALSE, cache=TRUE}
 ### This takes a long time
 results3<-gosolnp(fun=maxpfn,
-		ineqfun=function(x,distmat,alpha){ x[2] - x[1] },
-		ineqLB = 0,
-		ineqUB = maxpsdist,
-		LB=c(minpsdist,minpsdist+.01),
-		UB=c(maxpsdist-.01,maxpsdist),
-		n.restarts=2,
-		alpha=.25,distmat=psdist,
-		n.sim=500,
-		rseed=12345,
-		control=list(trace=1)
-		)
+		  ineqfun=function(x,distmat,alpha){ x[2] - x[1] },
+		  ineqLB = 0,
+		  ineqUB = maxpsdist,
+		  LB=c(minpsdist,minpsdist+.01),
+		  UB=c(maxpsdist-.01,maxpsdist),
+		  n.restarts=2,
+		  alpha=.25,distmat=psdist,
+		  n.sim=500,
+		  rseed=12345,
+		  control=list(trace=1)
+)
 ```
 
 ## Another approach: more fine tuned optimization
@@ -499,12 +539,7 @@ matchAndBalance2(results3$pars[1],distmat=psdist,alpha=.25)
 matchAndBalance(results3$par[1],balfmla=balfmla,distmat=psdist,thedata=meddat)
 ```
 
-
-## Summary:
-
-What do you think?
-
-### Next:
+## Next:
 
 Estimating causal effects, testing hypotheses about causal effects.
 

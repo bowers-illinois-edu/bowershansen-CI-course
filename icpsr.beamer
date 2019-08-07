@@ -23,6 +23,11 @@ $endif$
 \usepackage{tikz}
 \usepackage{tikz-cd}
 \usepackage{textpos}
+
+\usepgflibrary{arrows} % also see \tikzstyle spec below after \begin{doc}
+\usetikzlibrary{arrows} % also see \tikzstyle spec below after \begin{doc}
+
+
 \usepackage{ifxetex,ifluatex}
 % \usepackage{fixltx2e} % provides \textsubscript
 \ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
@@ -281,6 +286,8 @@ $endif$
 \let\End\end
 
 \begin{document}
+\tikzstyle{every picture}+=[remember picture]
+
 $if(title)$
 \begin{frame}[plain,label=intro,noframenumbering]
 \titlepage

@@ -78,13 +78,6 @@
 
 \newenvironment{Column}[1][.5\linewidth]{\begin{column}{#1}}{\end{column}}
 
-%\usepackage{tikz}
-%\usepackage{tikz-cd}
-%\usepackage{textpos}
-
-\usepgflibrary{arrows} % also see \tikzstyle spec below after \begin{doc}
-%\usetikzlibrary{arrows} % also see \tikzstyle spec below after \begin{doc}
-
 \newcommand{\mlpnode}[1]{\tikz[baseline=-.5ex] \coordinate (#1) {};}
 %\newcommand{\mlpnode}[1]{\raisebox{.5ex}{\pnode{#1}}}
 
@@ -92,7 +85,6 @@
 \usepackage{xspace}
 
 \includeversion{pedantic} % \excludeversion
-\tikzstyle{every picture}+=[remember picture]
 
 
 % copied from CSCAR svn repo, `dissdefs.tex`

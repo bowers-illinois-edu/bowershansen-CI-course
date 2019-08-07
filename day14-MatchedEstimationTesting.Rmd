@@ -3,7 +3,8 @@ title: Estimation and Testing for Stratified Matched Designs
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: ICPSR 2019 Session 2
 bibliography:
- - refs.bib
+ - BIB/abbrev-long.bib
+ - BIB/refs.bib
  - BIB/master.bib
  - BIB/misc.bib
  - BIB/causalinference.bib
@@ -38,8 +39,10 @@ require(knitr)
 ## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
 
 knitr::knit_hooks$set(mysize = function(before, options, envir) {
-			      if (before)
+			       if (before){
 				      return(options$size)
+			      } else {
+				      return("\\normalsize")}
 })
 
 knit_hooks$set(plotdefault = function(before, options, envir) {

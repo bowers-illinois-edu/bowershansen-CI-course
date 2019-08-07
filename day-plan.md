@@ -144,19 +144,22 @@ assignment  and outcome.
 ## Day 11: Monday
   - Basic forms of matching: greedy,optimal, replacement, full.
   - Matching on more than one variable, approaches: mahalanobis distance and propensity scores.
+  - Exact matching; Calipers; Combining matrices;
+  - The mechanics and intuition behind  the experimental comparison in xBalance
 
 ## Day 12:
-  - Hand out last assignment on matching. (assignment 3)
-  - Exact matching; Calipers; Combining matrices;
+  - Re-visiting propensity scores 
+  - Effective Sample size
+  - Practice creating matched designs
 
 ## Day 13:
-   - Effective sample size; SIUP for balance testing; searching for a good
-     match using balance, effective sample size, as well as max dist on
-important covariate.
+   - SIUP for balance testing; searching for a good match using balance,
+     effective sample size, as well as max dist on important covariate.
    - Estimation and Testing after matching; Plus more on  Navigating
      implementation tradeoffs in matching: Information and blocked designs
-(some blocking have more information about treatment effects than others);
-Balance tests and the Sequential Intersection Union Principle
+     (some blocking have more information about treatment effects than others);
+     Balance tests and the Sequential Intersection Union Principle
+  - Hand out last assignment on matching. (assignment 3)
 
 ## Day 14:
  - Non-bipartite matching (cross-sectional)
