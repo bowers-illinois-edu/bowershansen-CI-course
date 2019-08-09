@@ -34,7 +34,7 @@ comprehensive, but rather have chosen a few articles or chapters that, we
 think, introduce major conceptual approaches in ways that social scientists
 might  find particularly useful.
 
-## Day 1 and Day 2: (Unit 1) (Ben)
+## Day 1 and Day 2: Monday and Tuesday (Unit 1) (Ben)
  - The idea of a sharp null test.
     + Fisher's hypothesis of absolutely no effect
     + Appraising evidence vs a sharp null by comparing realized value to its distribution
@@ -53,7 +53,7 @@ might  find particularly useful.
  - @rosenbaum10book, Chapter 1
 
 
-## Day 3: P-values. (Unit 2) (Tom)
+## Day 3: Wednesday. P-values. (Unit 2) (Tom)
  - Review of Expectations, Probability
  - Probability distribution on Omega (assignments) forms the basis of p-values
  - Gesture at estimation.
@@ -88,7 +88,7 @@ might  find particularly useful.
  - **Assignment is due next Thursday**
 
 
-## Day 6: Monday (Unit 5)
+## Day 6: Monday 
  - Context for last week.
  - By now, we have a good sense of the statistics for causal quantities in
    randomized experiments: when the desired relationship is between treatment
@@ -147,12 +147,12 @@ assignment  and outcome.
   - Exact matching; Calipers; Combining matrices;
   - The mechanics and intuition behind  the experimental comparison in xBalance
 
-## Day 12:
+## Day 12: Tues
   - Re-visiting propensity scores 
   - Effective Sample size
   - Practice creating matched designs
 
-## Day 13:
+## Day 13: Wed
    - SIUP for balance testing; searching for a good match using balance,
      effective sample size, as well as max dist on important covariate.
    - Estimation and Testing after matching; Plus more on  Navigating
@@ -161,7 +161,10 @@ assignment  and outcome.
      Balance tests and the Sequential Intersection Union Principle
   - Hand out last assignment on matching. (assignment 3)
 
-## Day 14:
+## Day 14: Thurs
+   - Estimation and Testing in block-randomized experiments (and as-if block-randomized experiments)
+
+## Day 15: Fri
  - Non-bipartite matching (cross-sectional)
 
 ### Reading on matching with more than one group
@@ -169,7 +172,7 @@ assignment  and outcome.
  - @lu2011optimal
  - @wong2012jop (for an example)
 
-## Day 15: Monday
+## Day 16: Monday
  - (Regression) Discontinuity Designs
 
 ###  Readings about (Regression) Discontinuity Designs
@@ -181,7 +184,7 @@ assignment  and outcome.
  - @saleshansen2015riforrd
 
 
-## Day 16:
+## Day 17: Tues
  - Sensitivity analysis I (Rosenbaum Style)
 
 ### Readings on sensitivity analysis
@@ -190,11 +193,11 @@ assignment  and outcome.
  - @hhh2010
  - @rosenbaumtwo
 
-## Day 17:
+## Day 18: Wed
  - Sensitivity Analysis II (Calibrated Style)
 
-## Day 18:
- - Maybe Interference
+## Day 19: Thurs
+ - Maybe Interference or open discussion and/or project work
 
 ### Readings about causal inferences when units interact and causal effects flow across networks
  - @bowersetal2013; @bowers2016research
@@ -204,7 +207,5 @@ assignment  and outcome.
  - @liu2014large
 
 
-## Day 19:
- - Free Discussion or project work
 
 # References

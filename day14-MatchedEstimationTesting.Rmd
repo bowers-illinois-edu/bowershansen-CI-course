@@ -168,8 +168,8 @@ quantile(as.vector(mhdist),seq(0,1,.1))
 quantile(as.vector(absdist),seq(0,1,.1))
 ## Match and require no more than 3 treated per control, and no more than 5 control per treated
 fmMh <- fullmatch(psdist + caliper(psdist,5) + caliper(absdist,2)
-		  + caliper(mhdist,52), min.controls=1/3, # default
-		  max.controls=Inf, #Inf # default
+		  + caliper(mhdist,52), min.controls=0, ## 1/3, 
+		  max.controls=Inf,
 		  data=meddat,tol=.00001)
 summary(fmMh,min.controls=0,max.controls=Inf,propensity.model=psmod)
 meddat$fmMh <- factor(fmMh)
@@ -208,8 +208,11 @@ mdwt2 <- function(y,trt,b){
 	ate_hbwt <- with(datB,sum(ateb*hbwt1/sum(hbwt1)))
 	return(ate_hbwt)
 }
+```
 
+## Testing by hand
 
+```{r}
 wdat <- meddat %>% filter(!is.na(meddat$fmMh))
 
 obsmd1 <- with(wdat,mdwt1(y=HomRate08,trt=nhTrt,b=fmMh))
@@ -220,6 +223,8 @@ testtab <- with(wdat,table(trt=newexp(trt=nhTrt,b=fmMh),b=fmMh))
 all.equal(origtab,testtab)
 
 ```
+
+## Testing by hand
 
 ```{r}
 
@@ -235,25 +240,43 @@ var(nulldist1)
 var(nulldist2)
 ```
 
+```{r}
+
+plot(density(nulldist1))
+lines(density(nulldist2),lty=2)
+
+```
+
+
 
 ## Testing Approach: Faster
 
 ```{r}
 
 xbTest1 <- xBalance(nhTrt~HomRate08,strata=list(fmMh=~fmMh),data=wdat,report="all")
-xbTest1
+xbTest1$results[,,"fmMh"]
 
 xbTest2 <- balanceTest(nhTrt~HomRate08+strata(fmMh),data=wdat,report="all")
-xbTest2
+xbTest2$results[,,"fmMh"]
+```
 
+## Testing Approach: Faster
+
+```{r}
 wdat$nhTrtF <- factor(wdat$nhTrt)
 meanTestAsym  <- oneway_test(HomRate08~nhTrtF|fmMh,data=wdat,distribution='asymptotic')
 set.seed(12345)
 meanTestPerm  <- oneway_test(HomRate08~nhTrtF|fmMh,data=wdat,distribution=approximate(nresample=1000))
 
+pvalue(meanTestAsym)
+pvalue(meanTestPerm)
+
 rankTestAsym  <- wilcox_test(HomRate08~nhTrtF|fmMh,data=wdat,distribution='asymptotic')
 set.seed(12345)
 rankTestPerm <- wilcox_test(HomRate08~nhTrtF|fmMh,data=wdat,distribution=approximate(nresample=1000))
+
+pvalue(rankTestAsym)
+pvalue(rankTestPerm)
 
 ```
 
@@ -320,8 +343,6 @@ wdat <- meddat %>% filter(!is.na(fmMh)) %>% group_by(fmMh) %>% mutate(pb=mean(nh
 					       hbwt2 =  nbwt * ( pb * (1 - pb) )
                                                )
 
-cor(wdat[,c("gghbwt","hbwt1","hbwt2")])
-
 row.names(wdat) <- wdat$id ## dplyr strips row.names
 lm0b<-lm(HomRate08~nhTrt,data=wdat,weight=nbwt)
 coef(lm0b)["nhTrt"]
@@ -341,7 +362,7 @@ lmE0
 
 ## Using the weights: precision weights
 
-Set-size weighting is easy to explain but may differ in terms of precision table:
+Set-size weighting is easy to explain but may differ in terms of precision:
 
 ```{r}
 atewhb <- with(datB, sum(Y*hbwt1/sum(hbwt1)))
@@ -376,7 +397,12 @@ summary(lmer1)$coef
 ```
 
 
-## Which estimator?
+## Which estimator to choose?
+
+The  block-sized weighted approach is unbiased. But unbiased is not the only
+indicator quality in an estimator.
+
+##
 
 ```{r}
 library(DeclareDesign)
@@ -475,6 +501,8 @@ thedesign_plus_est <- thedesign + estimand1 + est1 + est2 + est3 + est4 + est5 +
 
 ```
 
+## Diagnosands and diagnosis
+
 ```{r diagnose, cache=TRUE}
 
 set.seed(12345)
@@ -490,42 +518,31 @@ thediagnosands <- declare_diagnosands(
      mean_estimand = mean(estimand)
      )
 
-diagnosis <- diagnose_design(thedesign_plus_est,sims=1000,bootstrap_sims=0,
+diagnosis <- diagnose_design(thedesign_plus_est,sims=10000,bootstrap_sims=0,
 			     diagnosands = thediagnosands)
 
 
 ```
 
+```{r}
+
+sims <- 
+
+```
+
+
 ## Results of the Simulation
 
 ```{r}
-kable(reshape_diagnosis(diagnosis)[,-c(1:2,4)])
+reshape_diagnosis(diagnosis,digits=4)[,-c(1:2,4)]
+
+kable(reshape_diagnosis(diagnosis,digits=4)[,-c(1:2,4)])
 
 ```
 
 
 
 
-
-## Using the weights: effect of treatment on treated
-
-`balanceTest` reports the ATT (the set mean differences weighted by number of
-treated) but uses the precision-weighted mean for the $p$-value.  `xBalance`
-reports the same $p$-values but reports the harmonic mean weighted difference
-of means as the `adj.diff`.
-
-
-```{r echo=FALSE,eval=FALSE}
-## The descriptive adj.mean diff from balanceTest
-with(datB, sum(Y*nTb/sum(nTb)))
-xbOutcome1 <- balanceTest(nhTrt~HomRate08+strata(fmMh),data=wdat,report="all")
-xbOutcome$results[,,"fmMh"]
-```
-
-```{r}
-xbOutcome2 <- xBalance(nhTrt~HomRate08,strata=list(fmMh=~fmMh),data=wdat,report="all")
-xbOutcome2$results[,,"fmMh"]
-```
 
 
 ## The direct permutation approach
@@ -582,6 +599,8 @@ obsNTZ<-wtMeanDiffTZ(wdat$HomRate08,wdat$nhTrt,wdat$fmMh,setsizewtfn)
 obsTTZ<-wtMeanDiffTZ(wdat$HomRate08,wdat$nhTrt,wdat$fmMh,trtsizewtfn)
 ```
 
+##  The direct permutation approach
+
 Test the null hypothesis of no effects:
 
 ```{r cache=TRUE}
@@ -604,18 +623,6 @@ plot(density(nulldistHwt),ylim=c(0,3))
 lines(density(nulldistNwt),lty=2)
 curve(dnorm(x,sd=sd(nulldistHwt)),from=-1,to=1,col="gray",add=TRUE)
 curve(dnorm(x,sd=sd(nulldistNwt)),from=-1,to=1,col="gray",lty=2,add=TRUE)
-```
-
-## Easier permutation tests
-
-```{r}
-library(coin)
-wdat$nhTrtF <- factor(wdat$nhTrt)
-testHwt <- oneway_test(HomRate08~nhTrtF | fmMh,data=wdat)
-pvalue(testHwt)
-testHwtPerm <- oneway_test(HomRate08~nhTrtF | fmMh,data=wdat,
-		       distribution=approximate(B=1000))
-pvalue(testHwtPerm)
 ```
 
 
@@ -658,7 +665,7 @@ g <- ggplot(data=newdat,aes(x=post,y=Y,color=Z,shape=fm)) +
 	scale_shape_manual(values=1:14) +
 	#geom_point() +
 	geom_jitter(width=.1) +
-	geom_smooth(method="lm",aes(x=post,y=Y,group=Z),se=FALSE,method.args=list(weights=newdat$nbwt),weights=newdat$nbwt)
+	geom_smooth(method="lm",aes(x=post,y=Y,group=Z,weight=nbwt),se=FALSE)
 
 print(g)
 
@@ -688,12 +695,23 @@ quite closely on baseline outcome).
 cinb<-coefci(ddnbwt,parm="nhTrt",  vcov.=vcov(ddnbwt,type="HC2"))
 cihb1<-coefci(ddhbwt1,parm="nhTrt",vcov.=vcov(ddhbwt1,type="HC2"))
 cihb2<-coefci(ddhbwt2,parm="nhTrtMD",vcov.=vcov(ddhbwt2,type="HC2"))
+```
 
-diff(theci1[1,]) ## precision weighting
-diff(theci0[1,]) ## set size weighting
-diff(cinb[1,])
-diff(cihb1[1,])
-diff(cihb2[1,])
+Difference in Diffences as Covariance Adjustment
+
+```{r}
+
+dind1 <- lm_lin(HomRate08~nhTrt,covariates = ~HomRate03,weight=nbwt,data=wdat)
+
+dind1
+
+## Versus
+
+lmbasic <- lm_robust(HomRate08~nhTrt,weight=nbwt,data=wdat)
+lmbasic
+
+lmfe <- lm_robust(HomRate08~nhTrt,fixed_effects=~fmMh,data=wdat)
+lmfe
 ```
 
 
@@ -717,17 +735,9 @@ Now that you've seen **a lot**, you can practice.
    principle controls the family-wise error rate for balance tests?
 
 
+## Summary
 
-
-## Summary:
-
-What do you think?
-
-### Next:
-
-Estimating causal effects, testing hypotheses about causal effects.
-
-
+Questions? Comments?
 
 ## Using the weights: Set size weights
 
