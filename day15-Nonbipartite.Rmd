@@ -433,6 +433,8 @@ vmdaPhPenMat <- distancematrix(vmdaPhPen)
 nbp2match<-nonbimatch(vmdaPhPenMat)
 nbp2<-get.sets(nbp2match$matches,remove.unpaired=TRUE)
 wrkdat[names(nbp2),"nbp2"]<-nbp2
+nbp2vmdiffs<-tapply(wrkdat$vmdaPct,wrkdat$nbp2,function(x){ abs(diff(x)) })
+
 ```
 
 ## Assess this new match
