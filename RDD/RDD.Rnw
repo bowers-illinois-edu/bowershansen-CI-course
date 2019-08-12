@@ -130,21 +130,19 @@
 
 << setup, echo=FALSE, results='hide',include = FALSE, eval = TRUE >>=
 
-if (!require("pacman")) { install.packages("pacman") }
-
-p_load(dplyr,
-       MASS,
-       magrittr,
-       tidyr,
-       haven,
-       optmatch,
-       RItools,
-       ggplot2,
-       parallel,
-       knitr,
-       lmtest,
-       sandwich,
-       rdd)
+library(dplyr)
+library(MASS)
+library(magrittr)
+library(tidyr)
+library(haven)
+library(optmatch)
+library(RItools)
+library(ggplot2)
+library(parallel)
+library(knitr)
+library(lmtest)
+library(sandwich)
+library(rdd)
 
 
 opts_chunk$set(tidy = TRUE,
@@ -168,7 +166,7 @@ options(width = 100,
 
 \section{Regression Discontinuity Design}
 
-\subsection{General Setup}
+\subsection{General Introduction and Setup}
 
 Today we are going to use the data on close US House of Representatives races
 1942--2008 used in  \citet{caugheysekhon2011}.\footnote{The full replication
@@ -268,7 +266,7 @@ kable(dvs)
 
 \subsubsection{Baseline Covariates}
 
-The relevant baseline (i.e., pre-treatment) covariates about the races are:
+The relevant baseline covariates (all measured prior to the realization of the running variable) are:
 
 << echo=FALSE >>=
 
@@ -309,18 +307,18 @@ kable(covs)
 
 @
 
-\subsection{RDD Framework}
+\subsection{Local Randomization Framework}
 
 Let the index $i \in \left\{1, \dots , n\right\}$ run over the $n$ experimental units. In the context of a regression discontinuity design, let $R_i$ denote the random ``score variable'' (also known as ``running variable''). The random assignment variable, $Z_i \in \left\{0, 1\right\}$, which indicates whether subject $i$ is assigned to treatment, $Z_i = 1$, or to control, $Z_i = 0$, is a deterministic function of $R_i$. In the context of the incumbency advantage study, we can define $Z_i$ as follows:
 \begin{align*}
-Z_i \equiv \mathbf{I}\left[R_i > 0 \right],
+Z_i \equiv \mathbbm{I}\left[R_i > 0 \right],
 \end{align*}
-where $\mathbf{I}\left[\cdot\right]$ is an indicator function that is $1$ if the argument to the function is true and $0$ if false. In this particular study, if the margin of victory is greater than $0$, then candidate $i$ is treated ($Z_i = 1$), and if not, then candidate $i$ is assigned to control ($Z_i = 0$).
+where $\mathbbm{I}\left[\cdot\right]$ is an indicator function that is $1$ if the argument to the function is true and $0$ if false. In this particular study, if the margin of victory is greater than $0$, then candidate $i$ is treated ($Z_i = 1$), and if not, then candidate $i$ is assigned to control ($Z_i = 0$).
 
 Let $W_0 = [\underline{r}, \overline{r}]$, where $\underline{r} < r_0 < \overline{r}$, denote the window around the cutpoint (or threshold value), $r_0$, that sorts units into treatment or control.
 
 
-\subsection{Optimal Bandwidth Selection}
+\subsubsection{Optimal Bandwidth Selection}
 
 We know from \citet{hansensales2015, rosenbaum2008, berger1988} that ``if a researcher pre-specifies a sequence of hypotheses and corresponding level-$\alpha$ tests, tests those hypotheses in order, and stops testing after the first non-rejected hypothesis, then the probability of incorrectly rejecting at least one correct hypothesis is at most $\alpha$'' \citep[p. 185]{hansensales2015}.
 
@@ -361,14 +359,13 @@ xBalance(fmla = bal_fmla,
          report = "all")
 @
 
-\vspace{5mm}
-\begin{mdframed}
+
 \textbf{Question for Students:}
 \vspace{-5mm}
 \begin{itemize}\itemsep1pt
 \item What can we infer from the results of the Chi-Squared balance test above?
 \end{itemize}
-\end{mdframed}
+
 
 Now let's write a function to perform this same procedure over all candidate bandwidth sizes beginning with the largerst candidate bandwidth and subsequently testing smaller and smaller bandwidths in order.
 
@@ -428,27 +425,23 @@ kable(band_df)
 @
 
 \vspace{5mm}
-\begin{mdframed}
 \textbf{Questions for Students:}
 \vspace{-5mm}
 \begin{itemize}\itemsep1pt
 \item There's something interesting going on as we make the window around the cut point smaller and smaller. What is it?
 \item And what are its implications, which are also mentioned by \citet{caugheysekhon2011}?
 \end{itemize}
-\end{mdframed}
 
-\subsection{Local Random Assignment Does \textit{Not} Imply Exclusion Restriction}
+\subsubsection{Local Random Assignment Does \textit{Not} Imply Exclusion Restriction}
 
 Now let's assume that within a certain bandwidth around the cutpoint, $W_0$, the assumption of a local randomized experiment obtains. In other words, probabilties are uniformly distributed on $R_i \in W_0$ for all $i$. Yet even if this assumption obtains, the running variable, $R$, might still relate to potential outcomes through a mechanism other than $Z \given R \in W_0$.
 
 \vspace{5mm}
-\begin{mdframed}
 \textbf{Question for Students:}
 \vspace{-5mm}
 \begin{itemize}\itemsep1pt
 \item Explain why this would be a violation of the \textit{exclusion restriction}?
 \end{itemize}
-\end{mdframed}
 
 The exclusion restriction is a strong assumption in the RDD context since $Z$ is a deterministic function of the running variable, $R$, which implies that treatment and control groups, by construction, will be imbalanced on the running variable. Thus, if $R$ relates to $(y_{c}, y_{t})$, through a mechanism other than $Z \given R \in W_0$, then the exlcusion restriction is violated.
 
@@ -485,12 +478,7 @@ two_sided_p_val <- min(1, 2 * min(upper_p_val, lower_p_val))
 
 What can we do if the exclusion restriction is violated? Or worse, if the running variable, $R$, confounds the relationship between $Z$ and $Y$? One approach is to model potential outcomes as a function of the running variable, and then to ``de-trend'' (or ``transform'') the outcome variable and to subsequently make the claim of ``residual ignorability.''
 
-More specifically, we postulate that:
-\begin{align*}
-Y_{c_i} & = \alpha_0 + \beta R_i + \epsilon_{c_i}, \ \epsilon_{c_i} \sim \mathcal{N}\left(0, \sigma^2\right) \\
-Y_{t_i} & = \alpha_0 + \left(\alpha_1 - \alpha_0\right)Z_i + \beta R_i + \epsilon_{t_i}, \ \epsilon_{t_i} \sim \mathcal{N}\left(0, \sigma^2\right) \\
-\end{align*}
-
+For example, we could do the folloiwng:
 <<>>=
 
 tmp_lm <- lm(DPctNxt ~ DifDPct, data = rdd_data)
@@ -500,17 +488,16 @@ rdd_data %<>% mutate(resid_DPctNxt = resid(tmp_lm))
 @
 
 \vspace{5mm}
-\begin{mdframed}
 \textbf{Question for Students:}
 \vspace{-5mm}
 \begin{itemize}\itemsep1pt
 \item Do we think modeling the outcome variable as a linear function of the running variable is appropriate?
 \end{itemize}
-\end{mdframed}
 
 <<>>=
 
-ggplot(rdd_data, aes(DifDPct, DPctNxt)) + geom_point() +
+ggplot(data = rdd_data,
+       mapping = aes(x = DifDPct, y = DPctNxt)) + geom_point() +
   geom_smooth(method = lm, se = FALSE) + geom_smooth(se = FALSE, colour= "red") +
   xlab("Democratic Margin of Victory (Running Variable)") +
   ylab("Democratic Vote Percentage in Next Election (Outcome Variable)") +
@@ -519,7 +506,7 @@ ggplot(rdd_data, aes(DifDPct, DPctNxt)) + geom_point() +
 
 @
 
-\subsection{Outcome Analysis}
+\subsubsection{Outcome Analysis}
 
 We can now perform outcome analysis on the detrended outcome variable:
 
@@ -556,12 +543,26 @@ confint.HC(lm(formula = rlm_resid_DPctNxt ~ DemWin, data = rdd_data),
 
 @
 
-An alternative approach to regression discontinuity, common in the econometrics literature \citep[see][]{angristpischke2008,imbenslemieux2008} is as follows:
+\subsection{Continuity in Potential Outcomes Framework}
 
-Estimate $\E\left[Y \given R = r\right]$ on both sides of the cutpoint and then take the difference of the two regressions evaluated at the cutpoint. That is,
+An alternative approach to regression discontinuity is common in the econometrics literature \citep[see, e.g.,][]{imbenslemieux2008,lee2008,calonicoetal2014,hahnetal2001,leelemieux2010,mccrary2008}. As \citet{hahnetal2001} and \citet{imbenslemieux2008} state, the estimand (i.e., the quantity we seek to estimate) is:
 \begin{align*}
-\lim \limits_{r \downarrow 0}\E\left[Y \given R = r\right] - \lim \limits_{r \uparrow 0}\E\left[Y \given R = r\right]
+\lim \limits_{r \downarrow 0}\E\left[Y \given R = r > 0\right] - \lim \limits_{r \uparrow 0}\E\left[Y \given R = r < 0 \right] &  \\
+& = \E\left[Y_t \given R = 0\right] - \E\left[Y_c \given R = 0 \right]  \\
+& = \E\left[Y_t - Y_c \given R = 0 \right]
 \end{align*}
+
+This estimand assumes that the (1) left and right limits of $\E\left[Y \given R \right]$ exist as $R$ approaches the cutpoint $r = 0$ and (2) conditional expectation of the outcome given the running variable is left-continuous and right-continuous at the cutpoint $r = 0$, where in general a function $f$ is continuous from the right at $a$ if $\lim \limits_{x \downarrow a} f(x) = f(a)$ and is continuous from the left if $\lim \limits_{x \uparrow a} f(x) = f(a)$.
+
+\vspace{5mm}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item How do we interpret the expected value operator, $\E\left[\cdot\right]$, above? Sometimes the continuity in potential outcomes is stated as $\mu_t, \mu_c$ are continuous at $r = 0$. How does this relate the the estimand defined above?
+\end{itemize}
+
+We don't actually need to know the true form of $\E[\left[Y \given R = r\right]$. Instead, we can use methods, such as local regression, to approximate the function of $\E[\left[Y \given R = r\right]$ at values of $R$ below and above the cutpoint.
+
 
 <<>>=
 
@@ -638,6 +639,8 @@ lm_poly_predict_above <- predict(object = lm(formula = DPctNxt ~ I(DifDPct^3) + 
 lm_poly_predict_above - lm_poly_predict_below
 
 @
+
+\citet[647]{cattaneotitiunikvazquez-bare2017} state that potential outcomes are viewed as a random sample from an infinite superpopulation. How does this fit with this course's emphasis on finite population, design-based causal inference?
 
 \newpage
 
