@@ -495,10 +495,13 @@ rdd_data %<>% mutate(resid_DPctNxt = resid(tmp_lm))
 \end{itemize}
 
 <<>>=
-
+## An influential point robust loess smoother.
 ggplot(data = rdd_data,
        mapping = aes(x = DifDPct, y = DPctNxt)) + geom_point() +
-  geom_smooth(method = lm, se = FALSE) + geom_smooth(se = FALSE, colour= "red") +
+  geom_smooth(method = lm, se = FALSE) + 
+  geom_smooth(method = rlm, se = FALSE, colour="black") + 
+  geom_smooth(method=loess,se = FALSE, colour= "red", 
+              method.args=list(deg=1,span=1/3,family="symmetric")) +
   xlab("Democratic Margin of Victory (Running Variable)") +
   ylab("Democratic Vote Percentage in Next Election (Outcome Variable)") +
   ggtitle("Relationship between Running Variable and Outcome") +
@@ -577,7 +580,8 @@ ggplot(data = rdd_data_cp,
                      y = DPctNxt)) +
   geom_point() +
   geom_smooth(method = lm, se = FALSE) +
-  geom_smooth(se = FALSE, colour= "red") +
+  geom_smooth(method = rlm, se = FALSE, colour = "black") +
+  geom_smooth(method = loess, se = FALSE, colour= "red", method.args=list(deg=1,span=1/2,family="symmetric")) +
   theme(plot.title = element_text(hjust = 0.5),
         axis.text.x = element_text(size = 4)) +
   xlab("Democratic Margin of Victory (Running Variable)") +
