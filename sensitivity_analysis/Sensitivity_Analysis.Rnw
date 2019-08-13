@@ -1,0 +1,527 @@
+\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
+\documentclass[11pt,leqno]{article}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb}          % AMS Stuff
+\usepackage[linewidth=1pt]{mdframed}
+\usepackage{mdframed}
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{afterpage}% http://ctan.org/pkg/afterpage
+\usepackage[T1]{fontenc}
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfig}
+\usepackage{titling}            % modify maketitle in latex
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage{verbatim}
+\usepackage{geometry}
+\usepackage{bigfoot}
+\usepackage[format=hang,
+            font={small},
+            labelfont=bf,
+            textfont=rm]{caption}
+
+\geometry{verbose,margin=2cm,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=page,
+            colorlinks=true,
+            hyperfootnotes=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1},
+            citecolor=blue!70!black,
+            linkcolor=red!70!black,
+            urlcolor=green!70!black]{hyperref}
+\usepackage{hypernat}
+
+\usepackage{multirow}
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+
+\parskip=12pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{12pt} %Aboveskip
+{12pt} %Below skip
+{\itshape} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+% \DeclareMathOperator{\Pr}{\rm{Pr}}
+
+% COLORS FOR GRAPHICS (3-class Set1)
+\definecolor{Blue}{RGB}{55,126,184}
+\definecolor{Red}{RGB}{228,26,28}
+\definecolor{Green}{RGB}{77,175,74}
+
+% COLORS FOR EQUATIONS (3-class Dark2)
+\definecolor{eqgreen}{RGB}{27,158,119}
+\definecolor{eqblue}{RGB}{117,112,179}
+\definecolor{eqred}{RGB}{217,95,2}
+
+
+\title{Sensitivity Analysis}
+\author{Jake Bowers, Ben Hansen \& Tom Leavitt}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+<< setup, include = FALSE, eval = TRUE >>=
+
+
+library(dplyr)
+library(magrittr)
+library(reshape2)
+library(tidyr)
+library(haven)
+library(broom)
+library(randomizr)
+library(lmtest)
+library(ggplot2)
+library(knitr)
+library(xtable)
+library(devtools)
+library(optmatch)
+library(RItools)
+library(sandwich)
+library(parallel)
+library(doParallel)
+library(sensitivitymv)
+library(sensitivitymw)
+library(latex2exp)
+
+opts_chunk$set(message=FALSE,
+               warning=FALSE,
+               size = "footnotesize")
+
+@
+
+\newpage
+
+\section{Introduction}
+
+Thus far this course has considered how to make \textit{valid} inferences conditional on the premise of no imbalances on unobserved covariates of which treatment assignment is a function. But what about the soundness of such inferences? Is the premise of no imbalances on unobserved covariates true? Ultimately, that is a question we cannot answer since it requires data that is not available; however, we can consider \textit{hypothetical} scenarios of confounding and then assess the extent to which such scenarios would alter our inferences. But first, a review . . .
+
+\subsection{Review: P-Values}
+
+<<>>=
+rm(list = ls())
+
+n <- 6
+n_1 <- 3
+
+y_c <- c(20, 8, 11, 10, 14, 1)
+y_t_null_true <- y_c + 0
+
+mean(y_t_null_true - y_c)
+
+treated <- combn(x = n,
+                 m = n_1,
+                 simplify = TRUE) 
+Omega <- apply(X = treated,
+               MARGIN = 2,
+               FUN = function(x) as.integer(1:n %in% x))
+
+unif_assign_probs <- rep(x = 1/ncol(Omega), times = ncol(Omega))
+
+obs_pot_outs_null_true <- sapply(X = 1:ncol(Omega),
+                                 FUN = function(x) { y_t_null_true * Omega[,x] + y_c * (1 - Omega[,x]) })
+
+obs_diff_means_null_true <- sapply(X = 1:ncol(Omega),
+                                   FUN = function(x) { mean(obs_pot_outs_null_true[,x][which(Omega[,x] == 1)]) -
+                                       mean(obs_pot_outs_null_true[,x][which(Omega[,x] == 0)]) })
+
+null_dists_null_true <- list()
+
+for(i in 1:ncol(Omega)){
+  
+  null_dists_null_true[[i]] = sapply(X = 1:ncol(Omega),
+                           FUN = function(x) { mean(obs_pot_outs_null_true[,i][which(Omega[,x] == 1)]) -
+                               mean(obs_pot_outs_null_true[,i][which(Omega[,x] == 0)]) }) }
+
+unif_p_values_null_true <- sapply(X = 1:ncol(Omega),
+                                  FUN = function(x) { sum((null_dists_null_true[[x]] >= obs_diff_means_null_true[x]) *
+                                                            unif_assign_probs) })
+
+## Type I Error Probability
+sum((unif_p_values_null_true <= 0.05) * unif_assign_probs)
+
+## What if we had nonuniform assignment probabilities?
+## e.g.,
+non_unif_indiv_probs <- c((3/4), (1/4), (1/2), (1/4), (1/4), (1/4))
+
+non_unif_unnorm_assign_probs <- sapply(X = 1:ncol(Omega),
+                                       FUN = function(x) prod(ifelse(test = Omega[,x] == 1,
+                                                                     yes = non_unif_indiv_probs,
+                                                                     no =  (1 - non_unif_indiv_probs))))
+
+non_unif_assign_probs <- non_unif_unnorm_assign_probs/sum(non_unif_unnorm_assign_probs)
+
+non_unif_p_values_null_true <- sapply(X = 1:ncol(Omega),
+                                      FUN = function(x) { sum((null_dists_null_true[[x]] >= obs_diff_means_null_true[x]) *
+                                                                non_unif_assign_probs) })
+
+sum((non_unif_p_values_null_true <= 0.05) * non_unif_assign_probs)
+
+p_values_data <- data.frame(p_value = c(round(x = unif_p_values_null_true, digits = 4),
+                                        round(x = non_unif_p_values_null_true, digits = 4)),
+                            prob = c(unif_assign_probs, non_unif_assign_probs),
+                            prob_type = as.factor(c(rep(x = "Uniform", times = length(unif_p_values_null_true)),
+                                                    rep(x = "Non-Uniform", times = length(non_unif_p_values_null_true)))))
+
+ggplot(data = p_values_data,
+       mapping = aes(x = p_value,
+                     y = prob)) +
+  geom_bar(stat = "identity") +
+  geom_vline(xintercept = 0.05,
+             color = "red",
+             linetype = "dashed") +
+  facet_wrap(facets = .~ prob_type,
+             nrow = 2,
+             ncol = 1) 
+
+alphas <- seq(from = 0.01, to = 0.99, by = 0.01)
+
+unif_type_1_error_probs <- sapply(X = 1:length(alphas),
+                                  FUN = function(x) { sum((unif_p_values_null_true <= alphas[x]) * unif_assign_probs) })
+
+all(sapply(X = 1:length(alphas),
+           FUN = function(x) { unif_type_1_error_probs[x] <= alphas[x] }))
+
+non_unif_type_1_error_probs <- sapply(X = 1:length(alphas),
+                                      FUN = function(x) { sum((non_unif_p_values_null_true <= alphas[x]) *
+                                                                non_unif_assign_probs) })
+
+all(sapply(X = 1:length(alphas),
+           FUN = function(x) { non_unif_type_1_error_probs[x] <= alphas[x] }))
+
+## Power
+y_t_null_false <- y_c + 3
+
+obs_pot_outs_null_false <- sapply(X = 1:ncol(Omega),
+                                  FUN = function(x) { y_t_null_false * Omega[,x] + y_c * (1 - Omega[,x]) })
+
+obs_diff_means_null_false <- sapply(X = 1:ncol(Omega),
+                                    FUN = function(x) { mean(obs_pot_outs_null_false[,x][which(Omega[,x] == 1)]) -
+                                        mean(obs_pot_outs_null_false[,x][which(Omega[,x] == 0)]) })
+
+null_dists_null_false <- list()
+
+for(i in 1:ncol(Omega)){
+  
+  null_dists_null_false[[i]] = sapply(X = 1:ncol(Omega),
+                                      FUN = function(x) { mean(obs_pot_outs_null_false[,i][which(Omega[,x] == 1)]) -
+                                          mean(obs_pot_outs_null_false[,i][which(Omega[,x] == 0)]) }) }
+
+unif_p_values_null_false <- sapply(X = 1:ncol(Omega),
+                                   FUN = function(x) { sum((null_dists_null_false[[x]] >= obs_diff_means_null_false[x]) * unif_assign_probs) })
+
+## Power
+sum((unif_p_values_null_false <= 0.05) * unif_assign_probs)
+
+non_unif_p_values_null_false <- sapply(X = 1:ncol(Omega),
+                                       FUN = function(x) { sum((null_dists_null_false[[x]] >= obs_diff_means_null_false[x]) *
+                                                                 non_unif_assign_probs) })
+
+sum((non_unif_p_values_null_false <= 0.05) * non_unif_assign_probs)
+
+all(non_unif_p_values_null_false <= non_unif_p_values_null_true)
+
+@
+
+\subsection{Hidden Bias Due to an Unobserved Confounder}
+
+A powerful, design-based framework for such a sensitivity analysis is given by \citet{rosenbaum2002observational}. Before explaining this framework, we need to define a few additional terms. First, the \textit{treatment odds} for unit $i \in \left\{1, \ldots , n\right\}$ is $\frac{\pi_i}{\left(1 - \pi_i\right)}$, which is simply the $i$th unit's probability of assignment to treatment divided by that unit's probability of assignment to control. The \textit{treatment odds ratio} for any two units $i$ and $j \neq i$ is simply the ratio of the $i$th unit's treatment odds and the $j$th unit's treatment odds. If units' treatment odds are a function of only observed covariates \textit{and} the researcher is able to obtain balance on all of these observed covariates, then the treatment odds for units $i, j \neq i: \mathbf{x}_i = \mathbf{x}_j$ is identical and their treatment odds ratio is $1$.
+
+\citet{rosenbaum2002observational} considers what would happen when units' treatment odds are a function not only of observed covariates, $\mathbf{x}$, but also an unobserved covariate $u$. Under the assumption of a logistic functional form between all units' treatment odds and baseline covariates, as well as the constraint that $0 \leq u \leq 1$, one can write the treatment odds of the $i$th unit as follows:
+\begin{align*}
+\frac{\pi_i}{\left(1 - \pi_i\right)} & = \exp\left\{\kappa\left(\mathbf{x}_i\right) + \gamma u_i\right\} \\ 
+\log\left(\frac{\pi_i}{\left(1 - \pi_i\right)}\right) & = \kappa\left(\mathbf{x}_i\right) + \gamma u_i,
+\end{align*}
+where $\kappa\left(\cdot\right)$ is an unknown function and $\gamma$ is an unknown parameter, and the the treatment odds ratio for units $i$ and $j$ is:
+\begin{align*}
+\frac{\left(\frac{\pi_i}{1 - \pi_i}\right)}{\left(\frac{\pi_j}{1 - \pi_j}\right)} & = \frac{\exp\left\{\kappa\left(\mathbf{x}_i\right) + \gamma u_i\right\}}{\exp\left\{\kappa\left(\mathbf{x}_j\right) + \gamma u_j\right\}} \\
+& = \exp\left\{\left(\kappa\left(\mathbf{x}_i\right) + \gamma u_i\right) - \left(\kappa\left(\mathbf{x}_j\right) + \gamma u_j\right)\right\}.
+\end{align*}
+If $\mathbf{x}_i = \mathbf{x}_j$, then $\kappa\left(\mathbf{x}_i\right) = \kappa\left(\mathbf{x}_j\right)$ and, hence, the treatment odds ratio is simply:
+\begin{align*}
+\exp\left\{\gamma \left(u_i -  u_j\right)\right\}.
+\end{align*}
+Since $u_i, u_j \in \left[0, 1\right]$, the minimum and maximum possible values of $\left(u_i -  u_j\right)$ are $-1$ and $1$. Therefore, the minimum and maximum possible values of the treatment odds ratio are $\exp\left\{-\gamma\right\}$ and $\exp\left\{\gamma\right\}$. After noting that $\exp\left\{-\gamma\right\} = \frac{1}{\exp\left\{\gamma\right\}}$, we can bound the treatment odds ratio between $i$ and $j$ as follows:
+\begin{equation}
+\frac{1}{\exp\left\{\gamma\right\}} \leq \frac{\left(\frac{\pi_i}{1 - \pi_i}\right)}{\left(\frac{\pi_j}{1 - \pi_j}\right)} \leq \exp\left\{\gamma\right\}.
+\end{equation}
+We can denote $\exp\left\{\gamma\right\}$ by $\Gamma$ and subsequently consider how one's inferences would change for various values of $\Gamma$.
+
+For example, let's say that a researcher obtains balance via stratification on all observed covariates---such that the design closely resembles a uniform, block randomized experiment---and subsequently tests a strong null hypothesis under the assumption that all units' treatment odds are identical. Now the researcher considers deviations from this assumption. Different assumptions about $u$ and $\gamma$ imply differing probabilities of possible assignments, which, as \citet[Chapter 4]{rosenbaum2002observational} shows, can be represented by:
+\begin{equation}
+\Pr\left(\mathbf{Z} = \mathbf{z}\right) = \frac{\exp\left\{\gamma \mathbf{z}^{\prime}\mathbf{u}\right\}}{\sum_{\mathbf{z} \in \Omega} \exp\left\{\gamma \mathbf{z}^{\prime}\mathbf{u}\right\}} = \prod \limits_{b = 1}^B \frac{\exp\left\{\gamma \mathbf{z}^{\prime}\mathbf{u}\right\}}{\sum_{\mathbf{z} \in \Omega} \exp\left\{\gamma \mathbf{z}^{\prime}\mathbf{u}\right\}}.
+\label{eq: prob omega sens}
+\end{equation}
+
+<<>>=
+
+## imagine there were some unobserved binary covariate u
+u <- c(1, 1, 1, 0, 1, 0)
+gamma <- 0.5
+
+unnorm_probs_1 <- sapply(X = 1:ncol(Omega),
+                       FUN = function(x) { exp(as.matrix(gamma) %*% t(Omega[,x]) %*% as.matrix(u))})
+#sapply(X = 1:ncol(Omega),
+#                       FUN = function(x) { exp(gamma * sum(Omega[,x] * u)) })
+
+assign_probs_1 <- unnorm_probs_1/sum(unnorm_probs_1)
+
+## convert odds to probs
+indiv_treat_odds_u <- exp(gamma * u)
+indiv_probs <- indiv_treat_odds_u/(1 + indiv_treat_odds_u)
+
+unnorm_probs_2 <- sapply(X = 1:ncol(Omega),
+                         FUN = function(x) { prod(ifelse(test = Omega[,x] == 1,
+                                                         yes = indiv_probs,
+                                                         no =  (1 - indiv_probs))) })
+
+assign_probs_2 <- unnorm_probs_2/sum(unnorm_probs_2)
+all.equal(assign_probs_1, assign_probs_2)
+                           
+## Type I error rate                           
+p_values_null_true <- sapply(X = 1:ncol(Omega),
+                             FUN = function(x) { sum((null_dists_null_true[[x]] >= obs_diff_means_null_true[x]) *
+                                                       assign_probs_1) })
+
+## We have a controlled Type I Error Rate
+sum((p_values_null_true <= 0.05) * assign_probs_1)
+
+## What about power?
+p_values_null_false <- sapply(X = 1:ncol(Omega),
+                              FUN = function(x) { sum((null_dists_null_false[[x]] >= obs_diff_means_null_false[x]) *
+                                                        assign_probs_1) })
+
+
+sum((p_values_null_false <= 0.05) * assign_probs_1)
+
+@
+
+\subsection{Sensitivity Analysis with Matched Sets Design}
+
+\citet{rosenbaum2015} offers an \texttt{[R]} package for the implementation of sensitivity analyses.
+
+<< >>=
+
+load(url("http://jakebowers.org/Data/meddat.rda"))
+
+meddat$HomRate03 <- with(meddat, (HomCount2003/Pop2003) * 1000)
+meddat$HomRate08 <- with(meddat, (HomCount2008/Pop2008) * 1000)
+
+load("fm4.rda")
+
+meddat %<>% mutate(fm4 = fm4,
+                   HomRate0803 = HomRate08 - HomRate03) %>%
+  filter(!is.na(fm4))
+
+meddat %<>% mutate(probs = unsplit(value = lapply(split(x = nhTrt,
+                                                     f = fm4),
+                                               function(x) {sum(x)/length(x)}),
+                                f = fm4))
+
+obs_ate <- coef(lm(HomRate0803 ~ nhTrt + fm4,
+           data = meddat))[["nhTrt"]]
+
+obs_ate
+
+new_block_experiment <- function(z,
+                                 y,
+                                 s){
+
+  Z = unsplit(value = lapply(X = split(x = z, f = s), FUN = sample), f = s)
+
+  ATE = coef(lm(y ~ Z + s))[["Z"]]
+
+  return(ATE)
+
+}
+
+set.seed(1:5)
+null_dist <- replicate(1000, new_block_experiment(z = meddat$nhTrt,
+                                                  y = meddat$HomRate0803,
+                                                  s = meddat$fm4))
+
+p_value_lower <- mean(null_dist <= obs_ate)
+
+p_value_lower
+
+p_value_two_sided <- mean(abs(null_dist) >= abs(obs_ate))
+
+p_value_two_sided
+
+@
+
+Now let's perform a sensitivity analysis.
+
+<< >>=
+
+meddat %<>% select(nhTrt,
+                   HomRate0803,
+                   fm4,
+                   probs) %>%
+  arrange(fm4,
+          nhTrt)
+
+
+reshape_sensitivity <- function(.data,
+                                .z,
+                                .y,
+                                .fm){
+
+  suppressMessages(stopifnot(require(dplyr, quietly = TRUE)))
+  suppressMessages(stopifnot(require(magrittr, quietly = TRUE)))
+
+  num_cols <- max(table(meddat$fm4))
+
+  reshaped <- lapply(X = split(.y, .fm),
+                     FUN = function(x){
+
+                       return(c(x,
+                                rep(x = NA,
+                                    times = max(num_cols - length(x),
+                                                0))))
+
+                       })
+
+  reshaped_df <- data.frame(t(simplify2array(reshaped)))
+
+  return(reshaped_df)
+
+  }
+
+meddat_reshaped <- reshape_sensitivity(.data = meddat,
+                    .z = meddat$nhTrt,
+                    .y = meddat$HomRate0803,
+                    .fm = meddat$fm4) %>%
+  rename(yt = X1,
+         yc1 = X2,
+         yc2 = X3,
+         yc3 = X4,
+         yc4 = X5,
+         yc5 = X6)
+
+gammas <- seq(from = 1,
+              to = 6,
+              by = 0.1)
+
+sens_results <- sapply(X = gammas,
+                       FUN = function(g) {
+
+                         c(gamma = g,
+                           senmv(meddat_reshaped,
+                                 method = "t",
+                                 gamma = g))
+                         })
+
+sens_results
+
+sens_plot_data <- data.frame(Gamma = unlist(sens_results['gamma',]),
+                             p_value = unlist(sens_results['pval',]))
+
+ggplot(data = sens_plot_data, mapping = aes(x = Gamma,
+                                            y = p_value)) + geom_line() +
+  geom_vline(xintercept = c(max(sens_plot_data$Gamma[which(sens_plot_data$p_value <= 0.05)]),
+                            max(sens_plot_data$Gamma[which(sens_plot_data$p_value <= 0.1)])),
+             color = "red",
+             linetype = "dashed") +
+  xlab(label = TeX('$\\Gamma$')) +
+  ylab(label = "P-value")
+
+@
+
+\textbf{Question for Students:}
+\begin{itemize}\itemsep1pt
+\item Interpret the plot above.
+\end{itemize}
+
+<< >>=
+
+find_Sens_G <- function(gamma,
+                        alpha){
+
+  senmv(meddat_reshaped,
+        gamma = gamma)$pval - alpha
+}
+
+## Find x value at which the function above == 0
+uniroot(f = find_Sens_G,
+        lower = 1,
+        upper = 6,
+        a = 0.05)$root
+
+@
+
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{Master_Bibliography}   % name your BibTeX data base
+\end{singlespace}
+
+\newpage
+
+\end{document}
