@@ -128,7 +128,7 @@
 \tableofcontents
 
 << setup, include = FALSE, eval = TRUE >>=
-
+#
 
 library(dplyr)
 library(magrittr)
@@ -151,10 +151,11 @@ library(sensitivitymv)
 library(sensitivitymw)
 library(latex2exp)
 
-opts_chunk$set(message=FALSE,
-               warning=FALSE,
-               size = "footnotesize")
-
+opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  size = "footnotesize"
+)
 @
 
 \newpage
@@ -176,118 +177,194 @@ y_t_null_true <- y_c + 0
 
 mean(y_t_null_true - y_c)
 
-treated <- combn(x = n,
-                 m = n_1,
-                 simplify = TRUE) 
-Omega <- apply(X = treated,
-               MARGIN = 2,
-               FUN = function(x) as.integer(1:n %in% x))
+treated <- combn(
+  x = n,
+  m = n_1,
+  simplify = TRUE
+)
+Omega <- apply(
+  X = treated,
+  MARGIN = 2,
+  FUN = function(x) as.integer(1:n %in% x)
+)
 
-unif_assign_probs <- rep(x = 1/ncol(Omega), times = ncol(Omega))
+unif_assign_probs <- rep(x = 1 / ncol(Omega), times = ncol(Omega))
 
-obs_pot_outs_null_true <- sapply(X = 1:ncol(Omega),
-                                 FUN = function(x) { y_t_null_true * Omega[,x] + y_c * (1 - Omega[,x]) })
+obs_pot_outs_null_true <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    y_t_null_true * Omega[, x] + y_c * (1 - Omega[, x])
+  }
+)
 
-obs_diff_means_null_true <- sapply(X = 1:ncol(Omega),
-                                   FUN = function(x) { mean(obs_pot_outs_null_true[,x][which(Omega[,x] == 1)]) -
-                                       mean(obs_pot_outs_null_true[,x][which(Omega[,x] == 0)]) })
+obs_diff_means_null_true <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    mean(obs_pot_outs_null_true[, x][which(Omega[, x] == 1)]) -
+      mean(obs_pot_outs_null_true[, x][which(Omega[, x] == 0)])
+  }
+)
 
 null_dists_null_true <- list()
 
-for(i in 1:ncol(Omega)){
-  
-  null_dists_null_true[[i]] = sapply(X = 1:ncol(Omega),
-                           FUN = function(x) { mean(obs_pot_outs_null_true[,i][which(Omega[,x] == 1)]) -
-                               mean(obs_pot_outs_null_true[,i][which(Omega[,x] == 0)]) }) }
+for (i in 1:ncol(Omega)) {
+  null_dists_null_true[[i]] <- sapply(
+    X = 1:ncol(Omega),
+    FUN = function(x) {
+      mean(obs_pot_outs_null_true[, i][which(Omega[, x] == 1)]) -
+        mean(obs_pot_outs_null_true[, i][which(Omega[, x] == 0)])
+    }
+  )
+}
 
-unif_p_values_null_true <- sapply(X = 1:ncol(Omega),
-                                  FUN = function(x) { sum((null_dists_null_true[[x]] >= obs_diff_means_null_true[x]) *
-                                                            unif_assign_probs) })
+unif_p_values_null_true <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    sum((null_dists_null_true[[x]] >= obs_diff_means_null_true[x]) *
+      unif_assign_probs)
+  }
+)
 
 ## Type I Error Probability
 sum((unif_p_values_null_true <= 0.05) * unif_assign_probs)
 
 ## What if we had nonuniform assignment probabilities?
 ## e.g.,
-non_unif_indiv_probs <- c((3/4), (1/4), (1/2), (1/4), (1/4), (1/4))
+non_unif_indiv_probs <- c((3 / 4), (1 / 4), (1 / 2), (1 / 4), (1 / 4), (1 / 4))
 
-non_unif_unnorm_assign_probs <- sapply(X = 1:ncol(Omega),
-                                       FUN = function(x) prod(ifelse(test = Omega[,x] == 1,
-                                                                     yes = non_unif_indiv_probs,
-                                                                     no =  (1 - non_unif_indiv_probs))))
+non_unif_unnorm_assign_probs <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) prod(ifelse(test = Omega[, x] == 1,
+      yes = non_unif_indiv_probs,
+      no = (1 - non_unif_indiv_probs)
+    ))
+)
 
-non_unif_assign_probs <- non_unif_unnorm_assign_probs/sum(non_unif_unnorm_assign_probs)
+non_unif_assign_probs <- non_unif_unnorm_assign_probs / sum(non_unif_unnorm_assign_probs)
 
-non_unif_p_values_null_true <- sapply(X = 1:ncol(Omega),
-                                      FUN = function(x) { sum((null_dists_null_true[[x]] >= obs_diff_means_null_true[x]) *
-                                                                non_unif_assign_probs) })
+non_unif_p_values_null_true <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    sum((null_dists_null_true[[x]] >= obs_diff_means_null_true[x]) *
+      non_unif_assign_probs)
+  }
+)
 
 sum((non_unif_p_values_null_true <= 0.05) * non_unif_assign_probs)
 
-p_values_data <- data.frame(p_value = c(round(x = unif_p_values_null_true, digits = 4),
-                                        round(x = non_unif_p_values_null_true, digits = 4)),
-                            prob = c(unif_assign_probs, non_unif_assign_probs),
-                            prob_type = as.factor(c(rep(x = "Uniform", times = length(unif_p_values_null_true)),
-                                                    rep(x = "Non-Uniform", times = length(non_unif_p_values_null_true)))))
+p_values_data <- data.frame(
+  p_value = c(
+    round(x = unif_p_values_null_true, digits = 4),
+    round(x = non_unif_p_values_null_true, digits = 4)
+  ),
+  prob = c(unif_assign_probs, non_unif_assign_probs),
+  prob_type = as.factor(c(
+    rep(x = "Uniform", times = length(unif_p_values_null_true)),
+    rep(x = "Non-Uniform", times = length(non_unif_p_values_null_true))
+  ))
+)
 
-ggplot(data = p_values_data,
-       mapping = aes(x = p_value,
-                     y = prob)) +
+ggplot(
+  data = p_values_data,
+  mapping = aes(
+    x = p_value,
+    y = prob
+  )
+) +
   geom_bar(stat = "identity") +
-  geom_vline(xintercept = 0.05,
-             color = "red",
-             linetype = "dashed") +
-  facet_wrap(facets = .~ prob_type,
-             nrow = 2,
-             ncol = 1) 
+  geom_vline(
+    xintercept = 0.05,
+    color = "red",
+    linetype = "dashed"
+  ) +
+  facet_wrap(
+    facets = . ~ prob_type,
+    nrow = 2,
+    ncol = 1
+  )
 
 alphas <- seq(from = 0.01, to = 0.99, by = 0.01)
 
-unif_type_1_error_probs <- sapply(X = 1:length(alphas),
-                                  FUN = function(x) { sum((unif_p_values_null_true <= alphas[x]) * unif_assign_probs) })
+unif_type_1_error_probs <- sapply(
+  X = 1:length(alphas),
+  FUN = function(x) {
+    sum((unif_p_values_null_true <= alphas[x]) * unif_assign_probs)
+  }
+)
 
-all(sapply(X = 1:length(alphas),
-           FUN = function(x) { unif_type_1_error_probs[x] <= alphas[x] }))
+all(sapply(
+  X = 1:length(alphas),
+  FUN = function(x) {
+    unif_type_1_error_probs[x] <= alphas[x]
+  }
+))
 
-non_unif_type_1_error_probs <- sapply(X = 1:length(alphas),
-                                      FUN = function(x) { sum((non_unif_p_values_null_true <= alphas[x]) *
-                                                                non_unif_assign_probs) })
+non_unif_type_1_error_probs <- sapply(
+  X = 1:length(alphas),
+  FUN = function(x) {
+    sum((non_unif_p_values_null_true <= alphas[x]) *
+      non_unif_assign_probs)
+  }
+)
 
-all(sapply(X = 1:length(alphas),
-           FUN = function(x) { non_unif_type_1_error_probs[x] <= alphas[x] }))
+all(sapply(
+  X = 1:length(alphas),
+  FUN = function(x) {
+    non_unif_type_1_error_probs[x] <= alphas[x]
+  }
+))
 
 ## Power
 y_t_null_false <- y_c + 3
 
-obs_pot_outs_null_false <- sapply(X = 1:ncol(Omega),
-                                  FUN = function(x) { y_t_null_false * Omega[,x] + y_c * (1 - Omega[,x]) })
+obs_pot_outs_null_false <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    y_t_null_false * Omega[, x] + y_c * (1 - Omega[, x])
+  }
+)
 
-obs_diff_means_null_false <- sapply(X = 1:ncol(Omega),
-                                    FUN = function(x) { mean(obs_pot_outs_null_false[,x][which(Omega[,x] == 1)]) -
-                                        mean(obs_pot_outs_null_false[,x][which(Omega[,x] == 0)]) })
+obs_diff_means_null_false <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    mean(obs_pot_outs_null_false[, x][which(Omega[, x] == 1)]) -
+      mean(obs_pot_outs_null_false[, x][which(Omega[, x] == 0)])
+  }
+)
 
 null_dists_null_false <- list()
 
-for(i in 1:ncol(Omega)){
-  
-  null_dists_null_false[[i]] = sapply(X = 1:ncol(Omega),
-                                      FUN = function(x) { mean(obs_pot_outs_null_false[,i][which(Omega[,x] == 1)]) -
-                                          mean(obs_pot_outs_null_false[,i][which(Omega[,x] == 0)]) }) }
+for (i in 1:ncol(Omega)) {
+  null_dists_null_false[[i]] <- sapply(
+    X = 1:ncol(Omega),
+    FUN = function(x) {
+      mean(obs_pot_outs_null_false[, i][which(Omega[, x] == 1)]) -
+        mean(obs_pot_outs_null_false[, i][which(Omega[, x] == 0)])
+    }
+  )
+}
 
-unif_p_values_null_false <- sapply(X = 1:ncol(Omega),
-                                   FUN = function(x) { sum((null_dists_null_false[[x]] >= obs_diff_means_null_false[x]) * unif_assign_probs) })
+unif_p_values_null_false <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    sum((null_dists_null_false[[x]] >= obs_diff_means_null_false[x]) * unif_assign_probs)
+  }
+)
 
 ## Power
 sum((unif_p_values_null_false <= 0.05) * unif_assign_probs)
 
-non_unif_p_values_null_false <- sapply(X = 1:ncol(Omega),
-                                       FUN = function(x) { sum((null_dists_null_false[[x]] >= obs_diff_means_null_false[x]) *
-                                                                 non_unif_assign_probs) })
+non_unif_p_values_null_false <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    sum((null_dists_null_false[[x]] >= obs_diff_means_null_false[x]) *
+      non_unif_assign_probs)
+  }
+)
 
 sum((non_unif_p_values_null_false <= 0.05) * non_unif_assign_probs)
 
 all(non_unif_p_values_null_false <= non_unif_p_values_null_true)
-
 @
 
 \subsection{Hidden Bias Due to an Unobserved Confounder}
@@ -324,43 +401,59 @@ For example, let's say that a researcher obtains balance via stratification on a
 
 ## imagine there were some unobserved binary covariate u
 u <- c(1, 1, 1, 0, 1, 0)
-gamma <- 0.5
+gamma <- 2 #0.5
 
-unnorm_probs_1 <- sapply(X = 1:ncol(Omega),
-                       FUN = function(x) { exp(as.matrix(gamma) %*% t(Omega[,x]) %*% as.matrix(u))})
-#sapply(X = 1:ncol(Omega),
+unnorm_probs_1 <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    exp(as.matrix(gamma) %*% t(Omega[, x]) %*% as.matrix(u))
+  }
+)
+# sapply(X = 1:ncol(Omega),
 #                       FUN = function(x) { exp(gamma * sum(Omega[,x] * u)) })
 
-assign_probs_1 <- unnorm_probs_1/sum(unnorm_probs_1)
+assign_probs_1 <- unnorm_probs_1 / sum(unnorm_probs_1)
 
 ## convert odds to probs
 indiv_treat_odds_u <- exp(gamma * u)
-indiv_probs <- indiv_treat_odds_u/(1 + indiv_treat_odds_u)
+indiv_probs <- indiv_treat_odds_u / (1 + indiv_treat_odds_u)
 
-unnorm_probs_2 <- sapply(X = 1:ncol(Omega),
-                         FUN = function(x) { prod(ifelse(test = Omega[,x] == 1,
-                                                         yes = indiv_probs,
-                                                         no =  (1 - indiv_probs))) })
+unnorm_probs_2 <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    prod(ifelse(test = Omega[, x] == 1,
+      yes = indiv_probs,
+      no = (1 - indiv_probs)
+    ))
+  }
+)
 
-assign_probs_2 <- unnorm_probs_2/sum(unnorm_probs_2)
+assign_probs_2 <- unnorm_probs_2 / sum(unnorm_probs_2)
 all.equal(assign_probs_1, assign_probs_2)
-                           
-## Type I error rate                           
-p_values_null_true <- sapply(X = 1:ncol(Omega),
-                             FUN = function(x) { sum((null_dists_null_true[[x]] >= obs_diff_means_null_true[x]) *
-                                                       assign_probs_1) })
+
+## Type I error rate
+p_values_null_true <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    sum((null_dists_null_true[[x]] >= obs_diff_means_null_true[x]) *
+      assign_probs_1)
+  }
+)
 
 ## We have a controlled Type I Error Rate
 sum((p_values_null_true <= 0.05) * assign_probs_1)
 
 ## What about power?
-p_values_null_false <- sapply(X = 1:ncol(Omega),
-                              FUN = function(x) { sum((null_dists_null_false[[x]] >= obs_diff_means_null_false[x]) *
-                                                        assign_probs_1) })
+p_values_null_false <- sapply(
+  X = 1:ncol(Omega),
+  FUN = function(x) {
+    sum((null_dists_null_false[[x]] >= obs_diff_means_null_false[x]) *
+      assign_probs_1)
+  }
+)
 
 
 sum((p_values_null_false <= 0.05) * assign_probs_1)
-
 @
 
 \subsection{Sensitivity Analysis with Matched Sets Design}
@@ -371,129 +464,205 @@ sum((p_values_null_false <= 0.05) * assign_probs_1)
 
 load(url("http://jakebowers.org/Data/meddat.rda"))
 
-meddat$HomRate03 <- with(meddat, (HomCount2003/Pop2003) * 1000)
-meddat$HomRate08 <- with(meddat, (HomCount2008/Pop2008) * 1000)
+meddat$HomRate03 <- with(meddat, (HomCount2003 / Pop2003) * 1000)
+meddat$HomRate08 <- with(meddat, (HomCount2008 / Pop2008) * 1000)
 
 load("fm4.rda")
 
-meddat %<>% mutate(fm4 = fm4,
-                   HomRate0803 = HomRate08 - HomRate03) %>%
+meddat %<>% mutate(
+  fm4 = fm4,
+  HomRate0803 = HomRate08 - HomRate03
+) %>%
   filter(!is.na(fm4))
 
-meddat %<>% mutate(probs = unsplit(value = lapply(split(x = nhTrt,
-                                                     f = fm4),
-                                               function(x) {sum(x)/length(x)}),
-                                f = fm4))
+meddat %<>% mutate(probs = unsplit(
+  value = lapply(
+    split(
+      x = nhTrt,
+      f = fm4
+    ),
+    function(x) {
+      sum(x) / length(x)
+    }
+  ),
+  f = fm4
+))
 
 obs_ate <- coef(lm(HomRate0803 ~ nhTrt + fm4,
-           data = meddat))[["nhTrt"]]
+  data = meddat
+))[["nhTrt"]]
 
 obs_ate
 
 new_block_experiment <- function(z,
                                  y,
-                                 s){
+                                 s) {
+  Z <- unsplit(value = lapply(X = split(x = z, f = s), FUN = sample), f = s)
 
-  Z = unsplit(value = lapply(X = split(x = z, f = s), FUN = sample), f = s)
-
-  ATE = coef(lm(y ~ Z + s))[["Z"]]
+  ATE <- coef(lm(y ~ Z + s))[["Z"]]
 
   return(ATE)
-
 }
 
 set.seed(1:5)
-null_dist <- replicate(1000, new_block_experiment(z = meddat$nhTrt,
-                                                  y = meddat$HomRate0803,
-                                                  s = meddat$fm4))
+null_dist <- replicate(1000, new_block_experiment(
+  z = meddat$nhTrt,
+  y = meddat$HomRate0803,
+  s = meddat$fm4
+))
 
 p_value_lower <- mean(null_dist <= obs_ate)
 
 p_value_lower
 
 p_value_two_sided <- mean(abs(null_dist) >= abs(obs_ate))
+p_value_two_sided_v2 <- 2*min(mean( null_dist >= abs(obs_ate)), mean( null_dist <= abs(obs_ate)))
 
 p_value_two_sided
-
 @
 
 Now let's perform a sensitivity analysis.
 
 << >>=
 
-meddat %<>% select(nhTrt,
-                   HomRate0803,
-                   fm4,
-                   probs) %>%
-  arrange(fm4,
-          nhTrt)
+meddat %<>% select(
+  nhTrt,
+  HomRate0803,
+  fm4,
+  probs
+) %>%
+  arrange(
+    fm4,
+    nhTrt
+  )
 
 
 reshape_sensitivity <- function(.data,
                                 .z,
                                 .y,
-                                .fm){
-
+                                .fm) {
   suppressMessages(stopifnot(require(dplyr, quietly = TRUE)))
   suppressMessages(stopifnot(require(magrittr, quietly = TRUE)))
 
   num_cols <- max(table(meddat$fm4))
 
-  reshaped <- lapply(X = split(.y, .fm),
-                     FUN = function(x){
-
-                       return(c(x,
-                                rep(x = NA,
-                                    times = max(num_cols - length(x),
-                                                0))))
-
-                       })
+  reshaped <- lapply(
+    X = split(.y, .fm),
+    FUN = function(x) {
+      return(c(
+        x,
+        rep(
+          x = NA,
+          times = max(
+            num_cols - length(x),
+            0
+          )
+        )
+      ))
+    }
+  )
 
   reshaped_df <- data.frame(t(simplify2array(reshaped)))
 
   return(reshaped_df)
+}
 
+meddat_reshaped <- reshape_sensitivity(
+  .data = meddat,
+  .z = meddat$nhTrt,
+  .y = meddat$HomRate0803,
+  .fm = meddat$fm4
+) %>%
+  rename(
+    yt = X1,
+    yc1 = X2,
+    yc2 = X3,
+    yc3 = X4,
+    yc4 = X5,
+    yc5 = X6
+  )
+
+gammas <- seq(
+  from = 1,
+  to = 6,
+  by = 0.1
+)
+
+sens_results <- sapply(
+  X = gammas,
+  FUN = function(g) {
+    c(
+      gamma = g,
+      senmv(meddat_reshaped,
+        method = "t",
+        gamma = g
+      )
+    )
   }
-
-meddat_reshaped <- reshape_sensitivity(.data = meddat,
-                    .z = meddat$nhTrt,
-                    .y = meddat$HomRate0803,
-                    .fm = meddat$fm4) %>%
-  rename(yt = X1,
-         yc1 = X2,
-         yc2 = X3,
-         yc3 = X4,
-         yc4 = X5,
-         yc5 = X6)
-
-gammas <- seq(from = 1,
-              to = 6,
-              by = 0.1)
-
-sens_results <- sapply(X = gammas,
-                       FUN = function(g) {
-
-                         c(gamma = g,
-                           senmv(meddat_reshaped,
-                                 method = "t",
-                                 gamma = g))
-                         })
+)
 
 sens_results
 
-sens_plot_data <- data.frame(Gamma = unlist(sens_results['gamma',]),
-                             p_value = unlist(sens_results['pval',]))
+sens_plot_data <- data.frame(
+  Gamma = unlist(sens_results["gamma", ]),
+  p_value = unlist(sens_results["pval", ])
+)
 
-ggplot(data = sens_plot_data, mapping = aes(x = Gamma,
-                                            y = p_value)) + geom_line() +
-  geom_vline(xintercept = c(max(sens_plot_data$Gamma[which(sens_plot_data$p_value <= 0.05)]),
-                            max(sens_plot_data$Gamma[which(sens_plot_data$p_value <= 0.1)])),
-             color = "red",
-             linetype = "dashed") +
-  xlab(label = TeX('$\\Gamma$')) +
+ggplot(data = sens_plot_data, mapping = aes(
+  x = Gamma,
+  y = p_value
+)) + geom_line() +
+  geom_vline(
+    xintercept = c(
+      max(sens_plot_data$Gamma[which(sens_plot_data$p_value <= 0.05)]),
+      max(sens_plot_data$Gamma[which(sens_plot_data$p_value <= 0.1)])
+    ),
+    color = "red",
+    linetype = "dashed"
+  ) +
+  xlab(label = TeX("$\\Gamma$")) +
   ylab(label = "P-value")
-
 @
+
+
+
+\section{Interpreting sensitivity analyses}
+
+
+ As an aid to interpreting sensitivity analyses,
+  \textcite{rosenbaum2009amplification} propose a way decompose $\Gamma$ into two
+  pieces: $\Delta$ gauges the relationship between an unobserved
+  confounder at the outcome (it records the maximum effect of the unobserved
+  confounder on the odds of a positive response (imagining a binary outcome))
+  and $\Lambda$ gauges the maximum relationship between the unobserved
+  confounder and treatment assignment.
+
+<<r >>=
+findSensG<-function(g,a,method){
+  senmv(-meddat_reshaped,gamma=g,method=method)$pval-a
+}
+res1<-uniroot(f=findSensG,method="h",lower=1,upper=6,a=.05)
+res1$root
+res2<-uniroot(f=findSensG,method="t",lower=1,upper=6,a=.05)
+res2$root
+@
+
+<< amplify, echo=FALSE>>=
+lambdas <- seq(round(res1$root,1)+.1,2*res1$root,length=100)
+ampres1<-amplify(round(res1$root,1), lambda=lambdas)
+ampres2<-amplify(2, lambda=lambdas)
+@
+
+<< echo=FALSE, out.width=".95\\textwidth">>=
+par(mar=c(3,3,1,1),mgp=c(1.5,.5,0))
+plot(as.numeric(names(ampres1)),ampres1,
+     xlab=expression(paste(Lambda," (maximum selection effect of confounder)")),
+     ylab=expression(paste(Delta," (maximum outcome effect of confounder)")),
+     main=expression(paste("Decomposition of ", Gamma, "=4.4")))
+##lines(as.numeric(names(ampres2)),ampres2,type="b")
+@
+
+
 
 \textbf{Question for Students:}
 \begin{itemize}\itemsep1pt
@@ -503,18 +672,19 @@ ggplot(data = sens_plot_data, mapping = aes(x = Gamma,
 << >>=
 
 find_Sens_G <- function(gamma,
-                        alpha){
-
+                        alpha) {
   senmv(meddat_reshaped,
-        gamma = gamma)$pval - alpha
+    gamma = gamma
+  )$pval - alpha
 }
 
 ## Find x value at which the function above == 0
-uniroot(f = find_Sens_G,
-        lower = 1,
-        upper = 6,
-        a = 0.05)$root
-
+uniroot(
+  f = find_Sens_G,
+  lower = 1,
+  upper = 6,
+  a = 0.05
+)$root
 @
 
 \bibliographystyle{chicago}
