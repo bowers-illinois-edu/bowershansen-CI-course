@@ -214,6 +214,9 @@ res1_t<-uniroot(f=findSensG,method="t",lower=1,upper=6,a=.05)
 res1_t$root
 res1_h<-uniroot(f=findSensG,method="h",lower=1,upper=6,a=.05)
 res1_h$root
+
+senmv(-respmat,gamma=1,method="t")$pval
+senmv(-respmat,gamma=1,method="h")$pval
 ```
 
 ## Assessing sensitivity of tests of hypothesis of effects

@@ -3,7 +3,7 @@ title: Causal Inference for Models of Interference
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: ICPSR 2019 Session 2
 bibliography:
- - refs.bib
+ - BIB/refs.bib
  - BIB/master.bib
  - BIB/misc.bib
 fontsize: 10pt
@@ -80,6 +80,12 @@ with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
 ```{r echo=FALSE}
 library(dplyr)
 library(RItools,lib.loc="./lib")
+library(coin)
+library(dplyr)
+library(ggplot2)
+library(sandwich)
+library(lmtest)
+library(estimatr)
 ```
 
 ## Today
@@ -94,44 +100,230 @@ library(RItools,lib.loc="./lib")
 
 # Remember about approaches to statistical inference for causal quantities
 
-\begin{frame}{Approach 1: Test Hypotheses about Models of Potential Outcomes}
+## Design Based Approach 1: Test Models of Potential Outcomes
 
+ 1. Make a guess (or model of) about $\tau_i$.
+ 2. Measure consistency of data with this model given the design.
 
-  \smallskip
+\centering
+  \includegraphics[width=.7\textwidth]{images/cartoonFisherNew1.pdf}
+
+## Design Based Approach 1: Test Models of Potential Outcomes
+
+\centering
+  \includegraphics[width=\textwidth]{images/cartoonFisherNew1.pdf}
+
+## Design Based Approach 1: Test Models of Potential Outcomes
+
+\centering
+  \includegraphics[width=\textwidth]{images/cartoonFisherNew2.pdf}
+
+## Design Based Approach 1: Test Models of Potential Outcomes
+
   \centering
   \includegraphics[width=.9\textwidth]{images/cartoonFisher.pdf}
 
+##  Design Based Approach 1: Test Models of Potential Outcomes
 
-\end{frame}
+```{r}
+smdat <- data.frame(Z=c(0,1,0,1),Y=c(16,22,7,4000))
+
+tz_mean_diff <- function(z,y){
+	mean(y[z==1]) - mean(y[z==0])
+}
+
+tz_mean_rank_diff <- function(z,y){
+	ry <- rank(y)
+	mean(ry[z==1]) - mean(ry[z==0])
+}
+
+newexp <- function(z){
+	sample(z)
+}
+```
+
+##  Design Based Approach 1: Test Models of Potential Outcomes
 
 
-\begin{frame}{Approach 2: Estimate Averages of Potential Outcomes}
+```{r repexp, cache=TRUE}
+set.seed(12345)
+rand_dist_md <- replicate(1000,tz_mean_diff(z=newexp(smdat$Z),y=smdat$Y))
+rand_dist_rank_md <- replicate(1000,tz_mean_rank_diff(z=newexp(smdat$Z),y=smdat$Y))
 
-  \smallskip
-  \centering
+```
+
+```{r calc}
+obs_md <- tz_mean_diff(z=smdat$Z,y=smdat$Y)
+obs_rank_md <- tz_mean_rank_diff(z=smdat$Z,y=smdat$Y)
+c(obs_md,obs_rank_md)
+table(rand_dist_md)
+table(rand_dist_rank_md)
+p_md <- mean(rand_dist_md >= obs_md)
+p_rank_md <- mean(rand_dist_rank_md >= obs_rank_md)
+c(p_md, p_rank_md)
+```
+
+##  Design Based Approach 1: Test Models of Potential Outcomes
+
+```{r}
+smdat$zF <- factor(smdat$Z)
+smdat$rY <- rank(smdat$Y)
+
+md_test_exact <- oneway_test(Y~zF,data=smdat,distribution=exact(),alternative="less")
+md_test_sim <- oneway_test(Y~zF,data=smdat,distribution=approximate(nresample=1000),
+			   alternative="less")
+md_test_asymp<- oneway_test(Y~zF,data=smdat,distribution=asymptotic(),alternative="less")
+
+rank_md_test_exact <- oneway_test(rY~zF,data=smdat,distribution=exact(),alternative="less")
+rank_md_test_asymp<- oneway_test(rY~zF,data=smdat,distribution=asymptotic(),alternative="less")
+rank_md_test_sim <- oneway_test(rY~zF,data=smdat,distribution=approximate(nresample=1000),
+			   alternative="less")
+```
+
+##  Design Based Approach 1: Test Models of Potential Outcomes
+
+```{r}
+pvalue(md_test_exact)
+pvalue(md_test_sim)
+pvalue(md_test_asymp)
+pvalue(rank_md_test_exact)
+pvalue(rank_md_test_sim)
+pvalue(rank_md_test_asymp)
+```
+##  Design Based Approach 1: Test Models of Potential Outcomes
+
+```{r}
+s_rank_md_exact <- support(rank_md_test_exact)
+d_rank_md_exact <- dperm(rank_md_test_exact,s_rank_md_exact)
+d_rank_md_asymp <- dperm(rank_md_test_asymp,seq(-1.6,1.6,.1))
+
+s_md_exact <- support(md_test_exact)
+d_md_exact <- dperm(md_test_exact,s_md_exact)
+d_md_asymp <- dperm(md_test_asymp,seq(-1.6,1.6,.1))
+```
+
+```{r plotexactdists, echo=FALSE}
+par(mfrow=c(1,2))
+plot(s_rank_md_exact,d_rank_md_exact,type="h",xlim=c(-1.6,1.6),ylim=c(0,.4),lwd=3)
+lines(seq(-1.6,1.6,.1),d_rank_md_asymp)
+plot(s_md_exact,d_md_exact,type="h",xlim=c(-1.6,1.6),ylim=c(0,.4),lwd=3)
+lines(seq(-1.6,1.6,.1),d_md_asymp)
+```
+
+## Design Based Approach 2: Estimate Averages of Potential Outcomes
+
+  1. Notice that the observed $Y_i$ are a sample from  the (small, finite) population of $(y_{i,1},y_{i,0})$.
+  2. Decide to focus on the average, $\bar{\tau}$, because sample averages, $\hat{\bar{\tau}}$ are unbiased and consistent estimators of population averages.
+  3. Estimate $\bar{\tau}$ with the observed difference in means.
+
+\centering
+  \includegraphics[width=.5\textwidth]{images/cartoonNeyman.pdf}
+
+## Design Based Approach 2: Estimate Averages of Potential Outcomes
+
+\centering
   \includegraphics[width=.9\textwidth]{images/cartoonNeyman.pdf}
 
 
-\end{frame}
+## Design Based Approach 2: Estimate Averages of Potential Outcomes
+
+```{r}
+
+est1 <- difference_in_means(Y~Z,data=smdat)
+est1
+```
+
+## Design Based Approach 2: Estimate Averages of Potential Outcomes
+
+Is this estimator a good guess about the unobserved causal effect? Let's simulate to learn.
+
+First, make up a simulated research design and underlying potential outcomes:
+
+```{r setupdd}
+library(DeclareDesign)
+
+set.seed(12345)
+smdat$x <- runif(4,min=0,max=1)
+smdat$e0 <- round(runif(4,min=min(smdat$Y[smdat$Z==0]),max=max(smdat$Y[smdat$Z==0])))
+smdat$y0 <- with(smdat,3*sd(e0)*x + e0)
+smdat$y1 <- smdat$Y - smdat$y0
+
+thepop <- declare_population(smdat[,c("y0","y1","x")])
+theassign <- declare_assignment(m=2)
+po_fun <- function(data){
+	data$Y_Z_1   <- data$y0
+	data$Y_Z_0 <- data$y1
+	data
+}
+thepo <- declare_potential_outcomes(handler=po_fun)
+thereveal <- declare_reveal(Y,Z) ## how does assignment reveal potential outcomes
+thedesign <- thepop + theassign + thepo + thereveal
+
+oneexp <- draw_data(thedesign)
+```
+
+## Design Based Approach 2: Estimate Averages of Potential Outcomes
+
+Next specify our estimator and compare to a couple of others:
+
+```{r}
+theestimand <- declare_estimand(ATE = mean(Y_Z_1 - Y_Z_0))
+theest1 <- declare_estimator(Y~Z, estimand=theestimand, model=difference_in_means,
+			     label="est1: diff means1")
+theest2 <- declare_estimator(Y~Z, estimand=theestimand, model=lm_robust,
+			     label="est2: diff means2")
+theest3 <- declare_estimator(Y~Z+x, estimand=theestimand, model=lm_robust,
+			     label="est3: covadj diff means")
+
+thedesign_plus_est <- thedesign + theestimand + theest1 + theest2 + theest3
+theest1(oneexp)
+theest2(oneexp)
+theest3(oneexp)
+
+```
+
+## Design Based Approach 2: Estimate Averages of Potential Outcomes
+
+Finally, repeat the design, applying our estimators and comparing to our known potential outcomes.
+
+```{r diagnose1, warnings=FALSE, cache=TRUE}
+require(DeclareDesign)
+set.seed(12345)
+
+thediagnosands <- declare_diagnosands(
+     bias = mean(estimate - estimand),
+     rmse = sqrt(mean((estimate - estimand) ^ 2)),
+     power = mean(p.value < .25),
+     coverage = mean(estimand <= conf.high & estimand >= conf.low),
+     mean_estimate = mean(estimate),
+     sd_estimate = sd(estimate),
+     mean_se = mean(std.error),
+     mean_estimand = mean(estimand)
+     )
+
+diagnosis <- diagnose_design(thedesign_plus_est,sims=1000,bootstrap_sims=0,
+			     diagnosands = thediagnosands)
+```
 
 
-\begin{frame}{Approach 3: Predict Potential Outcomes}
+## Design Based Approach 2: Estimate Averages of Potential Outcomes
+
+```{r}
+kable(reshape_diagnosis(diagnosis)[,-c(1:2,4)])
+```
+
+```{r simmethod, eval=FALSE, echo=FALSE}
+thedesign_sims<- simulate_design(thedesign_plus_est,sims=1000)
+res <- thedesign_sims %>% group_by(estimator_label) %>% summarize(bias=mean(estimate-estimand))
+```
+
+
+
+## Model Based Approach 1: Predict Potential Outcomes}
 
   \smallskip
   \centering
   \includegraphics[width=.9\textwidth]{images/cartoonBayes.pdf}
-
-
-\end{frame}
-
-## Approaches to creating interpretable comparisons:
-
-   - Randomized experiments (more precision from reducing heterogeneity in $Y$)
-   - Instrumental variables (with randomized $Z$ created $D$)
-   - Natural Experiments / Discontinuities (one $X$ creates $Z$)
-   - Difference-in-Differences (reduce bias *and* increase precision from reducing heterogeneity in $Y$)
-   - Semi-/Non-parametric Covariance Adjustment (i.e. matching)
-   - Parametric covariance adjustment
 
 # What about interference? How define, estimate and test causal effects.
 
