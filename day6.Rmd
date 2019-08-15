@@ -5,7 +5,7 @@ author: |
   | ICPSR 2019 Session 2
   | Jake Bowers, Ben Hansen, Tom Leavitt
 bibliography:
- - refs.bib
+ - BIB/refs.bib
  - BIB/master.bib
  - BIB/misc.bib
 fontsize: 10pt

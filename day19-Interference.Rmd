@@ -37,8 +37,11 @@ require(knitr)
 ## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
 
 knitr::knit_hooks$set(mysize = function(before, options, envir) {
-  if (before)
-    return(options$size)
+			           if (before){
+				      return(options$size)
+				   } else { 
+					   return("\\normalsize")
+				   }
 })
 
 knit_hooks$set(plotdefault = function(before, options, envir) {
@@ -86,6 +89,7 @@ library(ggplot2)
 library(sandwich)
 library(lmtest)
 library(estimatr)
+library(DeclareDesign)
 ```
 
 ## Today
@@ -240,7 +244,6 @@ Is this estimator a good guess about the unobserved causal effect? Let's simulat
 First, make up a simulated research design and underlying potential outcomes:
 
 ```{r setupdd}
-library(DeclareDesign)
 
 set.seed(12345)
 smdat$x <- runif(4,min=0,max=1)
@@ -287,7 +290,6 @@ theest3(oneexp)
 Finally, repeat the design, applying our estimators and comparing to our known potential outcomes.
 
 ```{r diagnose1, warnings=FALSE, cache=TRUE}
-require(DeclareDesign)
 set.seed(12345)
 
 thediagnosands <- declare_diagnosands(
@@ -327,16 +329,16 @@ res <- thedesign_sims %>% group_by(estimator_label) %>% summarize(bias=mean(esti
 
 # What about interference? How define, estimate and test causal effects.
 
-## Statistical inference for counterfactual quantities with interference?
+## Statistical inference with interference?
 
   \centering
-  \includegraphics{complete-graph.pdf}
+  \includegraphics[width=.3\textwidth]{complete-graph.pdf}
 
   \only<1>{
 
     \includegraphics[width=.95\textwidth]{interference-example.pdf}
 
-    Lots of good work in estimation area (Sobel, Aronow, Samii, Hudgens, Ogburn,
+    On estimation see (Sobel, Aronow, Samii, Hudgens, Ogburn,
     VanderWeele, Toulis, Kao, Coppock, Sicar, Raudenbush, Hong, \ldots). What is the function of potential
     outcomes that we can estimate using observed data? WWFisherD? WWNeymanD?
   }
@@ -377,7 +379,9 @@ res <- thedesign_sims %>% group_by(estimator_label) %>% summarize(bias=mean(esti
 \begin{columns}
   \begin{column}{.4\textwidth}
     \centering
-    \includegraphics[width=1.8\textwidth]{Ghana2008NetworkSlice-Annotated.png}
+    \only<1>{\includegraphics[width=\textwidth]{Ghana2008NetworkSlice-Annotated.png}}
+    \only<2>{\includegraphics[width=1.8\textwidth]{Ghana2008NetworkSlice-Annotated.png}}
+    \only<3>{\includegraphics[width=1.8\textwidth]{ichinoMap.pdf}}
   \end{column}
   \begin{column}{.5\textwidth}
     \begin{block}{}
@@ -405,7 +409,9 @@ res <- thedesign_sims %>% group_by(estimator_label) %>% summarize(bias=mean(esti
 
 Q: What is the probability of seeing
 as large an observed difference between the treated and control groups, if the
-observers had no effect at all --- recalling that no effect means no interference as well as no other effect?  A:$p=0.018$ (using a mean-difference test-statistic).
+observers had no effect at all --- recalling that no effect means no interference as well as no other effect?
+
+A:$p=0.018$ (using a mean-difference test-statistic).
 
 
 ## Approaches for going beyond the sharp-null of no effects
@@ -453,7 +459,7 @@ etc..
 
 How would we use this data to estimate direct, indirect, or spillover effects?
 
-```{r echo=FALSE}
+```{r loadghanastuff, echo=FALSE, cache=FALSE}
 library(sp)
 library(maptools)
 load("~/Documents/PROJECTS/GhanaModels/data/ELAs.rda")
