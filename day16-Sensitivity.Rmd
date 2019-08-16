@@ -79,7 +79,7 @@ with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
 ```{r echo=FALSE, warnings=FALSE}
 library(dplyr)
 library(ggplot2)
-library(RItools,lib.loc="./lib")
+library(RItools)#,lib.loc="./lib")
 library(optmatch)
 library(sandwich)
 library(lmtest)
