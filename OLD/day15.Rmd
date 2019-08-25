@@ -1,0 +1,929 @@
+---
+title: Information, Balance, Estimation, Testing
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2019 Session 2
+bibliography:
+ - refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+rm(list=ls())
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before)
+    return(options$size)
+})
+
+knit_hooks$set(plotdefault = function(before, options, envir) {
+    if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
+})
+
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='\\scriptsize',
+  out.width='.8\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA,
+  mysize=TRUE,
+  plotdefault=TRUE)
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(digits=4,
+	scipen=8,
+	width=132
+	)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+```
+
+
+```{r eval=FALSE, echo=FALSE,include=FALSE}
+## Having downloaded optmatch from Box OR http://jakebowers.org/ICPSR for mac (tgz) or windows (zip)
+## For Mac
+## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.tgz', repos=NULL),'pre')
+## For Windows
+## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.zip', repos=NULL),'pre')
+```
+
+```{r eval=FALSE, echo=FALSE}
+## Or if you have all of the required libraries (like fortran and c++) for compilation use
+with_libpaths('./lib', install_github("markmfredrickson/optmatch"), 'pre')
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(chemometrics) ## for the nice Mahalanobis ellipse plot
+library(RItools,lib.loc="./lib")
+library(optmatch,lib.loc="./lib")
+library(lmtest)
+library(sandwich)
+```
+
+## Today
+
+\begin{enumerate}
+\item Agenda: Estimation and Testing after matching; Plus more on  Navigating implementation tradeoffs in matching: Information and blocked designs (some blockings have more information about treatment effects than others); Balance tests and the Sequential Intersection Union Principle
+\item Reading for this week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{ho:etal:07} and \cite{hansen2011}.
+\item Questions arising from the reading or assignments or life?
+\item Next week: Sensitivity Analysis; Non-bipartite matching (matching where the treatment variable not binary).
+\end{enumerate}
+
+
+```{r loaddat, echo=FALSE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat$id <- row.names(meddat)
+meddat<- mutate(meddat, HomRate03=(HomCount2003/Pop2003)*1000,
+                HomRate08=(HomCount2008/Pop2008)*1000)
+## mutate strips off row names
+row.names(meddat) <- meddat$id
+options(show.signif.stars=FALSE)
+```
+
+# Matching structure and effective sample size
+
+## Matching with a varying number of controls and full matching
+
+### Fixed vs flexible ratio matching:
+
+\begin{itemize}[<+->]
+\item Pair matching \& sample size
+\item Effective vs real sample size
+\item If we limit ourselves to fixed matching ratios, we gain in
+  simplicity but pay a price in sample size (effective \& real).
+\item How big a price?  Trying is the best way to find out.
+\end{itemize}
+
+```{r echo=FALSE}
+nuke.nopt <- subset(nuclearplants, pt == 0)
+```
+
+## Matching with a varying number of controls
+
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\
+  C & -0.4 & {0} {\mlpnode{NC}} \\
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\
+  F & 2.2 & {0} {\mlpnode{NF}} \\
+  G & 1.3 & {0} {\mlpnode{NG}} \\
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+\begin{tikzpicture}[overlay]
+  \path[draw,gray] (NA) edge (NI);
+ \path[draw,gray] (NB) edge (NJ);
+ \path[draw,gray] (NC) edge (NH);
+ \path[draw,gray] (NC) edge (NL);
+ \path[draw,gray] (NC) edge (NN);
+ \path[draw,gray] (NC) edge (NP);
+ \path[draw,gray] (NC) edge (NS);
+ \path[draw,gray] (NC) edge (NT);
+ \path[draw,gray] (NC) edge (NW);
+ \path[draw,gray] (ND) edge (NK);
+ \path[draw,gray] (ND) edge (NM);
+ \path[draw,gray] (ND) edge (NO);
+ \path[draw,gray] (ND) edge (NQ);
+ \path[draw,gray] (NE) edge (NR);
+ \path[draw,gray] (NE) edge (NV);
+ \path[draw,gray] (NF) edge (NZ);
+ \path[draw,gray] (NG) edge (NU);
+ \path[draw,gray] (NG) edge (NX);
+ \path[draw,gray] (NG) edge (NY);
+ \end{tikzpicture}
+
+```{r}
+fmnukeMC1<-fullmatch(pr~date+cap,data=nuke.nopt,min.controls=1)
+summary(fmnukeMC1)
+```
+
+
+\note{
+  Observe that now no control plants are left out.  (This is something you can change if you want.)
+
+Discuss effective sample size.
+}
+
+
+
+## Matching so as to maximize effective sample size
+
+\begin{minipage}[t]{2in}
+\begin{center}
+Existing site\\
+{\small
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\
+  \hline
+A & -1.6 & {1.2} {\mlpnode{NA}} \\
+  B & -0.9 & {1.2} {\mlpnode{NB}} \\
+  C & -0.4 & {0} {\mlpnode{NC}} \\
+  D & -0.4 & {-1.4} {\mlpnode{ND}} \\
+  E & 0.1 & {1.1} {\mlpnode{NE}} \\
+  F & 2.2 & {0} {\mlpnode{NF}} \\
+  G & 1.3 & {0} {\mlpnode{NG}} \\
+   \hline
+\end{tabular}}
+\end{center}
+\bigskip
+\bigskip
+\bigskip
+\bigskip
+\end{minipage}
+\begin{minipage}[t]{2in}
+\begin{center}
+New site\\
+{\scriptsize
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Thu Jul 31 13:51:34 2014
+\begin{tabular}{lrr}
+  \hline
+ & z.date & z.cap \\
+  \hline
+{\mlpnode{NH}\mbox{}} {H} & -0.3 & -0.7 \\
+  {\mlpnode{NI}\mbox{}} {I} & -1.6 & 1.2 \\
+  {\mlpnode{NJ}\mbox{}} {J} & -0.9 & 1.2 \\
+  {\mlpnode{NK}\mbox{}} {K} & -0.9 & -1.5 \\
+  {\mlpnode{NL}\mbox{}} {L} & -0.7 & -0.0 \\
+  {\mlpnode{NM}\mbox{}} {M} & -0.4 & -1.8 \\
+  {\mlpnode{NN}\mbox{}} {N} & -0.5 & -0.2 \\
+  {\mlpnode{NO}\mbox{}} {O} & -0.3 & -1.3 \\
+  {\mlpnode{NP}\mbox{}} {P} & -0.1 & -0.2 \\
+  {\mlpnode{NQ}\mbox{}} {Q} & -0.4 & -1.4 \\
+  {\mlpnode{NR}\mbox{}} {R} & 0.1 & 1.1 \\
+  {\mlpnode{NS}\mbox{}} {S} & 0.1 & 0.1 \\
+  {\mlpnode{NT}\mbox{}} {T} & -0.4 & -0.2 \\
+  {\mlpnode{NU}\mbox{}} {U} & 0.7 & 0.1 \\
+  {\mlpnode{NV}\mbox{}} {V} & 0.4 & 1.3 \\
+  {\mlpnode{NW}\mbox{}} {W} & -0.1 & 0.4 \\
+  {\mlpnode{NX}\mbox{}} {X} & 0.9 & -0.2 \\
+  {\mlpnode{NY}\mbox{}} {Y} & 1.7 & -1.4 \\
+  {\mlpnode{NZ}\mbox{}} {Z} & 2.3 & 1.5 \\
+   \hline
+\end{tabular}}
+\end{center}
+\end{minipage}
+\begin{tikzpicture}[overlay]
+  \path[draw,gray] (NA) edge (NI);
+ \path[draw,gray] (NA) edge (NJ);
+ \path[draw,gray] (NB) edge (NL);
+ \path[draw,gray] (NB) edge (NN);
+ \path[draw,gray] (NB) edge (NW);
+ \path[draw,gray] (NC) edge (NH);
+ \path[draw,gray] (NC) edge (NO);
+ \path[draw,gray] (NC) edge (NT);
+ \path[draw,gray] (ND) edge (NK);
+ \path[draw,gray] (ND) edge (NM);
+ \path[draw,gray] (ND) edge (NQ);
+ \path[draw,gray] (NE) edge (NR);
+ \path[draw,gray] (NE) edge (NS);
+ \path[draw,gray] (NE) edge (NV);
+ \path[draw,gray] (NF) edge (NY);
+ \path[draw,gray] (NF) edge (NZ);
+ \path[draw,gray] (NG) edge (NP);
+ \path[draw,gray] (NG) edge (NU);
+ \path[draw,gray] (NG) edge (NX);
+ \end{tikzpicture}
+```{r}
+fmnuke<-fullmatch(pr~date+cap, min=2, max=3, data=nuke.nopt)
+summary(fmnuke)
+```
+
+## Showing matches
+
+\centering
+```{r out.width=".8\\textwidth", echo=FALSE}
+## perhaps try this https://briatte.github.io/ggnet/#example-2-bipartite-network next time
+library(igraph)
+blah1 <- outer(fmnuke,fmnuke,FUN=function(x,y){ as.numeric(x==y) })
+blah2 <- outer(fmnukeMC1,fmnukeMC1,FUN=function(x,y){ as.numeric(x==y) })
+par(mfrow=c(1,2),mar=c(3,3,3,1))
+plot(graph_from_adjacency_matrix(blah1,mode="undirected",diag=FALSE),
+     vertex.color=c("white","green")[nuke.nopt$pr+1],main="Min C=2, Max C=3")
+plot(graph_from_adjacency_matrix(blah2,mode="undirected",diag=FALSE),
+     vertex.color=c("white","green")[nuke.nopt$pr+1],main="Min C=1, Max C=Inf")
+```
+
+## Matching so as to maximize effective sample size
+
+\tiny
+```{r}
+effectiveSampleSize(fmnuke)
+nukewts <- cbind(nuke.nopt,fmnuke) %>% 
+  group_by(fmnuke) %>% summarise(nb = n(),
+                                 nTb = sum(pr),
+                                 nCb = nb - nTb,
+                                 hwt = ( 2*( nCb * nTb ) / (nTb + nCb)))
+nukewts
+dim(nukewts)
+sum(nukewts$hwt)
+```
+
+## Matching so as to maximize effective sample size
+
+```{r}
+stratumStructure(fmnuke)
+```
+
+So effective sample size for this match = $2 * 4/3 + 5* 3/2 = 10.17$ --- compare to 7 for pairs, 9.33 for triples.
+
+```{r}
+nukemh <- match_on(pr~date+cap,data=nuke.nopt)
+pmnuke <- pairmatch(nukemh,data=nuke.nopt)
+levels(pmnuke)
+effectiveSampleSize(pmnuke)
+```
+
+## Matching so as to maximize effective sample size
+
+```{r}
+mds <- matched.distances(fmnuke,nukemh)
+mean(unlist(mds))
+```
+
+Mean of matched distances is `r mean(unlist(mds))` --- compare to 0.29 for pairs, 0.57 for triples.
+
+Note variance/bias tradeoff. Covariate balance has to do with bias and extrapolation (i.e. confounding). We want balance **and** precision.
+
+
+## Inspect distances after matching
+
+What kinds of distances remain after matching?
+
+```{r}
+str(mds)
+quantile(unlist(mds))
+```
+
+
+##  Tracking effective sample size
+
+In 2-sample comparisons, total sample size can be a misleading as a measure of information content.  Example:
+\begin{itemize}
+\item say $Y$ has same variance, $\sigma^{2}$,in the Tx and the Ctl population.
+\item Ben H. samples 10 Tx and 40 Ctls, and
+\item Justin M. samples 25 Tx and 25 Ctls
+\end{itemize}
+--- so that total sample sizes are the same.  However,
+
+\begin{eqnarray*}
+  V_{BH}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{10} + \frac{\sigma^{2}}{40}=.125\sigma^{2}\mbox{;}\\
+  V_{JM}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{25} + \frac{\sigma^{2}}{25}=.08\sigma^{2}.\\
+\end{eqnarray*}
+
+Similarly, a matched triple is roughly $[(\sigma^{2}/1 + \sigma^{2}/2)/(\sigma^{2}/1 + \sigma^{2}/1)]^{-1}= 1.33$ times as informative as a matched pair.
+
+## Details
+
+Use pooled 2-sample t statistic SE formula to compare 1-1 vs 1-2 matched sets' contribution to variance:
+
+$$
+\begin{array}{c|c}
+  \atob{1}{1} & \atob{1}{2} \\
+M^{-2}\sum_{m=1}^{M} (\sigma^{2}/1 + \sigma^{2}/1) & M^{-2}\sum_{m=1}^{M} (\sigma^{2}/1 + \sigma^{2}/2) \\
+\frac{2\sigma^{2}}{M} & \frac{1.5\sigma^{2}}{M} \\
+\end{array}
+$$
+
+So 20 matched pairs is comparable to 15 matched triples.
+
+(Correspondingly, h-mean of $n_{t},n_{c}$ for a pair is 1, while for a triple it's $[(1/1 + 1/2)/2]^{-1}=4/3$.)
+
+The variance of the `pr`-coeff in `v~pr + match` is
+$$
+ \frac{2 \sigma^{2}}{\sum_{s} h_{s}}, \hspace{3em} h_{s} = \left( \frac{n_{ts}^{-1} + n_{cs}^{-1} }{2}  \right)^{-1} ,
+$$
+
+assuming the OLS model and homoskedastic errors.  (This is b/c the anova formulation is equivalent to harmonic-mean weighting, under which $V(\sum_{s}w_{s}(\bar{v}_{ts} - \bar v_{cs})) = \sum_{s} w_{s}^{2}(n_{ts}^{-1} + n_{cs}^{-1}) \sigma^{2} = \sigma^{2} \sum_{s} w_{s}^{2} 2 h_{s}^{-1} = 2\sigma^{2} \sum_{s}w_{s}/\sum_{s}h_{s} = 2\sigma^{2}/\sum_{s} h_{s}$.)
+
+For matched pairs, of course, $h_{s}=1$.  Harmonic mean of 1, 2 is $4/3$. Etc.
+
+# Balance
+
+
+ Hansen and Sales (2015) suggest one way to stop iterating between
+	\texttt{fullmatch} and \texttt{xBalance} when you have one caliper. The idea
+	is that if you would reject the null of balance with one caliper, you would
+	also certainly reject it with a wider caliper. That is, the idea is that
+	hypothesis tests about balance using calipers can be understood as nested,
+	or ordered. Rosenbaum (2008) talks about this in his paper ``Testing
+	Hypotheses in Order'' and Hansen and Sales (2008) how these ideas can
+	help us choose a matched design:
+
+  ``The SIUP[sequential intersection union principle] states that if a
+  researcher pre-specifies a sequence of hypotheses and corresponding
+  level-$\alpha$ tests, tests those hypotheses in order, and stops testing
+  after the first non-rejected hypothesis, then the probability of incorrectly
+  rejecting at least one correct hypothesis is at most $\alpha$.'' (page 2)
+
+	Let us try this out and also try to assess it. Say, we start by saying that
+	we will reject the null of balance at $\alpha=.50$.
+
+
+Imagine, for example we had this matched design:
+
+```{r}
+balfmla <- nhTrt ~ nhPopD + nhAboveHS + HomRate03
+mhdist <- match_on(balfmla,data=meddat)
+psmod <- arm::bayesglm(balfmla,data=meddat,family=binomial(link="logit"))
+psdist <- match_on(psmod,data=meddat)
+tmp <- meddat$HomRate03
+names(tmp) <- rownames(meddat)
+absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
+
+summary(psdist)
+summary(mhdist)
+summary(absdist)
+
+fmMh <- fullmatch(mhdist,data=meddat,tol=.00001)
+summary(fmMh,min.controls=0,max.controls=Inf)
+```
+
+## Principled Balance Search using SIUP
+
+If we just want to find the set of calipers and optmatch options which maximize
+balance, why not do a search?
+
+> The SIUP[sequential intersection union principle] states that if a researcher pre-specifies a sequence of hypotheses and corresponding level-$\alpha$ tests, tests those hypotheses in order, and stops testing after the first non-rejected hypothesis, then the probability of incorrectly rejecting at least one correct hypothesis is at most $\alpha$.'' \autocite{saleshansen2014}(page 2)
+
+
+```{r}
+matchAndBalance<-function(x,balfmla,distmat,thedata){
+	#x is a caliper width
+	thefm<-fullmatch(distmat+caliper(distmat,x),data=thedata,tol=.00001)
+  ## This next is very annoying but there are scope problems with balanceTest and balfmla
+  ## And I don't want to add thefm to meddat at each iteration, which would really slow things down.
+	thexb<-balanceTest(update(balfmla,.~.+strata(thefm)),
+			data=cbind(thedata,thefm),
+			report=c("chisquare.test"))
+	return(c(x=x,d2p=thexb$overall["thefm","p.value"]))
+}
+```
+
+
+## Balance Search using SIUP
+
+
+```{r cache=FALSE}
+## Start with the the largest distance between a treated and control unit.
+maxpsdist<-max(as.vector(psdist))
+minpsdist<-min(as.vector(psdist))
+psdistsum <- summary(psdist)
+quantile(as.vector(psdist),seq(0,1,.1))
+```
+
+```{r cache=TRUE}
+results1<-sapply(seq(3,minpsdist,length=100),function(thecal){
+                   matchAndBalance(thecal,balfmla,distmat=psdist,thedata=meddat)})
+
+apply(results1,1,summary)
+apply(results1[,results1["d2p",]>.8],1,summary)
+```
+
+
+```{r echo=FALSE}
+## Reorder the data from low to high to make cummax work better
+results1 <- data.frame(t(results1))
+results1o <- results1[order(results1$x,decreasing=TRUE),]
+results1o$maxp <- cummax(results1o$d2p)
+```
+
+## Balance Search using SIUP
+
+So, you can see that keeping the maximum produces a set of nested tests so
+that if I reject some caliper at some $p$, I know that any caliper tighter
+than the chosen one would have less balance (a smaller $p$, more information
+against the null that our design is like a well randomized block randomized
+study).
+
+
+```{r echo=FALSE, out.width=".8\\textwidth"}
+with(results1o,{
+       plot(x,d2p,xlab="PS Caliper",ylab="d2 p",cex=.6)
+       points(x,maxp,col="blue")
+})
+```
+
+\note{
+  Sometimes we want our matched designs to relate well not only to an
+	equivalent block-randomized experiment, but also to help us make the
+	argument that our comparisons are comparing specific kinds of like
+	with like and/or that our comparisons are statistically powerful.
+	That is, among matched designs that we might call "balanced", we might
+	one which drops the fewest observations, and perhaps one that has
+	specially good balance on certain special covariates (like baseline
+	outcomes). So, here is one example, of doing such a search.
+
+	In this case, we are not doing strictly nested hypothesis testing, but are
+	using the $p$ values to tell us about information against the null of
+	balance rather than using them strictly speaking to reject this null, or
+	not-reject it.
+  }
+
+## Design Search for both precision and balance
+
+Here I demonstrate searching for two calipers.
+
+```{r gridsearch, cache=FALSE}
+
+findbalance<-function(x){
+	##message(paste(x,collapse=" "))
+	thefm<-try(fullmatch(psdist+caliper(mhdist,x[2])+caliper(psdist,x[1]),data=meddat,tol=.00001))
+
+	if(inherits(thefm,"try-error")){
+		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA,effn=NA))
+	}
+
+	thexb<-try(balanceTest(update(balfmla,.~.+strata(thefm)),
+			    data=cbind(meddat,thefm),
+			    report=c("chisquare.test","p.values")),silent=TRUE)
+
+	if(inherits(thexb,"try-error")){
+		return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA,effn=NA))
+	}
+
+	maxHomRate03diff<-max(unlist(matched.distances(thefm,distance=absdist)))
+
+	return(c(x=x,d2p=thexb$overall["thefm","p.value"],
+           maxHR03diff=maxHomRate03diff,
+           n=sum(!is.na(thefm)),
+           effn=summary(thefm)$effective.sample.size))
+
+}
+
+```
+
+```{r echo=FALSE, cache=TRUE}
+## Test the function
+## findbalance(c(3,3))
+## Don't worry about errors for certain combinations of parameters
+maxmhdist<-max(as.vector(mhdist))
+minmhdist<-min(as.vector(mhdist))
+set.seed(123455)
+system.time({
+	results<-replicate(1000,findbalance(c(runif(1,minpsdist,maxpsdist),
+					      runif(1,minmhdist,maxmhdist))))
+}
+)
+
+```
+
+```{r eval=FALSE, echo=FALSE}
+## If you have a mac or linux machine you can speed this up:
+library(parallel)
+system.time({
+	resultsList<-mclapply(1:5000,function(i){
+				      findbalance(c(runif(1,minpsdist,maxpsdist),
+						    runif(1,minmhdist,maxmhdist)))},
+			      mc.cores=detectCores())
+	resultsListNA<-sapply(resultsList,function(x){ any(is.na(x)) })
+	resultsArr<-simplify2array(resultsList[!resultsListNA])
+}
+)
+
+```
+
+
+## Which matched design might we prefer?
+
+Now, how might we interpret the results of this search for matched designs?
+Here are a few ideas.
+
+```{r }
+if(class(results)=="list"){
+resAnyNA<-sapply(results,function(x){ any(is.na(x)) })
+resNoNA<-simplify2array(results[!resAnyNA])
+} else {
+resAnyNA<-apply(results,2,function(x){ any(is.na(x)) })
+resNoNA<-simplify2array(results[,!resAnyNA])
+}
+apply(resNoNA,1,summary)
+highbalres<-resNoNA[,resNoNA["d2p",]>.5]
+apply(highbalres,1,summary)
+```
+
+## Which matched design might we prefer?
+
+```{r eval=TRUE, echo=FALSE}
+# color points more dark for smaller differences
+plot(resNoNA["d2p",],resNoNA["n",],
+     xlab='d2p',ylab='n',
+     col=gray(1- ( resNoNA["maxHR03diff",]/max(resNoNA["maxHR03diff",]))),
+     pch=19)
+
+## identify(resNoNA["d2p",],resNoNA["n",],labels=round(resNoNA["maxHR03diff",],3),cex=.7)
+```
+
+```{r eval=TRUE,echo=TRUE}
+interestingDesigns<- (resNoNA["d2p",]>.5 & resNoNA["n",]>=10 &
+		      resNoNA["maxHR03diff",]<=1 & resNoNA["effn",] > 6)
+candDesigns <- resNoNA[,interestingDesigns]
+str(candDesigns)
+apply(candDesigns,1,summary)
+candDesigns<-candDesigns[,order(candDesigns["d2p",],decreasing=TRUE)]
+```
+
+## How would we use this information in \texttt{fullmatch}?
+
+```{r }
+fm4<-fullmatch(psdist+caliper(psdist,candDesigns["x1",2])
+	       +caliper(mhdist,candDesigns["x2",2]),data=meddat,tol=.00001)
+
+summary(fm4,min.controls=0,max.controls=Inf)
+
+meddat$fm4<-NULL ## this line exists to prevent confusion with new fm4 objects
+meddat[names(fm4),"fm4"]<-fm4
+
+xb3<-balanceTest(update(balfmla,.~.+strata(fm4)),
+	      data=meddat, report=c("all"))
+xb3$overall[,1:3]
+zapsmall(xb3$results["HomRate03",,])
+```
+
+## Another approach: more fine tuned optimization
+
+```{r eval=TRUE,cache=FALSE}
+matchAndBalance2<-function(x,distmat,alpha){
+	#x is a caliper widths
+	if(x>max(as.vector(distmat)) | x<min(as.vector(distmat))){ return(99999) }
+	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
+	thexb<-xBalance(balfmla,
+			strata=data.frame(thefm=thefm),
+			data=meddat,
+			report=c("chisquare.test"))
+	return(thexb$overall[,"p.value"])
+}
+
+maxpfn<-function(x,distmat,alpha){
+	## here x is the targeted caliper width and x2 is the next wider
+	## caliper width
+	p1<-matchAndBalance2(x=x[1],distmat,alpha)
+	p2<-matchAndBalance2(x=x[2],distmat,alpha)
+	return(abs( max(p1,p2) - alpha) )
+}
+
+maxpfn(c(minpsdist,minpsdist+1),distmat=psdist,alpha=.25)
+quantile(as.vector(psdist),seq(0,1,.1))
+sort(as.vector(psdist))[1:10]
+```
+
+## Another approach: more fine tuned optimization
+
+```{r solnp, cache=TRUE}
+library(Rsolnp)
+### This takes a long time
+results3<-gosolnp(fun=maxpfn,
+		ineqfun=function(x,distmat,alpha){ x[2] - x[1] },
+		ineqLB = 0,
+		ineqUB = maxpsdist,
+		LB=c(minpsdist,minpsdist+.01),
+		UB=c(maxpsdist-.01,maxpsdist),
+		n.restarts=2,
+		alpha=.25,distmat=psdist,
+		n.sim=500,
+		rseed=12345,
+		control=list(trace=1)
+		)
+```
+
+## Another approach: more fine tuned optimization
+
+```{r}
+maxpfn(results3$pars,distmat=psdist,alpha=.25)
+matchAndBalance2(results3$pars[1],distmat=psdist,alpha=.25)
+matchAndBalance(results3$par[1],balfmla=balfmla,distmat=psdist,thedata=meddat)
+```
+
+# Estimation and Testing
+
+## Overview: Estimate and Test "as if block-randomized"
+
+This means we have to *define* our estimands in weighted terms (because different blocks provide different amounts of information).  Here are some matched sets and their associated weights:
+
+```{r echo=TRUE}
+meddat[names(fmMh),"fmMh"] <- fmMh
+setmeanDiffs <- meddat %>% group_by(fmMh) %>%
+  summarise(Y=mean(HomRate08[nhTrt==1])-mean(HomRate08[nhTrt==0]),
+            nb=n(),
+            nTb = sum(nhTrt),
+            nCb = sum(1-nhTrt),
+            hwt = ( 2*( nCb * nTb ) / (nTb + nCb))
+            )
+setmeanDiffs
+```
+
+## Using the weights: Set size weights
+
+First, we could calculate the set-size weighted ATE:
+
+```{r}
+## The set-size weighted version
+with(setmeanDiffs, sum(Y*nb/sum(nb)))
+```
+
+## Using the weights: Set size weights
+
+Sometimes it is convenient to use `lm` because there are R functions for standard errors and confidence intervals. This requires a bit more work:
+
+```{r}
+source("http://jakebowers.org/ICPSR/confintHC.R")
+## See Gerber and Green section 4.5 and also Chapter 3 on block randomized experiments. Also Hansen and Bowers 2008.
+meddat <- meddat %>% group_by(fmMh) %>% mutate(trtprob=mean(nhTrt),
+                                               nbwt=nhTrt/trtprob + (1-nhTrt)/(1-trtprob),
+                                               gghbwt= 2*( n()/nrow(meddat) )*(trtprob*(1-trtprob)), ## GG version,
+                                               nb = n(),
+                                               nTb = sum(nhTrt),
+                                               nCb = nb - nTb,
+                                               hbwt = ( 2*( nCb * nTb ) / (nTb + nCb))
+                                               )
+row.names(meddat) <- meddat$id ## dplyr strips row.names
+lm0b<-lm(HomRate08~nhTrt,data=meddat,weight=nbwt)
+coef(lm0b)["nhTrt"]
+coeftest(lm0b,vcov=vcovHC(lm0b,type="HC2"))[1:2,]
+theci0 <- confint.HC(lm0b,parm="nhTrt",thevcov=vcovHC(lm0b,type="HC2"))
+```
+
+
+## Using the weights: Set size weights
+
+There is an even more elaborate version of this that we illustrate below (from Winston Lin via the Green Lab SOP).
+
+```{r}
+meddat <- meddat %>% group_by(fmMh) %>% mutate(fmwt=n()/nrow(meddat),nb=n())
+X <- model.matrix(~fmMh-1,data=meddat)
+XminusXbar <- apply(X,2,function(x){ x - mean(x) })
+wrkdat <- cbind.data.frame(meddat,data.frame(XminusXbar))
+tmpfmla <- reformulate(grep("fmMh1",names(wrkdat),value=TRUE)[-1],response="HomRate08")
+lmfmla <- update(tmpfmla,.~nhTrt*(.))
+lm0 <- lm(lmfmla,data=wrkdat)
+coef(lm0)["nhTrt"]
+## But, in this case, the HC2 Standard Error is undefined because some of our blocks have too few observations.
+coeftest(lm0,vcov=vcovHC(lm0,type="HC2"))[1:2,]
+
+## See Gerber and Green 4.5
+meddat$Zf <- factor(meddat$trtprob)
+Z <- model.matrix(~Zf-1,data=meddat)
+ZminusZbar <- apply(Z,2,function(z){ z - mean(z) })
+wrkdat <- cbind.data.frame(wrkdat,ZminusZbar)
+tmpfmla <- reformulate(grep("Zf0",names(wrkdat),value=TRUE)[-1],response="HomRate08")
+lmfmlaZ <- update(tmpfmla,.~nhTrt*(.))
+lm0a <- lm(lmfmlaZ,data=wrkdat)
+coef(lm0a)["nhTrt"]
+coeftest(lm0a,vcov=vcovHC(lm0a,type="HC2"))[1:2,]
+```
+
+## Using the weights: precision weights
+
+Set size weighting is easy to explain. But set size weighting leaves information on the table. (For example, if we used a set-size weighted mean difference as a test statistic, the null reference distribution would be wider than if we used a harmonic weighted mean difference test statistic.) See this for example:
+
+```{r}
+## The mean diff used as the observed value in the testing
+## or from lm
+with(setmeanDiffs, sum(Y*hwt/sum(hwt)))
+lm1 <- lm(HomRate08~nhTrt+fmMh,data=meddat)
+xbOutcome <- balanceTest(nhTrt~HomRate08+strata(fmMh),data=meddat,report="all")
+## lm1a <- lm(HomRate08~nhTrt,data=meddat,weights=1/hbwt)
+coeftest(lm1,parm="nhTrt",vcov=vcovHC(lm1,type="HC2"))["nhTrt",]
+coeftest(lm0b,parm="nhTrt",vcov=vcovHC(lm0b,type="HC2"))["nhTrt",]
+theci1 <- confint.HC(lm1,parm="nhTrt",thevcov=vcovHC(lm1,type="HC2"))
+theci1
+diff(theci1[1,])
+diff(theci0[1,]) ## set size weighting
+```
+
+## `balanceTest`
+
+`balanceTest` reports the ATT (the set mean differences weighted by number of treated) but uses the precision-weighted mean for the $p$-value.
+
+```{r echo=FALSE,eval=FALSE}
+## The descriptive adj.mean diff from balanceTest
+with(setmeanDiffs, sum(Y*nTb/sum(nTb)))
+xbOutcome$results[,,"fmMh"]
+```
+
+## The direct permutation approach
+
+```{r}
+library(permute)
+
+newExp <- function(z,b){
+  n <- length(z)
+  h1 <- how(blocks=b)
+  z[shuffle(n,control=h1)]
+}
+
+hwtfn <- function(data){
+  tapply(data$Tx.grp,data$stratum.code,function(x){ 2* sum((x-mean(x))^2) })
+}
+
+setsizewtfn<- function(data){
+  tapply(data$Tx.grp,data$stratum.code,function(x){ length(x) })
+}
+
+trtsizewtfn<- function(data){
+  ## Assumes Tx.grp \in \{0,1\} and 1=assigned to treatment
+  tapply(data$Tx.grp,data$stratum.code,function(x){ sum(x) })
+}
+
+wtMeanDiffTZ<-function(y,z,b,wtfn){
+  tzb <- mapply(function(yb,zb){ mean(yb[zb==1]) - mean(yb[zb==0]) },
+                yb=split(y,b),
+                zb=split(z,b))
+  wts <- wtfn(data.frame(Tx.grp=z,stratum.code=b))
+  sum(tzb*wts/sum(wts))
+}
+
+## Testing (compare to above)
+obsHTZ<-wtMeanDiffTZ(meddat$HomRate08,meddat$nhTrt,fmMh,hwtfn)
+obsNTZ<-wtMeanDiffTZ(meddat$HomRate08,meddat$nhTrt,fmMh,setsizewtfn)
+obsTTZ<-wtMeanDiffTZ(meddat$HomRate08,meddat$nhTrt,fmMh,trtsizewtfn)
+```
+
+Test the null hypothesis of no effects:
+
+```{r cache=TRUE}
+
+set.seed(12345)
+nulldistHwt <- replicate(10000,wtMeanDiffTZ(meddat$HomRate08,newExp(meddat$nhTrt,fmMh),fmMh,hwtfn))
+set.seed(12345)
+nulldistNwt <- replicate(10000,wtMeanDiffTZ(meddat$HomRate08,newExp(meddat$nhTrt,fmMh),fmMh,setsizewtfn))
+
+## Notice more precision with the Harmonic weight in thes p-values.
+2*min(mean(nulldistHwt>=obsHTZ),mean(nulldistHwt<=obsHTZ))
+2*min(mean(nulldistNwt>=obsNTZ),mean(nulldistNwt<=obsNTZ))
+
+```
+
+Comparing the reference distributions to each other and to their Normal approximations.
+
+```{r}
+plot(density(nulldistHwt),ylim=c(0,3))
+lines(density(nulldistNwt),lty=2)
+curve(dnorm(x,sd=sd(nulldistHwt)),from=-1,to=1,col="gray",add=TRUE)
+curve(dnorm(x,sd=sd(nulldistNwt)),from=-1,to=1,col="gray",lty=2,add=TRUE)
+```
+
+
+```{r echo=FALSE,eval=FALSE}
+## balanceTest does not yet take functions.
+hwtfn <- function(data){
+  tapply(data$Tx.grp,data$stratum.code,function(x){ 2* sum((x-mean(x))^2) })
+}
+
+setsizewtfn<- function(data){
+  tapply(data$Tx.grp,data$stratum.code,function(x){ length(x) })
+}
+
+wtMeanDiffTZ<-function(y,z,b,wtfn){
+  temp <- balanceTest(z~y+strata(b),data=data.frame(y,z,b),
+                      report="adj.mean.diffs",
+                      stratum.weights=wtfn)
+  return(temp$results[1,"adj.diff",1])
+}
+
+## Test the function
+## table(newExp(meddat$nhTrt,meddat$fmMh),meddat$fmMh)
+
+```
+
+# Your reports
+
+## Your reports?
+
+What did you do? What kind of overall balance did you achieve so far? What did you do? What kinds of confidence intervals and/or hypothesis tests did you produce?
+
+## Anything Else?
+
+ - Recall the utility of `fill.NAs()`: You can and should match on missingness. No reason to throw away observations only because of covariate missingness.
+
+ - EXTRA: How would we assess the claim that the sequential intersection union principle controls the family-wise error rate for balance tests?
+
+
+
+## References

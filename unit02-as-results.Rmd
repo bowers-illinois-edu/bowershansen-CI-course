@@ -1,0 +1,39 @@
+
+```{r}
+
+Z <- rep(c(0,1),1325)
+D <- ifelse(Z==0,0,rep(c(0,1),c(375,950)))
+
+table(Z,D)
+
+Y <- ifelse(Z==0,rep(c(0,1),c(1010,315)),
+	    ifelse(D==0,rep(c(0,1),c(293,82)),
+		   rep(c(0,1),c(640,310))))
+
+ftable(Y,Z,D,col.vars=c("D","Z"))
+
+dat <- data.frame(Y,Z,D)
+
+```
+
+
+Now estimation of ITT and CACE:
+
+```{r}
+
+ITT <- mean(Y[Z==1]) - mean(Y[Z==0])
+ITT_D <- mean(D[Z==1]) - mean(D[Z==0])
+ITT
+ITT_D
+cace1 <- ITT/ITT_D
+library(estimatr)
+cacemod1 <- iv_robust(Y~D|Z,data=dat)
+cacemod1
+
+library(AER)
+cacemod2 <- ivreg(Y~D|Z,data=dat)
+cacemod2
+
+```
+
+

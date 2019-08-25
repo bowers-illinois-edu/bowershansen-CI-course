@@ -1,0 +1,386 @@
+---
+title: Matching on more than one covariate
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2019 Session 2
+bibliography:
+ - refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before)
+    return(options$size)
+})
+
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='\\scriptsize',
+  out.width='.8\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA,
+  mysize=TRUE)
+
+
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(SweaveHooks=list(fig=function(){
+			   par(mar=c(3.5, 3, 1.1, 0),
+			       pty="s",
+			       mgp=c(1.5,0.5,0),
+			       oma=c(0,0,0,0))},
+			 echo=function(){options(continue=" ") ##Don't show "+" prompts,
+			 options(prompt=" ")
+			 }),
+	digits=4,
+	scipen=8,
+	width=132
+	)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+```
+
+
+```{r eval=FALSE, echo=FALSE,include=FALSE}
+## Having downloaded optmatch from box install either for mac (tar.gz) or windows (zip)
+## with_libpaths('./lib',install.packages('optmatch_0.9-8.9003.tar.gz', repos=NULL),'pre')
+
+## Or if you have all of the required libraries for compilation use
+with_libpaths('./lib', install_github("markmfredrickson/optmatch"), 'pre')
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(chemometrics)
+library(RItools,lib.loc="./lib")
+library(optmatch,lib.loc="./lib")
+```
+
+## Today
+
+\begin{enumerate}
+  \item Agenda: Matching on one covariate using optmatch; Matching on more than one covariate: mahalnobis distances, propensity scores using optmatch. Practice. Skipping discussion of fullmatching vs fixed ratio matching (like pairs), and optimal vs greedy.
+\item Reading for tomorrow: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{ho:etal:07}
+\item Questions arising from the reading or assignments or life?
+\end{enumerate}
+
+
+```{r loaddat, echo=FALSE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat$id <- row.names(meddat)
+meddat<- mutate(meddat, HomRate03=(HomCount2003/Pop2003)*1000,
+                HomRate08=(HomCount2008/Pop2008)*1000)
+## mutate strips off row names
+row.names(meddat) <- meddat$id
+```
+
+# Matching on one covariate using optmatch
+
+## The problem: the Metrocable-based comparison may be confounded.
+
+A simple comparison of violence in neighborhoods with and without the  Metrocable probably reflects the influence of the Metrocable project, but also pre-existing differences across neighborhoods and/or other non-Metrocable differences. Evidence for this? The balance table:
+
+
+```{r}
+options(show.signif.stars=FALSE)
+thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+balfmla<-reformulate(thecovs,response="nhTrt")
+
+xb1<-balanceTest(balfmla,
+	      data=meddat,
+	      report=c("all"),
+        p.adjust.method="none")
+xb1$overall[1,]
+```
+
+For example, looking at one variable
+
+```{r}
+xb1$results[c("nhTP03","nhPopD"),,]
+```
+
+## The problem: the Metrocable-based comparison may be confounded.
+
+Even after adjusting for multiple testing we wonder whether some of the variables maybe confounding the comparison --- making it hard to interpret (and hard to use the comparison for causal inference).
+
+```{r}
+xb1a<-balanceTest(balfmla,
+	      data=meddat,
+	      report=c("all"),
+        p.adjust.method="holm")
+xb1a$results[c("nhTP03","nhPopD"),,]
+```
+
+
+## Introduction to `optmatch`: Matching on a single variable
+
+First, set up the distance matrix:
+
+```{r}
+tmp <- meddat$nhPopD
+names(tmp) <- rownames(meddat)
+absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
+absdist[1:3,1:3]
+```
+
+Then match:
+
+```{r}
+fm1 <- fullmatch(absdist,data=meddat)
+summary(fm1)
+table(meddat$nhTrt,fm1)
+```
+
+## Evaluate the matched design
+
+```{r}
+xb2 <- balanceTest(nhTrt~nhPopD+strata(fm1),
+                  data=meddat,report="all",p.adjust.method="none")
+print(xb2,which.strata="fm1")
+```
+
+## Improve the matched design
+
+We can also decrease the tolerance at which the algorithm declares that it is done:
+
+```{r}
+fm2 <- fullmatch(absdist,data=meddat,tol=.000001)
+summary(fm2)
+xb3 <- balanceTest(nhTrt~nhPopD+strata(fm1)+strata(fm2),
+                  data=meddat,report="all",p.adjust.method="none")
+xb3$overall[,1:3]
+```
+
+## What is xBalance doing?
+
+```{r}
+meddat$fm1 <- fm1
+setmeanDiffs <- meddat %>% group_by(fm1) %>%
+  summarise(diffPopD=mean(nhPopD[nhTrt==1])-mean(nhPopD[nhTrt==0]),
+            nb=n(),
+            nTb = sum(nhTrt),
+            nCb = sum(1-nhTrt),
+            hwt = ( 2*( nCb * nTb ) / (nTb + nCb))
+            )
+setmeanDiffs
+```
+
+## What is balanceTest doing?
+
+(see `help("balanceTest")` )
+
+```{r}
+## The descriptive adj.mean diff from balanceTest
+with(setmeanDiffs, sum(diffPopD*nTb/sum(nTb)))
+## The mean diff used as the observed value in the testing
+with(setmeanDiffs, sum(diffPopD*hwt/sum(hwt)))
+## Compare to balanceTest output
+t(xb2$results["nhPopD",,])
+```
+
+#  Matching on Many Covariates
+
+## Dimension reduction using the Mahalanobis Distance
+
+The general idea: dimension reduction. When we convert many columns into one column we reduce the dimensions of the dataset (to one column).
+
+
+```{r}
+X <- meddat[,c("nhAboveHS","nhPopD")]
+plot(meddat$nhAboveHS,meddat$nhPopD,xlim=c(-.3,.6),ylim=c(50,700))
+```
+
+
+## Dimension reduction using the Mahalanobis Distance
+
+First, let's look at Euclidean distance: $\sqrt{ (x_1 - x_2)^2 + (y_1 - y_2)^2 }$
+
+```{r echo=FALSE, out.width=".8\\textwidth"}
+par(mgp=c(1.25,.5,0),oma=rep(0,4),mar=c(3,3,0,0))
+plot(meddat$nhAboveHS,meddat$nhPopD,xlim=c(-.3,.6),ylim=c(50,700))
+points(mean(X[,1]),mean(X[,2]),pch=19,cex=1)
+arrows(mean(X[,1]),mean(X[,2]),X["407",1],X["407",2])
+text(.4,200,label=round(dist(rbind(colMeans(X),X["407",])),2))
+```
+
+## Dimension reduction using the Mahalanobis Distance
+
+First, let's look at Euclidean distance: $\sqrt{ (x_1 - x_2)^2 + (y_1 - y_2)^2 }$
+
+```{r echo=FALSE, out.width=".5\\textwidth"}
+par(mgp=c(1.25,.5,0),oma=rep(0,4),mar=c(3,3,0,0))
+plot(meddat$nhAboveHS,meddat$nhPopD,xlim=c(-.3,.6),ylim=c(50,700))
+points(mean(X[,1]),mean(X[,2]),pch=19,cex=1)
+arrows(mean(X[,1]),mean(X[,2]),X["407",1],X["407",2])
+text(.4,200,label=round(dist(rbind(colMeans(X),X["407",])),2))
+```
+
+```{r}
+tmp <- rbind(colMeans(X),X["407",])
+tmp
+sqrt( (tmp[1,1] - tmp[2,1])^2 + (tmp[1,2]-tmp[2,2])^2 )
+```
+
+## Dimension reduction using the Mahalanobis Distance
+
+Now the Euclidean distance (on a standardized scale)
+
+```{r echo=FALSE}
+Xsd <-scale(X) 
+apply(Xsd,2,sd)
+apply(Xsd,2,mean)
+plot(Xsd[,1],Xsd[,2])
+points(mean(Xsd[,1]),mean(Xsd[,2]),pch=19,cex=1)
+arrows(mean(Xsd[,1]),mean(Xsd[,2]),Xsd["407",1],Xsd["407",2])
+text(2,-1.2,label=round(dist(rbind(colMeans(Xsd),Xsd["407",])),2))
+```
+
+
+## Dimension reduction using the Mahalanobis Distance
+
+The mahalanobis distance avoids the scale problem in the euclidean distance.^[For more see <https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance>]
+
+```{r echo=FALSE}
+par(mgp=c(1.5,.5,0),oma=rep(0,4),mar=c(3,3,0,0))
+mh <- mahalanobis(X,center=colMeans(X),cov=cov(X))
+drawMahal(X,center=colMeans(X),covariance=cov(X),
+          quantile = c(0.975, 0.75, 0.5, 0.25))
+abline(v=mean(meddat$nhAboveHS),h=mean(meddat$nhPopD))
+pts <-c("401","407","411","202")
+arrows(rep(mean(X[,1]),4),rep(mean(X[,2]),4),X[pts,1],X[pts,2])
+text(X[pts,1],X[pts,2],labels=round(mh[pts],2),pos=1)
+```
+
+```{r}
+Xsd <- scale(X)
+tmp<-rbind(c(0,0),Xsd["407",])
+mahalanobis(tmp,center=c(0,0),cov=cov(Xsd))
+edist <- sqrt( (tmp[1,1] - tmp[2,1])^2 + (tmp[1,2]-tmp[2,2])^2 )
+
+```
+
+## Matching on the Mahalanobis Distance
+
+Here using the rank based Mahalanobis distance following DOS Chap. 8 (but comparing to the ordinary version).
+
+```{r}
+mhdist <- match_on(nhTrt~nhPopD+nhAboveHS,data=meddat,method="rank_mahalanobis")
+mhdist[1:3,1:3]
+mhdist2 <- match_on(nhTrt~nhPopD+nhAboveHS,data=meddat)
+mhdist2[1:3,1:3]
+```
+
+
+## Matching on the Mahalanobis Distance
+
+```{r}
+fmMh <- fullmatch(mhdist,data=meddat)
+summary(fmMh,min.controls=0,max.controls=Inf)
+```
+
+## The propensity score
+
+## Matching on the propensity score
+
+**Make the score**^[Note that we will be using `brglm` or `bayesglm` in the
+future because of logit havin separation problems]
+
+```{r}
+theglm <- glm(nhTrt~nhPopD+nhAboveHS,data=meddat,family=binomial(link="logit"))
+thepscore <- theglm$linear.predictor
+thepscore01 <- predict(theglm,type="response")
+````
+
+We tend to match on the linear predictor rather than the version required to
+range only between 0 and 1.
+
+```{r echo=FALSE, out.width=".7\\textwidth"}
+par(mfrow=c(1,2),oma=rep(0,4),mar=c(3,3,2,0),mgp=c(1.5,.5,0))
+boxplot(split(thepscore,meddat$nhTrt),main="Linear Predictor (XB)")
+stripchart(split(thepscore,meddat$nhTrt),add=TRUE,vertical=TRUE)
+
+boxplot(split(thepscore01,meddat$nhTrt),main="Inverse Link Function (g^-1(XB)")
+stripchart(split(thepscore01,meddat$nhTrt),add=TRUE,vertical=TRUE)
+```
+
+## Matching on the propensity score
+
+```{r}
+psdist <- match_on(theglm,data=meddat)
+psdist[1:4,1:4]
+fmPs <- fullmatch(psdist,data=meddat)
+summary(fmPs,min.controls=0,max.controls=Inf)
+```
+
+## Can you do better?
+
+**Challenge:** Improve the matched design by adding covariates or functions of
+covariates using either or both of the propensity score or mahalanobis distance
+(rank- or not-rank based). So far we have:
+
+```{r}
+xb4 <- balanceTest(update(balfmla,.~.+strata(fmMh)+strata(fmPs)),
+                   data=meddat,report="all",p.adjust.method="none")
+xb4$overall[,]
+```
+
+## Can you do better?
+
+Challenge: Improve the matched design. So far we have:
+
+```{r}
+plot(xb4)
+```
+
+## Summary:
+
+What do you think?
+
+ - Matching solves the problem of making comparisons that are transparent (Question: "Did you adjust enough for X?" Ans: "Here is some evidence about how well I did.")
+ - You can adjust for one variable or more than one (if more than one, you need to choose one or more methods for reducing many columns to one column).
+ - The workflow involves the creation of a distance matrix, asking an algorithm to find the best configuration of sets that minimize the distances within set, and checking balance. (Eventually, it will also be concerned about the effective sample size.)
+
+
+# Anything Else?
+
+## References

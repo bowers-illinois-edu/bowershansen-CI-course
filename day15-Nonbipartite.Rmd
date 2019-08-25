@@ -1,0 +1,651 @@
+---
+title: Non-bipartite Matching
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2019 Session 2
+bibliography:
+  - BIB/abbrev-long.bib
+  - BIB/refs.bib
+  - BIB/master.bib
+  - BIB/misc.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    includes:
+      in_header:
+         - defs-all.sty
+    md_extensions: +raw_attribute
+---
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+rm(list=ls())
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+			      if (before){
+				      return(options$size)
+			      } else {
+				      return("\\normalsize")}
+})
+
+knit_hooks$set(plotdefault = function(before, options, envir) {
+		       if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
+})
+
+opts_chunk$set(
+	       tidy='styler',
+	       echo=TRUE,
+	       results='markup',
+	       strip.white=TRUE,
+	       fig.path='figs/fig',
+	       cache=FALSE,
+	       highlight=TRUE,
+	       width.cutoff=132,
+	       size='\\scriptsize',
+	       out.width='.8\\textwidth',
+	       fig.retina=FALSE,
+	       message=FALSE,
+	       comment=NA,
+	       mysize=TRUE,
+	       plotdefault=TRUE)
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(digits=4,
+	scipen=8,
+	width=132
+)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(RItools,lib.loc="./lib")
+library(optmatch)
+library(nbpMatching)
+library(lmtest)
+library(sandwich)
+library(estimatr)
+library(coin)
+```
+
+## Today
+
+  1. Agenda: Non-bipartite matching.
+  2. Reading for today and next week: (1) Non-bipartite matching DOS Chap 11
+     and \autocite{lu2011optimal}  and DOS 12 (longitudinal applications of
+     non-bipartite matching) and (2) Sensitivity analysis DOS Chap 3
+     \autocite{hhh2010}
+  3. Questions arising from the reading or assignments or life?
+ 
+## But first review
+
+ - Statistical inference for Causal Effects and Causal Hypotheses in Randomized
+   Experiments
+ - Adjustment by stratification;
+   - Matching to generate optimal stratifications  (decisions and strategies that are part of research design;
+     matching on missingness and `fill.NAs`; `exactMatch`; `caliper`;
+     `min.controls`; `effectiveSampleSize`);
+   - Assessing success of stratified research designs in adjustment;
+   - The As-If-Randomized mode of statistical inference for stratified research
+   designs (treat a matched design as a block-randomized experiment).
+
+## Review 2: An Adjustment Strategy to Address Alternative Explanations Effectively
+
+How to strengthen evidence about the claim that Metrocable caused a decrease in crime?
+
+ 1. **List main alternative explanations** (could crime have caused Metrocable
+    stations; socio-economic status differences; \ldots). Can we operationalize
+    these explanations?
+ 2. **Stratify data to minimize heterogeneity within set.** If education does
+    not vary within set, then we have "adjusted for" education by conditioning
+    on the set. The `optmatch` package for R finds sets that minimize the
+    weighted sum of distances across the sets. (See also `rcbalance`, `DiPs`,
+    `bigmatch`, `designmatch`, `quickmatch`).
+    1. Create distance matrices using `match_on` (and `caliper` and
+       `exactMatch`) (Scalar distances on  especially important variables like
+       baseline outcomes; Multivariate distances in terms of other covariates
+       via Mahalanobis or Propensity scores distances.)
+    2. Find stratifications using `fullmatch`.
+
+
+
+```{r echo=FALSE, cache=TRUE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat<- mutate(meddat,
+		HomRate03=(HomCount2003/Pop2003)*1000,
+		HomRate08=(HomCount2008/Pop2008)*1000)
+row.names(meddat) <- meddat$nh
+```
+
+
+```{r echo=FALSE}
+covs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+balfmla <- reformulate(covs,response="nhTrt")
+mhdist <- match_on(balfmla,data=meddat, method="rank_mahalanobis")
+psmod <- arm::bayesglm(balfmla,data=meddat,family=binomial(link="logit"))
+stopifnot(any(abs(coef(psmod))<10))
+psdist <- match_on(psmod,data=meddat)
+tmp <- meddat$HomRate03
+names(tmp) <- rownames(meddat)
+absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
+```
+
+## Example design for the day
+
+```{r}
+## Inspect the distance matrices
+quantile(as.vector(psdist),seq(.9,1,.01))
+quantile(as.vector(mhdist),seq(.9,1,.01))
+quantile(as.vector(absdist),seq(.9,1,.01))
+matchdist <- psdist + caliper(psdist,9) + caliper(absdist,2) + caliper(mhdist,60)
+summary(matchdist)
+fm1 <- fullmatch(matchdist, min.controls= 1, max.controls=Inf, data=meddat,tol=.00001)
+summary(fm1,min.controls=0,max.controls=Inf,propensity.model=psmod)
+meddat$fm1 <- factor(fm1)
+meddat$nhTrtF <- factor(meddat$nhTrt)
+```
+
+
+## An Adjustment Strategy to Address Alternative Explanations
+
+ 3. **Assess the stratification in substantive terms** If we look within the
+    sets, are the differences we see substantively concerning or trivial?
+
+
+
+```{r echo=FALSE}
+meddat[names(fm1),"fm1"] <- fm1
+setmeanDiffs <- meddat %>% filter(!is.na(fm1)) %>% group_by(fm1) %>%
+  summarise(ateb=mean(HomRate08[nhTrt==1])-mean(HomRate08[nhTrt==0]),
+            nb=n(),
+            nTb = sum(nhTrt),
+            nCb = sum(1-nhTrt),
+	    baselinediffs = mean(HomRate03[nhTrt==1])-mean(HomRate03[nhTrt==0]),
+	    minbaselines = min(HomRate03),
+	    maxbaseline = max(HomRate03)
+            ) %>% arrange(abs(baselinediffs))
+setmeanDiffs
+```
+
+## An Adjustment Strategy to Address Alternative Explanations
+
+ 4. **Assess the stratification by comparison to a model of a block-randomized
+    experiment** Does our research design look like a block-randomized
+    experiment in terms of covariate balance? If so, move onto step 4.
+    Otherwise, work to improve the research design by (a) changing scores; (b)
+    combining scores (for example, using calipers); (c) excluding units (using
+    calipers); (d) exact matching on subgroups; (e) reducing variation in
+    set-size.
+
+## An Adjustment Strategy to Address Alternative Explanations
+
+ 5. **Estimate effects and test hypothesis as-if-block-randomized** Estimators
+    and tests refer to the finite "population" of the study pool and the fixed
+    stratification in the same way common in the analysis of block-randomized
+    experiments.
+
+```{r  estandtest,  cache=TRUE, warning=FALSE}
+meddat <-  meddat %>%  filter(!is.na(fm1)) %>% group_by(fm1) %>%
+	mutate(trtprob=mean(nhTrt), nbwt=nhTrt/trtprob + (1-nhTrt)/(1-trtprob))
+estate <-  lm_robust(HomRate08~nhTrt,data=meddat,weights=nbwt,subset=!is.na(fm1))
+estate
+with(setmeanDiffs,sum(ateb*nb/sum(nb)))
+ranktest1  <-  wilcox_test(HomRate08~nhTrtF|fm1,data=meddat,
+		       distribution=approximate(nresample=10000))
+pvalue(ranktest1)
+```
+
+## An Adjustment Strategy to Address Alternative Explanations
+
+ 6. **Assess the sensitivity of the analysis to the assumptions of
+    as-if-randomized** The design is not a randomized design. Is this likely to
+    cause small or large changes in the substantive interpretation of our
+    results? (R packages `sensitivityfull`, `sensitivitymv`, `sensitivitymw`, `sensitivitymult`,
+    `rbounds`)
+
+# Non-bipartite Matching: An Application with the Study of Race and Place
+
+## How do perceptions of place influence attitudes?
+
+\autocite{wong2012jop} set out to measure perceptions of environments using an
+internet survey of Canadians during 2012 which each respondent drew a free hand
+map of their "local community" and then reported their understanding of the
+demographic breakdown of this place.
+
+```{r echo=FALSE, results='hide'}
+## White English Speaking Canadians only
+load(url("http://jakebowers.org/ICPSR/canadamapdat.rda"))
+## summary(canadamapdat)
+```
+\centering
+\igrphx{TwoMapsToronto.png}
+
+
+## Capturing perceptions
+
+Here are 50 maps drawn by people based in Toronto.
+
+\centering
+\igrphx{TorontoAllCommunities1.png}
+
+## Capturing perceptions
+
+And here is the question people were asked (groups in random order).
+
+\centering
+\igrphx{MLCCPerceptionsQuestion.pdf}
+
+## Capturing perceptions
+
+White Canadian respondents' reports about "visible minorities" in their hand drawn "local communities".
+
+\centering
+```{r echo=FALSE}
+par(mfrow=c(1,2))
+with(canadamapdat,scatter.smooth(vm.da,vm.community.norm2,col="gray",
+				 ylab="Perceptions",xlab="Census Neighborhood (DA)",
+				 xlim=c(0,1),ylim=c(0,1),lpars=list(lwd=2)))
+with(canadamapdat,scatter.smooth(vm.csd,vm.community.norm2,col="gray",
+				 ylab="Perceptions",xlab="Census Municipality (CSD)",
+				 xlim=c(0,1),ylim=c(0,1),lpars=list(lwd=2)))
+##summary(canadamapdat$vm.community.norm2)
+```
+
+## Codebook: Mainly for Rmd file
+
+The variables are: age in years, income as a scale, sex in categories, a
+social.capital scale coded to run 0 to 1, country of ancestry in categories,
+csd.pop is population of the Census Subdivision (like a municipality), vm.csd
+is 2006 proportion visible minority in the CSD, vm.da is proportion visible
+minority in the Census Dissemination Area (a small area containing 400--700
+persons), and vm.community.norm2 is the proportion of visible minorities
+reported by respondents in their map of their local community,
+community_area_km is the area within their drawing in square km.
+
+## How to make the case for perceptions?
+
+If we could randomly assign different perceptions to people, we could claim
+that differences of perceptions matter (above and beyond and independent of
+objective characteristics of the context).
+
+\medskip
+
+What is an observational design that would do this? Match people on objective
+context (and maybe covariates) who differ in perceptions.
+
+\medskip
+
+But objective context is continuous not binary: rather than matching $m$ "treated"
+to $n-m$ "controls", we want to compare all $n$ with all $n$ respondents.
+
+```{r echo=FALSE}
+## Exclude people who did not offer a perception or an outcome
+wrkdat<-canadamapdat[!is.na(canadamapdat$vm.community.norm2) &
+		     !is.na(canadamapdat$social.capital01),]
+	     wrkdat$vmdaPct <- wrkdat$vm.da * 100 ## express in pct
+```
+
+## Create $n \times n$ distance matrices
+
+Our main design compares white, English-speaking, Canadians people with similar
+neighborhood proportions of visible minorities.
+
+```{r }
+scalar.dist<-function(v){
+	## Utility function to make n x n abs dist matrices
+	outer(v,v,FUN=function(x,y){ abs(x-y) })
+}
+
+vmdaDist<-scalar.dist(wrkdat$vmdaPct)
+dimnames(vmdaDist)<-list(row.names(wrkdat), row.names(wrkdat))
+## The nbpmatching way (Mahalanobis \equiv standardized in one dimension) takes a while:
+##obj.com.dist.mat2<-distancematrix(gendistance(wrkdat[,"vmdaPct",drop=FALSE]))
+## compare to tmp<-scalar.dist(wrkdat$vmdaPct/sd(wrkdat$vmdaPct))
+wrkdat$vmdaPct[1:4]
+diff(wrkdat$vmdaPct[1:4])
+vmdaDist[1:4,1:4]
+```
+
+## Non-bipartite match
+
+```{r nbp1, cache=TRUE}
+vmdaDistMat <- distancematrix(vmdaDist)
+nbp1match<-nonbimatch(vmdaDistMat)
+nbp1<-get.sets(nbp1match$matches,remove.unpaired=TRUE)
+wrkdat[names(nbp1),"nbp1"]<-nbp1
+nbp1[1:5]
+table(is.na(wrkdat$nbp1)) ## recall the "ghost message"
+```
+
+## Inspect the solution
+
+```{r }
+wrkdat[order(wrkdat$nbp1),c("nbp1","vmdaPct","vm.community.norm2")][1:6,]
+## table(wrkdat$nbp1)
+nbp1vmdiffs<-tapply(wrkdat$vmdaPct,wrkdat$nbp1,function(x){ abs(diff(x)) })
+nbp1percdiffs<-tapply(wrkdat$vm.community.norm2,wrkdat$nbp1,function(x){ abs(diff(x)) })
+summary(nbp1vmdiffs)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+source(url("http://jakebowers.org/Matching/nonbimatchingfunctions.R"))
+```
+
+## Inspect the solution
+
+\centering
+```{r out.width=".8\\textwidth"}
+nbmplot(wrkdat,yvar="vmdaPct",xvar="vm.community.norm2",strata="nbp1",points=FALSE,
+	ylim=range(wrkdat$vmdaPct))
+```
+
+## Assess balance
+
+No treatment and control groups to compare. But we can still compare the **relationships** between the adjusted variable (`vmdaPct`) and other covariates conditional on pair.
+
+```{r balnbp1, cache=TRUE }
+thecovs<-c("age","income.coded","education","x.years","sex",
+	   "csd.pop","vm.csd","community_area_km")
+balfmla<-reformulate(thecovs,response="vmdaPct")
+xb1<-xBalance(balfmla,strata=list(unstrat=NULL,nbp1=~nbp1), report="all",data=wrkdat)
+xb1$overall
+xb1$results[,c("z","p"),"nbp1"]
+```
+
+## Improve balance using penalties and dropping observations
+
+  For example, (a) require matches within Province, (b) do not compare people
+  in small towns to people in large towns, (c) do not compare people who drew
+  big maps to people who drew small maps, (d) drop the 8 least well matched
+  observations. (Choosing 8 arbitrarily to demonstrate.)
+
+```{r echo=FALSE}
+rescale01<-function(x){
+	(x-min(x,na.rm=TRUE))/(max(x,na.rm=TRUE)-min(x,na.rm=TRUE))
+}
+```
+
+```{r results="hide"}
+csdpopDist<-scalar.dist(wrkdat$csd.pop)
+dimnames(csdpopDist)<-list(row.names(wrkdat),row.names(wrkdat))
+
+## Since we have some missing values on community area, and we would like to
+## match people who are both missing, we will give it a very large value.
+wrkdat$commarea<-ifelse(is.na(wrkdat$community_area_km),
+			max(wrkdat$community_area_km,na.rm=TRUE)*10,
+			wrkdat$community_area_km)
+
+areaDist<-scalar.dist(log(wrkdat$commarea))
+dimnames(areaDist)<-list(row.names(wrkdat),row.names(wrkdat))
+
+csdpopDist01<-rescale01(csdpopDist)
+areaDist01<-rescale01(areaDist)
+
+summary(as.vector(csdpopDist01))
+summary(as.vector(areaDist01))
+summary(as.vector(vmdaDist))
+
+maxvmdaDist<-max(as.vector(vmdaDist))
+```
+
+## Improve balance using penalties and dropping observations
+
+```{r cache=TRUE}
+vmdaPen1<-vmdaDist+(maxvmdaDist*csdpopDist01)+(maxvmdaDist*areaDist01)
+vmdaDist[1:5,1:5]
+csdpopDist01[1:5,1:5]
+areaDist01[1:5,1:5]
+vmdaPen1[1:5,1:5]
+```
+
+## Dropping some observations
+
+```{r cache=TRUE}
+## now decide how many to drop
+vmdaPhPen<-make.phantoms(vmdaPen1,8,maxval = max(as.vector(vmdaPen1))*10)
+```
+
+## Improve balance using penalties and dropping observations
+
+```{r cache=TRUE}
+vmdaPhPenMat <- distancematrix(vmdaPhPen)
+nbp2match<-nonbimatch(vmdaPhPenMat)
+nbp2<-get.sets(nbp2match$matches,remove.unpaired=TRUE)
+wrkdat[names(nbp2),"nbp2"]<-nbp2
+nbp2vmdiffs<-tapply(wrkdat$vmdaPct,wrkdat$nbp2,function(x){ abs(diff(x)) })
+
+```
+
+## Assess this new match
+
+Is this match better or worse (in terms of balance? in terms of within-set distances?)
+
+```{r echo=FALSE,results="hide"}
+xb2<-xBalance(balfmla,strata=list(unstrat=NULL,nbp1=~nbp1,nbp2=~nbp2),
+	      report="all",data=wrkdat)
+xb2$overall[2:3,]
+xb2$results[,"p",c("nbp1","nbp2")]
+```
+
+## Assess this new match
+
+```{r echo=FALSE,out.width=".8\\textwidth"}
+nbmplot(wrkdat,yvar="vmdaPct",xvar="vm.community.norm2",strata="nbp2",points=FALSE,ylim=range(wrkdat$vmdaPct))
+```
+
+## Strength of the treatment
+
+The difference in "treatment" within sets varies --- and so we expect the size
+of the effect to vary. For example, consider the ratio of  objective context
+differences to  perceived context differences:
+
+```{r}
+summary(nbp1vmdiffs)
+summary(nbp1percdiffs)
+percDist <- scalar.dist(wrkdat$vm.community.norm2*100)
+da <- vmdaDist[1:5,1:5]
+perc <- percDist[1:5,1:5]
+
+da/perc
+```
+
+## Strength of the treatment
+
+To prevent many sets with no variation on "treatment" we could add a penalty
+for pairs that are too close on treatment: to maximize size of treatment (i.e.
+differences in perceptions) while minimizing differences on covariates. That
+is, we should be able to get more precision / power about the perceptions
+related differences if they are larger.
+
+For example: if difference in  perceptions is  small,  make the distance very large.
+
+
+```{r}
+da + 1000*(perc < 2)
+
+```
+
+## Assess hypotheses about effects
+
+Test the hypothesis of no relationship between perceptions
+`vm.community.norm2` and `social capital`.
+
+```{r eval=TRUE,echo=TRUE}
+## These are the same test in this case
+test1<-independence_test(social.capital01~vm.community.norm2|nbp1,data=wrkdat[!is.na(wrkdat$nbp1),])
+test2<-xBalance(vm.community.norm2~social.capital01,
+		strata=list(nbp1=~nbp1), data=wrkdat, report=c("adj.mean.diffs","chisquare.test","z.scores","p.values"))
+test1
+test2$overall
+```
+
+
+## Describe the differences within pairs
+
+Does the person who perceives more visible minorities in their community tend
+to be higher (or lower) in `social.capital` than the other person in the pair?
+
+```{r echo=FALSE}
+rank.pairs<-function (x, block) { ## Identify the low and high subj in each pair
+	unsplit(lapply(split(x, block), function(x) {
+			       rank(x)
+				 }), block)
+}
+```
+
+```{r}
+wrkdat$scRank<-with(wrkdat,rank.pairs(social.capital01,nbp1))
+wrkdat$vmCRank<-with(wrkdat,rank.pairs(vm.community.norm2,nbp1))
+wrkdat[order(wrkdat$nbp1),c("nbp1","social.capital01","scRank","vm.community.norm2","vmCRank")][1:6,]
+with(wrkdat,tapply(scRank,vmCRank,mean))
+```
+
+## Summarize mean differences within pairs
+
+If perceptions matters for social capital then we would expect pairs differing
+greatly in subjective context to display greater differences in social capital
+than pairs that differ a little.
+
+
+```{r echo=FALSE,results="hide"}
+align.by.block<-function (x, block, fn = mean, thenames=NULL) { ## By default, this rescales each observation to be the distance from the group mean.
+	newx<-unsplit(lapply(split(x, block), function(x) {
+				     x - fn(x)
+				 }), block)
+	if(!is.null(names)){ names(newx)<-thenames }
+	return(newx)
+}
+```
+
+```{r}
+wrkdat$scMD<-with(wrkdat,align.by.block(social.capital01,nbp1))
+wrkdat$vmcn2MD<-with(wrkdat,align.by.block(vm.community.norm2,nbp1))
+wrkdat[order(wrkdat$nbp1),c("social.capital01","scMD","vm.community.norm2","vmcn2MD","nbp1")][1:4,]
+## notice that aligning or pair-mean-centering the data preserves the within
+## set relationships
+## summary(tapply(wrkdat$scMD,wrkdat$nbp1,function(x){ abs(diff(x)) }))
+## summary(tapply(wrkdat$social.capital01,wrkdat$nbp1,function(x){ abs(diff(x)) }))
+lm1<-lm(scMD~vmcn2MD,data=wrkdat[!is.na(wrkdat$nbp2),])
+coefci(lm1,vcov=vcovHC(lm1,type="HC2"))
+coeftest(lm1,vcov.=vcovHC(lm1,type="HC2"))
+```
+## Summarize mean differences within pairs
+
+```{r warning=FALSE}
+lm2 <- lm_robust(scMD~vmcn2MD,data=wrkdat[!is.na(wrkdat$nbp2),])
+lm2
+lm3 <- lm_robust(social.capital01~vm.community.norm2,fixed_effects=~nbp2,data=wrkdat)
+lm3
+table(wrkdat$vmCRank,exclude=c())
+lm4 <- lm_robust(social.capital01~I(vmCRank-1),fixed_effects=~nbp2,data=wrkdat)
+lm4
+```
+
+## Summarize mean differences within pairs
+
+If perceptions matter for social capital above and beyond objective context
+then we would expect pairs differing greatly in subjective context to display
+greater differences in social capital than pairs that differ a little.
+
+```{r}
+coefci(lm1,vcov=vcovHC(lm1,type="HC2"))
+coeftest(lm1,vcov.=vcovHC(lm1,type="HC2"))
+lm2
+lm3
+pairdiffs <- wrkdat %>% filter(!is.na(vmCRank)&!is.na(social.capital01)&!is.na(nbp2)) %>%
+       group_by(vmCRank) %>% summarize(mnsc=mean(social.capital01))
+wrkdat[order(wrkdat$nbp2),c("social.capital01","scRank","scMD","vm.community.norm2","vmcn2MD","vmCRank","nbp2")][1:4,]
+lm4
+```
+
+## Summarize mean differences within pairs
+
+```{r}
+summary(wrkdat$vmcn2MD)
+summary(wrkdat$scMD)
+```
+
+Within matched pair, the person who perceives more visible minorities within set tends to report
+lower social capital than the person who perceives fewer visible minorities
+within set.
+
+\medskip
+
+The largest difference is about `r round(max(wrkdat$vmcn2MD,na.rm=TRUE),2)`. The model
+predicts that social capital would differ by about `r coef(lm1)[[2]]*.48` for such a difference. This is about
+`r coef(lm1)[[2]]*.48/sd(wrkdat$scMD,na.rm=TRUE)` of a standard deviation
+of the social capital scale. Or about
+`r coef(lm1)[[2]]*.48/abs(diff(range(wrkdat$scMD,na.rm=TRUE)))` of the range.
+
+
+## Summarize mean differences within pairs
+
+Here is a look at the within-pair differences in perceptions of visible minorities as well as social capital.
+
+```{r smoothplot, out.width=".7\\textwidth", echo=FALSE}
+with(wrkdat,scatter.smooth(vmcn2MD,scMD,span=.3,cex=.7,col="gray",pch=19,lpars=list(lwd=2)))
+abline(h=0,lwd=.5)
+```
+
+
+## Summary of matching without groups
+
+ - Workflow in general is the same as matching with groups (covariates,
+   distance matrices, optimization to select a stratification, assessment of
+   the stratification by comparison to an experiment)
+ - Estimation is more flexible --- could look simply at "higher versus lower"
+   within  pair, or could average over scores.
+
+
+
+## Another estimation approach
+
+\autocite{smith:1997} presents a multi-level modelling approach to taking
+matched sets into account. The weights implied here are a bit different from
+the weights that we've discussed before (although with pairs they might be more
+or less the same). What is the data model? What additional assumptions are involved
+here?
+
+```{r lmer, cache=FALSE, warning=FALSE}
+library(lme4)
+wrkdat$vmCbi<-ave(wrkdat$vm.community.norm2,wrkdat$nbp1)
+lmer1<-lmer(social.capital01~vm.community.norm2+vmCbi+(1|nbp1),data=wrkdat)
+confint(lmer1)["vm.community.norm2",]
+## Notice that we may have less information than we thought (some clustered of observation by DA).
+table(table(wrkdat$dauid))
+## So maybe:
+lmer2<-lmer(social.capital01~vm.community.norm2+vmCbi+(1|nbp1)+(1|dauid),data=wrkdat)
+confint(lmer2)["vm.community.norm2",]
+```
+
+## Other applications of non-bipartite matching?
+
+See: DOS Chapter 11.
+
+Also: this has a lot of applications in experimental design (see `blockTools` and \autocite{moore2012blocktools,moore2012multivariate}).
+
+
+## Anything Else?
+
+## References

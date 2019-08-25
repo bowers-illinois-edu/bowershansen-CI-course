@@ -1,0 +1,635 @@
+---
+title: Sensitivity Analysis II
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: ICPSR 2019 Session 2
+bibliography:
+ - BIB/refs.bib
+ - BIB/master.bib
+ - BIB/misc.bib
+ - BIB/causalinference.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    includes:
+        in_header:
+           - defs-all.sty
+---
+
+
+```{r echo=FALSE, include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+rm(list=ls())
+
+require(knitr)
+
+## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+			      if (before)
+				      return(options$size)
+})
+
+knit_hooks$set(plotdefault = function(before, options, envir) {
+		       if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
+})
+
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='\\scriptsize',
+  out.width='.7\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA,
+  mysize=TRUE,
+  plotdefault=TRUE)
+
+if(!file.exists('figs')) dir.create('figs')
+
+options(digits=4,
+	scipen=8,
+	width=132,
+	show.signif.stars=FALSE)
+```
+
+```{r eval=FALSE, include=FALSE, echo=FALSE}
+## Run this only once and then not again until we want a new version from github
+library('devtools')
+library('withr')
+with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
+```
+
+```{r echo=FALSE, warnings=FALSE}
+library(dplyr)
+library(ggplot2)
+library(RItools,lib.loc="./lib")
+library(optmatch)
+library(sandwich)
+library(lmtest)
+library(estimatr)
+library(nbpMatching)
+library(sensitivitymv)
+library(sensitivitymw)
+library(sensitivitymult)
+library(rbounds)
+library(experiment)
+library(coin)
+```
+
+## Today
+
+
+  1. Agenda: Sensitivity analysis II --- Hosman, Hansen, Holland ($H^3$) Style. Using what we observe to reason about what we do not observe.
+  2. Reading for this topic: DOS Chap 3, \textcite{hhh2010}, \textcite{rosenbaumtwo}.
+   3. Reading for tomorrow: on Experiments on Networks  \citep{bowersetal2013, bowers2016research,bowers2018models}.
+  3. Questions arising from the reading or assignments or life?
+
+# But first, review
+
+## What have we done so far?
+
+ 1. Creating matched designs or using instruments or discontinuities (or
+    randomization itself) to create interpretable comparisons and justifiable
+    statistical inferences about causal effects using measured covariates.
+ 2. Assessed the sensitivity of a matched design to unmeasured covariates,
+    $\bm{u}$, that have an effect on selection/treatment.
+
+\includegraphics[width=.7\textwidth]{xyzudiagram}
+
+
+
+# Selection bias based sensitivity analysis: using $\Gamma$
+
+```{r loaddat, echo=FALSE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat$id <- row.names(meddat)
+meddat<- mutate(meddat, HomRate03=(HomCount2003/Pop2003)*1000,
+                HomRate08=(HomCount2008/Pop2008)*1000,
+                HomRate0803=( HomRate08 - HomRate03))
+## mutate strips off row names
+row.names(meddat) <- meddat$id
+options(show.signif.stars=FALSE)
+```
+## Example design for the day
+
+Imagine, for example we had this matched design:
+
+```{r echo=FALSE, results="hide"}
+## Make one of the covariates have missing data to
+## demonstrate how to match on it
+set.seed(12345)
+whichmissing <- sample(1:45,5)
+meddat$nhPopD[whichmissing] <- NA
+covs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+covfmla1 <- reformulate(covs,response="nhTrt")
+datNoNA <- fill.NAs(covfmla1, data=meddat)
+stopifnot(all.equal(row.names(datNoNA),row.names(meddat)))
+datNoNA$id <- meddat$nh
+datNoNA$HomRate08 <- meddat$HomRate08
+covfmla2 <- update(covfmla1,.~.+nhPopD.NA)
+mhdist <- match_on(covfmla2,data=datNoNA, method="rank_mahalanobis")
+psmod <- arm::bayesglm(covfmla2,data=datNoNA,family=binomial(link="logit"))
+stopifnot(any(abs(coef(psmod))<10))
+psdist <- match_on(psmod,data=datNoNA)
+## Make a scalar distance
+tmp <- datNoNA$HomRate03
+names(tmp) <- rownames(datNoNA)
+absdist <- match_on(tmp, z = datNoNA$nhTrt,data=datNoNA)
+## Inspect the distance matrices to choose calipers if desired
+quantile(as.vector(psdist),seq(0,1,.1))
+quantile(as.vector(mhdist),seq(0,1,.1))
+quantile(as.vector(absdist),seq(0,1,.1))
+```
+
+
+```{r echo=FALSE}
+## Match and require no more than 1 treated per control
+fm <- fullmatch(psdist +  caliper(psdist,5) + caliper(absdist,3) + caliper(mhdist,55),
+		   min.controls=1,
+		   max.controls=Inf,
+		   data=meddat,tol=.0000001)
+summary(fm,min.controls=0,max.controls=Inf,data=meddat) #,propensity.model=psmod)
+```
+
+```{r echo=TRUE}
+meddat$fm <- fm
+xb1 <- balanceTest(update(covfmla2,.~.+strata(fm)),data=datNoNA,report="chisquare.test")
+xb1$overall[,]
+```
+
+
+```{r dosens, echo=FALSE,results="hide"}
+reshape_sensitivity<-function(y,z,fm){
+  ## A function to reformat fullmatches for use with sensmv/mw
+  ## y is the outcome
+  ## z is binary treatment indicator (1=assigned treatment)
+  ## fm is a factor variable indicating matched set membership
+  ## We assume that y,z, and fm have no missing data.
+  dat<-data.frame(y=y,z=z,fm=fm)[order(fm,z,decreasing=TRUE),]
+  numcols<-max(table(fm))
+  resplist<-lapply(split(y,fm),
+		   function(x){
+		     return(c(x,rep(NA, max(numcols-length(x),0))))
+		   })
+  respmat<-t(simplify2array(resplist))
+  return(respmat)
+}
+```
+
+## An example of sensitivity analysis with `senmv`.
+
+
+The workflow: First, reshape the matched design into the appropriate shape (one treated unit in column 1, controls in columns 2+).^[Notice that this software requires 1:K matches although K can vary.]
+
+```{r echo=FALSE}
+respmat<-with(meddat[matched(meddat$fm),],reshape_sensitivity(HomRate0803,nhTrt,fm))
+respmat[4:8,]
+```
+
+Here is the sensitivity level of this design (using the $t$-test statistic and $\alpha=.05$).
+
+
+```{r }
+findSensG<-function(g,a,method,...){
+  senmv(-respmat,gamma=g,method=method,...)$pval-a
+}
+res1_t<-uniroot(f=findSensG,method="t",lower=1,upper=6,a=.05)
+res1_t$root
+res1_h<-uniroot(f=findSensG,method="h",lower=1,upper=6,a=.05)
+res1_h$root
+
+senmv(-respmat,gamma=1,method="t")$pval
+senmv(-respmat,gamma=1,method="h")$pval
+```
+
+## Assessing sensitivity of tests of hypothesis of effects
+
+
+The sharp null hypothesis of no effects is $H_0: y_{1i}=y_{0i}$ or $H_0:
+y_{1i}=y_{0i} + \tau_i$ where $\tau_i = 0$. This  means that we can also
+hypothesize about other values of $\tau_i$, for example, the constant additive
+effects hypothesis: $$H_0: y_{1i}=y_{0i} + \tau$ where $\tau \ne 0$.
+
+```{r}
+res1_t_tau<-senmv(-respmat,method="t",gamma=1,tau=-.5)
+res1_t_tau$pval
+res1_h_tau<-senmv(-respmat,method="h",gamma=1,tau=-.5)
+res1_h_tau$pval
+
+res1_t_tau_g<-uniroot(f=findSensG,method="t",lower=1,upper=6,a=.05,tau=-.5)
+res1_t_tau_g$root
+res1_h_tau_g<-uniroot(f=findSensG,method="h",lower=1,upper=6,a=.05,tau=-.5)
+res1_h_tau_g$root
+
+```
+
+
+## Some other approaches
+
+If we have sets with multiple treated units, we can use `senfm`.
+
+```{r}
+library(sensitivityfull)
+res2_full <- senfm(-respmat,treated1=rep(TRUE,nrow(respmat)),gamma=1)
+res2_full$pval
+
+res2_full_g2 <- senfm(-respmat,treated1=rep(TRUE,nrow(respmat)),gamma=res1_h$root)
+res2_full_g2$pval
+```
+
+ - https://cran.r-project.org/web/packages/treatSens/index.html -- for parametric
+models
+ - https://cran.r-project.org/web/packages/sensitivityPStrat/index.html
+
+
+
+## A more general, computational, approach
+
+Show the approach that directly simulates the effects of different $\Gamma$s.
+(Using a difference of means test statistic and non-asymptotic $p$-values).
+
+First setup:
+
+```{r echo=FALSE}
+source("general_sens_analysis.R")
+```
+
+```{r echo=FALSE}
+unit_index <- 1:8
+block_index <- c(1, 1, 1, 2, 2, 2, 3, 3)
+total_n = length(unit_index)
+hyp_z <- c(1, 0, 0, 0, 1, 0, 1, 0)
+y = c(8, 11, 21, 27, 27, 33,  6, 34)
+thedat <- data.frame(unit_index,block_index,hyp_z,y)
+total_n_t <- sum(hyp_z)
+pis <- c(rep(x = 0.5,
+	     times = length(hyp_z)))
+```
+
+```{r}
+thedat
+thedat$zF <- factor(thedat$hyp_z)
+thedat$bF <- factor(thedat$block_index)
+p1exact <- coin::oneway_test(y~zF|bF,data=thedat,distribution=exact(),alternative="greater")
+pvalue(p1exact)
+
+p1approx <- coin::oneway_test(y~zF|bF,data=thedat,distribution=approximate(nresample=1000),alternative="greater")
+pvalue(p1approx)
+
+sensmat <-  reshape_sensitivity(y = thedat$y, z=thedat$hyp_z, fm = thedat$block_index)
+sens1g1 <- senmv(-sensmat,gamma=1,method="t")
+sens1g1$pval
+sens1g2 <- senmv(-sensmat,gamma=2,method="t")
+sens1g2$pval
+
+```
+
+
+## A more general, computational, approach
+
+Then assess $\Gamma=2$.
+
+```{r}
+resG2 <- gen_Omega_and_probs(.total_n = total_n,
+			   .total_n_t = total_n_t,
+			   .y = y,
+			   .z = hyp_z,
+			   .block = NULL,
+			   .probs = pis,
+			   .gamma = 2,
+			   .p_value = "two.sided",
+			   .exact = TRUE,
+			   .seed = 1:5,
+			   .n_sims = 1000)
+resG2
+```
+
+
+## A more general, computational, approach
+
+Show the approach that directly simulates the effects of different $\Gamma$s.
+(Using a difference of means test statistic and non-asymptotic $p$-values).
+
+
+```{r echo=TRUE}
+someG <- seq(1,10,1)
+res <- sapply(someG,function(G){ gen_Omega_and_probs(.total_n = total_n,
+			   .total_n_t = total_n_t,
+			   .y = y,
+			   .z = hyp_z,
+			   .block = NULL,
+			   .probs = pis,
+			   .gamma = G,
+			   .p_value = "two.sided",
+			   .exact = TRUE,
+			   .seed = 1:5,
+			   .n_sims = 1000) })
+
+res <- rbind(someG,res)
+```
+
+```{r}
+res
+```
+
+
+
+# $H^{3}$ sensitivity analysis: Selection ($\teeW$) and Outcome Effects ($\pcor$)
+
+
+## Background: omitted variables
+
+  Almost all findings from observational studies could in principle be
+  explained by an unmeasured variable. But how strong a confounder
+  would be needed?  Rosenbaum (1987,\ldots) quantifies confounding in
+  terms of propensity scores.
+
+  \begin{center}
+  \igrphx[height=.6\textheight]{rb2010p77}
+  \end{center}
+
+  An analytically easier approach uses regression to quantify confounding.
+
+## Background: Causal inference via covariance adjustment
+
+
+When we fit a model $Z \in \{0,1\}$ and an $n \times p$ matrix of covariates $\mathbf{x}$ where $p < \sqrt{n}$,
+
+$$ Y = a + Zb +  \mathbf{x} c + e, $$
+the estimated $b$ merits interpretation as the causal effect of treatment $Z$ if
+
+ 1. $(Y_{t}, Y_{c}) \perp Z | \bm{x}$
+ 2. The linear relationship between $Z$, $\mathbf{x}$, and $Y$, well-enough describes the finite population of interest.
+
+The first of these assumptions is usually untestable, and more central.
+
+## Sensitivity analysis for the linear model
+
+Considering an omitted variable:
+
+We fit
+$$ Y = a + Zb +  \mathbf{X} c + e, $$
+but would have liked to have fit
+$$ Y = \alpha + Z\beta +  \mathbf{x} \gamma + W\zeta + e, $$
+
+ 1. How different are $b$ and $\beta$?
+ 2. How different are the confidence intervals for $b$ and $\beta$?
+
+
+## Sensitivity analysis for the linear model: "speculation parameters"
+
+We can quantify the relationship of $b$ to $\beta$, and of $\mathrm{se}(b)$ to
+$\mathrm{se}(\beta)$, in terms of 2 "speculation parameters":
+
+ 1. $t_{w}$, the $t$-statistic associated with $W$'s coefficient in the (OLS) regression of $Z$ on $W$ and $\mathbf{X}$ (the selection effect, the effect of $W$ on treatment)
+ 2. $R^2_{y\cdot z\mathbf{x} w}$, the
+coefficient of multiple determination of the regression of $Y$ on $Z$,
+$\mathbf{X}$, and $W$. (the prognostic effect of $W$, the relationship with
+the outcome).
+
+More specifically, we can bound the upper and lower limits of conventional confidence intervals in terms of $t_{w}$ alone, or (often more sharply) in terms of $t_{w}$ and $R^2_{y\cdot z\mathbf{x} w}$.
+
+## $W$-insensitive confidence bounds as a function of $t_{w}$
+
+  \begin{prop}[Hosman, Hansen \& Holland, 2010]
+Let $T>0$.  If $|t_{w}| \leq T$ then
+$$
+\hat{\beta}\pm q\widehat{\mathrm{se}} (\hat{\beta}) \subseteq
+\hat{b} \pm \left( \sqrt{T^2 + q^{2} \cdot \frac{T^2 +
+n-r(\mathbf{X})-2}{n-r(\mathbf{X})-3} } \right) \widehat{\mathrm{se}}(\hat{b}).
+$$
+\end{prop}
+
+
+## The relationship between $\hat{b}$ and $\hat{\beta}$ as a function of $\teeW$ and $\pcor$
+
+@hhh2010 show that:
+
+$$ \hat{b}-\hat{\beta}=SE(\hat{b})\teeW \pcor $$
+
+This allows them to represent confidence intervals for different speculative values of $\teeW$ and $\pcor$.
+
+\medskip
+
+Note that $\teeW > 0$ but $0 \le \pcor \ge 1$, so selection bias will be a much bigger deal than prognostic power.
+
+
+
+## The intuition behind the HHH method:
+
+Use observed covariates to represent the possible behavior of unobserved covariates.
+
+ - What are some reasonable values for $\teeW$? (Find out by regressing
+   an observed covariate $x$ on treatment $Z$ according to the design (i.e.
+   with fixed effects for matched sets created without $x$. Record the $t$ statistic from this
+   regression.)
+ - What are some reasonable values for $\pcor$? (Find out by regressing
+   $Y$ on $Z$ (according to the design) **with and without $x$**. Compare the
+   $R^2$ for the two models to get $\pcor$. (Without $x$ means that the
+   propensity score and matching happen without $x$).
+ - Given a $\teeW$, $\pcor$, and $\widehat{SE}(\hat{b})$, we can calculate the
+   bounds on the confidence interval that we would seen if $W$ had been
+   included.
+
+## Trying the HHH Method
+
+Load the functions:
+
+```{r defspecpar,eval=TRUE,echo=TRUE}
+source(url("http://jakebowers.org/ICPSR/hhhsensfns.R"))
+```
+
+
+```{r usespecpars,echo=FALSE,cache=TRUE}
+myfmmaker<-function(newdat,newcovs,keepcov,treatment){
+	## newdat is a new data frame
+	## newcovs is a vector of covariate names
+	## treatment is the name of the treatment variable
+	## keepcov is a vector that we never drop from the absolute scalar distance but can drop in other distance matrices
+
+	balfmla<-reformulate(newcovs,response=treatment)
+
+	## Scalar distance on baseline outcome
+	tmp <- keepcov
+	names(tmp) <- rownames(newdat)
+	absdist <- match_on(tmp, z = newdat[,treatment])
+
+	## Mh Distance
+	## mhd<-match_on(balfmla,data=meddat)
+
+	## PS Distance
+	 bayesglm1<-arm::bayesglm(balfmla,data=newdat,family=binomial)
+	 ps<-predict(bayesglm1)
+	 names(ps)<-row.names(newdat)
+	 psd<-match_on(ps,z=newdat[,treatment])
+
+	 thefm <- fullmatch(psdist +  caliper(psdist,3) + caliper(absdist,2),
+			    min.controls=1,
+			    max.controls=Inf,
+			    data=newdat,tol=.0000001)
+
+	 return(thefm)
+}
+```
+
+```{r}
+adjcovs<-all.vars(covfmla2)[-c(1,22)] ## don't need the NA indicator
+datNoNA$HomRate0803 <- meddat$HomRate0803
+datNoNA$nhClass <- factor(meddat$nhClass)
+
+## Try it for one continuous covariate
+specpars.ps(dat=datNoNA,covs=adjcovs,dropcov="nhPopD",
+	    type=1, outcome="HomRate0803", treatment="nhTrt",
+	    fmmaker=myfmmaker,keepcov=datNoNA$HomRate03)
+
+## Try it for a categorical covariate
+specpars.ps(dat=datNoNA,covs=adjcovs,dropcov="nhClass",
+	    type=2, outcome="HomRate0803", treatment="nhTrt",
+	    fmmaker=myfmmaker,keepcov=datNoNA$HomRate03)
+```
+
+## Trying the HHH Method
+
+Do it for all of the covariates that we worry about (we will present these
+results in two slides).
+
+```{r}
+specps.res<-sapply(adjcovs,function(thecov){
+			   message(thecov) ## just to see what it is doing
+			   specpars.ps(dat=datNoNA,covs=adjcovs,dropcov=thecov,
+				       type=is.factor(datNoNA[,thecov])+1,
+				       outcome="HomRate0803", treatment="nhTrt",
+				       fmmaker=myfmmaker,keepcov=datNoNA$HomRate03)
+	    })
+
+rownames(specps.res) = c("r.par", "t.w", "b", "se.b", "df", "add.b", "add.se.b")
+
+## head(specps.res)
+```
+
+```{r echo=FALSE}
+tmp<-round(specps.res[,"nhPopD"],4)
+```
+
+## Trying the HHH Method
+
+
+Consider the results for population density. The elements of the
+table are: $\pcor$, $\teeW$, the treatment effect (i.e. coef on nhTrt) when
+this variable is \emph{not} included in the propensity model/matching; the
+finite-sample standard error on this coef; the df for that
+regression (mainly relevant for factor variables); and the coef for nhTrt
+when this term is included in the matching/fixed-effects and corresponding
+standard error.
+
+```{r}
+round(specps.res[,"nhPopD"],4)
+```
+
+The most important pieces are the two sensitivity parameters. We can see that
+we decrease "unexplained" variation in 2008 Homicide Rate by about
+`r tmp["r.par"]` when we include this term versus when we do not include
+this term. And we see that this term strongly predicts whether the
+neighborhood received the Metrocable intervention ($t$-statistic of about
+`r tmp["t.w"]`).
+
+
+
+## Looking at the sensitivity parameters
+
+What does this plot suggest about the potential influence of unobserved
+covariates similar to those that we have used so  far?
+
+
+```{r echo=FALSE,eval=TRUE,tidy=FALSE,out.width=".8\\textwidth"}
+plot(specps.res["r.par",],abs(specps.res["t.w",]))
+## this next command allows you to click on points to get a label
+## I think a double click or an escape stops the identification process
+#identify(specps.res["r.par",],abs(specps.res["t.w",]),labels=colnames(specps.res),cex=.6)
+thevars <- c("nhPopD","nhClass","nhAboveHS","HomRate03","nhSepDiv","nhTP03")
+text(specps.res["r.par",thevars],abs(specps.res["t.w",thevars]),
+	 labels=thevars,cex=.8,pos=3)
+```
+
+## Sensitivity Intervals
+
+```{r echo=FALSE,results="hide"}
+lm1<-lm(HomRate0803~nhTrt+fm,data=datNoNA)
+theci<-coefci(lm1,level=.95,parm="nhTrt",thevcov=vcovHC(lm1,type="HC2"))
+theci
+```
+
+What might be the effect of an excluded variable like $x$ on the confidence
+intervals calculated on the ATE? The CI assuming no confounding is [`r theci[1]`,`r theci[2]`] CI width: `r theci[2] - theci[1]`.
+
+```{r echo=FALSE}
+adf<-mean(specps.res["df",])
+t95<-qt(.975,df=adf) ## Skipping their bootstrapping step.
+sensintervals<-sapply(colnames(specps.res),function(nm){
+			      c(abs(specps.res["t.w",nm]),specps.res["r.par",nm],
+				make.ci(datNoNA,specps.res,nm,t95,specps.res["r.par",nm]))
+	})
+
+colnames(sensintervals)<-colnames(specps.res)
+rownames(sensintervals)<-c("t.w","r.par","l.bound","u.bound")
+
+## make the table long rather than wide
+theintervals<-t(round(sensintervals,4))
+theintervals <- cbind(theintervals,ciwidth=theintervals[,"u.bound"] -
+		      theintervals[,"l.bound"])
+round(theintervals[order(theintervals[,"t.w"],theintervals[,"r.par"],decreasing=TRUE),],2)
+```
+
+## Sensitivity Intervals
+
+A graphical version of that table:
+
+```{r plotcis,fig.width=8,fig.height=8,out.width='.7\\textwidth',fig.keep='last',eval=TRUE,echo=FALSE}
+par(mfrow=c(1,1),mar=c(3,6,0,0),mgp=c(1.5,.5,0),oma=c(0,2,0,0))
+plot(range(theintervals[,3:4]),c(1,nrow(theintervals)),type="n",axes=FALSE,
+     ylab="",
+     xlab="estimated ATE 95% CI")
+segments(theintervals[order(theintervals[,"t.w"]),'l.bound'],1:nrow(theintervals),
+	 theintervals[order(theintervals[,"t.w"]),'u.bound'],1:nrow(theintervals))
+axis(1)
+segments(theci[1,1],nrow(theintervals)/3,
+	 theci[1,2],nrow(theintervals)/3,
+	 lwd=3)
+text(theci[1,1]-.2,nrow(theintervals)/3,"Est CI")
+axis(2,at=1:nrow(theintervals),labels=row.names(theintervals),las=2)
+mtext(side=2, "Confound Type",outer=TRUE)
+abline(v=0)
+```
+
+## Summary about Sensitivity Analysis
+
+ - Observational study design methods help us make the case that we have
+   adequately adjusted for observed covariates, $\mathbf{x}$. We can compare
+   our designs to analogous randomized designs as a check for the adequacy of
+   our adjustment for $\mathbf{x}$ (and we can also inspect the designs using
+   our substantive knowledge).
+ - Adjusting for $\mathbf{x}$ is not the same as adjusting for $\mathbf{u}$
+   (which  we often collapse into one scalar $u$). 
+ - Sensitivity analysis formalizes our reasoning about the potential effects of
+   $u$ on our results using models of the relationship between $u$ and $Z$
+   and/or $u$ and $y$.
+
+
+## References

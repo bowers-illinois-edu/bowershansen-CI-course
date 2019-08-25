@@ -1,0 +1,370 @@
+---
+title: "Day 08: Testing Causal Hypotheses with Instrumental Variables"
+author:
+- name: \href{mailto:t.leavitt718@gmail.com}{Thomas Leavitt}
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  pdf_document:
+    citation_package: natbib
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    highlight: tango
+    keep_tex: true
+    latex_engine: xelatex
+    toc: no
+    toc_depth: 1
+    template: svm-latex-ms.tex
+    includes:
+      in_header: mystyle.sty
+  html_document:
+    fig_caption: yes
+    force_captions: yes
+    highlight: tango
+    number_sections: yes
+    theme: cerulean
+fontsize: 12pt
+classoption: leqno
+geometry: margin = 1cm
+bibliography: Bibliography.bib
+biblio-style: apsr
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(magrittr)
+library(ggplot2)
+library(knitr)
+
+```
+
+# Review: Estimation
+
+Yesterday we showed that, in addition to the standard SUTVA assumption, if three assumptions are true --- (1) exlcusion restriction, (2) no Defiers and (3) at least one Complier --- then the mean causal effect of the instrument, $\bar{\tau}$, divided by the proportion of Compliers, $\pi_C$, is equal to the mean causal effect among Compliers, $\delta_C$. That is,
+\begin{equation}
+\frac{\bar{\tau}}{\pi_C} = \delta_C
+\end{equation}
+
+When the instrument, $\mathbf{Z}$, is randomly assigned, the Difference-in-Means estimator, $\hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{Y}\right)$, unbiasedly estimates $\bar{\tau}$ and $\hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{D}\right)$ unbiasedly estimates $\pi_C$.
+
+The ratio of these two estimators, $\cfrac{\hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{Y}\right)}{\hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{D}\right)}$, is a \textit{consistent}, but \textit{not} necessarily \textit{unbiased} estimator of $\frac{\bar{\tau}}{\pi_C} = \delta_C$.
+
+What if we wanted not to estimate the mean causal effect among compliers, but to test hypotheses about causal effects among Compliers? 
+
+# Hypothesis Testing
+
+## A simple example
+
+```{r}
+
+rm(list = ls())
+n <- 8
+n_1 <- 4
+
+set.seed(1:5)
+d_c <- rbinom(n = n, size = 1, prob = 0.3)
+d_t <- rep(x = NA, times = length(d_c))
+## HERE WE SATISFY THE AT LEAST ONE COMPLIER (NON-WEAK INSTRUMENT) ASSUMPTION
+d_t[which(d_c != 1)] <- rbinom(n = length(which(d_c != 1)), size = 1, prob = 0.6)
+## HERE WE SATISFY THE NO DEFIERS (MONOTONICITY) ASSUMPTION
+d_t[which(d_c == 1)] <- rep(x = 1, times = length(which(d_c == 1)))
+cbind(d_c, d_t)
+prop_comp <- length(which(d_c == 0 & d_t == 1)) / n
+prop_def <- length(which(d_c == 1 & d_t == 0)) / n
+prop_at <- length(which(d_c == 1 & d_t == 1)) / n
+prop_nt <- length(which(d_c == 0 & d_t == 0)) / n
+
+## HERE WE SATISFY THE EXCLUSION RESTRICTION ASSUMPTION BY LETTING
+## y_c = y_t FOR ALL ALWAYS-TAKERS AND NEVER-TAKERS AND
+## WE ALSO SATISFY THE SUTVA ASSUMPTION BY LETTING ALL UNITS HAVE
+## ONLY TWO POT OUTS
+set.seed(1:5)
+y_c <- round(x = rnorm(n = 8, mean = 20, sd = 10), digits = 0)
+y_t_null_false <- rep(x = NA, times = n)
+y_t_null_false[which(d_c == 0 & d_t == 1)] <- y_c[which(d_c == 0 & d_t == 1)] +
+  round(x = rnorm(n = length(which(d_c == 0 & d_t == 1)),
+                  mean = 10,
+                  sd = 4),
+        digits = 0)
+y_t_null_false[!(d_c == 0 & d_t == 1)] <- y_c[!(d_c == 0 & d_t == 1)]
+cbind(y_c, y_t_null_false)
+
+true_data <- data.frame(y_t = y_t_null_false,
+                        y_c = y_c,
+                        d_t = d_t,
+                        d_c = d_c,
+                        tau = y_t_null_false - y_c)
+
+true_data %<>% mutate(type = NA,
+                      type = ifelse(test = d_c == 0 & d_t == 0,
+                                    yes = "Never Taker",
+                                    no = type),
+                      type = ifelse(test = d_c == 0 & d_t == 1,
+                                    yes = "Complier",
+                                    no = type),
+                      type = ifelse(test = d_c == 1 & d_t == 0,
+                                    yes = "Defier",
+                                    no = type),
+                      type = ifelse(test = d_c == 1 & d_t == 1,
+                                    yes = "Always Taker",
+                                    no = type))
+```
+
+```{r}
+
+kable(true_data)
+
+```
+
+
+```{r}
+
+Omega <- apply(X = combn(x = 1:n,
+                         m = n_1),
+               MARGIN = 2,
+               FUN = function(x) { as.integer(1:n %in% x) })
+
+assign_vec_probs <- rep(x = (1/70), times = ncol(Omega))
+## Omega contains all possible assignments, so the probs should add up to 1
+stopifnot(sum(assign_vec_probs)==1) 
+stopifnot(length(assign_vec_probs)==ncol(Omega) )
+
+set.seed(1:5)
+obs_z <- Omega[,sample(x = 1:ncol(Omega), size = 1)]
+
+#obs_ys <- apply(X = Omega,
+## MARGIN = 2,
+## FUN = function(x) { x * y_t_null_false + (1 - x) * y_c })
+
+#obs_ds <- apply(X = Omega,
+##MARGIN = 2,
+##FUN = function(x) { x * d_t + (1 - x) * d_c }) 
+
+obs_y <- obs_z * true_data$y_t + (1 - obs_z) * true_data$y_c
+obs_d <- obs_z * true_data$d_t + (1 - obs_z) * true_data$d_c
+
+obs_diff_means <- as.numeric((t(obs_z) %*% obs_y) / (t(obs_z) %*% obs_z) -
+                               (t(1 - obs_z) %*% obs_y) / (t(1 - obs_z) %*% (1 - obs_z)))
+
+coef(lm(formula = obs_y ~ obs_z))[["obs_z"]]
+
+```
+
+Our observed data is as follows:
+
+\begin{table}[H]
+\centering
+    \begin{tabular}{l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ \\ \hline
+    1 & 14 & ? & 14 & 0 & ? & 0 \\
+    0 & 22 & 22 & ? & 0 & 0 & ? \\
+    1 & 21 & ? & 21 & 1 & ? & 1 \\
+    1 & 36 & ? & 36 & 1 & ? & 1 \\
+    0 & 23 & 23 & ? & 0 & 0 & ? \\
+    0 & 12 & 12 & ? & 1 & 1 & ? \\
+    0 & 25 & 25 & ? & 1 & 1 & ? \\
+    1 & 27 & ?  & 27 & 0 & ? & 0\\
+    \end{tabular}
+    \caption{Observed Experimental Data}
+\end{table}    
+
+The observed Difference-in-Means test statistic is $16.75$.
+
+The null hypothesis of no complier causal effect states that the individual causal effect of $\mathbf{Z}$ on $\mathbf{Y}$ is $0$ among units who are Compliers.
+
+Along with the exclusion restriction (i.e., that the individual causal effect is $0$ for Always Takers and Never Takers) and the assumption of no Defiers, we can "fill in" missing potential outcomes according to the null hypothesis of no complier causal effect as follows:
+\begin{align*}
+Y_{c,0,i} & = 
+\begin{cases}
+Y_i - D_i \tau_i & \text{if } D_i = 1 \\
+Y_i + \left(1 - D_i\right) \tau_i & \text{if } D_i = 0
+\end{cases} \\
+Y_{t,0,i} & = 
+\begin{cases}
+Y_i - D_i \tau_i & \text{if } D_i = 1 \\
+Y_i + \left(1 - D_i\right) \tau_i & \text{if } D_i = 0,
+\end{cases}
+\end{align*}
+where $\tau_i = 0$ for all $i$.
+
+
+```{r}
+
+## tau = 0 under exclusion restriction and no complier causal effect
+tau <- 0
+
+null_y_c <- obs_y - obs_d * tau
+null_y_t <- obs_y + (1 - obs_d) * tau
+
+```
+
+According to the null hypothesis of no effect among compliers and the exclusion restriction, the full schedule of potential outcomes under the null hypothesis is as follows:
+
+\begin{table}[H]
+\centering
+    \begin{tabular}{l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ \\ \hline
+    1 & 14 & 14 & 14 & 0 & ? & 0 \\
+    0 & 22 & 22 & 22 & 0 & 0 & ? \\
+    1 & 21 & 21 & 21 & 1 & ? & 1 \\
+    1 & 36 & 36 & 36 & 1 & ? & 1 \\
+    0 & 23 & 23 & 23 & 0 & 0 & ? \\
+    0 & 12 & 12 & 12 & 1 & 1 & ? \\
+    0 & 25 & 25 & 25 & 1 & 1 & ? \\
+    1 & 27 & 27  & 27 & 0 & ? & 0\\
+    \end{tabular}
+    \caption{Potential outcomes under the exclusion restriction and null hypothesis of no complier causal effect}
+    \label{tab: pot outs under null}
+\end{table}    
+
+The null potential outcomes are a function of $\mathbf{D}$. But once we have constructed these potential outcomes according to the null hypothesis, we summarize the data under the null via a test statistic that is a function of $\mathbf{Z}$ and $\mathbf{Y}$, $t\left(\mathbf{Z}, \mathbf{Y}\right)$. For this example, we will stick with the Difference-in-Means test statistic.
+
+We can now exactly enumerate all possible realizations of data if Table \ref{tab: pot outs under null} were the true state of the world.
+
+```{r}
+
+obs_null_pot_outs <- sapply(X = 1:ncol(Omega),
+                            FUN = function(x) { Omega[,x] * null_y_t + (1 - Omega[,x]) * null_y_c })
+
+null_test_stat_dist <- sapply(X = 1:ncol(Omega),
+                              FUN = function(x) { mean(obs_null_pot_outs[,x][which(Omega[,x] == 1)]) -
+                                  mean(obs_null_pot_outs[,x][which(Omega[,x] == 0)])})
+
+null_test_stats_data <- data.frame(null_test_stat = null_test_stat_dist,
+                                   prob = assign_vec_probs)
+
+```
+
+```{r null_dist_plot, fig.cap = 'Null Distribution of Test Statistic'}
+
+ggplot(data = null_test_stats_data,
+                         mapping = aes(x = null_test_stat,
+                                       y = prob)) +
+  geom_bar(stat = "identity") +
+  geom_vline(xintercept = obs_diff_means,
+             color = "red",
+             linetype = "dashed") +
+  xlab(label = "Null Test Statistics") +
+  ylab(label = "Probability")
+
+```
+
+\newpage
+How would we calculate a p-value in \texttt{[R]}? Recall the expression for an upper p-value from Day 3:
+
+\begin{equation}
+\Pr\left(t\left(\mathbf{z}, \mathbf{y}_0 \right) \geq T \right) = \sum \limits_{\mathbf{z} \in \Omega} \mathbbm{1}\left[t\left(\mathbf{z}, \mathbf{y}_0 \right) \geq T\right] \Pr\left(\mathbf{Z} = \mathbf{z}\right),
+\end{equation}
+where $\mathbbm{1}\left[\cdot\right]$ is an indicator function that is $1$ if the argument to the function is true and $0$ if it is false, $t\left(\mathbf{z}, \mathbf{y}_0 \right)$ is the null test statistic and $T$ is the observed test statistic.
+
+```{r}
+
+upper_p_value <- sum((null_test_stat_dist >= obs_diff_means) * assign_vec_probs)
+
+```
+\newcommand{\V}{\mathbb{V}}
+We could also use a Normal approximation p-value, where the upper p-value, $p_u$, is:
+\begin{equation}
+p_u =  1 - \Phi\left(\frac{t\left(\mathbf{z}, \mathbf{y}_0 \right) - \E\left[t\left(\mathbf{z}, \mathbf{y}_0 \right)\right]}{\sqrt{\V\left[t\left(\mathbf{z}, \mathbf{y}_0 \right)\right]}}\right).
+\end{equation}
+
+```{r}
+
+source("true_diff_means_var_fun.R")
+
+var_null_test_stat <- true_diff_means_var(.n = n,
+                                          .n_1 = n_1,
+                                          .y_c = null_y_c,
+                                          .y_t = null_y_t)$var
+
+z_score <- (obs_diff_means - 0)/sqrt(var_null_test_stat)
+
+1 - pnorm(q = z_score)
+
+```
+
+What if we were to construct potential outcomes under a null with values of $\tau_i$ that were not all equal to 0? Consider these two possible states of the world:
+
+\begin{table}[H]
+\centering
+    \begin{tabular}{l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_{c0}}$ & $\mathbf{y_{t0}}$ & $\mathbf{d}$ & $\mathbf{d_{c0}}$ & $\mathbf{d_{t0}}$ \\ \hline
+    1 & 14 & 14 & 14 & 0 & 0 & 0 \\
+    0 & 22 & 22 & 27 & 0 & 0 & 0 \\
+    1 & 21 & 16 & 21 & 1 & 1 & 1 \\
+    1 & 36 & 31 & 36 & 1 & 1 & 1 \\
+    0 & 23 & 23 & 28 & 0 & 0 & 0 \\
+    0 & 12 & 12 & 17 & 1 & 1 & 1 \\
+    0 & 25 & 25 & 25 & 1 & 1 & 1 \\
+    1 & 27 & 27  & 27 & 0 & 0 & 0\\
+    \end{tabular}
+    \hfill 
+    \begin{tabular}{l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_{c0}}$ & $\mathbf{y_{t0}}$ & $\mathbf{d}$ & $\mathbf{d_{c0}}$ & $\mathbf{d_{t0}}$ \\ \hline
+    1 & 14 & 14 & 14 & 0 & 0 & 0 \\
+    0 & 22 & 22 & 27 & 0 & 0 & 1 \\
+    1 & 21 & 16 & 21 & 1 & 0 & 1 \\
+    1 & 36 & 31 & 36 & 1 & 0 & 1 \\
+    0 & 23 & 23 & 28 & 0 & 0 & 1 \\
+    0 & 12 & 12 & 17 & 1 & 1 & 1 \\
+    0 & 25 & 25 & 25 & 1 & 1 & 1 \\
+    1 & 27 & 27  & 27 & 0 & 0 & 0\\
+    \end{tabular}
+\end{table}
+
+Both hypothetical states of the world yield observationally equivalent null distributions of the test statistic, $t\left(\mathbf{Z}, \mathbf{Y}_0\right)$.
+
+```{r}
+
+df_a <- data.frame(y_c0 = c(14, 27, 21, 36, 28, 17, 25, 27),
+                   y_t0 = c(14, 27, 21, 36, 28, 17, 25, 27),
+                   d_c0 = c(0, 0, 1, 1, 0, 1, 1, 0),
+                   d_t0 = c(0, 0, 1, 1, 0, 1, 1, 0))
+
+df_b <- data.frame(y_c0 = c(14, 27, 21, 36, 28, 17, 25, 27),
+                   y_t0 = c(14, 27, 21, 36, 28, 17, 25, 27),
+                   d_c0 = c(0, 0, 0, 0, 0, 1, 1, 1),
+                   d_t0 = c(0, 1, 1, 1, 1, 1, 1, 0))
+
+obs_null_pot_outs_a <- sapply(X = 1:ncol(Omega),
+                              FUN = function(x) { Omega[,x] * df_a$y_t0 + (1 - Omega[,x]) * df_a$y_c0 })
+
+null_test_stat_dist_a <- sapply(X = 1:ncol(Omega),
+                                FUN = function(x) { mean(obs_null_pot_outs_a[,x][which(Omega[,x] == 1)]) -
+                                    mean(obs_null_pot_outs_a[,x][which(Omega[,x] == 0)])})
+
+obs_null_pot_outs_b <- sapply(X = 1:ncol(Omega),
+                              FUN = function(x) { Omega[,x] * df_b$y_t0 + (1 - Omega[,x]) * df_b$y_c0 })
+
+null_test_stat_dist_b <- sapply(X = 1:ncol(Omega),
+                                FUN = function(x) { mean(obs_null_pot_outs_b[,x][which(Omega[,x] == 1)]) -
+                                    mean(obs_null_pot_outs_b[,x][which(Omega[,x] == 0)])})
+
+cbind(null_test_stat_dist_a, null_test_stat_dist_b)
+
+```
+
+# Applied Example
+
+Let's estimate the average causal effect among Compliers and also test the null hypothesis that the causal effect is $0$ among all compliers.
+
+```{r}
+
+adam_smith_data <- data.frame(call = c(rep(x = 0, times = 1325), rep(x = 1, times = 1325)),
+                              contact = c(rep(x = 0, times = 1325 + 375), rep(x = 1, times = 950)),
+                              vote = c(rep(x = 0, times = 1010), rep(x = 1, times = 315),
+                                       rep(x = 0, times = 293), rep(x = 1, times = 82),
+                                       rep(x = 1, times = 310), rep(x = 0, times = 640)))
+
+
+
+```
+
+
+
+
+
+

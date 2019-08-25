@@ -1,0 +1,984 @@
+%\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
+\documentclass[11pt,leqno]{article}\usepackage[]{graphicx}\usepackage[]{color}
+% maxwidth is the original width if it is less than linewidth
+% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb}          % AMS Stuff
+\usepackage[linewidth=1pt]{mdframed}
+\usepackage{mdframed}
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{afterpage}% http://ctan.org/pkg/afterpage
+\usepackage[T1]{fontenc}
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfig}
+\usepackage{titling}            % modify maketitle in latex
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage{verbatim}
+\usepackage{geometry}
+\usepackage{bigfoot}
+\usepackage[format=hang,
+            font={small},
+            labelfont=bf,
+            textfont=rm]{caption}
+
+\geometry{verbose,margin=2cm,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=page,
+            colorlinks=true,
+            hyperfootnotes=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1},
+            citecolor=blue!70!black,
+            linkcolor=red!70!black,
+            urlcolor=green!70!black]{hyperref}
+\usepackage{hypernat}
+
+\usepackage{multirow}
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+
+\parskip=12pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+% align all math after the command
+\newcommand\given[1][]{\:#1\vert\:}
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{12pt} %Aboveskip
+{12pt} %Below skip
+{\itshape} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+% \DeclareMathOperator{\Pr}{\rm{Pr}}
+
+% COLORS FOR GRAPHICS (3-class Set1)
+\definecolor{Blue}{RGB}{55,126,184}
+\definecolor{Red}{RGB}{228,26,28}
+\definecolor{Green}{RGB}{77,175,74}
+
+% COLORS FOR EQUATIONS (3-class Dark2)
+\definecolor{eqgreen}{RGB}{27,158,119}
+\definecolor{eqblue}{RGB}{117,112,179}
+\definecolor{eqred}{RGB}{217,95,2}
+
+
+\title{Regression Discontinuity Designs}
+\author{Jake Bowers, Ben Hansen \& Tom Leavitt}
+\date{\today}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+
+
+\section{Regression Discontinuity Design}
+
+\subsection{General Introduction and Setup}
+
+Today we are going to use the data on close US House of Representatives races
+1942--2008 used in  \citet{caugheysekhon2011}.\footnote{The full replication
+	data is available for download
+	\href{http://sekhon.berkeley.edu/rep/RDReplication.zip}{here}. But we
+	read it directly below.} \citet{caugheysekhon2011} engage in a debate
+whose participants seek to identify the causal effect of the so-called
+``incumbency advantage.'' That is, what effect does a candidate's status as an incumbent have on whether or not that candidate wins an election? Obviously, whether or not a candidate is an incumbent is \textit{not} randomly assigned.
+
+Let's first load the data:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{rm}\hlstd{(}\hlkwc{list}\hlstd{=}\hlkwd{ls}\hlstd{())}
+
+\hlstd{rdd_data} \hlkwb{<-} \hlkwd{read_dta}\hlstd{(}\hlstr{"http://jakebowers.org/Matching/RDReplication.dta"}\hlstd{)} \hlopt{%>%}
+        \hlkwd{filter}\hlstd{(Use} \hlopt{==} \hlnum{1}\hlstd{)} \hlcom{## Use is indicator for whether unit is included in RD incumbency advantage sample}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\subsubsection{The Running Variable}
+
+The ``running variable'' is called DifDPct, which is defined as the Democratic margin of victory or defeat in the election; in other words, DifDPct is the difference between the percentage of all votes that were cast for the leading Democrat in the race and the percentage cast for the leading non-Democrat. Races in which no Democrat ran or in which the top two vote-getters were both Democrats are coded as missing.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{running_var} \hlkwb{<-} \hlkwd{matrix}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{'DifDPct'}\hlstd{,} \hlstr{'Democrat Margin of Victory'}\hlstd{),}
+              \hlkwc{ncol} \hlstd{=} \hlnum{2}\hlstd{,}
+              \hlkwc{byrow} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+
+\hlkwd{dimnames}\hlstd{(running_var)} \hlkwb{<-} \hlkwd{list}\hlstd{(}\hlnum{1}\hlstd{,} \hlkwd{c}\hlstd{(}\hlstr{"Running Variable"}\hlstd{,} \hlstr{"Description"}\hlstd{))}
+
+\hlkwd{kable}\hlstd{(running_var)}
+\end{alltt}
+\end{kframe}
+\begin{tabular}{l|l}
+\hline
+Running Variable & Description\\
+\hline
+DifDPct & Democrat Margin of Victory\\
+\hline
+\end{tabular}
+
+
+\end{knitrout}
+
+\subsubsection{The Treatment Variable}
+
+The treatment variable is whether or not the Democratic candidate wins the election or not. If the candidate wins the election, then that candidate is assigned to ``treatment.'' If the candidate loses the election, then he or she is assigned to ``control.''
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{treatment} \hlkwb{<-} \hlkwd{matrix}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{'DemWin'}\hlstd{,} \hlstr{'Democrat Wins Election'}\hlstd{),}
+              \hlkwc{ncol} \hlstd{=} \hlnum{2}\hlstd{,}
+              \hlkwc{byrow} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+
+\hlkwd{dimnames}\hlstd{(treatment)} \hlkwb{<-} \hlkwd{list}\hlstd{(}\hlnum{1}\hlstd{,} \hlkwd{c}\hlstd{(}\hlstr{"Treatment"}\hlstd{,} \hlstr{"Description"}\hlstd{))}
+
+\hlkwd{kable}\hlstd{(treatment)}
+\end{alltt}
+\end{kframe}
+\begin{tabular}{l|l}
+\hline
+Treatment & Description\\
+\hline
+DemWin & Democrat Wins Election\\
+\hline
+\end{tabular}
+
+
+\end{knitrout}
+
+Now let's quickly look at the empirical distribution of the treatment variable:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{table}\hlstd{(rdd_data}\hlopt{$}\hlstd{DemWin)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{table}[ht]
+	\centering
+	\begin{tabular}{rr}
+		\hline
+		& Democrat Wins Election \\
+		\hline
+		0 & 4507 \\
+		1 & 5677 \\
+		\hline
+	\end{tabular}
+	\caption{The Treatment Variable}
+\end{table}
+
+\subsubsection{Outcome Variables}
+
+In \citet{caugheysekhon2011}, the primary outcome variables of interest are as
+follows: whether a democrat wins the next election, the proportion voting for
+a democrat in the next election, and the democratic vote margin in the next
+election.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{dvs} \hlkwb{<-} \hlkwd{matrix}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{'DWinNxt'}\hlstd{,} \hlstr{'Dem Win t + 1'}\hlstd{,}
+                \hlstr{'DPctNxt'}\hlstd{,} \hlstr{'Dem % t + 1'}\hlstd{,}
+                \hlstr{'DifDPNxt'}\hlstd{,} \hlstr{'Dem % Margin t + 1'}\hlstd{),}
+              \hlkwc{ncol} \hlstd{=} \hlnum{2}\hlstd{,}
+              \hlkwc{byrow} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+
+\hlkwd{dimnames}\hlstd{(dvs)} \hlkwb{<-} \hlkwd{list}\hlstd{(}\hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlnum{1}\hlstd{,}
+                           \hlkwc{to} \hlstd{=} \hlnum{3}\hlstd{,}
+                           \hlkwc{by} \hlstd{=} \hlnum{1}\hlstd{),}
+                       \hlkwd{c}\hlstd{(}\hlstr{"Outcome"}\hlstd{,} \hlstr{"Description"}\hlstd{))}
+
+\hlkwd{kable}\hlstd{(dvs)}
+\end{alltt}
+\end{kframe}
+\begin{tabular}{l|l}
+\hline
+Outcome & Description\\
+\hline
+DWinNxt & Dem Win t + 1\\
+\hline
+DPctNxt & Dem \% t + 1\\
+\hline
+DifDPNxt & Dem \% Margin t + 1\\
+\hline
+\end{tabular}
+
+
+\end{knitrout}
+
+\subsubsection{Baseline Covariates}
+
+The relevant baseline covariates (all measured prior to the realization of the running variable) are:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+\begin{tabular}{l|l}
+\hline
+Covariate & Description\\
+\hline
+DWinPrv & Dem Win t - 1\\
+\hline
+DPctPrv & Dem \% t - 1\\
+\hline
+DifDPPrv & Dem \% Margin t - 1\\
+\hline
+IncDWNOM1 & Inc's D1 NOMINATE\\
+\hline
+DemInc & Dem Inc in Race\\
+\hline
+NonDInc & Rep Inc in Race\\
+\hline
+PrvTrmsD & Dem's \# Prev Terms\\
+\hline
+PrvTrmsO & Rep's \# Prev Terms\\
+\hline
+RExpAdv & Rep Experience Adv\\
+\hline
+DExpAdv & Dem Experience Adv\\
+\hline
+ElcSwing & Partisan Swing\\
+\hline
+CQRating3 & CQ Rating \{-1, 0, 1\}\\
+\hline
+DSpndPct & Dem Spending \%\\
+\hline
+DDonaPct & Dem Donation \%\\
+\hline
+SoSDem & Dem Sec of State\\
+\hline
+GovDem & Dem Governor\\
+\hline
+DifPVDec & Dem Pres \% Margin\\
+\hline
+DemOpen & Dem-held Open Seat\\
+\hline
+NonDOpen & Rep-held Open Seat\\
+\hline
+OpenSeat & Open Seat\\
+\hline
+VtTotPct & Voter Turnout \%\\
+\hline
+GovWkPct & Pct Gov't Worker\\
+\hline
+UrbanPct & Pct Urban\\
+\hline
+BlackPct & Pct Black\\
+\hline
+ForgnPct & Pct Foreign Born\\
+\hline
+\end{tabular}
+
+
+\end{knitrout}
+
+\subsection{Local Randomization Framework}
+
+Let the index $i \in \left\{1, \dots , n\right\}$ run over the $n$ experimental units. In the context of a regression discontinuity design, let $R_i$ denote the random ``score variable'' (also known as ``running variable''). The random assignment variable, $Z_i \in \left\{0, 1\right\}$, which indicates whether subject $i$ is assigned to treatment, $Z_i = 1$, or to control, $Z_i = 0$, is a deterministic function of $R_i$. In the context of the incumbency advantage study, we can define $Z_i$ as follows:
+\begin{align*}
+Z_i \equiv \mathbbm{I}\left[R_i > 0 \right],
+\end{align*}
+where $\mathbbm{I}\left[\cdot\right]$ is an indicator function that is $1$ if the argument to the function is true and $0$ if false. In this particular study, if the margin of victory is greater than $0$, then candidate $i$ is treated ($Z_i = 1$), and if not, then candidate $i$ is assigned to control ($Z_i = 0$).
+
+Let $W_0 = [\underline{r}, \overline{r}]$, where $\underline{r} < r_0 < \overline{r}$, denote the window around the cutpoint (or threshold value), $r_0$, that sorts units into treatment or control.
+
+
+\subsubsection{Optimal Bandwidth Selection}
+
+We know from \citet{hansensales2015, rosenbaum2008, berger1988} that ``if a researcher pre-specifies a sequence of hypotheses and corresponding level-$\alpha$ tests, tests those hypotheses in order, and stops testing after the first non-rejected hypothesis, then the probability of incorrectly rejecting at least one correct hypothesis is at most $\alpha$'' \citep[p. 185]{hansensales2015}.
+
+As applied to bandwidth selection in the RDD context, the SIUP implies that one should start with a set of candidate bandwidths and sequentially test for covariate balance (beginning from either the largest candidate bandwidth or the smallest candidate bandwidth).
+
+Let's specify a set of candidate bandwidths and then sequentially test covariate balance. Before actually testing, though, we want to specify a balance criterion and then maximize effective sample size subject to that criterion.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{bal_fmla} \hlkwb{<-} \hlkwd{reformulate}\hlstd{(covs[}\hlnum{1}\hlopt{:}\hlnum{25}\hlstd{],} \hlkwc{response} \hlstd{=} \hlstr{"DemWin"}\hlstd{)}
+
+\hlstd{candidate_bands} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlopt{-}\hlnum{5}\hlstd{,}
+                       \hlkwc{to} \hlstd{=} \hlnum{5}\hlstd{,}
+                       \hlkwc{by} \hlstd{=} \hlnum{.1}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Now let's first filter our dataset and check for balance in the largest candidate bandwidth spanning from $-5$ to $5$.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{lower_bound} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlopt{-}\hlnum{5}\hlstd{,} \hlkwc{to} \hlstd{=} \hlopt{-}\hlnum{0.1}\hlstd{,} \hlkwc{by} \hlstd{=} \hlnum{0.1}\hlstd{)}
+
+\hlstd{upper_bound} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlnum{0.1}\hlstd{,} \hlkwc{to} \hlstd{=} \hlnum{5}\hlstd{,} \hlkwc{by} \hlstd{=} \hlnum{0.1}\hlstd{)} \hlopt{%>%}
+  \hlkwd{sort}\hlstd{(}\hlkwc{decreasing} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+
+\hlstd{rdd_dataA} \hlkwb{<-}\hlstd{rdd_data}
+\hlstd{rdd_dataA} \hlopt{%<>%} \hlkwd{filter}\hlstd{(DifDPct} \hlopt{>} \hlstd{lower_bound[}\hlnum{1}\hlstd{]} \hlopt{&} \hlstd{DifDPct} \hlopt{<} \hlstd{upper_bound[}\hlnum{1}\hlstd{])}
+
+\hlstd{rdd_dataA} \hlopt{%$%} \hlkwd{summary}\hlstd{(DifDPct)}
+\end{alltt}
+\begin{verbatim}
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  -4.99   -2.50   -0.13    0.04    2.81    4.99 
+\end{verbatim}
+\begin{alltt}
+\hlkwd{xBalance}\hlstd{(}\hlkwc{fmla} \hlstd{= bal_fmla,}
+         \hlkwc{data} \hlstd{= rdd_dataA,}
+         \hlkwc{report} \hlstd{=} \hlstr{"chisquare.test"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+---Overall Test---
+        chisquare df p.value
+unstrat       569 45 8.9e-92
+---
+Signif. codes:  0 '***' 0.001 '** ' 0.01 '*  ' 0.05 '.  ' 0.1 '   ' 1 
+\end{verbatim}
+\begin{alltt}
+\hlkwd{xBalance}\hlstd{(}\hlkwc{fmla} \hlstd{= bal_fmla,}
+         \hlkwc{data} \hlstd{= rdd_dataA,}
+         \hlkwc{report} \hlstd{=} \hlstr{"all"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+                 strata  unstrat                                                              
+                 stat   DemWin=0 DemWin=1 adj.diff adj.diff.null.sd std.diff     z            
+vars                                                                                          
+DWinPrv                 3.5e-01  5.2e-01  1.8e-01          3.4e-02  3.6e-01  5.2e+00  ***     
+DPctPrv                 4.7e+01  5.1e+01  3.6e+00          9.1e-01  2.8e-01  4.0e+00  ***     
+DifDPPrv                -5.4e+00 2.2e+00  7.6e+00          1.8e+00  3.0e-01  4.3e+00  ***     
+IncDWNOM1               9.3e-02  -6.2e-03 -1.0e-01         2.3e-02  -3.0e-01 -4.3e+00 ***     
+DemInc                  2.5e-01  4.1e-01  1.5e-01          3.2e-02  3.3e-01  4.7e+00  ***     
+NonDInc                 4.6e-01  3.2e-01  -1.4e-01         3.3e-02  -2.9e-01 -4.3e+00 ***     
+PrvTrmsD                3.7e-01  1.8e+00  1.4e+00          1.7e-01  6.0e-01  8.4e+00  ***     
+PrvTrmsO                2.0e+00  1.1e+00  -9.3e-01         1.5e-01  -4.2e-01 -6.0e+00 ***     
+RExpAdv                 4.9e-01  3.0e-01  -2.0e-01         3.3e-02  -4.1e-01 -5.9e+00 ***     
+DExpAdv                 2.7e-01  4.4e-01  1.7e-01          3.3e-02  3.7e-01  5.3e+00  ***     
+ElcSwing                1.6e+00  1.1e+00  -4.8e-01         5.5e-01  -6.0e-02 -8.8e-01         
+CQRating3               -1.2e-01 1.1e-01  2.3e-01          4.3e-02  3.7e-01  5.3e+00  ***     
+DSpndPct                4.7e+01  5.1e+01  3.8e+00          6.6e-01  4.0e-01  5.7e+00  ***     
+DDonaPct                4.8e+01  5.1e+01  3.8e+00          7.1e-01  3.7e-01  5.4e+00  ***     
+SoSDem                  4.5e-01  4.7e-01  2.2e-02          3.4e-02  4.3e-02  6.3e-01          
+GovDem                  4.3e-01  4.9e-01  5.4e-02          3.4e-02  1.1e-01  1.6e+00          
+DifPVDec                -6.4e-02 -5.8e-02 5.8e-03          1.1e-02  3.7e-02  5.3e-01          
+DemOpen                 8.0e-02  1.1e-01  3.0e-02          2.0e-02  1.0e-01  1.5e+00          
+NonDOpen                1.1e-01  9.8e-02  -1.2e-02         2.1e-02  -3.9e-02 -5.7e-01         
+OpenSeat                1.9e-01  2.1e-01  1.3e-02          2.7e-02  3.3e-02  4.8e-01          
+VtTotPct                3.9e+01  3.9e+01  -6.0e-01         5.5e-01  -7.4e-02 -1.1e+00         
+GovWkPct                4.5e+00  4.6e+00  4.3e-02          1.7e-01  1.8e-02  2.6e-01          
+UrbanPct                6.3e+01  6.6e+01  3.0e+00          1.6e+00  1.3e-01  1.9e+00  .       
+BlackPct                5.3e+00  6.0e+00  6.2e-01          5.1e-01  8.4e-02  1.2e+00          
+ForgnPct                3.7e+00  3.8e+00  6.4e-02          3.0e-01  1.5e-02  2.1e-01          
+DWinPrv.NATRUE          3.4e-02  1.7e-02  -1.8e-02         1.1e-02  -1.1e-01 -1.6e+00         
+DPctPrv.NATRUE          6.9e-02  5.3e-02  -1.6e-02         1.6e-02  -6.8e-02 -9.9e-01         
+DifDPPrv.NATRUE         3.4e-02  2.1e-02  -1.3e-02         1.1e-02  -7.8e-02 -1.1e+00         
+IncDWNOM1.NATRUE        6.9e-03  1.7e-18  -6.9e-03         4.0e-03  -1.2e-01 -1.7e+00 .       
+DemInc.NATRUE           4.1e-02  2.6e-02  -1.5e-02         1.2e-02  -8.3e-02 -1.2e+00         
+NonDInc.NATRUE          7.8e-02  6.0e-02  -1.8e-02         1.7e-02  -7.2e-02 -1.0e+00         
+PrvTrmsD.NATRUE         6.2e-01  -5.6e-16 -6.2e-01         3.2e-02  -1.8e+00 -1.9e+01 ***     
+PrvTrmsO.NATRUE         0.0e+00  6.6e-01  6.6e-01          3.2e-02  2.0e+00  2.1e+01  ***     
+RExpAdv.NATRUE          7.6e-02  6.7e-02  -8.7e-03         1.8e-02  -3.4e-02 -4.9e-01         
+DExpAdv.NATRUE          8.2e-02  6.9e-02  -1.3e-02         1.8e-02  -5.0e-02 -7.3e-01         
+ElcSwing.NATRUE         6.9e-03  1.7e-18  -6.9e-03         4.0e-03  -1.2e-01 -1.7e+00 .       
+CQRating3.NATRUE        4.1e-01  3.9e-01  -2.0e-02         3.4e-02  -4.2e-02 -6.1e-01         
+DSpndPct.NATRUE         5.6e-01  5.3e-01  -2.4e-02         3.4e-02  -4.8e-02 -7.0e-01         
+DDonaPct.NATRUE         6.4e-01  6.8e-01  4.7e-02          3.2e-02  9.8e-02  1.4e+00          
+SoSDem.NATRUE           6.9e-03  9.5e-03  2.7e-03          6.2e-03  3.0e-02  4.4e-01          
+DifPVDec.NATRUE         6.4e-02  5.7e-02  -6.8e-03         1.6e-02  -2.8e-02 -4.2e-01         
+DemOpen.NATRUE          2.3e-02  7.2e-03  -1.6e-02         8.4e-03  -1.3e-01 -1.9e+00 .       
+NonDOpen.NATRUE         5.9e-02  4.1e-02  -1.9e-02         1.5e-02  -8.7e-02 -1.3e+00         
+OpenSeat.NATRUE         6.4e-02  4.5e-02  -1.9e-02         1.6e-02  -8.2e-02 -1.2e+00         
+VtTotPct.NATRUE         1.7e-01  1.6e-01  -1.2e-02         2.5e-02  -3.1e-02 -4.6e-01         
+GovWkPct.NATRUE         9.4e-02  9.1e-02  -3.1e-03         2.0e-02  -1.1e-02 -1.6e-01         
+UrbanPct.NATRUE         9.6e-02  9.1e-02  -5.4e-03         2.0e-02  -1.9e-02 -2.7e-01         
+BlackPct.NATRUE         9.4e-02  9.1e-02  -3.1e-03         2.0e-02  -1.1e-02 -1.6e-01         
+ForgnPct.NATRUE         9.4e-02  9.1e-02  -3.1e-03         2.0e-02  -1.1e-02 -1.6e-01         
+---Overall Test---
+        chisquare df p.value
+unstrat       569 45 8.9e-92
+---
+Signif. codes:  0 '***' 0.001 '** ' 0.01 '*  ' 0.05 '.  ' 0.1 '   ' 1 
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item What can we infer from the results of the Chi-Squared balance test above?
+\end{itemize}
+
+
+Now let's write a function to perform this same procedure over all candidate bandwidth sizes beginning with the largerst candidate bandwidth and subsequently testing smaller and smaller bandwidths in order.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{chi_squared_balance} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{i}\hlstd{,}
+                                \hlkwc{running_var}\hlstd{,}
+                                \hlkwc{bal_fmla}\hlstd{,}
+                                \hlkwc{data}\hlstd{)\{}
+
+  \hlcom{# Preliminaries}
+  \hlkwd{suppressMessages}\hlstd{(}\hlkwd{stopifnot}\hlstd{(}\hlkwd{require}\hlstd{(dplyr,} \hlkwc{quietly} \hlstd{=} \hlnum{TRUE}\hlstd{)))}
+  \hlkwd{suppressMessages}\hlstd{(}\hlkwd{stopifnot}\hlstd{(}\hlkwd{require}\hlstd{(parallel,} \hlkwc{quietly} \hlstd{=} \hlnum{TRUE}\hlstd{)))}
+  \hlkwd{suppressMessages}\hlstd{(}\hlkwd{stopifnot}\hlstd{(}\hlkwd{require}\hlstd{(magrittr,} \hlkwc{quietly} \hlstd{=} \hlnum{TRUE}\hlstd{)))}
+  \hlkwd{suppressMessages}\hlstd{(}\hlkwd{stopifnot}\hlstd{(}\hlkwd{require}\hlstd{(RItools,} \hlkwc{quietly} \hlstd{=} \hlnum{TRUE}\hlstd{)))}
+
+  \hlstd{lower_bound} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlopt{-}\hlnum{5}\hlstd{,} \hlkwc{to} \hlstd{=} \hlopt{-}\hlnum{0.1}\hlstd{,} \hlkwc{by} \hlstd{=} \hlnum{0.1}\hlstd{)}
+
+  \hlstd{upper_bound} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlnum{0.1}\hlstd{,} \hlkwc{to} \hlstd{=} \hlnum{5}\hlstd{,} \hlkwc{by} \hlstd{=} \hlnum{0.1}\hlstd{)} \hlopt{%>%}
+  \hlkwd{sort}\hlstd{(}\hlkwc{decreasing} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+
+  \hlstd{data} \hlopt{%<>%} \hlkwd{filter}\hlstd{(running_var} \hlopt{>} \hlstd{lower_bound[i]} \hlopt{&} \hlstd{running_var} \hlopt{<} \hlstd{upper_bound[i])}
+
+  \hlcom{# Effective Sample Size}
+  \hlstd{ess} \hlkwb{<-} \hlkwd{nrow}\hlstd{(data)}
+
+  \hlstd{p_value} \hlkwb{<-} \hlkwd{xBalance}\hlstd{(}\hlkwc{fmla} \hlstd{= bal_fmla,}
+                      \hlkwc{data} \hlstd{= data,}
+                      \hlkwc{report} \hlstd{=} \hlstr{"chisquare.test"}\hlstd{)}\hlopt{$}\hlstd{overall[[}\hlnum{3}\hlstd{]]}
+
+  \hlstd{bands} \hlkwb{<-} \hlkwd{cbind}\hlstd{(ess, p_value, lower_bound[i], upper_bound[i])}
+
+  \hlkwd{return}\hlstd{(bands)}
+
+  \hlstd{\}}
+
+\hlstd{is} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlnum{1}\hlstd{,}
+          \hlkwc{to} \hlstd{=} \hlkwd{length}\hlstd{(}\hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlopt{-}\hlnum{5}\hlstd{,}
+                          \hlkwc{to} \hlstd{=} \hlopt{-}\hlnum{0.1}\hlstd{,}
+                          \hlkwc{by} \hlstd{=} \hlnum{0.1}\hlstd{)),}
+                      \hlkwc{by} \hlstd{=} \hlnum{1}\hlstd{)}
+
+\hlstd{cl} \hlkwb{<-} \hlkwd{makeCluster}\hlstd{(parallel}\hlopt{::}\hlkwd{detectCores}\hlstd{())}
+
+\hlstd{band_df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwd{t}\hlstd{(}\hlkwd{parSapply}\hlstd{(cl, is,}
+       \hlstd{chi_squared_balance,}
+       \hlkwc{running_var} \hlstd{= rdd_data}\hlopt{$}\hlstd{DifDPct,}
+       \hlkwc{bal_fmla} \hlstd{= bal_fmla,}
+       \hlkwc{data} \hlstd{= rdd_data)))} \hlopt{%>%}
+  \hlkwd{rename}\hlstd{(}\hlkwc{ess} \hlstd{= X1,}
+         \hlkwc{p_value} \hlstd{= X2)}
+
+\hlstd{parallel}\hlopt{::}\hlkwd{stopCluster}\hlstd{(cl)}
+
+\hlkwd{kable}\hlstd{(band_df)}
+\end{alltt}
+\end{kframe}
+\begin{tabular}{r|r|r|r}
+\hline
+ess & p\_value & X3 & X4\\
+\hline
+856 & 0.000 & -5.0 & 5.0\\
+\hline
+843 & 0.000 & -4.9 & 4.9\\
+\hline
+826 & 0.000 & -4.8 & 4.8\\
+\hline
+811 & 0.000 & -4.7 & 4.7\\
+\hline
+797 & 0.000 & -4.6 & 4.6\\
+\hline
+782 & 0.000 & -4.5 & 4.5\\
+\hline
+767 & 0.000 & -4.4 & 4.4\\
+\hline
+751 & 0.000 & -4.3 & 4.3\\
+\hline
+725 & 0.000 & -4.2 & 4.2\\
+\hline
+701 & 0.000 & -4.1 & 4.1\\
+\hline
+675 & 0.000 & -4.0 & 4.0\\
+\hline
+652 & 0.000 & -3.9 & 3.9\\
+\hline
+626 & 0.000 & -3.8 & 3.8\\
+\hline
+613 & 0.000 & -3.7 & 3.7\\
+\hline
+600 & 0.000 & -3.6 & 3.6\\
+\hline
+586 & 0.000 & -3.5 & 3.5\\
+\hline
+565 & 0.000 & -3.4 & 3.4\\
+\hline
+547 & 0.000 & -3.3 & 3.3\\
+\hline
+525 & 0.000 & -3.2 & 3.2\\
+\hline
+515 & 0.000 & -3.1 & 3.1\\
+\hline
+499 & 0.000 & -3.0 & 3.0\\
+\hline
+474 & 0.000 & -2.9 & 2.9\\
+\hline
+456 & 0.000 & -2.8 & 2.8\\
+\hline
+429 & 0.000 & -2.7 & 2.7\\
+\hline
+418 & 0.000 & -2.6 & 2.6\\
+\hline
+404 & 0.000 & -2.5 & 2.5\\
+\hline
+387 & 0.000 & -2.4 & 2.4\\
+\hline
+375 & 0.000 & -2.3 & 2.3\\
+\hline
+357 & 0.000 & -2.2 & 2.2\\
+\hline
+339 & 0.000 & -2.1 & 2.1\\
+\hline
+322 & 0.001 & -2.0 & 2.0\\
+\hline
+302 & 0.005 & -1.9 & 1.9\\
+\hline
+287 & 0.002 & -1.8 & 1.8\\
+\hline
+274 & 0.004 & -1.7 & 1.7\\
+\hline
+257 & 0.006 & -1.6 & 1.6\\
+\hline
+238 & 0.031 & -1.5 & 1.5\\
+\hline
+219 & 0.082 & -1.4 & 1.4\\
+\hline
+204 & 0.088 & -1.3 & 1.3\\
+\hline
+190 & 0.107 & -1.2 & 1.2\\
+\hline
+176 & 0.101 & -1.1 & 1.1\\
+\hline
+168 & 0.132 & -1.0 & 1.0\\
+\hline
+146 & 0.141 & -0.9 & 0.9\\
+\hline
+136 & 0.178 & -0.8 & 0.8\\
+\hline
+122 & 0.248 & -0.7 & 0.7\\
+\hline
+107 & 0.357 & -0.6 & 0.6\\
+\hline
+85 & 0.369 & -0.5 & 0.5\\
+\hline
+70 & 0.578 & -0.4 & 0.4\\
+\hline
+55 & 0.507 & -0.3 & 0.3\\
+\hline
+37 & 0.606 & -0.2 & 0.2\\
+\hline
+19 & 0.456 & -0.1 & 0.1\\
+\hline
+\end{tabular}
+
+
+\end{knitrout}
+
+\vspace{5mm}
+\textbf{Questions for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item There's something interesting going on as we make the window around the cut point smaller and smaller. What is it?
+\item And what are its implications, which are also mentioned by \citet{caugheysekhon2011}?
+\end{itemize}
+
+\subsubsection{Local Random Assignment Does \textit{Not} Imply Exclusion Restriction}
+
+Now let's assume that within a certain bandwidth around the cutpoint, $W_0$, the assumption of a local randomized experiment obtains. In other words, probabilties are uniformly distributed on $R_i \in W_0$ for all $i$. Yet even if this assumption obtains, the running variable, $R$, might still relate to potential outcomes through a mechanism other than $Z \given R \in W_0$.
+
+\vspace{5mm}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Explain why this would be a violation of the \textit{exclusion restriction}?
+\end{itemize}
+
+The exclusion restriction is a strong assumption in the RDD context since $Z$ is a deterministic function of the running variable, $R$, which implies that treatment and control groups, by construction, will be imbalanced on the running variable. Thus, if $R$ relates to $(y_{c}, y_{t})$, through a mechanism other than $Z \given R \in W_0$, then the exlcusion restriction is violated.
+
+If we think the exclusion restriction holds, then we can simply perform outcome analysis within a window around the cutpoint where local randomization presumably holds:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{rdd_data} \hlopt{%<>%} \hlkwd{filter}\hlstd{(DifDPct} \hlopt{>} \hlstd{lower_bound[}\hlnum{47}\hlstd{]} \hlopt{&} \hlstd{DifDPct} \hlopt{<} \hlstd{upper_bound[}\hlnum{47}\hlstd{])}
+
+\hlstd{rdd_data} \hlopt{%>%} \hlstd{nrow}
+\end{alltt}
+\begin{verbatim}
+[1] 70
+\end{verbatim}
+\begin{alltt}
+\hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= DPctNxt} \hlopt{~} \hlstd{DemWin,} \hlkwc{data} \hlstd{= rdd_data))[[}\hlstr{"DemWin"}\hlstd{]]}
+\end{alltt}
+\begin{verbatim}
+[1] 11.9
+\end{verbatim}
+\begin{alltt}
+\hlkwd{source}\hlstd{(}\hlstr{"http://jakebowers.org/ICPSR/confintHC.R"}\hlstd{)}
+\hlkwd{confint.HC}\hlstd{(}\hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= DPctNxt} \hlopt{~} \hlstd{DemWin,} \hlkwc{data} \hlstd{= rdd_data),}
+           \hlkwc{parm} \hlstd{=} \hlstr{"DemWin"}\hlstd{,}
+           \hlkwc{thevcov} \hlstd{=} \hlkwd{vcovHC}\hlstd{(}\hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= DPctNxt} \hlopt{~} \hlstd{DemWin,} \hlkwc{data} \hlstd{= rdd_data),}
+                            \hlkwc{type}\hlstd{=}\hlstr{"HC2"}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+       2.5 % 97.5 %
+DemWin   4.9   18.9
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+We coud also perform permutation inference within the window around the cutpoint under the assumption that local randomization holds:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{set.seed}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{)}
+\hlstd{sharp_null_dist} \hlkwb{<-} \hlkwd{replicate}\hlstd{(}\hlkwc{n} \hlstd{=} \hlnum{10}\hlopt{^}\hlnum{3}\hlstd{,}
+                             \hlkwc{expr} \hlstd{=} \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= DPctNxt} \hlopt{~} \hlkwd{sample}\hlstd{(DemWin),} \hlkwc{data} \hlstd{= rdd_data))[[}\hlnum{2}\hlstd{]])}
+
+\hlstd{upper_p_val} \hlkwb{<-} \hlkwd{mean}\hlstd{(sharp_null_dist} \hlopt{>=} \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= DPctNxt} \hlopt{~} \hlstd{DemWin,} \hlkwc{data} \hlstd{= rdd_data))[[}\hlstr{"DemWin"}\hlstd{]])}
+\hlstd{lower_p_val} \hlkwb{<-} \hlkwd{mean}\hlstd{(sharp_null_dist} \hlopt{<=} \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= DPctNxt} \hlopt{~} \hlstd{DemWin,} \hlkwc{data} \hlstd{= rdd_data))[[}\hlstr{"DemWin"}\hlstd{]])}
+\hlstd{two_sided_p_val} \hlkwb{<-} \hlkwd{min}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{2} \hlopt{*} \hlkwd{min}\hlstd{(upper_p_val, lower_p_val))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+What can we do if the exclusion restriction is violated? Or worse, if the running variable, $R$, confounds the relationship between $Z$ and $Y$? One approach is to model potential outcomes as a function of the running variable, and then to ``de-trend'' (or ``transform'') the outcome variable and to subsequently make the claim of ``residual ignorability.''
+
+For example, we could do the folloiwng:
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{tmp_lm} \hlkwb{<-} \hlkwd{lm}\hlstd{(DPctNxt} \hlopt{~} \hlstd{DifDPct,} \hlkwc{data} \hlstd{= rdd_data)}
+
+\hlstd{rdd_data} \hlopt{%<>%} \hlkwd{mutate}\hlstd{(}\hlkwc{resid_DPctNxt} \hlstd{=} \hlkwd{resid}\hlstd{(tmp_lm))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\vspace{5mm}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item Do we think modeling the outcome variable as a linear function of the running variable is appropriate?
+\end{itemize}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= rdd_data,}
+       \hlkwc{mapping} \hlstd{=} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= DifDPct,} \hlkwc{y} \hlstd{= DPctNxt))} \hlopt{+} \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{= lm,} \hlkwc{se} \hlstd{=} \hlnum{FALSE}\hlstd{)} \hlopt{+} \hlkwd{geom_smooth}\hlstd{(}\hlkwc{se} \hlstd{=} \hlnum{FALSE}\hlstd{,} \hlkwc{colour}\hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
+  \hlkwd{xlab}\hlstd{(}\hlstr{"Democratic Margin of Victory (Running Variable)"}\hlstd{)} \hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlstr{"Democratic Vote Percentage in Next Election (Outcome Variable)"}\hlstd{)} \hlopt{+}
+  \hlkwd{ggtitle}\hlstd{(}\hlstr{"Relationship between Running Variable and Outcome"}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_vline}\hlstd{(}\hlkwc{xintercept} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\includegraphics[width=.9\textwidth]{figs/figunnamed-chunk-13-1} 
+
+\end{knitrout}
+
+\subsubsection{Outcome Analysis}
+
+We can now perform outcome analysis on the detrended outcome variable:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{coeftest}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= resid_DPctNxt} \hlopt{~} \hlstd{DemWin,} \hlkwc{data} \hlstd{= rdd_data),}
+         \hlkwc{vcov.} \hlstd{=} \hlkwd{vcovHC}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= resid_DPctNxt} \hlopt{~} \hlstd{DemWin,} \hlkwc{data} \hlstd{= rdd_data),}
+                        \hlkwc{type} \hlstd{=} \hlstr{"HC2"}\hlstd{))[}\hlnum{2}\hlstd{,}\hlnum{1}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+[1] 4.57
+\end{verbatim}
+\begin{alltt}
+\hlkwd{source}\hlstd{(}\hlstr{"http://jakebowers.org/ICPSR/confintHC.R"}\hlstd{)}
+\hlkwd{confint.HC}\hlstd{(}\hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= resid_DPctNxt} \hlopt{~} \hlstd{DemWin,} \hlkwc{data} \hlstd{= rdd_data),}
+           \hlkwc{parm} \hlstd{=} \hlstr{"DemWin"}\hlstd{,}
+           \hlkwc{thevcov} \hlstd{=} \hlkwd{vcovHC}\hlstd{(}\hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= resid_DPctNxt} \hlopt{~} \hlstd{DemWin,} \hlkwc{data} \hlstd{= rdd_data),}
+                            \hlkwc{type}\hlstd{=}\hlstr{"HC2"}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+       2.5 % 97.5 %
+DemWin -2.64   11.8
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\citet{saleshansen2018}, however, propose robust regression, which is less sensitive to violations of the regression model's assumptions.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{tmp_rlm} \hlkwb{<-} \hlkwd{rlm}\hlstd{(DPctNxt} \hlopt{~} \hlstd{DifDPct,} \hlkwc{data} \hlstd{= rdd_data)}
+
+\hlstd{rdd_data} \hlopt{%<>%} \hlkwd{mutate}\hlstd{(}\hlkwc{rlm_resid_DPctNxt} \hlstd{=} \hlkwd{resid}\hlstd{(tmp_rlm))}
+
+\hlkwd{coeftest}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= rlm_resid_DPctNxt} \hlopt{~} \hlstd{DemWin,} \hlkwc{data} \hlstd{= rdd_data),}
+         \hlkwc{vcov.} \hlstd{=} \hlkwd{vcovHC}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= rlm_resid_DPctNxt} \hlopt{~} \hlstd{DemWin,} \hlkwc{data} \hlstd{= rdd_data),}
+                        \hlkwc{type} \hlstd{=} \hlstr{"HC2"}\hlstd{))[}\hlnum{2}\hlstd{,}\hlnum{1}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+[1] 5.87
+\end{verbatim}
+\begin{alltt}
+\hlkwd{confint.HC}\hlstd{(}\hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= rlm_resid_DPctNxt} \hlopt{~} \hlstd{DemWin,} \hlkwc{data} \hlstd{= rdd_data),}
+           \hlkwc{parm} \hlstd{=} \hlstr{"DemWin"}\hlstd{,}
+           \hlkwc{thevcov} \hlstd{=} \hlkwd{vcovHC}\hlstd{(}\hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= rlm_resid_DPctNxt} \hlopt{~} \hlstd{DemWin,} \hlkwc{data} \hlstd{= rdd_data),}
+                            \hlkwc{type}\hlstd{=}\hlstr{"HC2"}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+       2.5 % 97.5 %
+DemWin  -1.3     13
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\subsection{Continuity in Potential Outcomes Framework}
+
+An alternative approach to regression discontinuity is common in the econometrics literature \citep[see, e.g.,][]{imbenslemieux2008,lee2008,calonicoetal2014,hahnetal2001,leelemieux2010,mccrary2008}. As \citet{hahnetal2001} and \citet{imbenslemieux2008} state, the estimand (i.e., the quantity we seek to estimate) is:
+\begin{align*}
+\lim \limits_{r \downarrow 0}\E\left[Y \given R = r > 0\right] - \lim \limits_{r \uparrow 0}\E\left[Y \given R = r < 0 \right] &  \\
+& = \E\left[Y_t \given R = 0\right] - \E\left[Y_c \given R = 0 \right]  \\
+& = \E\left[Y_t - Y_c \given R = 0 \right]
+\end{align*}
+
+This estimand assumes that the (1) left and right limits of $\E\left[Y \given R \right]$ exist as $R$ approaches the cutpoint $r = 0$ and (2) conditional expectation of the outcome given the running variable is left-continuous and right-continuous at the cutpoint $r = 0$, where in general a function $f$ is continuous from the right at $a$ if $\lim \limits_{x \downarrow a} f(x) = f(a)$ and is continuous from the left if $\lim \limits_{x \uparrow a} f(x) = f(a)$.
+
+\vspace{5mm}
+\textbf{Question for Students:}
+\vspace{-5mm}
+\begin{itemize}\itemsep1pt
+\item How do we interpret the expected value operator, $\E\left[\cdot\right]$, above? Sometimes the continuity in potential outcomes is stated as $\mu_t, \mu_c$ are continuous at $r = 0$. How does this relate the the estimand defined above?
+\end{itemize}
+
+We don't actually need to know the true form of $\E[\left[Y \given R = r\right]$. Instead, we can use methods, such as local regression, to approximate the function of $\E[\left[Y \given R = r\right]$ at values of $R$ below and above the cutpoint.
+
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{rdd_data} \hlopt{%<>%} \hlkwd{arrange}\hlstd{(DifDPct)}
+
+\hlstd{rdd_data_cp} \hlkwb{<-} \hlstd{dplyr}\hlopt{::}\hlkwd{select}\hlstd{(}\hlkwc{.data} \hlstd{= rdd_data, DifDPct, DPctNxt, DemWin)} \hlopt{%>%}
+  \hlkwd{mutate}\hlstd{(}\hlkwc{cp} \hlstd{=} \hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{= DifDPct} \hlopt{<} \hlnum{0}\hlstd{,} \hlkwc{yes} \hlstd{=} \hlstr{"Below Cutpoint"}\hlstd{,}
+         \hlkwc{no} \hlstd{=} \hlstr{"Above Cutpoint"}\hlstd{))}
+
+\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= rdd_data_cp,}
+       \hlkwc{mapping} \hlstd{=} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= DifDPct,}
+                     \hlkwc{y} \hlstd{= DPctNxt))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{= lm,} \hlkwc{se} \hlstd{=} \hlnum{FALSE}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{se} \hlstd{=} \hlnum{FALSE}\hlstd{,} \hlkwc{colour}\hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
+  \hlkwd{theme}\hlstd{(}\hlkwc{plot.title} \hlstd{=} \hlkwd{element_text}\hlstd{(}\hlkwc{hjust} \hlstd{=} \hlnum{0.5}\hlstd{),}
+        \hlkwc{axis.text.x} \hlstd{=} \hlkwd{element_text}\hlstd{(}\hlkwc{size} \hlstd{=} \hlnum{4}\hlstd{))} \hlopt{+}
+  \hlkwd{xlab}\hlstd{(}\hlstr{"Democratic Margin of Victory (Running Variable)"}\hlstd{)} \hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlstr{"Democratic Vote Percentage in Next Election (Outcome Variable)"}\hlstd{)} \hlopt{+}
+  \hlkwd{ggtitle}\hlstd{(}\hlstr{"Relationship between Running Variable and Outcome"}\hlstd{)} \hlopt{+}
+  \hlkwd{facet_wrap}\hlstd{(}\hlkwc{facets} \hlstd{=}  \hlopt{~} \hlstd{cp,}
+             \hlkwc{nrow} \hlstd{=} \hlnum{1}\hlstd{,}
+             \hlkwc{ncol} \hlstd{=} \hlnum{2}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\includegraphics[width=.9\textwidth]{figs/figunnamed-chunk-16-1} 
+
+\end{knitrout}
+
+Let's first use a simple linear model to estimate the relationship on both sides of the cutpoint:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{lm_predict_below} \hlkwb{<-} \hlkwd{predict}\hlstd{(}\hlkwc{object} \hlstd{=} \hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= DPctNxt} \hlopt{~} \hlstd{DifDPct,} \hlkwc{data} \hlstd{= rdd_data,} \hlkwc{subset} \hlstd{= DifDPct} \hlopt{<} \hlnum{0}\hlstd{),}
+                           \hlkwc{newdata} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{DifDPct} \hlstd{=} \hlnum{0}\hlstd{))}
+
+\hlstd{lm_predict_above} \hlkwb{<-} \hlkwd{predict}\hlstd{(}\hlkwc{object} \hlstd{=} \hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= DPctNxt} \hlopt{~} \hlstd{DifDPct,} \hlkwc{data} \hlstd{= rdd_data,} \hlkwc{subset} \hlstd{= DifDPct} \hlopt{>} \hlnum{0}\hlstd{),}
+                                 \hlkwc{newdata} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{DifDPct} \hlstd{=} \hlnum{0}\hlstd{))}
+
+\hlstd{lm_predict_above} \hlopt{-} \hlstd{lm_predict_below}
+\end{alltt}
+\begin{verbatim}
+   1 
+18.7 
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\newpage
+We could also do the same thing with LOESS regression:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{loess_predict_below} \hlkwb{<-} \hlkwd{predict}\hlstd{(}\hlkwc{object} \hlstd{=} \hlkwd{loess}\hlstd{(}\hlkwc{formula} \hlstd{= DPctNxt} \hlopt{~} \hlstd{DifDPct,}
+                                                       \hlkwc{data} \hlstd{= rdd_data,}
+                                                       \hlkwc{subset} \hlstd{= DifDPct} \hlopt{<} \hlnum{0}\hlstd{,}
+                                                       \hlkwc{surface} \hlstd{=} \hlstr{"direct"}\hlstd{),}
+                                        \hlkwc{newdata} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{DifDPct} \hlstd{=} \hlnum{0}\hlstd{))}
+
+\hlstd{loess_predict_above} \hlkwb{<-} \hlkwd{predict}\hlstd{(}\hlkwc{object} \hlstd{=} \hlkwd{loess}\hlstd{(}\hlkwc{formula} \hlstd{= DPctNxt} \hlopt{~} \hlstd{DifDPct,}
+                                                       \hlkwc{data} \hlstd{= rdd_data,}
+                                                       \hlkwc{subset} \hlstd{= DifDPct} \hlopt{>} \hlnum{0}\hlstd{,}
+                                                       \hlkwc{surface} \hlstd{=} \hlstr{"direct"}\hlstd{),}
+                                        \hlkwc{newdata} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{DifDPct} \hlstd{=} \hlnum{0}\hlstd{))}
+
+\hlstd{loess_predict_above} \hlopt{-} \hlstd{loess_predict_below}
+\end{alltt}
+\begin{verbatim}
+   1 
+14.9 
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+We could also use a $p$th order polynomial. For example:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{lm_poly_predict_below} \hlkwb{<-} \hlkwd{predict}\hlstd{(}\hlkwc{object} \hlstd{=} \hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= DPctNxt} \hlopt{~} \hlkwd{I}\hlstd{(DifDPct}\hlopt{^}\hlnum{3}\hlstd{)} \hlopt{+} \hlkwd{I}\hlstd{(DifDPct}\hlopt{^}\hlnum{2}\hlstd{)} \hlopt{+} \hlstd{DifDPct,}
+                                             \hlkwc{data} \hlstd{= rdd_data,} \hlkwc{subset} \hlstd{= DifDPct} \hlopt{<} \hlnum{0}\hlstd{),}
+                                 \hlkwc{newdata} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{DifDPct} \hlstd{=} \hlnum{0}\hlstd{))}
+
+\hlstd{lm_poly_predict_above} \hlkwb{<-} \hlkwd{predict}\hlstd{(}\hlkwc{object} \hlstd{=} \hlkwd{lm}\hlstd{(}\hlkwc{formula} \hlstd{= DPctNxt} \hlopt{~} \hlkwd{I}\hlstd{(DifDPct}\hlopt{^}\hlnum{3}\hlstd{)} \hlopt{+} \hlkwd{I}\hlstd{(DifDPct}\hlopt{^}\hlnum{2}\hlstd{)} \hlopt{+} \hlstd{DifDPct,}
+                                             \hlkwc{data} \hlstd{= rdd_data,} \hlkwc{subset} \hlstd{= DifDPct} \hlopt{>} \hlnum{0}\hlstd{),}
+                                 \hlkwc{newdata} \hlstd{=} \hlkwd{data.frame}\hlstd{(}\hlkwc{DifDPct} \hlstd{=} \hlnum{0}\hlstd{))}
+
+\hlstd{lm_poly_predict_above} \hlopt{-} \hlstd{lm_poly_predict_below}
+\end{alltt}
+\begin{verbatim}
+   1 
+15.9 
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\citet[647]{cattaneotitiunikvazquez-bare2017} state that potential outcomes are viewed as a random sample from an infinite superpopulation. How does this fit with this course's emphasis on finite population, design-based causal inference?
+
+\newpage
+
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{master_bibliography}   % name your BibTeX data base
+\end{singlespace}
+
+\newpage
+
+\end{document}
