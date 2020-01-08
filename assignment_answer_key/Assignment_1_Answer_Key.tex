@@ -1,6 +1,6 @@
 \documentclass[11pt]{article}\usepackage[]{graphicx}\usepackage[]{color}
-%% maxwidth is the original width if it is less than linewidth
-%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+% maxwidth is the original width if it is less than linewidth
+% otherwise use linewidth (to make sure the graphics do not exceed the margin)
 \makeatletter
 \def\maxwidth{ %
   \ifdim\Gin@nat@width>\linewidth
@@ -266,9 +266,7 @@ Assignment 1 Answer Key}
 \end{alltt}
 
 
-{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: pacman}}
-
-{\ttfamily\noindent\color{warningcolor}{\#\# Warning: package 'pacman' was built under R version 3.3.2}}\begin{alltt}
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: pacman}}\begin{alltt}
 \hlkwd{p_load}\hlstd{(MASS,}
        \hlstd{plyr,}
        \hlstd{dplyr,}
@@ -461,7 +459,7 @@ We can calculate one sided and two sided simulation p-values via the function be
             \hlkwc{.alternative} \hlstd{=} \hlstr{"greater"}\hlstd{)}
 \end{alltt}
 \begin{verbatim}
-## [1] 0.07421
+## [1] 0.07516
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -509,7 +507,7 @@ The simulation approximation of the null expected value of the test statistic, $
 \hlkwd{mean}\hlstd{(null_test_stat_dist}\hlopt{$}\hlstd{null_test_stat)}
 \end{alltt}
 \begin{verbatim}
-## [1] 0.3066633
+## [1] 0.3066652
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -527,7 +525,7 @@ The simulation approximation of $\Var\left[n_t^{-1} \mathbf{Z}^{\prime} \mathbf{
 \hlstd{sim_var}
 \end{alltt}
 \begin{verbatim}
-## [1] 0.000154535
+## [1] 0.0001552291
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -747,7 +745,7 @@ This quantity is the variance of the sampling distribution, which is distinct fr
 \hlstd{(}\hlkwd{abs}\hlstd{(sim_var} \hlopt{-} \hlstd{fpc_var)}\hlopt{/}\hlstd{fpc_var)} \hlopt{*} \hlnum{100}
 \end{alltt}
 \begin{verbatim}
-## [1] 0.5317748
+## [1] 0.08497887
 \end{verbatim}
 \end{kframe}
 \end{knitrout}

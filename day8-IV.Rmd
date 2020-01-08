@@ -1,7 +1,7 @@
 ---
 title: Statistical Inference for Causal Quantities when the Active Ingredient is not Random
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-author: ICPSR 2018 Session 2
+author: ICPSR 2019 Session 2
 bibliography:
  - refs.bib
  - BIB/master.bib
@@ -39,6 +39,7 @@ require(knitr)
 knitr::knit_hooks$set(mysize = function(before, options, envir) {
   if (before)
     return(options$size)
+                              else return("\\normalsize")
 })
 
 knit_hooks$set(plotdefault = function(before, options, envir) {
@@ -151,6 +152,12 @@ y1d1 <- mean(y0) + taubar + (y0 - mean(y0))/2
 Y <-  Z*d*y1d1 + Z*(1-d)*y1d0 + (1-Z)*d*y0d1 + (1-Z)*(1-d)*y0d0
 dat <- data.frame(y1d1,y1d0,y0d1,y0d0,y0,Y,Z,d,x,probd)
 dat$y1 <- dat$Y[dat$Z==1]
+dat$thetype <-  interaction(dat$Z,dat$d,drop=TRUE)
+##  0.0 = who would not take a dose if assigned to control (nevertakers and  compliers)
+## 1.0 = who would not take a dose if assigned  to  treatment  (nevertakers and defiers)
+## 1.1 = who would take a dose if  assigned to treatment  (alwaystakeers and compliers)
+## 0.1 = who would take  a dose if assigned to treatment (defiers and alwaystakers)
+
 ```
 
 ```{r}
@@ -329,10 +336,6 @@ myfn <- function(){
 }
 
 res <- replicate(1000,myfn())
-
-
-
-
 ```
 
 
@@ -345,6 +348,82 @@ estimator" mean anyway?)
 
 How would we check to see if this is a good test? (What does "good test" mean
 anyway?)
+
+## Using DeclareDesign to Assess IV Estimation
+
+```{r eval=FALSE}
+library(DeclareDesign)
+
+then <- 1000
+
+summary(dat[,c("y1d1","y1d0","y0d1","y0d0","y0","y1","x","d","thetype")])
+
+dat$D <- dat$d
+
+thepop <- declare_population(dat[,c("y1d1","y1d0","y0d1","y0d0","y0","y1","x","D","thetype")])
+theassign <- declare_assignment(m=then/2)
+
+po_fun <- function(data){
+	data$Y_Z_1_D_1 <- data$y1d1
+	data$Y_Z_0_D_0 <- data$y0d0
+	data$Y_Z_1_D_0 <- data$y1d0
+	data$Y_Z_0_D_1 <- data$y0d1
+	data$Y_Z_0 <-  data$y0
+	data$Y_Z_1 <-  data$y1
+	data
+}
+thepo <- declare_potential_outcomes(handler=po_fun)
+
+reveal_outcomes <- declare_reveal(outcome_variables=Y,assignment_variables=c("Z","D")) ## how does assignment reveal potential outcomes
+
+## From  DeclareDesign blog  about IV
+##  declare_step(
+##    U1_complier = X_U1_0_Z_0 == 0 & X_U1_0_Z_1 == 0 & X_U1_1_Z_0 == 1 & X_U1_1_Z_1 == 1,
+ ##   Z_complier  = X_U1_0_Z_0 == 0 & X_U1_1_Z_0 == 0 & X_U1_0_Z_1 == 1 & X_U1_1_Z_1 == 1, 
+  ##  handler = fabricate) +
+
+
+thedesign <- thepop + theassign + thepo + reveal_outcomes
+
+oneexp <- draw_data(thedesign)
+
+theestimands <- declare_estimand(ITT1 = mean(Y_Z_1 - Y_Z_0),
+				 CACE = mean(Y_Z_1_D_1 - Y_Z_0_D_0),
+				 CACE2=mean(Y_Z_1[D==1] - Y_Z_0[D==0]))
+
+theest1 <- declare_estimator(Y~Z, estimand="ITT1", model=difference_in_means,
+			     label="itt1: diff means")
+theest2 <- declare_estimator(Y~D|Z, estimand="CACE", model=iv_robust,
+			     label="cace1: iv")
+theest3 <- declare_estimator(Y~D+x|Z+x, estimand="CACE", model=iv_robust,
+			     label="cace2: iv+x")
+theest4 <- declare_estimator(Y~D|Z+x, estimand="CACE", model=iv_robust,
+			     label="cace3: iv+x v2")
+
+thedesign_plus_est <- thedesign + theestimands + theest1 + theest2 + theest3 + theest4
+theest1(oneexp)
+theest2(oneexp)
+theest3(oneexp)
+theest4(oneexp)
+
+set.seed(12345)
+thediagnosands <- declare_diagnosands(
+     bias = mean(estimate - estimand),
+     rmse = sqrt(mean((estimate - estimand) ^ 2)),
+     power = mean(p.value < .25),
+     coverage = mean(estimand <= conf.high & estimand >= conf.low),
+     mean_estimate = mean(estimate),
+     sd_estimate = sd(estimate),
+     mean_se = mean(std.error),
+     mean_estimand = mean(estimand)
+     )
+
+diagnosis <- diagnose_design(thedesign_plus_est,sims=1000,bootstrap_sims=0,
+			     diagnosands = thediagnosands)
+kable(reshape_diagnosis(diagnosis)[,-c(1:2,4)])
+
+```
+
 
 
 ## The Complier Average Causal Effect or Local Average Treatment Effect (on the Compliers)

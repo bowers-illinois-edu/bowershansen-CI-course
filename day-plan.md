@@ -5,10 +5,10 @@ author: |
   | ICPSR 2019 Session 2
   | Jake Bowers, Ben Hansen, Tom Leavitt
 bibliography:
- - refs.bib
+ - BIB/refs.bib
  - BIB/master.bib
  - BIB/misc.bib
- - ci.bib
+ - BIB/ci.bib
 fontsize: 10pt
 geometry: margin=1in
 graphics: yes
@@ -34,7 +34,7 @@ comprehensive, but rather have chosen a few articles or chapters that, we
 think, introduce major conceptual approaches in ways that social scientists
 might  find particularly useful.
 
-## Day 1 and Day 2: (Unit 1) (Ben)
+## Day 1 and Day 2: Monday and Tuesday (Unit 1) (Ben)
  - The idea of a sharp null test.
     + Fisher's hypothesis of absolutely no effect
     + Appraising evidence vs a sharp null by comparing realized value to its distribution
@@ -53,7 +53,7 @@ might  find particularly useful.
  - @rosenbaum10book, Chapter 1
 
 
-## Day 3: P-values. (Unit 2) (Tom)
+## Day 3: Wednesday. P-values. (Unit 2) (Tom)
  - Review of Expectations, Probability
  - Probability distribution on Omega (assignments) forms the basis of p-values
  - Gesture at estimation.
@@ -88,7 +88,7 @@ might  find particularly useful.
  - **Assignment is due next Thursday**
 
 
-## Day 6: Monday (Unit 5)
+## Day 6: Monday 
  - Context for last week.
  - By now, we have a good sense of the statistics for causal quantities in
    randomized experiments: when the desired relationship is between treatment
@@ -144,21 +144,27 @@ assignment  and outcome.
 ## Day 11: Monday
   - Basic forms of matching: greedy,optimal, replacement, full.
   - Matching on more than one variable, approaches: mahalanobis distance and propensity scores.
-
-## Day 12:
-  - Hand out last assignment on matching. (assignment 3)
   - Exact matching; Calipers; Combining matrices;
+  - The mechanics and intuition behind  the experimental comparison in xBalance
 
-## Day 13:
-   - Effective sample size; SIUP for balance testing; searching for a good
-     match using balance, effective sample size, as well as max dist on
-important covariate.
+## Day 12: Tues
+  - Re-visiting propensity scores 
+  - Effective Sample size
+  - Practice creating matched designs
+
+## Day 13: Wed
+   - SIUP for balance testing; searching for a good match using balance,
+     effective sample size, as well as max dist on important covariate.
    - Estimation and Testing after matching; Plus more on  Navigating
      implementation tradeoffs in matching: Information and blocked designs
-(some blocking have more information about treatment effects than others);
-Balance tests and the Sequential Intersection Union Principle
+     (some blocking have more information about treatment effects than others);
+     Balance tests and the Sequential Intersection Union Principle
+  - Hand out last assignment on matching. (assignment 3)
 
-## Day 14:
+## Day 14: Thurs
+   - Estimation and Testing in block-randomized experiments (and as-if block-randomized experiments)
+
+## Day 15: Fri
  - Non-bipartite matching (cross-sectional)
 
 ### Reading on matching with more than one group
@@ -166,7 +172,7 @@ Balance tests and the Sequential Intersection Union Principle
  - @lu2011optimal
  - @wong2012jop (for an example)
 
-## Day 15: Monday
+## Day 16: Monday
  - (Regression) Discontinuity Designs
 
 ###  Readings about (Regression) Discontinuity Designs
@@ -178,19 +184,20 @@ Balance tests and the Sequential Intersection Union Principle
  - @saleshansen2015riforrd
 
 
-## Day 16:
+## Day 17: Tues
  - Sensitivity analysis I (Rosenbaum Style)
 
 ### Readings on sensitivity analysis
+ - @rosenbaum2017observation, Chap 9
  - @rosenbaum10book, Chap 3
  - @hhh2010
  - @rosenbaumtwo
 
-## Day 17:
+## Day 18: Wed
  - Sensitivity Analysis II (Calibrated Style)
 
-## Day 18:
- - Maybe Interference
+## Day 19: Thurs
+ - Maybe Interference or open discussion and/or project work
 
 ### Readings about causal inferences when units interact and causal effects flow across networks
  - @bowersetal2013; @bowers2016research
@@ -200,7 +207,5 @@ Balance tests and the Sequential Intersection Union Principle
  - @liu2014large
 
 
-## Day 19:
- - Free Discussion or project work
 
 # References

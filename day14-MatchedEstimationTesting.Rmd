@@ -1,9 +1,10 @@
 ---
 title: Estimation and Testing for Stratified Matched Designs
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-author: ICPSR 2018 Session 2
+author: ICPSR 2019 Session 2
 bibliography:
- - refs.bib
+ - BIB/abbrev-long.bib
+ - BIB/refs.bib
  - BIB/master.bib
  - BIB/misc.bib
  - BIB/causalinference.bib
@@ -38,8 +39,10 @@ require(knitr)
 ## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
 
 knitr::knit_hooks$set(mysize = function(before, options, envir) {
-			      if (before)
+			       if (before){
 				      return(options$size)
+			      } else {
+				      return("\\normalsize")}
 })
 
 knit_hooks$set(plotdefault = function(before, options, envir) {
@@ -47,7 +50,7 @@ knit_hooks$set(plotdefault = function(before, options, envir) {
 })
 
 opts_chunk$set(
-  tidy=FALSE,     # display code as typed
+  tidy='styler',     # display code as typed
   echo=TRUE,
   results='markup',
   strip.white=TRUE,
@@ -86,12 +89,14 @@ library(optmatch)
 library(sandwich)
 library(lmtest)
 library(estimatr)
+library(coin)
+library(lme4)
 ```
 
 ## Today
 
 
-  1. Agenda:  Estimation and Testing given a Matched Stratified Design. 
+  1. Agenda:  Estimation and Testing given a Matched Stratified Design.
   2. Reading: Review Gerber and Green on Block-Randomized Experiments.
   3. Questions arising from the reading or assignments or life?
 
@@ -109,6 +114,7 @@ for propensity scores; what to do about it.
  4. Strategies for choosing a matched design to maximize information and
 balance and substantive grounds for argument. (Using your computer to hunt for
 a defensible matched design.)
+ 5. What does it mean to "compare a design to an experiment"? Why do this? How did we do this?
 
 
 ```{r echo=FALSE, cache=TRUE}
@@ -123,10 +129,10 @@ row.names(meddat) <- meddat$nh
 
 ## Example design for the day
 
-Imagine, for example we had this matched design:
+Imagine, that we had this matched design (including matching on missing data):
 
 ```{r}
-## Make one of the covariates have missing data to 
+## Make one of the covariates have missing data to
 ## demonstrate how to match on it
 set.seed(12345)
 whichmissing <- sample(1:45,5)
@@ -136,21 +142,24 @@ datNoNA <- fill.NAs(nhTrt ~ nhPopD + nhAboveHS + HomRate03,
 stopifnot(all.equal(row.names(datNoNA),row.names(meddat)))
 datNoNA$id <- meddat$nh
 datNoNA$HomRate08 <- meddat$HomRate08
-covs <- c("nhPopD","nhPopD.NA","nhAboveHS","HomRate03")
+##covs <- c("nhPopD","nhPopD.NA","nhAboveHS","HomRate03")
+covs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
 balfmla <- reformulate(covs,response="nhTrt")
-mhdist <- match_on(balfmla,data=datNoNA, method="rank_mahalanobis")
-psmod <- arm::bayesglm(balfmla,data=datNoNA,family=binomial(link="logit"))
+mhdist <- match_on(balfmla,data=meddat, method="rank_mahalanobis")
+meddat$nhPopDmd <- datNoNA$nhPopD
+meddat$nhPopD.NA<- datNoNA$nhPopD.NA
+balfmla <- update(balfmla,.~.-nhPopD+nhPopDmd+nhPopD.NA)
+mhdist <- match_on(balfmla,data=meddat, method="rank_mahalanobis")
+psmod <- arm::bayesglm(balfmla,data=meddat,family=binomial(link="logit"))
 stopifnot(any(abs(coef(psmod))<10))
-psdist <- match_on(psmod,data=datNoNA)
+psdist <- match_on(psmod,data=meddat)
 ## Make a scalar distance
-tmp <- datNoNA$HomRate03
-names(tmp) <- rownames(datNoNA)
-absdist <- match_on(tmp, z = datNoNA$nhTrt,data=datNoNA)
+tmp <- meddat$HomRate03
+names(tmp) <- rownames(meddat)
+absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
 ```
 
 ## Example design for the day
-
-
 
 ```{r}
 ## Inspect the distance matrices to choose calipers if desired
@@ -158,40 +167,151 @@ quantile(as.vector(psdist),seq(0,1,.1))
 quantile(as.vector(mhdist),seq(0,1,.1))
 quantile(as.vector(absdist),seq(0,1,.1))
 ## Match and require no more than 3 treated per control, and no more than 5 control per treated
-fmMhA <- fullmatch(psdist + caliper(psdist,1) + caliper(absdist,1)
-		  + caliper(mhdist,12),
-		  min.controls=1/3,
-		  max.controls=3,
-		  data=datNoNA)
-
-fmMhA <- fullmatch(psdist +  caliper(psdist,3),
-		   min.controls=1/4,
-		   max.controls=4,
-		   data=meddat)
-summary(fmMhA,data=meddat,propensity.model=psmod)
-summary(fmMhA,min.controls=0,max.controls=Inf,data=meddat,propensity.model=psmod)
-
-fmMh <- fullmatch(psdist + caliper(psdist,1) + caliper(absdist,1)
-		  + caliper(mhdist,12), min.controls=1/3, #0 # default
-		  max.controls=5, #Inf # default
-		  data=datNoNA,tol=.00001)
+fmMh <- fullmatch(psdist + caliper(psdist,5) + caliper(absdist,2)
+		  + caliper(mhdist,52), min.controls=0, ## 1/3, 
+		  max.controls=Inf,
+		  data=meddat,tol=.00001)
 summary(fmMh,min.controls=0,max.controls=Inf,propensity.model=psmod)
+meddat$fmMh <- factor(fmMh)
+meddat$nhTrtF <- factor(meddat$nhTrt)
 ```
+
+# Testing Hypotheses by Randomization Inference in a Block-Randomized Trial
+
+## Testing Approach: By Hand
+
+```{r}
+
+newexp <- function(trt,b){
+	newtrt <- unsplit(lapply(split(trt,b),sample),b)
+	return(newtrt)
+}
+
+mdwt1 <- function(y,trt,b){
+	datB <- data.frame(y,trt,b) %>% group_by(b) %>%
+		summarise(ateb=mean(y[trt==1])-mean(y[trt==0]), nb=n())
+	ate_nbwt <- with(datB,sum(ateb*nb/sum(nb)))
+	return(ate_nbwt)
+}
+
+mdwt2 <- function(y,trt,b){
+	datB <- data.frame(y,trt,b) %>% group_by(b) %>%
+		summarise(ateb=mean(y[trt==1])-mean(y[trt==0]),
+			  nb=n(),
+            nTb = sum(trt),
+            nCb = sum(1-trt),
+	    pb = mean(trt),
+	    pbwt = pb * (1-pb),
+	    hbwt1 = pbwt * nb,
+            hbwt3 = ( 2*( nCb * nTb ) / (nTb + nCb))
+		)
+	ate_hbwt <- with(datB,sum(ateb*hbwt1/sum(hbwt1)))
+	return(ate_hbwt)
+}
+```
+
+## Testing by hand
+
+```{r}
+wdat <- meddat %>% filter(!is.na(meddat$fmMh))
+
+obsmd1 <- with(wdat,mdwt1(y=HomRate08,trt=nhTrt,b=fmMh))
+obsmd2 <- with(wdat,mdwt2(y=HomRate08,trt=nhTrt,b=fmMh))
+
+origtab <- with(wdat,table(trt=nhTrt,b=fmMh))
+testtab <- with(wdat,table(trt=newexp(trt=nhTrt,b=fmMh),b=fmMh))
+all.equal(origtab,testtab)
+
+```
+
+## Testing by hand
+
+```{r}
+
+set.seed(12345)
+nulldist1 <- replicate(1000,with(wdat,mdwt1(y=HomRate08,trt=newexp(trt=nhTrt,b=fmMh),b=fmMh)))
+set.seed(12345)
+nulldist2 <- replicate(1000,with(wdat,mdwt2(y=HomRate08,trt=newexp(trt=nhTrt,b=fmMh),b=fmMh)))
+
+p1 <- mean(nulldist1 <= obsmd1)
+p2 <- mean(nulldist2 <= obsmd2)
+
+var(nulldist1)
+var(nulldist2)
+```
+
+```{r}
+
+plot(density(nulldist1))
+lines(density(nulldist2),lty=2)
+
+```
+
+
+
+## Testing Approach: Faster
+
+```{r}
+
+xbTest1 <- xBalance(nhTrt~HomRate08,strata=list(fmMh=~fmMh),data=wdat,report="all")
+xbTest1$results[,,"fmMh"]
+
+xbTest2 <- balanceTest(nhTrt~HomRate08+strata(fmMh),data=wdat,report="all")
+xbTest2$results[,,"fmMh"]
+```
+
+## Testing Approach: Faster
+
+```{r}
+wdat$nhTrtF <- factor(wdat$nhTrt)
+meanTestAsym  <- oneway_test(HomRate08~nhTrtF|fmMh,data=wdat,distribution='asymptotic')
+set.seed(12345)
+meanTestPerm  <- oneway_test(HomRate08~nhTrtF|fmMh,data=wdat,distribution=approximate(nresample=1000))
+
+pvalue(meanTestAsym)
+pvalue(meanTestPerm)
+
+rankTestAsym  <- wilcox_test(HomRate08~nhTrtF|fmMh,data=wdat,distribution='asymptotic')
+set.seed(12345)
+rankTestPerm <- wilcox_test(HomRate08~nhTrtF|fmMh,data=wdat,distribution=approximate(nresample=1000))
+
+pvalue(rankTestAsym)
+pvalue(rankTestPerm)
+
+```
+
+See also `RItest` (in development) and the `ri2` and `ri` packages for R.
+
+# Estimation
 
 ## Overview: Estimate and Test "as if block-randomized"
 
-This means we have to **define** our estimands in weighted terms (because different blocks provide different amounts of information).  Is our average causal effect weighted by set size? Or something else?
+What are we estimating? Most people would say ACE=$\bar{\tau}=\bar{y}_1 - \bar{y}_0$. What estimator estimates this without bias?
 
 ```{r echo=TRUE}
-datNoNA[names(fmMh),"fmMh"] <- fmMh
-setmeanDiffs <- datNoNA %>% filter(!is.na(fmMh)) %>% group_by(fmMh) %>%
+meddat[names(fmMh),"fmMh"] <- fmMh
+datB <- meddat %>% filter(!is.na(fmMh)) %>% group_by(fmMh) %>%
   summarise(Y=mean(HomRate08[nhTrt==1])-mean(HomRate08[nhTrt==0]),
             nb=n(),
+	    nbwt= unique(nb/nrow(meddat)),
             nTb = sum(nhTrt),
             nCb = sum(1-nhTrt),
-            hwt = ( 2*( nCb * nTb ) / (nTb + nCb))
+	    pb = mean(nhTrt),
+	    pbwt = pb * (1-pb),
+	    hbwt1 = pbwt * nb,
+	    hbwt2 = pbwt * nbwt,
+            hbwt3 = ( 2*( nCb * nTb ) / (nTb + nCb))
             )
-setmeanDiffs
+datB
+
+
+## Notice that all of these different ways to express the harmonic mean weight are the same.
+datB$hbwt101 <- datB$hbwt1/sum(datB$hbwt1)
+datB$hbwt201 <- datB$hbwt2/sum(datB$hbwt2)
+datB$hbwt301 <- datB$hbwt3/sum(datB$hbwt3)
+stopifnot(all.equal(datB$hbwt101,datB$hbwt201))
+stopifnot(all.equal(datB$hbwt101,datB$hbwt301))
+
 ```
 
 ## Using the weights: Set size weights
@@ -201,7 +321,7 @@ size of the sets to estimate this quantity.
 
 ```{r}
 ## The set-size weighted version
-atewnb<-with(setmeanDiffs, sum(Y*nb/sum(nb)))
+atewnb<-with(datB, sum(Y*nb/sum(nb)))
 atewnb
 ```
 
@@ -210,37 +330,24 @@ atewnb
 Sometimes it is convenient to use `lm` because there are R functions for design-based standard errors and confidence intervals.
 
 ```{r warnings=FALSE}
+meddat$id <- row.names(meddat)
 ## See Gerber and Green section 4.5 and also Chapter 3 on block randomized experiments. Also Hansen and Bowers 2008.
-wdat <- datNoNA %>% filter(!is.na(fmMh)) %>% group_by(fmMh) %>% mutate(trtprob=mean(nhTrt),
-                                               nbwt=nhTrt/trtprob + (1-nhTrt)/(1-trtprob),
-                                               gghbwt= 2*( n()/nrow(datNoNA) )*(trtprob*(1-trtprob)), ## GG version,
+wdat <- meddat %>% filter(!is.na(fmMh)) %>% group_by(fmMh) %>% mutate(pb=mean(nhTrt),
+                                               nbwt=nhTrt/pb + (1-nhTrt)/(1-pb),
+                                               gghbwt= 2*( n()/nrow(meddat) )*(pb*(1-pb)), ## GG version,
+                                               gghbwt2= 2*( nbwt )*(pb*(1-pb)), ## GG version,
                                                nb = n(),
                                                nTb = sum(nhTrt),
                                                nCb = nb - nTb,
-                                               hbwt = ( 2*( nCb * nTb ) / (nTb + nCb))
+                                               hbwt1 = ( 2*( nCb * nTb ) / (nTb + nCb)),
+					       hbwt2 =  nbwt * ( pb * (1 - pb) )
                                                )
+
 row.names(wdat) <- wdat$id ## dplyr strips row.names
 lm0b<-lm(HomRate08~nhTrt,data=wdat,weight=nbwt)
 coef(lm0b)["nhTrt"]
 coeftest(lm0b,vcov=vcovHC(lm0b,type="HC2"))[1:2,]
 ```
-
-```{r echo=FALSE, eval=FALSE}
-## Evaluating the different expressions for the harmonic mean weight
-wdat <- datNoNA %>% filter(!is.na(fmMh)) %>% group_by(fmMh) %>% mutate(trtprob=mean(nhTrt),
-                                               nbwt=nhTrt/trtprob + (1-nhTrt)/(1-trtprob),
-                                               gghbwt= 2*( n()/nrow(datNoNA) )*(trtprob*(1-trtprob)), ## GG version,
-                                               nb = n(),
-                                               nTb = sum(nhTrt),
-                                               nCb = nb - nTb,
-                                               hbwt = ( 2*( nCb * nTb ) / (nTb + nCb))
-					       hwt2 = nb * (trtprob * (1 - trtprob)),
-					       hwt3 = 2* sum((nhTrt-mean(nhTrt))^2)
-                                               )
-
-cor(wdat[,c("gghbwt","hbwt","hwt2","hwt3")])
-```
-
 
 ## Using the weights: Set size weights
 
@@ -255,40 +362,187 @@ lmE0
 
 ## Using the weights: precision weights
 
-Set-size weighting is easy to explain but leaves information on the table:
-
+Set-size weighting is easy to explain but may differ in terms of precision:
 
 ```{r}
-atewhb <- with(setmeanDiffs, sum(Y*hwt/sum(hwt)))
+atewhb <- with(datB, sum(Y*hbwt1/sum(hbwt1)))
 atewhb
-lm1 <- lm(HomRate08~nhTrt+fmMh,data=wdat)
-coeftest(lm1,parm="nhTrt",vcov=vcovHC(lm1,type="HC2"))["nhTrt",]
-theci1 <- coefci(lm1,parm="nhTrt",vcov=vcovHC(lm1,type="HC2"))
-theci1
-diff(theci1[1,]) ## precision weighting
-theci0[1,]
-diff(theci0[1,]) ## set size weighting
+lm1 <- lm_robust(HomRate08~nhTrt+fmMh,data=wdat)
+summary(lm1)$coef[2,]
+summary(lmE0)$coef[2,]
+lm1a <- lm_robust(HomRate08~nhTrt,fixed_effects=~fmMh,data=wdat)
+summary(lm1a)$coef[1,]
 ```
 
-## Using the weights: effect of treatment on treated
+## Precision weighting
 
-`balanceTest` reports the ATT (the set mean differences weighted by number of
-treated) but uses the precision-weighted mean for the $p$-value.  `xBalance`
-reports the same $p$-values but reports the harmonic mean weighted difference
-of means as the `adj.diff`.
+Block-mean centering is another approach.
+
+```{r}
+wdat$HomRate08Cent <- with(wdat,HomRate08-ave(HomRate08,fmMh))
+wdat$nhTrtCent <- with(wdat,nhTrt-ave(nhTrt,fmMh))
+
+lm2 <- lm_robust(HomRate08Cent~nhTrtCent,data=wdat)
+summary(lm2)$coef[2,]
+```
 
 
-```{r echo=FALSE,eval=FALSE}
-## The descriptive adj.mean diff from balanceTest
-with(setmeanDiffs, sum(Y*nTb/sum(nTb)))
-xbOutcome1 <- balanceTest(nhTrt~HomRate08+strata(fmMh),data=wdat,report="all")
-xbOutcome$results[,,"fmMh"]
+## What about random effects?
+
+```{r}
+lmer1 <- lmer(HomRate08~nhTrtF+(1|fmMh),data=wdat,
+	      verbose=2,start=0,
+	      control=lmerControl(restart_edge=TRUE,optCtrl=list(maxfun=1000)))
+summary(lmer1)$coef
+```
+
+
+## Which estimator to choose?
+
+The  block-sized weighted approach is unbiased. But unbiased is not the only
+indicator quality in an estimator.
+
+##
+
+```{r}
+library(DeclareDesign)
+
+thepop <- declare_population(wdat)
+theassign <- declare_assignment(blocks=fmMh,block_m_each=table(fmMh,nhTrt))
+po_fun <- function(data){
+	data$Y_Z_1   <- data$HomRate08
+	data$Y_Z_0 <- data$HomRate08
+	data
+}
+thepo <- declare_potential_outcomes(handler=po_fun)
+thereveal <- declare_reveal(Y,Z) ## how does assignment reveal potential outcomes
+thedesign <- thepop + theassign + thepo + thereveal
+
+oneexp <- draw_data(thedesign)
+## Test
+all.equal(origtab,with(oneexp,table(trt=Z,b=fmMh)))
+
 ```
 
 ```{r}
-xbOutcome2 <- xBalance(nhTrt~HomRate08,strata=list(fmMh=~fmMh),data=wdat,report="all")
-xbOutcome2$results[,,"fmMh"]
+
+estimand1 <- declare_estimand(ACE = mean(Y_Z_1 - Y_Z_0))
+
+est1 <- declare_estimator(Y~Z, estimand=estimand1,
+			     model=difference_in_means,
+			     label="E1: Ignoring Blocks")
+est2 <- declare_estimator(Y~Z, fixed_effects=~fmMh,
+			     estimand=estimand1, model=lm_robust,
+			     label="E2: precision weights fe1")
+est3 <- declare_estimator(Y~Z+fmMh, estimand=estimand1, model=lm_robust,
+			     label="E3: precision weights fe2")
+
+nbwt_est_fun <- function(data){
+	data$newnbwt <- with(data,( Z/pb ) + ( (1-Z)/(1-pb) ) )
+	obj <-lm_robust(Y~Z,data=data,weights = newnbwt)
+	res <- tidy(obj) %>% filter(term=="Z")
+	return(res)
+}
+
+hbwt_est_fun <- function(data){
+	data$newnbwt <- with(data,( Z/pb ) + ( (1-Z)/(1-pb) ) )
+	data$newhbwt <-  with(data, newnbwt * ( pb * (1 - pb) ) )
+	obj <-lm_robust(Y~Z,data=data,weights = newhbwt)
+	res <- tidy(obj) %>% filter(term=="Z")
+	return(res)
+}
+
+est4   <- declare_estimator(handler = tidy_estimator(nbwt_est_fun), estimand=estimand1, label="E4: direct block size weights")
+est5   <- declare_estimator(handler = tidy_estimator(hbwt_est_fun), estimand=estimand1, label="E5: direct precision weights")
+
+
+
+direct_demean_fun <- function(data){
+	data$Y <- with(data, Y - ave(Y,fmMh))
+	data$Z <- with(data, Z - ave(Z,fmMh))
+	obj <- lm_robust(Y~Z,data=data)
+	data.frame(term = "Z" ,
+		   estimate = obj$coefficients[[2]],
+		   std.error = obj$std.error[[2]],
+		   statistic = obj$statistic[[2]],
+		   p.value=obj$p.value[[2]],
+		   conf.low=obj$conf.low[[2]],
+		   conf.high=obj$conf.high[[2]],
+		   df=obj$df[[2]],
+		   outcome="Y")
+}
+
+est6   <- declare_estimator(handler = tidy_estimator(direct_demean_fun), estimand=estimand1,label="E6: Direct Demeaning")
+
+lmer_est_fun <- function(data){
+	thelmer <- lmer(Y~Z+(1|fmMh),data=data,
+			control=lmerControl(restart_edge=TRUE,optCtrl=list(maxfun=1000)))
+	obj <- summary(thelmer)
+	cis <- confint(thelmer,parm="Z")
+	data.frame(term = "Z" ,
+		   estimate = obj$coefficients[2,1],
+		   std.error = obj$coefficients[2,2],
+		   statistic = obj$coefficients[2,3],
+		   p.value=NA,
+		   conf.low=cis[1,1],
+		   conf.high=cis[1,2],
+		   df=NA,
+		   outcome="Y")
+}
+
+
+est7 <- declare_estimator(handler=tidy_estimator(lmer_est_fun),estimand=estimand1,label="E7: Random Effects")
+#est1(oneexp)
+#est2(oneexp)
+est7(oneexp)
+
+thedesign_plus_est <- thedesign + estimand1 + est1 + est2 + est3 + est4 + est5 + est6 + est7
+
+
 ```
+
+## Diagnosands and diagnosis
+
+```{r diagnose, cache=TRUE}
+
+set.seed(12345)
+
+thediagnosands <- declare_diagnosands(
+     bias = mean(estimate - estimand),
+     rmse = sqrt(mean((estimate - estimand) ^ 2)),
+     power = mean(p.value < .05),
+     coverage = mean(estimand <= conf.high & estimand >= conf.low),
+     mean_estimate = mean(estimate),
+     sd_estimate = sd(estimate),
+     mean_se = mean(std.error),
+     mean_estimand = mean(estimand)
+     )
+
+diagnosis <- diagnose_design(thedesign_plus_est,sims=10000,bootstrap_sims=0,
+			     diagnosands = thediagnosands)
+
+
+```
+
+```{r}
+
+sims <- 
+
+```
+
+
+## Results of the Simulation
+
+```{r}
+reshape_diagnosis(diagnosis,digits=4)[,-c(1:2,4)]
+
+kable(reshape_diagnosis(diagnosis,digits=4)[,-c(1:2,4)])
+
+```
+
+
+
+
 
 
 ## The direct permutation approach
@@ -307,15 +561,15 @@ newExp2 <- function(b,nT){
 	block_ra(blocks=b,block_m=nT)
 }
 
-newz2 <- newExp2(b=wdat$fmMh,nT=setmeanDiffs$nTb)
+newz2 <- newExp2(b=wdat$fmMh,nT=datB$nTb)
 testnewExp2 <- sapply(split(newz2,wdat$fmMh),function(x){ c(nb=length(x),nTb=sum(x)) })
-stopifnot(all.equal(testnewExp2["nb",],setmeanDiffs$nb,check.attributes=FALSE))
-stopifnot(all.equal(testnewExp2["nTb",],setmeanDiffs$nTb,check.attributes=FALSE))
+stopifnot(all.equal(testnewExp2["nb",],datB$nb,check.attributes=FALSE))
+stopifnot(all.equal(testnewExp2["nTb",],datB$nTb,check.attributes=FALSE))
 
 newz1 <- newExp(wdat$nhTrt,wdat$fmMh)
 testnewExp1 <- sapply(split(newz1,wdat$fmMh),function(x){ c(nb=length(x),nTb=sum(x)) })
-stopifnot(all.equal(testnewExp1["nb",],setmeanDiffs$nb,check.attributes=FALSE))
-stopifnot(all.equal(testnewExp1["nTb",],setmeanDiffs$nTb,check.attributes=FALSE))
+stopifnot(all.equal(testnewExp1["nb",],datB$nb,check.attributes=FALSE))
+stopifnot(all.equal(testnewExp1["nTb",],datB$nTb,check.attributes=FALSE))
 
 
 hwtfn <- function(data){
@@ -345,6 +599,8 @@ obsNTZ<-wtMeanDiffTZ(wdat$HomRate08,wdat$nhTrt,wdat$fmMh,setsizewtfn)
 obsTTZ<-wtMeanDiffTZ(wdat$HomRate08,wdat$nhTrt,wdat$fmMh,trtsizewtfn)
 ```
 
+##  The direct permutation approach
+
 Test the null hypothesis of no effects:
 
 ```{r cache=TRUE}
@@ -369,18 +625,6 @@ curve(dnorm(x,sd=sd(nulldistHwt)),from=-1,to=1,col="gray",add=TRUE)
 curve(dnorm(x,sd=sd(nulldistNwt)),from=-1,to=1,col="gray",lty=2,add=TRUE)
 ```
 
-## Easier permutation tests
-
-```{r}
-library(coin)
-wdat$nhTrtF <- factor(wdat$nhTrt)
-testHwt <- oneway_test(HomRate08~nhTrtF | fmMh,data=wdat)
-pvalue(testHwt)
-testHwtPerm <- oneway_test(HomRate08~nhTrtF | fmMh,data=wdat,
-		       distribution=approximate(B=1000))
-pvalue(testHwtPerm)
-```
-
 
 # Difference in Differences for Matched Designs
 
@@ -392,7 +636,7 @@ matching on baseline outcome, we *might* increase precision and diminish bias by
 further adjusting after matching.
 
 ```{r}
-bal1 <- balanceTest(update(balfmla,.~.+strata(fmMh)),data=datNoNA,report="all")
+bal1 <- balanceTest(update(balfmla,.~.+strata(fmMh)),data=meddat,report="all")
 t(bal1$results["HomRate03",,])
 ```
 
@@ -418,10 +662,10 @@ newdat$Z <- factor(newdat$nhTrt)
 newdat$fm <- factor(newdat$fmMh)
 
 g <- ggplot(data=newdat,aes(x=post,y=Y,color=Z,shape=fm)) +
-	scale_shape_manual(values=1:10) +
+	scale_shape_manual(values=1:14) +
 	#geom_point() +
 	geom_jitter(width=.1) +
-	geom_smooth(method="lm",aes(x=post,y=Y,group=Z),se=FALSE,method.args=list(weights=newdat$nbwt),weights=newdat$nbwt)
+	geom_smooth(method="lm",aes(x=post,y=Y,group=Z,weight=nbwt),se=FALSE)
 
 print(g)
 
@@ -447,16 +691,27 @@ In this case, we don't see big precision improvements (recall that we matched
 quite closely on baseline outcome).
 
 
-```{r}
+```{r eval=FALSE}
 cinb<-coefci(ddnbwt,parm="nhTrt",  vcov.=vcov(ddnbwt,type="HC2"))
 cihb1<-coefci(ddhbwt1,parm="nhTrt",vcov.=vcov(ddhbwt1,type="HC2"))
 cihb2<-coefci(ddhbwt2,parm="nhTrtMD",vcov.=vcov(ddhbwt2,type="HC2"))
+```
 
-diff(theci1[1,]) ## precision weighting
-diff(theci0[1,]) ## set size weighting
-diff(cinb[1,])
-diff(cihb1[1,])
-diff(cihb2[1,])
+Difference in Diffences as Covariance Adjustment
+
+```{r}
+
+dind1 <- lm_lin(HomRate08~nhTrt,covariates = ~HomRate03,weight=nbwt,data=wdat)
+
+dind1
+
+## Versus
+
+lmbasic <- lm_robust(HomRate08~nhTrt,weight=nbwt,data=wdat)
+lmbasic
+
+lmfe <- lm_robust(HomRate08~nhTrt,fixed_effects=~fmMh,data=wdat)
+lmfe
 ```
 
 
@@ -480,17 +735,9 @@ Now that you've seen **a lot**, you can practice.
    principle controls the family-wise error rate for balance tests?
 
 
+## Summary
 
-
-## Summary:
-
-What do you think?
-
-### Next:
-
-Estimating causal effects, testing hypotheses about causal effects.
-
-
+Questions? Comments?
 
 ## Using the weights: Set size weights
 
@@ -510,7 +757,7 @@ coef(lmLin)["nhTrt"]
 coeftest(lmLin,vcov=vcovHC(lmLin,type="HC2"))[1:2,]
 
 ## See Gerber and Green 4.5
-wdat$Zf <- factor(wdat$trtprob)
+wdat$Zf <- factor(wdat$pb)
 Z <- model.matrix(~Zf-1,data=wdat)
 ZminusZbar <- apply(Z,2,function(z){ z - mean(z) })
 wrkdat <- cbind.data.frame(wrkdat,ZminusZbar)
@@ -525,5 +772,8 @@ coeftest(lmLinA,vcov=vcovHC(lmLinA,type="HC2"))[1:2,]
 lmE2 <- lm_lin(HomRate08~nhTrt,covariates=~fmMh,data=wdat)
 ```
 
+## Covariance Adjustment after Matching
+
+@rubin:thom:2000 suggest covariance adjustment after matching.
 
 ## References

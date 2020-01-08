@@ -1,0 +1,701 @@
+\RequirePackage[l2tabu, orthodox]{nag} % warn about outdated packages
+\documentclass[11pt,leqno]{article}\usepackage[]{graphicx}\usepackage[]{color}
+% maxwidth is the original width if it is less than linewidth
+% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage{microtype} %
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb}          % AMS Stuff
+\usepackage[linewidth=1pt]{mdframed}
+\usepackage{mdframed}
+\usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{afterpage}% http://ctan.org/pkg/afterpage
+\usepackage[T1]{fontenc}
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfig}
+\usepackage{titling}            % modify maketitle in latex
+% \usepackage{mathtools}          % multlined environment with size option
+\usepackage{verbatim}
+\usepackage{geometry}
+\usepackage{bigfoot}
+\usepackage[format=hang,
+            font={small},
+            labelfont=bf,
+            textfont=rm]{caption}
+
+\geometry{verbose,margin=2cm,nomarginpar}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+\usepackage{url}
+\usepackage{relsize}            % \mathlarger{} environment
+\usepackage[unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=page,
+            colorlinks=true,
+            hyperfootnotes=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1},
+            citecolor=blue!70!black,
+            linkcolor=red!70!black,
+            urlcolor=green!70!black]{hyperref}
+\usepackage{hypernat}
+
+\usepackage{multirow}
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+
+\parskip=12pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=0pt
+\thm@postskip=0pt}
+\makeatother
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+\newtheoremstyle{newstyle}
+{12pt} %Aboveskip
+{12pt} %Below skip
+{\itshape} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+{} %Indent
+{\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+{.} %Punctuation afer theorem header
+{ } %Space after theorem header
+{} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+% \DeclareMathOperator{\Pr}{\rm{Pr}}
+
+% COLORS FOR GRAPHICS (3-class Set1)
+\definecolor{Blue}{RGB}{55,126,184}
+\definecolor{Red}{RGB}{228,26,28}
+\definecolor{Green}{RGB}{77,175,74}
+
+% COLORS FOR EQUATIONS (3-class Dark2)
+\definecolor{eqgreen}{RGB}{27,158,119}
+\definecolor{eqblue}{RGB}{117,112,179}
+\definecolor{eqred}{RGB}{217,95,2}
+
+
+\title{Sensitivity Analysis}
+\author{Jake Bowers, Ben Hansen \& Tom Leavitt}
+\date{\today}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+
+
+\newpage
+
+\section{Introduction}
+
+Thus far this course has considered how to make \textit{valid} inferences conditional on the premise of no imbalances on unobserved covariates of which treatment assignment is a function. But what about the soundness of such inferences? Is the premise of no imbalances on unobserved covariates true? Ultimately, that is a question we cannot answer since it requires data that is not available; however, we can consider \textit{hypothetical} scenarios of confounding and then assess the extent to which such scenarios would alter our inferences. But first, a review . . .
+
+\subsection{Review: P-Values}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{rm}\hlstd{(}\hlkwc{list} \hlstd{=} \hlkwd{ls}\hlstd{())}
+
+\hlstd{n} \hlkwb{<-} \hlnum{6}
+\hlstd{n_1} \hlkwb{<-} \hlnum{3}
+
+\hlstd{y_c} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlnum{20}\hlstd{,} \hlnum{8}\hlstd{,} \hlnum{11}\hlstd{,} \hlnum{10}\hlstd{,} \hlnum{14}\hlstd{,} \hlnum{1}\hlstd{)}
+\hlstd{y_t_null_true} \hlkwb{<-} \hlstd{y_c} \hlopt{+} \hlnum{0}
+
+\hlkwd{mean}\hlstd{(y_t_null_true} \hlopt{-} \hlstd{y_c)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+\begin{alltt}
+\hlstd{treated} \hlkwb{<-} \hlkwd{combn}\hlstd{(}\hlkwc{x} \hlstd{= n,}
+                 \hlkwc{m} \hlstd{= n_1,}
+                 \hlkwc{simplify} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\hlstd{Omega} \hlkwb{<-} \hlkwd{apply}\hlstd{(}\hlkwc{X} \hlstd{= treated,}
+               \hlkwc{MARGIN} \hlstd{=} \hlnum{2}\hlstd{,}
+               \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)} \hlkwd{as.integer}\hlstd{(}\hlnum{1}\hlopt{:}\hlstd{n} \hlopt{%in%} \hlstd{x))}
+
+\hlstd{unif_assign_probs} \hlkwb{<-} \hlkwd{rep}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlopt{/}\hlkwd{ncol}\hlstd{(Omega),} \hlkwc{times} \hlstd{=} \hlkwd{ncol}\hlstd{(Omega))}
+
+\hlstd{obs_pot_outs_null_true} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                                 \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{ y_t_null_true} \hlopt{*} \hlstd{Omega[,x]} \hlopt{+} \hlstd{y_c} \hlopt{*} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{Omega[,x]) \})}
+
+\hlstd{obs_diff_means_null_true} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                                   \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{mean}\hlstd{(obs_pot_outs_null_true[,x][}\hlkwd{which}\hlstd{(Omega[,x]} \hlopt{==} \hlnum{1}\hlstd{)])} \hlopt{-}
+                                       \hlkwd{mean}\hlstd{(obs_pot_outs_null_true[,x][}\hlkwd{which}\hlstd{(Omega[,x]} \hlopt{==} \hlnum{0}\hlstd{)]) \})}
+
+\hlstd{null_dists_null_true} \hlkwb{<-} \hlkwd{list}\hlstd{()}
+
+\hlkwa{for}\hlstd{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega))\{}
+
+  \hlstd{null_dists_null_true[[i]]} \hlkwb{=} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                           \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{mean}\hlstd{(obs_pot_outs_null_true[,i][}\hlkwd{which}\hlstd{(Omega[,x]} \hlopt{==} \hlnum{1}\hlstd{)])} \hlopt{-}
+                               \hlkwd{mean}\hlstd{(obs_pot_outs_null_true[,i][}\hlkwd{which}\hlstd{(Omega[,x]} \hlopt{==} \hlnum{0}\hlstd{)]) \}) \}}
+
+\hlstd{unif_p_values_null_true} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                                  \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{sum}\hlstd{((null_dists_null_true[[x]]} \hlopt{>=} \hlstd{obs_diff_means_null_true[x])} \hlopt{*}
+                                                            \hlstd{unif_assign_probs) \})}
+
+\hlcom{## Type I Error Probability}
+\hlkwd{sum}\hlstd{((unif_p_values_null_true} \hlopt{<=} \hlnum{0.05}\hlstd{)} \hlopt{*} \hlstd{unif_assign_probs)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.05
+\end{verbatim}
+\begin{alltt}
+\hlcom{## What if we had nonuniform assignment probabilities?}
+\hlcom{## e.g.,}
+\hlstd{non_unif_indiv_probs} \hlkwb{<-} \hlkwd{c}\hlstd{((}\hlnum{3}\hlopt{/}\hlnum{4}\hlstd{), (}\hlnum{1}\hlopt{/}\hlnum{4}\hlstd{), (}\hlnum{1}\hlopt{/}\hlnum{2}\hlstd{), (}\hlnum{1}\hlopt{/}\hlnum{4}\hlstd{), (}\hlnum{1}\hlopt{/}\hlnum{4}\hlstd{), (}\hlnum{1}\hlopt{/}\hlnum{4}\hlstd{))}
+
+\hlstd{non_unif_unnorm_assign_probs} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                                       \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)} \hlkwd{prod}\hlstd{(}\hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{= Omega[,x]} \hlopt{==} \hlnum{1}\hlstd{,}
+                                                                     \hlkwc{yes} \hlstd{= non_unif_indiv_probs,}
+                                                                     \hlkwc{no} \hlstd{=  (}\hlnum{1} \hlopt{-} \hlstd{non_unif_indiv_probs))))}
+
+\hlstd{non_unif_assign_probs} \hlkwb{<-} \hlstd{non_unif_unnorm_assign_probs}\hlopt{/}\hlkwd{sum}\hlstd{(non_unif_unnorm_assign_probs)}
+
+\hlstd{non_unif_p_values_null_true} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                                      \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{sum}\hlstd{((null_dists_null_true[[x]]} \hlopt{>=} \hlstd{obs_diff_means_null_true[x])} \hlopt{*}
+                                                                \hlstd{non_unif_assign_probs) \})}
+
+\hlkwd{sum}\hlstd{((non_unif_p_values_null_true} \hlopt{<=} \hlnum{0.05}\hlstd{)} \hlopt{*} \hlstd{non_unif_assign_probs)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+\begin{alltt}
+\hlstd{p_values_data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{p_value} \hlstd{=} \hlkwd{c}\hlstd{(}\hlkwd{round}\hlstd{(}\hlkwc{x} \hlstd{= unif_p_values_null_true,} \hlkwc{digits} \hlstd{=} \hlnum{4}\hlstd{),}
+                                        \hlkwd{round}\hlstd{(}\hlkwc{x} \hlstd{= non_unif_p_values_null_true,} \hlkwc{digits} \hlstd{=} \hlnum{4}\hlstd{)),}
+                            \hlkwc{prob} \hlstd{=} \hlkwd{c}\hlstd{(unif_assign_probs, non_unif_assign_probs),}
+                            \hlkwc{prob_type} \hlstd{=} \hlkwd{as.factor}\hlstd{(}\hlkwd{c}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlkwc{x} \hlstd{=} \hlstr{"Uniform"}\hlstd{,} \hlkwc{times} \hlstd{=} \hlkwd{length}\hlstd{(unif_p_values_null_true)),}
+                                                    \hlkwd{rep}\hlstd{(}\hlkwc{x} \hlstd{=} \hlstr{"Non-Uniform"}\hlstd{,} \hlkwc{times} \hlstd{=} \hlkwd{length}\hlstd{(non_unif_p_values_null_true)))))}
+
+\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= p_values_data,}
+       \hlkwc{mapping} \hlstd{=} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= p_value,}
+                     \hlkwc{y} \hlstd{= prob))} \hlopt{+}
+  \hlkwd{geom_bar}\hlstd{(}\hlkwc{stat} \hlstd{=} \hlstr{"identity"}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_vline}\hlstd{(}\hlkwc{xintercept} \hlstd{=} \hlnum{0.05}\hlstd{,}
+             \hlkwc{color} \hlstd{=} \hlstr{"red"}\hlstd{,}
+             \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)} \hlopt{+}
+  \hlkwd{facet_wrap}\hlstd{(}\hlkwc{facets} \hlstd{= .}\hlopt{~} \hlstd{prob_type,}
+             \hlkwc{nrow} \hlstd{=} \hlnum{2}\hlstd{,}
+             \hlkwc{ncol} \hlstd{=} \hlnum{1}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-1-1} 
+\begin{kframe}\begin{alltt}
+\hlstd{alphas} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlnum{0.01}\hlstd{,} \hlkwc{to} \hlstd{=} \hlnum{0.99}\hlstd{,} \hlkwc{by} \hlstd{=} \hlnum{0.01}\hlstd{)}
+
+\hlstd{unif_type_1_error_probs} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{length}\hlstd{(alphas),}
+                                  \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{sum}\hlstd{((unif_p_values_null_true} \hlopt{<=} \hlstd{alphas[x])} \hlopt{*} \hlstd{unif_assign_probs) \})}
+
+\hlkwd{all}\hlstd{(}\hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{length}\hlstd{(alphas),}
+           \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{ unif_type_1_error_probs[x]} \hlopt{<=} \hlstd{alphas[x] \}))}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlstd{non_unif_type_1_error_probs} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{length}\hlstd{(alphas),}
+                                      \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{sum}\hlstd{((non_unif_p_values_null_true} \hlopt{<=} \hlstd{alphas[x])} \hlopt{*}
+                                                                \hlstd{non_unif_assign_probs) \})}
+
+\hlkwd{all}\hlstd{(}\hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{length}\hlstd{(alphas),}
+           \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{ non_unif_type_1_error_probs[x]} \hlopt{<=} \hlstd{alphas[x] \}))}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlcom{## Power}
+\hlstd{y_t_null_false} \hlkwb{<-} \hlstd{y_c} \hlopt{+} \hlnum{3}
+
+\hlstd{obs_pot_outs_null_false} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                                  \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{ y_t_null_false} \hlopt{*} \hlstd{Omega[,x]} \hlopt{+} \hlstd{y_c} \hlopt{*} \hlstd{(}\hlnum{1} \hlopt{-} \hlstd{Omega[,x]) \})}
+
+\hlstd{obs_diff_means_null_false} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                                    \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{mean}\hlstd{(obs_pot_outs_null_false[,x][}\hlkwd{which}\hlstd{(Omega[,x]} \hlopt{==} \hlnum{1}\hlstd{)])} \hlopt{-}
+                                        \hlkwd{mean}\hlstd{(obs_pot_outs_null_false[,x][}\hlkwd{which}\hlstd{(Omega[,x]} \hlopt{==} \hlnum{0}\hlstd{)]) \})}
+
+\hlstd{null_dists_null_false} \hlkwb{<-} \hlkwd{list}\hlstd{()}
+
+\hlkwa{for}\hlstd{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega))\{}
+
+  \hlstd{null_dists_null_false[[i]]} \hlkwb{=} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                                      \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{mean}\hlstd{(obs_pot_outs_null_false[,i][}\hlkwd{which}\hlstd{(Omega[,x]} \hlopt{==} \hlnum{1}\hlstd{)])} \hlopt{-}
+                                          \hlkwd{mean}\hlstd{(obs_pot_outs_null_false[,i][}\hlkwd{which}\hlstd{(Omega[,x]} \hlopt{==} \hlnum{0}\hlstd{)]) \}) \}}
+
+\hlstd{unif_p_values_null_false} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                                   \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{sum}\hlstd{((null_dists_null_false[[x]]} \hlopt{>=} \hlstd{obs_diff_means_null_false[x])} \hlopt{*} \hlstd{unif_assign_probs) \})}
+
+\hlcom{## Power}
+\hlkwd{sum}\hlstd{((unif_p_values_null_false} \hlopt{<=} \hlnum{0.05}\hlstd{)} \hlopt{*} \hlstd{unif_assign_probs)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.1
+\end{verbatim}
+\begin{alltt}
+\hlstd{non_unif_p_values_null_false} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                                       \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{sum}\hlstd{((null_dists_null_false[[x]]} \hlopt{>=} \hlstd{obs_diff_means_null_false[x])} \hlopt{*}
+                                                                 \hlstd{non_unif_assign_probs) \})}
+
+\hlkwd{sum}\hlstd{((non_unif_p_values_null_false} \hlopt{<=} \hlnum{0.05}\hlstd{)} \hlopt{*} \hlstd{non_unif_assign_probs)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.04891304
+\end{verbatim}
+\begin{alltt}
+\hlkwd{all}\hlstd{(non_unif_p_values_null_false} \hlopt{<=} \hlstd{non_unif_p_values_null_true)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\subsection{Hidden Bias Due to an Unobserved Confounder}
+
+A powerful, design-based framework for such a sensitivity analysis is given by \citet{rosenbaum2002observational}. Before explaining this framework, we need to define a few additional terms. First, the \textit{treatment odds} for unit $i \in \left\{1, \ldots , n\right\}$ is $\frac{\pi_i}{\left(1 - \pi_i\right)}$, which is simply the $i$th unit's probability of assignment to treatment divided by that unit's probability of assignment to control. The \textit{treatment odds ratio} for any two units $i$ and $j \neq i$ is simply the ratio of the $i$th unit's treatment odds and the $j$th unit's treatment odds. If units' treatment odds are a function of only observed covariates \textit{and} the researcher is able to obtain balance on all of these observed covariates, then the treatment odds for units $i, j \neq i: \mathbf{x}_i = \mathbf{x}_j$ is identical and their treatment odds ratio is $1$.
+
+\citet{rosenbaum2002observational} considers what would happen when units' treatment odds are a function not only of observed covariates, $\mathbf{x}$, but also an unobserved covariate $u$. Under the assumption of a logistic functional form between all units' treatment odds and baseline covariates, as well as the constraint that $0 \leq u \leq 1$, one can write the treatment odds of the $i$th unit as follows:
+\begin{align*}
+\frac{\pi_i}{\left(1 - \pi_i\right)} & = \exp\left\{\kappa\left(\mathbf{x}_i\right) + \gamma u_i\right\} \\ 
+\log\left(\frac{\pi_i}{\left(1 - \pi_i\right)}\right) & = \kappa\left(\mathbf{x}_i\right) + \gamma u_i,
+\end{align*}
+where $\kappa\left(\cdot\right)$ is an unknown function and $\gamma$ is an unknown parameter, and the the treatment odds ratio for units $i$ and $j$ is:
+\begin{align*}
+\frac{\left(\frac{\pi_i}{1 - \pi_i}\right)}{\left(\frac{\pi_j}{1 - \pi_j}\right)} & = \frac{\exp\left\{\kappa\left(\mathbf{x}_i\right) + \gamma u_i\right\}}{\exp\left\{\kappa\left(\mathbf{x}_j\right) + \gamma u_j\right\}} \\
+& = \exp\left\{\left(\kappa\left(\mathbf{x}_i\right) + \gamma u_i\right) - \left(\kappa\left(\mathbf{x}_j\right) + \gamma u_j\right)\right\}.
+\end{align*}
+If $\mathbf{x}_i = \mathbf{x}_j$, then $\kappa\left(\mathbf{x}_i\right) = \kappa\left(\mathbf{x}_j\right)$ and, hence, the treatment odds ratio is simply:
+\begin{align*}
+\exp\left\{\gamma \left(u_i -  u_j\right)\right\}.
+\end{align*}
+Since $u_i, u_j \in \left[0, 1\right]$, the minimum and maximum possible values of $\left(u_i -  u_j\right)$ are $-1$ and $1$. Therefore, the minimum and maximum possible values of the treatment odds ratio are $\exp\left\{-\gamma\right\}$ and $\exp\left\{\gamma\right\}$. After noting that $\exp\left\{-\gamma\right\} = \frac{1}{\exp\left\{\gamma\right\}}$, we can bound the treatment odds ratio between $i$ and $j$ as follows:
+\begin{equation}
+\frac{1}{\exp\left\{\gamma\right\}} \leq \frac{\left(\frac{\pi_i}{1 - \pi_i}\right)}{\left(\frac{\pi_j}{1 - \pi_j}\right)} \leq \exp\left\{\gamma\right\}.
+\end{equation}
+We can denote $\exp\left\{\gamma\right\}$ by $\Gamma$ and subsequently consider how one's inferences would change for various values of $\Gamma$.
+
+For example, let's say that a researcher obtains balance via stratification on all observed covariates---such that the design closely resembles a uniform, block randomized experiment---and subsequently tests a strong null hypothesis under the assumption that all units' treatment odds are identical. Now the researcher considers deviations from this assumption. Different assumptions about $u$ and $\gamma$ imply differing probabilities of possible assignments, which, as \citet[Chapter 4]{rosenbaum2002observational} shows, can be represented by:
+\begin{equation}
+\Pr\left(\mathbf{Z} = \mathbf{z}\right) = \frac{\exp\left\{\gamma \mathbf{z}^{\prime}\mathbf{u}\right\}}{\sum_{\mathbf{z} \in \Omega} \exp\left\{\gamma \mathbf{z}^{\prime}\mathbf{u}\right\}} = \prod \limits_{b = 1}^B \frac{\exp\left\{\gamma \mathbf{z}^{\prime}\mathbf{u}\right\}}{\sum_{\mathbf{z} \in \Omega} \exp\left\{\gamma \mathbf{z}^{\prime}\mathbf{u}\right\}}.
+\label{eq: prob omega sens}
+\end{equation}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## imagine there were some unobserved binary covariate u}
+\hlstd{u} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{0}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{0}\hlstd{)}
+\hlstd{gamma} \hlkwb{<-} \hlnum{0.5}
+
+\hlstd{unnorm_probs_1} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                       \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{exp}\hlstd{(}\hlkwd{as.matrix}\hlstd{(gamma)} \hlopt{%*%} \hlkwd{t}\hlstd{(Omega[,x])} \hlopt{%*%} \hlkwd{as.matrix}\hlstd{(u))\})}
+\hlcom{#sapply(X = 1:ncol(Omega),}
+\hlcom{#                       FUN = function(x) \{ exp(gamma * sum(Omega[,x] * u)) \})}
+
+\hlstd{assign_probs_1} \hlkwb{<-} \hlstd{unnorm_probs_1}\hlopt{/}\hlkwd{sum}\hlstd{(unnorm_probs_1)}
+
+\hlcom{## convert odds to probs}
+\hlstd{indiv_treat_odds_u} \hlkwb{<-} \hlkwd{exp}\hlstd{(gamma} \hlopt{*} \hlstd{u)}
+\hlstd{indiv_probs} \hlkwb{<-} \hlstd{indiv_treat_odds_u}\hlopt{/}\hlstd{(}\hlnum{1} \hlopt{+} \hlstd{indiv_treat_odds_u)}
+
+\hlstd{unnorm_probs_2} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                         \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{prod}\hlstd{(}\hlkwd{ifelse}\hlstd{(}\hlkwc{test} \hlstd{= Omega[,x]} \hlopt{==} \hlnum{1}\hlstd{,}
+                                                         \hlkwc{yes} \hlstd{= indiv_probs,}
+                                                         \hlkwc{no} \hlstd{=  (}\hlnum{1} \hlopt{-} \hlstd{indiv_probs))) \})}
+
+\hlstd{assign_probs_2} \hlkwb{<-} \hlstd{unnorm_probs_2}\hlopt{/}\hlkwd{sum}\hlstd{(unnorm_probs_2)}
+\hlkwd{all.equal}\hlstd{(assign_probs_1, assign_probs_2)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlcom{## Type I error rate                           }
+\hlstd{p_values_null_true} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                             \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{sum}\hlstd{((null_dists_null_true[[x]]} \hlopt{>=} \hlstd{obs_diff_means_null_true[x])} \hlopt{*}
+                                                       \hlstd{assign_probs_1) \})}
+
+\hlcom{## We have a controlled Type I Error Rate}
+\hlkwd{sum}\hlstd{((p_values_null_true} \hlopt{<=} \hlnum{0.05}\hlstd{)} \hlopt{*} \hlstd{assign_probs_1)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+\begin{alltt}
+\hlcom{## What about power?}
+\hlstd{p_values_null_false} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlnum{1}\hlopt{:}\hlkwd{ncol}\hlstd{(Omega),}
+                              \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{} \hlkwd{sum}\hlstd{((null_dists_null_false[[x]]} \hlopt{>=} \hlstd{obs_diff_means_null_false[x])} \hlopt{*}
+                                                        \hlstd{assign_probs_1) \})}
+
+
+\hlkwd{sum}\hlstd{((p_values_null_false} \hlopt{<=} \hlnum{0.05}\hlstd{)} \hlopt{*} \hlstd{assign_probs_1)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.04757146
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\subsection{Sensitivity Analysis with Matched Sets Design}
+
+\citet{rosenbaum2015} offers an \texttt{[R]} package for the implementation of sensitivity analyses.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{load}\hlstd{(}\hlkwd{url}\hlstd{(}\hlstr{"http://jakebowers.org/Data/meddat.rda"}\hlstd{))}
+
+\hlstd{meddat}\hlopt{$}\hlstd{HomRate03} \hlkwb{<-} \hlkwd{with}\hlstd{(meddat, (HomCount2003}\hlopt{/}\hlstd{Pop2003)} \hlopt{*} \hlnum{1000}\hlstd{)}
+\hlstd{meddat}\hlopt{$}\hlstd{HomRate08} \hlkwb{<-} \hlkwd{with}\hlstd{(meddat, (HomCount2008}\hlopt{/}\hlstd{Pop2008)} \hlopt{*} \hlnum{1000}\hlstd{)}
+
+\hlkwd{load}\hlstd{(}\hlstr{"fm4.rda"}\hlstd{)}
+
+\hlstd{meddat} \hlopt{%<>%} \hlkwd{mutate}\hlstd{(}\hlkwc{fm4} \hlstd{= fm4,}
+                   \hlkwc{HomRate0803} \hlstd{= HomRate08} \hlopt{-} \hlstd{HomRate03)} \hlopt{%>%}
+  \hlkwd{filter}\hlstd{(}\hlopt{!}\hlkwd{is.na}\hlstd{(fm4))}
+
+\hlstd{meddat} \hlopt{%<>%} \hlkwd{mutate}\hlstd{(}\hlkwc{probs} \hlstd{=} \hlkwd{unsplit}\hlstd{(}\hlkwc{value} \hlstd{=} \hlkwd{lapply}\hlstd{(}\hlkwd{split}\hlstd{(}\hlkwc{x} \hlstd{= nhTrt,}
+                                                     \hlkwc{f} \hlstd{= fm4),}
+                                               \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}\hlkwd{sum}\hlstd{(x)}\hlopt{/}\hlkwd{length}\hlstd{(x)\}),}
+                                \hlkwc{f} \hlstd{= fm4))}
+
+\hlstd{obs_ate} \hlkwb{<-} \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(HomRate0803} \hlopt{~} \hlstd{nhTrt} \hlopt{+} \hlstd{fm4,}
+           \hlkwc{data} \hlstd{= meddat))[[}\hlstr{"nhTrt"}\hlstd{]]}
+
+\hlstd{obs_ate}
+\end{alltt}
+\begin{verbatim}
+## [1] -0.5981382
+\end{verbatim}
+\begin{alltt}
+\hlstd{new_block_experiment} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{z}\hlstd{,}
+                                 \hlkwc{y}\hlstd{,}
+                                 \hlkwc{s}\hlstd{)\{}
+
+  \hlstd{Z} \hlkwb{=} \hlkwd{unsplit}\hlstd{(}\hlkwc{value} \hlstd{=} \hlkwd{lapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlkwd{split}\hlstd{(}\hlkwc{x} \hlstd{= z,} \hlkwc{f} \hlstd{= s),} \hlkwc{FUN} \hlstd{= sample),} \hlkwc{f} \hlstd{= s)}
+
+  \hlstd{ATE} \hlkwb{=} \hlkwd{coef}\hlstd{(}\hlkwd{lm}\hlstd{(y} \hlopt{~} \hlstd{Z} \hlopt{+} \hlstd{s))[[}\hlstr{"Z"}\hlstd{]]}
+
+  \hlkwd{return}\hlstd{(ATE)}
+
+\hlstd{\}}
+
+\hlkwd{set.seed}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{)}
+\hlstd{null_dist} \hlkwb{<-} \hlkwd{replicate}\hlstd{(}\hlnum{1000}\hlstd{,} \hlkwd{new_block_experiment}\hlstd{(}\hlkwc{z} \hlstd{= meddat}\hlopt{$}\hlstd{nhTrt,}
+                                                  \hlkwc{y} \hlstd{= meddat}\hlopt{$}\hlstd{HomRate0803,}
+                                                  \hlkwc{s} \hlstd{= meddat}\hlopt{$}\hlstd{fm4))}
+
+\hlstd{p_value_lower} \hlkwb{<-} \hlkwd{mean}\hlstd{(null_dist} \hlopt{<=} \hlstd{obs_ate)}
+
+\hlstd{p_value_lower}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.001
+\end{verbatim}
+\begin{alltt}
+\hlstd{p_value_two_sided} \hlkwb{<-} \hlkwd{mean}\hlstd{(}\hlkwd{abs}\hlstd{(null_dist)} \hlopt{>=} \hlkwd{abs}\hlstd{(obs_ate))}
+
+\hlstd{p_value_two_sided}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.002
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Now let's perform a sensitivity analysis.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{meddat} \hlopt{%<>%} \hlkwd{select}\hlstd{(nhTrt,}
+                   \hlstd{HomRate0803,}
+                   \hlstd{fm4,}
+                   \hlstd{probs)} \hlopt{%>%}
+  \hlkwd{arrange}\hlstd{(fm4,}
+          \hlstd{nhTrt)}
+
+
+\hlstd{reshape_sensitivity} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{.data}\hlstd{,}
+                                \hlkwc{.z}\hlstd{,}
+                                \hlkwc{.y}\hlstd{,}
+                                \hlkwc{.fm}\hlstd{)\{}
+
+  \hlkwd{suppressMessages}\hlstd{(}\hlkwd{stopifnot}\hlstd{(}\hlkwd{require}\hlstd{(dplyr,} \hlkwc{quietly} \hlstd{=} \hlnum{TRUE}\hlstd{)))}
+  \hlkwd{suppressMessages}\hlstd{(}\hlkwd{stopifnot}\hlstd{(}\hlkwd{require}\hlstd{(magrittr,} \hlkwc{quietly} \hlstd{=} \hlnum{TRUE}\hlstd{)))}
+
+  \hlstd{num_cols} \hlkwb{<-} \hlkwd{max}\hlstd{(}\hlkwd{table}\hlstd{(meddat}\hlopt{$}\hlstd{fm4))}
+
+  \hlstd{reshaped} \hlkwb{<-} \hlkwd{lapply}\hlstd{(}\hlkwc{X} \hlstd{=} \hlkwd{split}\hlstd{(.y, .fm),}
+                     \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)\{}
+
+                       \hlkwd{return}\hlstd{(}\hlkwd{c}\hlstd{(x,}
+                                \hlkwd{rep}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{NA}\hlstd{,}
+                                    \hlkwc{times} \hlstd{=} \hlkwd{max}\hlstd{(num_cols} \hlopt{-} \hlkwd{length}\hlstd{(x),}
+                                                \hlnum{0}\hlstd{))))}
+
+                       \hlstd{\})}
+
+  \hlstd{reshaped_df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwd{t}\hlstd{(}\hlkwd{simplify2array}\hlstd{(reshaped)))}
+
+  \hlkwd{return}\hlstd{(reshaped_df)}
+
+  \hlstd{\}}
+
+\hlstd{meddat_reshaped} \hlkwb{<-} \hlkwd{reshape_sensitivity}\hlstd{(}\hlkwc{.data} \hlstd{= meddat,}
+                    \hlkwc{.z} \hlstd{= meddat}\hlopt{$}\hlstd{nhTrt,}
+                    \hlkwc{.y} \hlstd{= meddat}\hlopt{$}\hlstd{HomRate0803,}
+                    \hlkwc{.fm} \hlstd{= meddat}\hlopt{$}\hlstd{fm4)} \hlopt{%>%}
+  \hlkwd{rename}\hlstd{(}\hlkwc{yt} \hlstd{= X1,}
+         \hlkwc{yc1} \hlstd{= X2,}
+         \hlkwc{yc2} \hlstd{= X3,}
+         \hlkwc{yc3} \hlstd{= X4,}
+         \hlkwc{yc4} \hlstd{= X5,}
+         \hlkwc{yc5} \hlstd{= X6)}
+
+\hlstd{gammas} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlnum{1}\hlstd{,}
+              \hlkwc{to} \hlstd{=} \hlnum{6}\hlstd{,}
+              \hlkwc{by} \hlstd{=} \hlnum{0.1}\hlstd{)}
+
+\hlstd{sens_results} \hlkwb{<-} \hlkwd{sapply}\hlstd{(}\hlkwc{X} \hlstd{= gammas,}
+                       \hlkwc{FUN} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{g}\hlstd{) \{}
+
+                         \hlkwd{c}\hlstd{(}\hlkwc{gamma} \hlstd{= g,}
+                           \hlkwd{senmv}\hlstd{(meddat_reshaped,}
+                                 \hlkwc{method} \hlstd{=} \hlstr{"t"}\hlstd{,}
+                                 \hlkwc{gamma} \hlstd{= g))}
+                         \hlstd{\})}
+
+\hlstd{sens_results}
+\end{alltt}
+\begin{verbatim}
+##             [,1]         [,2]        [,3]        [,4]        [,5]       
+## gamma       1            1.1         1.2         1.3         1.4        
+## pval        0.001652875  0.002737169 0.004180985 0.005999901 0.008196182
+## deviate     2.937777     2.77771     2.637094    2.51215     2.40006    
+## statistic   0.6305185    0.6305185   0.6305185   0.6305185   0.6305185  
+## expectation 2.312965e-18 0.03499982  0.06681783  0.09586906  0.1224994  
+## variance    0.04606363   0.0459639   0.04569261  0.04529467  0.0448039  
+##             [,6]       [,7]       [,8]       [,9]       [,10]     
+## gamma       1.5        1.6        1.7        1.8        1.9       
+## pval        0.01076179 0.01368123 0.01693401 0.02049654 0.0243437 
+## deviate     2.298672   2.206308   2.12164    2.0436     1.971319  
+## statistic   0.6305185  0.6305185  0.6305185  0.6305185  0.6305185 
+## expectation 0.1469992  0.1696145  0.1905546  0.2099989  0.2281022 
+## variance    0.04424597 0.04364042 0.04300224 0.04234292 0.04167132
+##             [,11]      [,12]      [,13]      [,14]      [,15]     
+## gamma       2          2.1        2.2        2.3        2.4       
+## pval        0.02844987 0.03278976 0.03733894 0.04227118 0.047226  
+## deviate     1.90408    1.841287   1.782438   1.724917   1.672367  
+## statistic   0.6305185  0.6305185  0.6305185  0.6305185  0.6305185 
+## expectation 0.2449987  0.2608051  0.2756236  0.2895941  0.3027583 
+## variance    0.04099425 0.04031694 0.03964341 0.03906426 0.03841045
+##             [,16]      [,17]      [,18]      [,19]      [,20]     
+## gamma       2.5        2.6        2.7        2.8        2.9       
+## pval        0.05233184 0.0575698  0.06292244 0.06837373 0.07390902
+## deviate     1.622653   1.575506   1.530695   1.488013   1.447282  
+## statistic   0.6305185  0.6305185  0.6305185  0.6305185  0.6305185 
+## expectation 0.3151758  0.3269086  0.3380117  0.3485347  0.358522  
+## variance    0.03776717 0.03713571 0.03651698 0.03591161 0.03532   
+##             [,21]      [,22]      [,23]      [,24]      [,25]     
+## gamma       3          3.1        3.2        3.3        3.4       
+## pval        0.07951496 0.08517937 0.09089124 0.09730922 0.1032111 
+## deviate     1.408342   1.371052   1.335287   1.297037   1.263465  
+## statistic   0.6305185  0.6305185  0.6305185  0.6305185  0.6305185 
+## expectation 0.3680134  0.377045   0.3856496  0.3939279  0.4018498 
+## variance    0.03474238 0.03417884 0.03362933 0.03327287 0.03275573
+##             [,26]      [,27]      [,28]      [,29]      [,30]     
+## gamma       3.5        3.6        3.7        3.8        3.9       
+## pval        0.1091425  0.1150957  0.1210639  0.1270409  0.1330211 
+## deviate     1.231101   1.199866   1.169685   1.140491   1.112223  
+## statistic   0.6305185  0.6305185  0.6305185  0.6305185  0.6305185 
+## expectation 0.4094275  0.4166831  0.423637   0.4303078  0.4367126 
+## variance    0.03225185 0.03176097 0.03128281 0.03081705 0.03036337
+##             [,31]      [,32]      [,33]      [,34]      [,35]     
+## gamma       4          4.1        4.2        4.3        4.4       
+## pval        0.1389992  0.1449708  0.1509317  0.156878   0.1628066 
+## deviate     1.084827   1.05825    1.032446   1.007372   0.9829885 
+## statistic   0.6305185  0.6305185  0.6305185  0.6305185  0.6305185 
+## expectation 0.4428672  0.448786   0.4544826  0.4599693  0.4652576 
+## variance    0.02992145 0.02949096 0.02907155 0.02866289 0.02826466
+##             [,36]      [,37]      [,38]     [,39]      [,40]     
+## gamma       4.5        4.6        4.7       4.8        4.9       
+## pval        0.1687142  0.1745982  0.1804562 0.186286   0.1920856 
+## deviate     0.9592588  0.936149   0.9136278 0.8916659  0.8702364 
+## statistic   0.6305185  0.6305185  0.6305185 0.6305185  0.6305185 
+## expectation 0.4703581  0.4752809  0.4800352 0.4846294  0.4890717 
+## variance    0.02787653 0.02749818 0.0271293 0.02676958 0.02641874
+##             [,41]      [,42]      [,43]      [,44]      [,45]     
+## gamma       5          5.1        5.2        5.3        5.4       
+## pval        0.1978533  0.2035875  0.2092869  0.2149503  0.2205766 
+## deviate     0.849314   0.8288752  0.8088979  0.7893617  0.7702472 
+## statistic   0.6305185  0.6305185  0.6305185  0.6305185  0.6305185 
+## expectation 0.4933695  0.4975298  0.5015593  0.5054639  0.5092495 
+## variance    0.02607648 0.02574253 0.02541662 0.02509849 0.02478789
+##             [,46]      [,47]     [,48]      [,49]      [,50]     
+## gamma       5.5        5.6       5.7        5.8        5.9       
+## pval        0.2261649  0.2317144 0.2372244  0.2426942  0.2481235 
+## deviate     0.7515365  0.7332126 0.7152594  0.6976622  0.6804066 
+## statistic   0.6305185  0.6305185 0.6305185  0.6305185  0.6305185 
+## expectation 0.5129215  0.516485  0.5199447  0.5233052  0.5265707 
+## variance    0.02448457 0.0241883 0.02389887 0.02361604 0.02333961
+##             [,51]     
+## gamma       6         
+## pval        0.2535118 
+## deviate     0.6634794 
+## statistic   0.6305185 
+## expectation 0.5297453 
+## variance    0.02306938
+\end{verbatim}
+\begin{alltt}
+\hlstd{sens_plot_data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{Gamma} \hlstd{=} \hlkwd{unlist}\hlstd{(sens_results[}\hlstr{'gamma'}\hlstd{,]),}
+                             \hlkwc{p_value} \hlstd{=} \hlkwd{unlist}\hlstd{(sens_results[}\hlstr{'pval'}\hlstd{,]))}
+
+\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= sens_plot_data,} \hlkwc{mapping} \hlstd{=} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= Gamma,}
+                                            \hlkwc{y} \hlstd{= p_value))} \hlopt{+} \hlkwd{geom_line}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_vline}\hlstd{(}\hlkwc{xintercept} \hlstd{=} \hlkwd{c}\hlstd{(}\hlkwd{max}\hlstd{(sens_plot_data}\hlopt{$}\hlstd{Gamma[}\hlkwd{which}\hlstd{(sens_plot_data}\hlopt{$}\hlstd{p_value} \hlopt{<=} \hlnum{0.05}\hlstd{)]),}
+                            \hlkwd{max}\hlstd{(sens_plot_data}\hlopt{$}\hlstd{Gamma[}\hlkwd{which}\hlstd{(sens_plot_data}\hlopt{$}\hlstd{p_value} \hlopt{<=} \hlnum{0.1}\hlstd{)])),}
+             \hlkwc{color} \hlstd{=} \hlstr{"red"}\hlstd{,}
+             \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)} \hlopt{+}
+  \hlkwd{xlab}\hlstd{(}\hlkwc{label} \hlstd{=} \hlkwd{TeX}\hlstd{(}\hlstr{'$\textbackslash{}\textbackslash{}Gamma$'}\hlstd{))} \hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlkwc{label} \hlstd{=} \hlstr{"P-value"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-4-1} 
+
+\end{knitrout}
+
+\textbf{Question for Students:}
+\begin{itemize}\itemsep1pt
+\item Interpret the plot above.
+\end{itemize}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{find_Sens_G} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{gamma}\hlstd{,}
+                        \hlkwc{alpha}\hlstd{)\{}
+
+  \hlkwd{senmv}\hlstd{(meddat_reshaped,}
+        \hlkwc{gamma} \hlstd{= gamma)}\hlopt{$}\hlstd{pval} \hlopt{-} \hlstd{alpha}
+\hlstd{\}}
+
+\hlcom{## Find x value at which the function above == 0}
+\hlkwd{uniroot}\hlstd{(}\hlkwc{f} \hlstd{= find_Sens_G,}
+        \hlkwc{lower} \hlstd{=} \hlnum{1}\hlstd{,}
+        \hlkwc{upper} \hlstd{=} \hlnum{6}\hlstd{,}
+        \hlkwc{a} \hlstd{=} \hlnum{0.05}\hlstd{)}\hlopt{$}\hlstd{root}
+\end{alltt}
+\begin{verbatim}
+## [1] 2.789649
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\bibliographystyle{chicago}
+\begin{singlespace}
+\bibliography{Master_Bibliography}   % name your BibTeX data base
+\end{singlespace}
+
+\newpage
+
+\end{document}

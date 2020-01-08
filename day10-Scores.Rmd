@@ -1,9 +1,10 @@
 ---
 title: Statistical Adjustment and Assessment of Adjustment in Observational Studies --- Matched Stratification for One and Multiple Variables.
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-author: ICPSR 2018 Session 2
+author: ICPSR 2019 Session 2
 bibliography:
- - refs.bib
+ - BIB/abbrev-long.bib
+ - BIB/refs.bib
  - BIB/master.bib
  - BIB/misc.bib
 fontsize: 10pt
@@ -13,6 +14,14 @@ biblio-style: authoryear-comp
 biblatexoptions:
   - natbib=true
 output:
+  revealjs::revealjs_presentation:
+    slide_level: 2
+    incremental: true
+    transition: none
+    fig_caption: true
+    self_contained: false
+    reveal_plugins: ["notes","search","zoom","chalkboard"]
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
   beamer_presentation:
     slide_level: 2
     keep_tex: true
@@ -39,9 +48,13 @@ require(knitr)
 ## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
 
 knitr::knit_hooks$set(mysize = function(before, options, envir) {
-  if (before)
-    return(options$size)
+			      if (before){
+				      return(options$size)
+			      } else {
+				      return("\\normalsize")}
+
 })
+
 
 knit_hooks$set(plotdefault = function(before, options, envir) {
     if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
@@ -88,11 +101,12 @@ library(optmatch)
 ## Today
 
 \begin{enumerate}
-  \item Agenda:  Need to adjustment $\rightarrow$ "fair comparison" $\rightarrow$
-  stratification $\rightarrow$ Evaluation/Assessment of the stratification;
-  How to do this with one variable. How to do this with more than one
+  \item Agenda:  Continue to think about an adjustment strategy to enhance counterfactual causal interpretations in non-randomized studies: \\	
+Need adjust $\rightarrow$ "fair comparison" $\rightarrow$
+  stratification $\rightarrow$ evaluation of the stratification;
+  How to do this with one variable and/or more than one
   variable.
-\item Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans04} \cite{ho:etal:07}
+\item Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans:04} \cite{ho:etal:07}
 \item Questions arising from the reading or assignments or life?
 \end{enumerate}
 
@@ -123,9 +137,9 @@ How, in principle, might one do this?
 load(url("http://jakebowers.org/Data/meddat.rda"))
 ```
 
-## Review of what it means to "control for" in a linear regression model.
+## Review of linear model "control for" 
 
-Recall the Metrocable project: Did the Metrocable intervention decrease
+Did the Metrocable intervention decrease
 violence in those neighborhoods? We have Homicides per 1000 people in 2008 (`HomRate08`) as a function of Metrocable.
 
 ```{r}
@@ -137,7 +151,7 @@ lmRaw <- lm(HomRate08~nhTrt,data=meddat)
 coef(lmRaw)[["nhTrt"]]
 ```
 
-What do we need to believe or know in order to imagine that we have done a good job adjusting for Proportion with more than HS Education below? (concerns about extrapolation, interpolation, linearity, influential points, parallel slopes)
+What do we need to believe or know in order to imagine that we have done a good job adjusting for Proportion with more than HS Education below? (concerns about extrapolation, interpolation, linearity, influential points, parallel slopes, biased estimation of the ACE)
 
 ```{r}
 lmAdj1 <- lm(HomRate08 ~ nhTrt + nhAboveHS, data=meddat)
@@ -189,8 +203,6 @@ The goal of optmatch: collect observations into strata which minimize the
 within strata differences (calculate the absolute difference between treated and
 controls within strata, sum across strata, minimize this quantity).
 
-Start with a matrix of those differences (in general terms, a matrix of
-distances between the treated and control units)
 
 ```{r}
 tmp <- meddat$nhAboveHS
@@ -265,6 +277,7 @@ setdiffsfm1 <- meddat %>% group_by(fm1) %>% summarize(mneddiffs =
 setdiffsfm1
 #summary(setdiffs$mneddiffs)
 #quantile(setdiffs$mneddiffs, seq(0,1,.1))
+
 ```
 
 ## Evaluate the design: Within set differences
@@ -369,18 +382,22 @@ arrows(mean(X[,1]),mean(X[,2]),X["407",1],X["407",2])
 text(.4,200,label=round(dist(rbind(colMeans(X),X["407",])),2))
 ```
 
+Distance between point 0,0 and unit "407".
+
 ```{r}
 tmp <- rbind(colMeans(X),X["407",])
 tmp
 sqrt( (tmp[1,1] - tmp[2,1])^2 + (tmp[1,2]-tmp[2,2])^2 )
 ```
 
+Problem: overweights variables with bigger scales (Population Density dominates).
+
 ## Dimension reduction using the Mahalanobis Distance
 
-Now the Euclidean distance (on a standardized scale)
+Now the Euclidean distance (on a standardized scale) so neither variable is overly dominant.
 
-```{r echo=FALSE}
-Xsd <-scale(X) 
+```{r echo=FALSE,out.width=".6\\textwidth"}
+Xsd <-scale(X)
 apply(Xsd,2,sd)
 apply(Xsd,2,mean)
 plot(Xsd[,1],Xsd[,2],xlab="nhAboveHS/sd",ylab="nhPopD/sd")
@@ -392,9 +409,9 @@ text(2,-1.2,label=round(dist(rbind(colMeans(Xsd),Xsd["407",])),2))
 
 ## Dimension reduction using the Mahalanobis Distance
 
-The mahalanobis distance avoids the scale problem in the euclidean distance.^[For more see <https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance>]
+The mahalanobis distance avoids the scale problem in the euclidean distance.^[For more [see here](https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance)] Here each circle are points of the same MH distance.
 
-```{r echo=FALSE}
+```{r mhfig, echo=FALSE,out.width=".6\\textwidth"}
 library(chemometrics)
 par(mgp=c(1.5,.5,0),oma=rep(0,4),mar=c(3,3,0,0))
 mh <- mahalanobis(X,center=colMeans(X),cov=cov(X))
@@ -412,6 +429,34 @@ tmp<-rbind(c(0,0),Xsd["407",])
 mahalanobis(tmp,center=c(0,0),cov=cov(Xsd))
 edist <- sqrt( (tmp[1,1] - tmp[2,1])^2 + (tmp[1,2]-tmp[2,2])^2 )
 edist
+```
+
+## Dimension reduction using the Mahalanobis Distance
+
+
+```{r}
+plot(Xsd[,1],Xsd[,2],xlab="nhAboveHS/sd",ylab="nhPopD/sd")
+```
+
+## Dimension reduction using the Mahalanobis Distance
+
+
+```{r}
+drawMahal(X,center=colMeans(X),covariance=cov(X),quantile=c(.1,.2))
+```
+
+```{r}
+covX <- cov(X)
+newcovX <- covX
+newcovX[1,2] <- 0
+newcovX[2,1] <- 0
+```
+
+## Dimension reduction using the Mahalanobis Distance
+
+
+```{r}
+drawMahal(X,center=colMeans(X),covariance=newcovX,quantile=c(.1,.2))
 ```
 
 ## Matching on the Mahalanobis Distance
@@ -446,7 +491,19 @@ mhdist2[tpts,"407"]
 ```{r}
 fmMh <- fullmatch(mhdist,data=meddat)
 summary(fmMh,min.controls=0,max.controls=Inf)
+
+fmMh1 <- fullmatch(mhdist,data=meddat,min.controls=1)
+summary(fmMh1,min.controls=0,max.controls=Inf)
+
 ```
+
+```{r}
+
+xbMh <- xBalance(nhTrt~nhAboveHS+nhPopD,strata=list(unstrat=NULL,fmMh=~fmMh,fmMh1=~fmMh1),report="all",data=meddat)
+xbMh
+
+```
+
 
 #  Matching on Many Covariates: Using Propensity Scores
 
@@ -457,7 +514,7 @@ future because of logit separation problems when the number of covariates
 increases.]
 
 ```{r}
-theglm <- glm(nhTrt~nhPopD+nhAboveHS,data=meddat,family=binomial(link="logit"))
+theglm <- glm(nhTrt~nhPopD+nhAboveHS+HomRate03,data=meddat,family=binomial(link="logit"))
 thepscore <- theglm$linear.predictor
 thepscore01 <- predict(theglm,type="response")
 ````
@@ -495,7 +552,20 @@ balfmla<-reformulate(thecovs,response="nhTrt")
 xb4 <- balanceTest(update(balfmla,.~.+strata(fmMh)+strata(fmPs)),
                    data=meddat,report="all",p.adjust.method="none")
 xb4$overall[,]
+xb5 <- xBalance(balfmla,strata=list(fmMh=~fmMh,fmPs=~fmPs),
+                   data=meddat,report="all")
+xb5$overall
 ```
+
+```{r}
+
+newexp <- function(z,block){
+
+}
+
+
+```
+
 
 ## Can you do better?
 

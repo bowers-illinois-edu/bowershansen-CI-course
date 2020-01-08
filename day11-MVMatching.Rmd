@@ -1,17 +1,17 @@
 ---
 title: Matching on more than one covariate
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-author: ICPSR 2018 Session 2
+author: ICPSR 2019 Session 2
 bibliography:
- - refs.bib
+ - BIB/refs.bib
  - BIB/master.bib
  - BIB/misc.bib
 fontsize: 10pt
 geometry: margin=1in
 graphics: yes
-biblio-style: authoryear-comp
 biblatexoptions:
   - natbib=true
+biblio-style: authoryear-comp
 output:
   beamer_presentation:
     slide_level: 2
@@ -22,6 +22,18 @@ output:
     includes:
         in_header:
            - defs-all.sty
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
+  revealjs::revealjs_presentation:
+    slide_level: 2
+    incremental: true
+    transition: none
+    fig_caption: true
+    self_contained: false
+    reveal_plugins: ["notes","search","zoom","chalkboard"]
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
+    css: icpsr-revealjs.css
+    includes:
+      in_header: icpsr-revealjs.html
 ---
 
 <!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
@@ -37,8 +49,10 @@ require(knitr)
 ## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
 
 knitr::knit_hooks$set(mysize = function(before, options, envir) {
-  if (before)
-    return(options$size)
+			      if (before){
+				      return(options$size)
+			      } else {
+				      return("\\normalsize")}
 })
 
 knit_hooks$set(plotdefault = function(before, options, envir) {
@@ -46,7 +60,7 @@ knit_hooks$set(plotdefault = function(before, options, envir) {
 })
 
 opts_chunk$set(
-  tidy=FALSE,     # display code as typed
+  tidy='styler',     # display code as typed
   echo=TRUE,
   results='markup',
   strip.white=TRUE,
@@ -86,16 +100,63 @@ library(chemometrics) ## for drawMahal
 library(mvtnorm)
 ```
 
+<!--- For HTML Only --->
+`r if (!knitr:::is_latex_output()) '
+$\\newcommand{\\Pdistsym}{P}$
+$\\newcommand{\\Pdistsymn}{P_n}$
+$\\newcommand{\\Qdistsym}{Q}$
+$\\newcommand{\\Qdistsymn}{Q_n}$
+$\\newcommand{\\Qdistsymni}{Q_{n_i}}$
+$\\newcommand{\\Qdistsymt}{Q[t]}$
+$\\newcommand{\\dQdP}{\\ensuremath{\\frac{dQ}{dP}}}$
+$\\newcommand{\\dQdPn}{\\ensuremath{\\frac{dQ_{n}}{dP_{n}}}}$
+$\\newcommand{\\EE}{\\ensuremath{\\mathbf{E}}}$
+$\\newcommand{\\EEp}{\\ensuremath{\\mathbf{E}_{P}}}$
+$\\newcommand{\\EEpn}{\\ensuremath{\\mathbf{E}_{P_{n}}}}$
+$\\newcommand{\\EEq}{\\ensuremath{\\mathbf{E}_{Q}}}$
+$\\newcommand{\\EEqn}{\\ensuremath{\\mathbf{E}_{Q_{n}}}}$
+$\\newcommand{\\EEqni}{\\ensuremath{\\mathbf{E}_{Q_{n[i]}}}}$
+$\\newcommand{\\EEqt}{\\ensuremath{\\mathbf{E}_{Q[t]}}}$
+$\\newcommand{\\PP}{\\ensuremath{\\mathbf{Pr}}}$
+$\\newcommand{\\PPp}{\\ensuremath{\\mathbf{Pr}_{P}}}$
+$\\newcommand{\\PPpn}{\\ensuremath{\\mathbf{Pr}_{P_{n}}}}$
+$\\newcommand{\\PPq}{\\ensuremath{\\mathbf{Pr}_{Q}}}$
+$\\newcommand{\\PPqn}{\\ensuremath{\\mathbf{Pr}_{Q_{n}}}}$
+$\\newcommand{\\PPqt}{\\ensuremath{\\mathbf{Pr}_{Q[t]}}}$
+$\\newcommand{\\var}{\\ensuremath{\\mathbf{V}}}$
+$\\newcommand{\\varp}{\\ensuremath{\\mathbf{V}_{P}}}$
+$\\newcommand{\\varpn}{\\ensuremath{\\mathbf{V}_{P_{n}}}}$
+$\\newcommand{\\varq}{\\ensuremath{\\mathbf{V}_{Q}}}$
+$\\newcommand{\\cov}{\\ensuremath{\\mathbf{Cov}}}$
+$\\newcommand{\\covp}{\\ensuremath{\\mathbf{Cov}_{P}}}$
+$\\newcommand{\\covpn}{\\ensuremath{\\mathbf{Cov}_{P_{n}}}}$
+$\\newcommand{\\covq}{\\ensuremath{\\mathbf{Cov}_{Q}}}$
+$\\newcommand{\\hatvar}{\\ensuremath{\\widehat{\\mathrm{Var}}}}$
+$\\newcommand{\\hatcov}{\\ensuremath{\\widehat{\\mathrm{Cov}}}}$
+$\\newcommand{\\sehat}{\\ensuremath{\\widehat{\\mathrm{se}}}}$
+$\\newcommand{\\combdiff}[1]{\\ensuremath{\\Delta_{{z}}[#1]}}$
+$\\newcommand{\\Combdiff}[1]{\\ensuremath{\\Delta_{{Z}}[#1]}}$
+$\\newcommand{\\psvec}{\\ensuremath{\\varphi}}$
+$\\newcommand{\\psvecgc}{\\ensuremath{\\tilde{\\varphi}}}$
+$\\newcommand{\\atob}[2]{\\ensuremath{#1\\!\\! :\\!\\! #2}}$
+$\\newcommand{\\stratA}{\\ensuremath{\\mathbf{S}}}$
+$\\newcommand{\\stratAnumstrat}{\\ensuremath{S}}$
+$\\newcommand{\\sAsi}{\\ensuremath{s}}$
+$\\newcommand{\\permsd}{\\ensuremath{\\sigma_{\\Pdistsym}}}$
+$\\newcommand{\\dZ}[1]{\\ensuremath{d_{Z}[{#1}]}}$
+$\\newcommand{\\tz}[1]{\\ensuremath{t_{{z}}[#1]}}$
+$\\newcommand{\\tZ}[1]{\\ensuremath{t_{{Z}}[#1]}} $
+$\\newcommand{\\bX}[1]{\\ensuremath{\\mathbf{X}[#1]}} $
+'`
+
 ## Today
 
-\begin{enumerate}
-  \item Agenda:  Need to adjustment $\rightarrow$ "fair comparison" $\rightarrow$
+ 1. Agenda:  Need to adjustment $\rightarrow$ "fair comparison" $\rightarrow$
   stratification $\rightarrow$ Evaluation/Assessment of the stratification;
   How to do this with one variable. How to do this with more than one
   variable.
-\item Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans04} \cite{ho:etal:07}
-\item Questions arising from the reading or assignments or life?
-\end{enumerate}
+ 2. Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans:04} \cite{ho:etal:07}
+ 3. Questions arising from the reading or assignments or life?
 
 # But first, review:
 
@@ -107,24 +168,21 @@ library(mvtnorm)
    inference about causal effects).
    - The testing based approach (Fisher, Rosenbaum)
    - The estimation based approach (Neyman, Robins, many others)
-   - Skipped: The prediction based approach (Bayes, Rubin)
+   - Skipped: The prediction based approach (Bayes, Rubin); Estimation of Structural Models (Pearl)
  - Causal inference from simple randomized experiments.
  - Causal inference from randomized experiments with not-randomized doses
    (i.e. Instrumental Variables approaches to causal inference)
  - Briefly: How to know that our statistical procedures are doing what we want
    them to do: The operating characteristics of statistical procedures for
    esimation (bias,consistency) and testing (coverage / false positive error
-   rate, power). 
+   rate, power).
  - Making the case for adequate adjustment in observational studies
-   - The difficulties of making this case using the linear model
-   - The potential for making this case for one or more variables using
-     stratification.
-   - Using optimal, full matching technology to make and evaluate
-     stratifications.
+   - Using the linear model
+   - Using stratification  (via optimal, full matching) and the experimental standard
 
 ```{r echo=FALSE, cache=TRUE}
 load(url("http://jakebowers.org/Data/meddat.rda"))
-meddat<- mutate(meddat, 
+meddat<- mutate(meddat,
 		HomRate03=(HomCount2003/Pop2003)*1000,
                 HomRate08=(HomCount2008/Pop2008)*1000)
 row.names(meddat) <- meddat$nh
@@ -132,7 +190,7 @@ row.names(meddat) <- meddat$nh
 #  Matching on Many Covariates: Using Mahalnobis Distance
 
 
-## Dimension reduction using the Mahalanobis Distance
+## Mahalanobis Distance
 
 The general idea: dimension reduction. When we convert many columns into one column we reduce the dimensions of the dataset (to one column).
 
@@ -143,7 +201,7 @@ plot(meddat$nhAboveHS,meddat$nhPopD,xlim=c(-.3,.6),ylim=c(50,700))
 ```
 
 
-## Dimension reduction using the Mahalanobis Distance
+## Mahalanobis Distance
 
 First, let's look at Euclidean distance: $\sqrt{ (x_1 - x_2)^2 + (y_1 - y_2)^2 }$
 
@@ -155,7 +213,7 @@ arrows(mean(X[,1]),mean(X[,2]),X["407",1],X["407",2])
 text(.4,200,label=round(dist(rbind(colMeans(X),X["407",])),2))
 ```
 
-## Dimension reduction using the Mahalanobis Distance
+## Mahalanobis Distance
 
 Problems with the Euclidean distance ($\sqrt{ (x_1 - x_2)^2 + (y_1 - y_2)^2
 }$): over/under-emphasis depending on scaling, ignores correlation.
@@ -174,12 +232,12 @@ tmp
 sqrt( (tmp[1,1] - tmp[2,1])^2 + (tmp[1,2]-tmp[2,2])^2 )
 ```
 
-## Dimension reduction using the Mahalanobis Distance
+## Mahalanobis Distance
 
-For the scaling problem, standardize the Euclidean distance:$\sqrt{ (x_1/sd(x_1) - x_2/sd(x_2))^2 + (y_1/sd(y_1) - y_2/sd(y_2))^2 }$. (Here also centering the variables, since we only care about distance.) 
+For the scaling problem, standardize the Euclidean distance:$\sqrt{ (x_1/sd(x_1) - x_2/sd(x_2))^2 + (y_1/sd(y_1) - y_2/sd(y_2))^2 }$. (Here also centering the variables, since we only care about distance.)
 
 ```{r echo=FALSE}
-Xsd <-scale(X) 
+Xsd <-scale(X)
 apply(Xsd,2,sd)
 zapsmall(apply(Xsd,2,mean))
 ```
@@ -193,11 +251,11 @@ text(2,-1.2,label=round(dist(rbind(colMeans(Xsd),Xsd["407",])),2))
 ```
 
 
-## Dimension reduction using the Mahalanobis distance
+## Mahalanobis distance
 
 
 
-The Mahalanobis distance \citep{mahalanobis1930test}, avoids the scale and correlation problem in the euclidean distance.^[For more see <https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance>] $dist_M =  \sqrt{ (\bm{x} - \bm{\bar{x}})^T \bm{M}^{-1} (\bm{y} - \bm{\bar{y}}) }$ where $\bm{M}=\begin{bmatrix} var(x) & cov(x,y)  \\ cov(x,y) & var(y) \end{bmatrix}$
+The Mahalanobis distance \citep{mahalanobis1930test}, avoids the scale and correlation problem in the euclidean distance.^[For more see <https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance>] $dist_M =  \sqrt{ (\mathbf{x} - \mathbf{\bar{x}})^T \mathbf{M}^{-1} (\mathbf{y} - \mathbf{\bar{y}}) }$ where $\mathbf{M}=\begin{bmatrix} var(x) & cov(x,y)  \\ cov(x,y) & var(y) \end{bmatrix}$
 
 
 Here, using simulated data: The contour lines show points with the same
@@ -211,7 +269,7 @@ row.names(newX) <- row.names(X)
 cor(newX)
 ```
 
-```{r echo=FALSE, out.width=".5\\textwidth"}
+```{r echo=FALSE, out.width=".4\\textwidth"}
 mhnew <- mahalanobis(newX,center=colMeans(newX),cov=cov(newX))
 drawMahal(newX,center=colMeans(newX),covariance=cov(newX),
           quantile = c(0.975, 0.75, 0.5, 0.25))
@@ -228,9 +286,9 @@ text(newX[newpts,1]-.02,newX[newpts,2]-10,
 ## Dimension reduction using the Mahalanobis distance
 
 The contour lines show points with the same
-Mahalanobis distance and the numbers are Euclidean distance.
+Mahalanobis distance, the numbers are Euclidean distance. Notice that the point with Euclidean distance of 161 is farther than 250 in Mahalanobis terms.
 
-```{r echo=FALSE, out.width=".8\\textwidth"}
+```{r echo=FALSE, results="hide", out.width=".75\\textwidth"}
 mhnew <- mahalanobis(newX,center=colMeans(newX),cov=cov(newX))
 drawMahal(newX,center=colMeans(newX),covariance=cov(newX),
           quantile = c(0.975, 0.75, 0.5, 0.25))
@@ -341,6 +399,63 @@ setdiffsfm1
 
 ```
 
+Balance testing by hand
+
+```{r}
+d.stat<-function(zz, mm, ss){
+  ## this is the d statistic (harmonic mean weighted diff of means statistic)
+  ## from Hansen and Bowers 2008
+  h.fn<-function(n, m){(m*(n-m))/n}
+  myssn<-apply(mm, 2, function(x){sum((zz-unsplit(tapply(zz, ss, mean), ss))*x)})
+  hs<-tapply(zz, ss, function(z){h.fn(m=sum(z), n=length(z))})
+  mywtsum<-sum(hs)
+  myadjdiff<-myssn/mywtsum
+  return(myadjdiff)
+}
+
+newexp <- function(zz,ss){
+	newzz <- unsplit(lapply(split(zz,ss),sample),ss)
+	return(newzz)
+}
+
+## Test
+
+thetab <- table(meddat$nhTrt,meddat$fmMhRank,exclude=c())
+test1 <- newexp(meddat$nhTrt,meddat$fmMhRank)
+thetabtest <- table(test1,meddat$fmMhRank)
+all.equal(thetab, thetabtest)
+
+d.dist<-replicate(100, d.stat(zz=newexp(zz=meddat$nhTrt,ss=meddat$fmPs),
+			      meddat[,c("nhPopD","nhAboveHS")], ss=meddat$fmPs))
+
+
+obsds <- d.stat(zz=meddat$nhTrt,mm=meddat[,c("nhPopD","nhAboveHS")],ss=meddat$fmPs)
+
+d2.stat <- function(dstats,ddist=NULL,theinvcov=NULL){
+  ## d is the vector of d statistics
+  ## ddist is the matrix of the null reference distributions of the d statistics
+  if(is.null(theinvcov) & !is.null(ddist)){
+    as.numeric( t(dstats) %*% solve(cov(t(ddist))) %*% dstats)
+  } else {
+    as.numeric( t(dstats) %*% theinvcov %*% dstats)
+  }
+}
+
+invCovDDist <- solve(cov(t(d.dist)))
+obs.d2<- d2.stat(obsds,d.dist,invCovDDist)
+
+d2.dist<-apply(d.dist, 2, function(thed){
+                 d2.stat(thed,theinvcov=invCovDDist)
+         })
+## The chi-squared reference distribution only uses a one-sided p-value going in the positive direction
+d2p<-mean(d2.dist>=obs.d2)
+cbind(obs.d2,d2p)
+xb2$overall[,]
+
+
+```
+
+
 
 ## Matching on the Mahalanobis Distance
 
@@ -389,6 +504,10 @@ psdist <- match_on(theglm,data=meddat)
 psdist[1:4,1:4]
 fmPs <- fullmatch(psdist,data=meddat)
 summary(fmPs,min.controls=0,max.controls=Inf)
+xb2 <- balanceTest(nhTrt~nhPopD+nhAboveHS + strata(fmMh) + strata(fmMhRank) + strata(fmPs), data=meddat,
+		    report="all")
+xb2$overall[,]
+meddat$fmPs  <- factor(fmPs)
 ```
 
 ## Matching on the propensity score
@@ -400,6 +519,7 @@ simpdist <- outer(thepscore,thepscore,function(x,y){ abs(x-y) })
 mad(thepscore[meddat$nhTrt==1])
 mad(thepscore[meddat$nhTrt==0])
 optmatch:::match_on_szn_scale(thepscore,Tx=meddat$nhTrt)
+simpdist["101",c("401","402","403")]
 simpdist["101",c("401","402","403")]/.9137
 psdist["101",c("401","402","403")]
 ```
@@ -419,6 +539,36 @@ xb4 <- balanceTest(update(balfmla,.~.+strata(fmMh)+strata(fmMhRank)+ strata(fmPs
                    data=meddat,report="all",p.adjust.method="none")
 xb4$overall[,]
 xb4$results[,"p",]
+
+xb2$results[,,"fmPs"]
+setdiffs <- meddat  %>% group_by(fmPs) %>% summarize(md=mean(nhPopD[nhTrt==1]) - mean(nhPopD[nhTrt==0]),
+    nb=n(),
+            nTb = sum(nhTrt),
+            nCb = sum(1-nhTrt),
+            hwt = ( 2*( nCb * nTb ) / (nTb + nCb))
+)
+
+with(setdiffs,sum(md*nTb/sum(nTb)))
+
+xb2a <- xBalance(nhTrt ~ nhPopD + nhAboveHS,strata=list(fmPs=~fmPs),data=meddat,report="all")
+xb2a$results
+obststat <- with(setdiffs, sum(md*hwt/sum(hwt)))
+
+
+newexp <- function(zz,ss){
+	newzz <- unsplit(lapply(split(zz,ss),sample),ss)
+	return(newzz)
+}
+
+
+with(meddat,newexp(zz=nhTrt,ss=fmPs))
+
+weighted.mean(setdiffsHR$mneddiffs,w=setdiffsHR$hwt)
+thelmversion <-
+	lm(HomRate08~nhTrt+fmEx1,data=droplevels(meddat[!is.na(meddat$fmEx1),]))
+
+
+
 ```
 
 ## Can you do better?
@@ -434,16 +584,17 @@ plot(xb4)
 
 ## Calipers
 
-The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we disallow comparisons which differ by more than 2 standard deviations on the propensity score.
+The optmatch package allows calipers (which forbids certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we forbid comparisons which differ by more than 2 standard deviations on the propensity score.
 
 ```{r}
 quantile(as.vector(psdist),seq(0,1,.1))
 psdistCal <- psdist + caliper(psdist,2)
+as.matrix(psdist)[5:10,5:10]
 as.matrix(psdistCal)[5:10,5:10]
 ```
 ## Calipers
 
-The optmatch package allows calipers (which disallow certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we disallow comparisons which differ by more than 2 standard deviations on the propensity score.
+The optmatch package allows calipers (which forbid certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we forbid comparisons which differ by more than 2 standard deviations on the propensity score.
 
 ```{r}
 fmCal1 <- fullmatch(psdist+caliper(psdist,2),data=meddat,tol=.00001)
@@ -551,8 +702,8 @@ strata or sets or selecting subsets.
  - The work on cardinality matching and fine balance
    <http://jrzubizarreta.com/>
    <https://cran.rstudio.com/web/packages/designmatch/> )
- - The work on speedier approximate full matching <http://fredriksavje.com/>
-   <https://github.com/fsavje/quickmatch>
+ - The work on speedier approximate full matching with more data  <http://fredriksavje.com/>
+   <https://github.com/fsavje/quickmatch>, <https://cran.r-project.org/web/packages/rcbalance/index.html>.
  - The work on using genetic algorithms to (1) find approximate strata
    with-replacement <http://sekhon.berkeley.edu/matching/> and (2) to find
    an approximation to a completely randomized study (i.e. best subset

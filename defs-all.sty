@@ -45,26 +45,18 @@
 \newcommand{\covp}{\ensuremath{\mathbf{Cov}_{P}}}
 \newcommand{\covpn}{\ensuremath{\mathbf{Cov}_{P_{n}}}}
 \newcommand{\covq}{\ensuremath{\mathbf{Cov}_{Q}}}
-
 \newcommand{\hatvar}{\ensuremath{\widehat{\mathrm{Var}}}}
 \newcommand{\hatcov}{\ensuremath{\widehat{\mathrm{Cov}}}}
-
 \newcommand{\sehat}{\ensuremath{\widehat{\mathrm{se}}}}
-
 \newcommand{\combdiff}[1]{\ensuremath{\Delta_{{z}}[#1]}}
 \newcommand{\Combdiff}[1]{\ensuremath{\Delta_{{Z}}[#1]}}
-
 \newcommand{\psvec}{\ensuremath{\varphi}}
 \newcommand{\psvecgc}{\ensuremath{\tilde{\varphi}}}
-
-
 \newcommand{\atob}[2]{\ensuremath{#1\!\! :\!\! #2}}
 \newcommand{\stratA}{\ensuremath{\mathbf{S}}}
 \newcommand{\stratAnumstrat}{\ensuremath{S}}
 \newcommand{\sAsi}{\ensuremath{s}}
-
 \newcommand{\permsd}{\ensuremath{\sigma_{\Pdistsym}}}
-% \newcommand{\dz}[1]{\ensuremath{d_{z}[{#1}]}}
 \newcommand{\dZ}[1]{\ensuremath{d_{Z}[{#1}]}}
 \newcommand{\tz}[1]{\ensuremath{t_{{z}}[#1]}}
 \newcommand{\tZ}[1]{\ensuremath{t_{{Z}}[#1]}}
@@ -86,12 +78,6 @@
 
 \newenvironment{Column}[1][.5\linewidth]{\begin{column}{#1}}{\end{column}}
 
-\usepackage{tikz}
-\usepackage{tikz-cd}
-\usepackage{textpos}
-
-\usetikzlibrary{arrows} % also see \tikzstyle spec below after \begin{doc}
-
 \newcommand{\mlpnode}[1]{\tikz[baseline=-.5ex] \coordinate (#1) {};}
 %\newcommand{\mlpnode}[1]{\raisebox{.5ex}{\pnode{#1}}}
 
@@ -99,7 +85,6 @@
 \usepackage{xspace}
 
 \includeversion{pedantic} % \excludeversion
-\tikzstyle{every picture}+=[remember picture]
 
 
 % copied from CSCAR svn repo, `dissdefs.tex`
