@@ -1,0 +1,824 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+  12pt,
+  leqno]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Assignment 1 Answer Key},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin = 1.5cm]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+% \usepackage{microtype} %
+% \usepackage{setspace}
+% \onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb,bm}          % AMS Fonts
+% \usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+% \usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfigure}
+\usepackage{array}
+% \usepackage{cancel}
+\usepackage{longtable}
+% % \usepackage{lmodern}
+% % \usepackage{libertine} \usepackage[libertine]{newtxmath}
+% \usepackage{stix}
+% % \usepackage[osf,sc]{mathpazo}     % alternative math
+% \usepackage[T1]{fontenc}
+% \usepackage{fontspec}
+% \setmainfont{Times New Roman}
+% \usepackage{mathtools}          % multlined environment with size option
+% \usepackage{verbatim}
+% \usepackage{geometry}
+% \usepackage{bigfoot}
+% \geometry{verbose,margin=.8in,nomarginpar}
+% \setcounter{secnumdepth}{2}
+% \setcounter{tocdepth}{2}
+% \usepackage{lscape}
+
+\setlist{nosep}
+
+
+% \usepackage{url}
+% \usepackage[nobreak=true]{mdframed} % put box around section with \begin{mdframed}\end{mdframed}
+
+% \usepackage{relsize}            % \mathlarger{} environment
+% \usepackage[unicode=true,
+%             pdfusetitle,
+%             bookmarks=true,
+%             bookmarksnumbered=true,
+%             bookmarksopen=true,
+%             bookmarksopenlevel=2,
+%             breaklinks=false,
+%             pdfborder={0 0 1},
+%             backref=false,
+%             colorlinks=true,
+%             hypertexnames=false]{hyperref}
+% \hypersetup{pdfstartview={XYZ null null 1},
+%             citecolor=blue!50,
+%             linkcolor=red,
+%             urlcolor=green!70!black}
+
+\usepackage{multirow}
+% \usepackage{tikz}
+% \usetikzlibrary{trees, positioning, arrows, automata}
+
+% \tikzset{
+%   treenode/.style = {align=center, inner sep=0pt, text centered,
+%     font=\sffamily},
+%   arn_n/.style = {treenode, rectangle, black, fill=white, text width=6em},
+%   arn_r/.style = {treenode, circle, red, draw=red, text width=1.5em, thick}
+% }
+
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+\usepackage[small,bf]{caption}  % Captions
+
+% \usepackage[obeyFinal,textwidth=0.8in, colorinlistoftodos,prependcaption,textsize=tiny]{todonotes} % \fxnote*[options]{note}{text} to make sticky notes
+% \usepackage{xargs}
+% \newcommandx{\unsure}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+% \newcommandx{\change}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}}
+% \newcommandx{\info}[2][1=]{\todo[linecolor=OliveGreen,backgroundcolor=OliveGreen!25,bordercolor=OliveGreen,#1]{#2}}
+% \newcommandx{\improvement}[2][1=]{\todo[linecolor=Plum,backgroundcolor=Plum!25,bordercolor=Plum,#1]{#2}}
+
+\parskip=8pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\newcommand{\qedknitr}{\hfill\rule{1.2ex}{1.2ex}}
+
+% \makeatletter
+% \def\thm@space@setup{\thm@preskip=0pt
+% \thm@postskip=0pt}
+% \makeatother
+
+\def\tightlist{}
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+% \newtheoremstyle{newstyle}
+% {} %Aboveskip
+% {} %Below skip
+% {\mdseries} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+% {} %Indent
+% {\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+% {.} %Punctuation afer theorem header
+% { } %Space after theorem header
+% {} %Heading
+
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newtheorem{definition}{Definition}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+% suppress table numbering
+\captionsetup[table]{labelformat=empty}
+
+\usepackage[]{natbib}
+\bibliographystyle{apsr}
+
+\title{Assignment 1 Answer Key}
+\author{\href{mailto:tl2624@columbia.edu}{Thomas Leavitt}}
+\date{22 July 2020}
+
+\begin{document}
+\maketitle
+
+\section*{Question 1}
+
+\subsection*{1a}
+
+Let's first load the data and then write a function to calculate this
+specific test statistic, \(n_t^{-1}\mathbf{Z}^{\prime}\mathbf{y}\),
+under the sharp null hypothesis of no effect:
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{acorn\_data \textless{}{-}}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"acorn03.csv"}\NormalTok{)}
+
+\NormalTok{acorn\_data\_subset \textless{}{-}}\StringTok{ }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{select}\NormalTok{(}\DataTypeTok{.data =}\NormalTok{ acorn\_data, unit, size, z, vote03)}
+
+\NormalTok{treat\_group\_mean \textless{}{-}}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.Z, .y) \{}
+    
+\NormalTok{    n\_t =}\StringTok{ }\KeywordTok{sum}\NormalTok{(.Z }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)}
+    
+\NormalTok{    test\_stat =}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(n\_t}\OperatorTok{\^{}}\NormalTok{\{}
+        \DecValTok{{-}1}
+\NormalTok{    \} }\OperatorTok{*}\StringTok{ }\KeywordTok{t}\NormalTok{(.Z) }\OperatorTok{\%*\%}\StringTok{ }\NormalTok{.y)}
+    
+    \KeywordTok{return}\NormalTok{(test\_stat)}
+    
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\normalsize
+
+Calculate the observed test statistic as follows: \scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{obs\_test\_stat \textless{}{-}}\StringTok{ }\KeywordTok{treat\_group\_mean}\NormalTok{(}\DataTypeTok{.Z =}\NormalTok{ acorn\_data\_subset}\OperatorTok{$}\NormalTok{z, }\DataTypeTok{.y =}\NormalTok{ acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03)}
+\end{Highlighting}
+\end{Shaded}
+
+\normalsize
+
+In this example there are \(\binom{28}{14} = 40,116,600\) possible ways
+in which \(14\) precincts could be assigned to treatment and the
+remaining \(14\) to control. It is too computationally intensive to
+enumerate all \(40,116,600\) of them. Instead, we can use a
+simulation-based approximation to the null distribution of the test
+statistic under all possible assignments.
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{set.seed}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{)}
+\NormalTok{null\_test\_stats \textless{}{-}}\StringTok{ }\KeywordTok{replicate}\NormalTok{(}\DataTypeTok{n =} \DecValTok{10}\OperatorTok{\^{}}\DecValTok{5}\NormalTok{, }\DataTypeTok{expr =} \KeywordTok{treat\_group\_mean}\NormalTok{(}\DataTypeTok{.Z =} \KeywordTok{sample}\NormalTok{(acorn\_data\_subset}\OperatorTok{$}\NormalTok{z), }
+    \DataTypeTok{.y =}\NormalTok{ acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03))}
+
+\NormalTok{null\_test\_stat\_dist \textless{}{-}}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{null\_test\_stat =}\NormalTok{ null\_test\_stats)}
+\end{Highlighting}
+\end{Shaded}
+
+\normalsize
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#\# Use Freedman{-}Diaconis rule for bin width}
+\NormalTok{bw \textless{}{-}}\StringTok{ }\DecValTok{2} \OperatorTok{*}\StringTok{ }\KeywordTok{IQR}\NormalTok{(null\_test\_stats)}\OperatorTok{/}\KeywordTok{length}\NormalTok{(null\_test\_stats)}\OperatorTok{\^{}}\NormalTok{(}\DecValTok{1}\OperatorTok{/}\DecValTok{3}\NormalTok{)}
+
+\KeywordTok{library}\NormalTok{(ggplot2)}
+\KeywordTok{ggplot}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ null\_test\_stat\_dist, }\DataTypeTok{mapping =} \KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ null\_test\_stat, }\DataTypeTok{y =}\NormalTok{ (..count..)}\OperatorTok{/}\KeywordTok{sum}\NormalTok{(..count..))) }\OperatorTok{+}\StringTok{ }
+\StringTok{    }\KeywordTok{geom\_histogram}\NormalTok{(}\DataTypeTok{binwidth =}\NormalTok{ bw) }\OperatorTok{+}\StringTok{ }\KeywordTok{geom\_vline}\NormalTok{(}\DataTypeTok{xintercept =}\NormalTok{ obs\_test\_stat, }\DataTypeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\OperatorTok{+}\StringTok{ }
+\StringTok{    }\KeywordTok{xlab}\NormalTok{(}\DataTypeTok{label =} \StringTok{"Null test statistic"}\NormalTok{) }\OperatorTok{+}\StringTok{ }\KeywordTok{ylab}\NormalTok{(}\DataTypeTok{label =} \StringTok{"Probability"}\NormalTok{) }\OperatorTok{+}\StringTok{ }\KeywordTok{theme\_bw}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{assignment_1_answer_key_files/figure-latex/unnamed-chunk-4-1.pdf}
+\normalsize
+
+The upper, one-sided p-value is simply the proportion of null test
+statistics greater than or equal to the observed test statistic (the
+dsahed line in the plot above).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{null\_dist\_sim\_p\_value \textless{}{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{(null\_test\_stats }\OperatorTok{\textgreater{}=}\StringTok{ }\NormalTok{obs\_test\_stat)}
+
+\NormalTok{null\_dist\_sim\_p\_value}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.07516
+\end{verbatim}
+
+\subsection*{1b}
+
+To calculate the null expected value of our test statistic, simply take
+the mean of our simulations of the test statistic under the null.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{null\_dist\_sim\_EV \textless{}{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{(null\_test\_stats)}
+
+\NormalTok{null\_dist\_sim\_EV}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.3066652
+\end{verbatim}
+
+\subsection*{1c}
+
+We can do the same for the variance.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{null\_dist\_sim\_var \textless{}{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{((null\_test\_stats }\OperatorTok{{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{(null\_test\_stats))}\OperatorTok{\^{}}\DecValTok{2}\NormalTok{)}
+
+\NormalTok{null\_dist\_sim\_var}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.0001552291
+\end{verbatim}
+
+\section*{Question 2}
+
+We can calculate the null expected value of the sample mean estimator,
+\(\E_0\left[n_t^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right]\), from first
+principles via the logic described below.
+
+Since the vector \(\mathbf{y}_t\) is equivalent to the observed vector
+of outcomes \(\mathbf{y}\) under the sharp null hypothesis of no effect,
+\(\E_0\left[n_t^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right] \equiv \E_0\left[n_t^{-1} \mathbf{Z}^{\prime}\mathbf{y}_t\right]\).
+Drawing upon basic properties of expectations, we can express
+\(\E_0\left[n_t^{-1} \mathbf{Z}^{\prime}\mathbf{y}_t\right]\) as
+follows:
+
+\begin{align*}
+\E_0\left[n_t^{-1} \mathbf{Z}^{\prime}\mathbf{y}_t\right] \\
+& \equiv n_t^{-1} \E_0\left[\mathbf{Z}^{\prime}\mathbf{y}_t\right] & \text{Since } \E\left[c\right] = c \\
+& \equiv n_t^{-1} \E_0\left[\sum \limits_{n = 1}^n Z_i y_{ti}\right] & \text{By the definition of matrix multiplication} \\
+& \equiv n_t^{-1} \sum \limits_{n = 1}^n \E_0\left[Z_i y_{ti}\right] & \text{By the linearity of expectations} \\
+& \equiv n_t^{-1} \sum \limits_{n = 1}^n y_{ti} \E_0\left[Z_i\right] & \text{Since } y_{ti} \text{ is a constant} \\
+& \equiv n_t^{-1} \sum \limits_{n = 1}^n y_{ti} \frac{n_t}{n} & \text{By the random assignment process of the experiment} \\
+& \equiv n_t^{-1}  \left(y_{t1} \frac{n_t}{n}\right) + \dots + \left(y_{tn} \frac{n_t}{n}\right) & \text{By the definition of the summation operator} \\
+& \equiv n_t^{-1} \frac{n_t}{n} \left(y_{t1} + \dots + y_{tn}\right) & \text{By the distributive property } (a b) + (a  c) = a(b + c) \\
+& \equiv \frac{1}{n_t} \frac{n_t}{n} \left(y_{t1} + \dots + y_{tn}\right) & \text{Since } n_t^{-1} = \frac{1}{n_t} \\
+& \equiv \frac{1}{n} \left(y_{t1} + \dots + y_{tn}\right) & \text{Since } \frac{n_t}{n n_t} = \frac{1}{n} \\
+& \equiv \frac{\left(y_{t1} + \dots + y_{tn}\right)}{n} \\
+& \equiv \overline{y_t}
+\end{align*}
+
+\section*{Question 3}
+
+In introductory textbooks, you may have seen the expression for the
+variance of the sample mean when sampling from a finite population as
+follows: \begin{equation}
+\sigma^2_{\overline{Y}} = \frac{N - n}{N - 1} \frac{\sigma^2_y}{n},
+\label{eq: fpc sample mean variance}
+\end{equation} where \(N\) denotes the size of the population from which
+one is sampling and \(n\) denotes the sample size. The term
+\(\frac{N - n}{N - 1}\) is typically known as a
+\textit{finite population correction factor}.
+
+To translate this expression into the experimentcal context, let's
+denote \(n\) by \(n_t\), which is the number of treated units, and \(N\)
+by \(n\), which is the size of the experimental population. Therefore,
+we can rexpress (and further manipulate) Equation
+\ref{eq: fpc sample mean variance} above as follows: \begin{align*}
+\sigma^2_{\overline{Y}} & = \frac{n - n_t}{n - 1} \frac{\sigma^2_y}{n_t} \\
+& = \frac{n_c}{n - 1} \frac{\sigma^2_y}{n_t} \\
+& = \frac{n_c}{n - 1} \sigma^2_y \frac{1}{n_t} \\
+& = \frac{n_c}{n - 1} \frac{\sum_{i = 1}^n \left(y_i - \bar{y}\right)}{n} \frac{1}{n_t} \\
+& = \frac{n_c \left(\sum_{i = 1}^n \left(y_i - \bar{y}\right)\right)}{\left(n - 1\right)\left(n\right) \left(n_t\right)} \\
+& = \frac{1}{n_t} \frac{n_c}{n} \frac{\sum_{i = 1}^n \left(y_i - \bar{y}\right)}{n - 1} \\
+& = n_t^{-1} \frac{n_c}{n} \frac{\sum_{i = 1}^n \left(y_i - \bar{y}\right)}{n - 1},
+\end{align*} which is the expression for the variance of the sample mean
+given in the question.
+
+If we examine the expression for the finite population sample mean
+variance, \(\frac{n - n_t}{n - 1} \frac{\sigma^2_y}{n_t}\), we can see
+that if \(n_t > 1\), then \(\frac{n - n_t}{n - 1}\) will be less than 1,
+in which case the standard error, \(\frac{\sigma^2_y}{n_t}\), will be
+smaller \textit{with} the finite population correction factor relative
+to the standard error \textit{without} the finite population corrections
+factor. The sample mean estimator is therefore more precise with this
+correction factor. Notice, though, that as the size of the finite
+population, \(n\), approaches \(\infty\), the finite population
+correction factor, \(\frac{n - n_t}{n - 1}\) approaches \(1\), in which
+case \(\frac{n - n_t}{n - 1} \frac{\sigma^2_y}{n_t}\) converges to the
+conventional variance formula of \(\frac{\sigma^2_y}{n_t}\).
+
+\section*{Question 4}
+
+For this experiment, the test statistic is
+\(n_t^{-1}\mathbf{Z}^{\prime}\mathbf{y}\). The observed test statistic,
+\(n_t^{-1}\mathbf{z}^{\prime}\mathbf{y}\), then, is simply
+\begin{align*}
+\left(\frac{1}{14}\right) \begin{bmatrix} 0 & 0 & \dots & 1 & 1 \end{bmatrix} \begin{bmatrix}  0.3832 \\ 0.1865 \\ \vdots \\ 0.369 \\ 0.2924 \end{bmatrix} & = \left(\frac{1}{14}\right)\begin{bmatrix} 4.547345 \end{bmatrix} \\
+& \approx 0.3248.
+\end{align*} This quantity is the mean turnout proportion among treated
+units.
+
+We can calculate this value in \texttt{R} as follows:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#\# t() is to transpose a matrix; \%*\% is the matrix multiplication operator}
+\NormalTok{(}\DecValTok{1}\OperatorTok{/}\KeywordTok{sum}\NormalTok{(acorn\_data\_subset}\OperatorTok{$}\NormalTok{z)) }\OperatorTok{*}\StringTok{ }\KeywordTok{t}\NormalTok{(acorn\_data\_subset}\OperatorTok{$}\NormalTok{z) }\OperatorTok{\%*\%}\StringTok{ }\NormalTok{acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+          [,1]
+[1,] 0.3248104
+\end{verbatim}
+
+Under the sharp null hypothesis of no effect, we know both potential
+outcomes for all \(i = 1 , \dots , 28\) units:
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+\hline
+Unit Index & z & y & $y_c$ & $y_t$ \\ 
+\hline
+1  & 0  & 0.3832 & 0.3832 & 0.3832 \\ 
+2  & 0  & 0.1865 & 0.1865 & 0.1865 \\ 
+$\vdots$ & $\vdots$  & $\vdots$ & $\vdots$ & $\vdots$ \\ 
+27 & 1  & 0.3699 & 0.3699 & 0.3699 \\ 
+28 & 1  & 0.2924 & 0.2924 & 0.2924 \\ 
+\hline
+\end{tabular}
+\end{table}
+
+Therefore, we can directly calculate the population mean and variance of
+all \(28\) \(y_t\) values under the sharp null hypothesis of no effect.
+The population mean and variance of \(y_t\) under the sharp null
+hyothesis of no effect are \(\mu_{y_t} = 0.3066632\) and
+\(\sigma^2_{y_t} = 0.004194751\), respectively.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{pop\_mean \textless{}{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{(acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03)}
+
+\NormalTok{pop\_var \textless{}{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{((acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03 }\OperatorTok{{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{(acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03))}\OperatorTok{\^{}}\DecValTok{2}\NormalTok{)}
+
+\KeywordTok{cbind}\NormalTok{(pop\_mean, pop\_var)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+      pop_mean     pop_var
+[1,] 0.3066632 0.004194751
+\end{verbatim}
+
+Given that we now know \(\mu_{y_t}\) and \(\sigma^2_{y_t}\) under the
+sharp null hypothesis, we can directly calculate
+\(\mathrm{Var}_0\left[n_t^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]\):
+\begin{align*}
+\mathrm{Var}_0\left[n_t^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right] & = \left(n_t^{-1}\right) \left(\frac{n_c}{n}\right) \left(\frac{\sum \limits_{i = 1}^n \left(y_i - \bar{y}\right)^2}{n - 1}\right) \\
+& = \left(\frac{1}{14}\right) \left(\frac{14}{28}\right) \left(\frac{0.117453}{28 - 1}\right) \\
+& = 0.0001553611.
+\end{align*} This quantity is the variance of the sampling distribution,
+which is distinct from the variance of the population from which we are
+sampling.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fpc\_var\_sample\_mean \textless{}{-}}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.y, .n\_t) \{}
+    
+\NormalTok{    (.n\_t}\OperatorTok{\^{}}\NormalTok{(}\OperatorTok{{-}}\DecValTok{1}\NormalTok{)) }\OperatorTok{*}\StringTok{ }\NormalTok{((}\KeywordTok{length}\NormalTok{(.y) }\OperatorTok{{-}}\StringTok{ }\NormalTok{.n\_t)}\OperatorTok{/}\KeywordTok{length}\NormalTok{(.y)) }\OperatorTok{*}\StringTok{ }\NormalTok{(}\KeywordTok{sum}\NormalTok{((.y }\OperatorTok{{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{(.y))}\OperatorTok{\^{}}\DecValTok{2}\NormalTok{))}\OperatorTok{/}\NormalTok{(}\KeywordTok{length}\NormalTok{(.y) }\OperatorTok{{-}}\StringTok{ }
+\StringTok{        }\DecValTok{1}\NormalTok{)}
+    
+\NormalTok{\}}
+
+\NormalTok{fpc\_var \textless{}{-}}\StringTok{ }\KeywordTok{fpc\_var\_sample\_mean}\NormalTok{(}\DataTypeTok{.y =}\NormalTok{ acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03, }\DataTypeTok{.n\_t =} \KeywordTok{sum}\NormalTok{(acorn\_data\_subset}\OperatorTok{$}\NormalTok{z))}
+
+\NormalTok{fpc\_var}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.0001553611
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{(}\KeywordTok{abs}\NormalTok{(null\_dist\_sim\_var }\OperatorTok{{-}}\StringTok{ }\NormalTok{fpc\_var)}\OperatorTok{/}\NormalTok{fpc\_var) }\OperatorTok{*}\StringTok{ }\DecValTok{100}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.08497887
+\end{verbatim}
+
+The error of the simulation based approximation, expressed as a
+percentage of
+\(\mathrm{Var}\left[n_t^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]\) is:
+\begin{align*}
+\left(\frac{\left|\mathrm{Var}_{sim} - \mathrm{Var}_0\right|}{\mathrm{Var}_0}\right) 100 \\
+& = 0.5318 \%.
+\end{align*}
+
+\section*{Question 5}
+
+In the case of the Acorn experiment, we can calculate the Z-score as
+follows: \begin{align*}
+\text{Z-score} & = \frac{n_t^{-1}\mathbf{Z}^{\prime}\mathbf{y} - \E\left[n_t^{-1}\mathbf{Z}^{\prime}\mathbf{y}\right]}{\sqrt{\mathrm{Var}\left[n_t^{-1}\mathbf{Z}^{\prime}\mathbf{y}\right]}} \\
+& = \frac{\left(0.3248104 - 0.3066632\right)}{0.01246439}
+\end{align*}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{z\_score \textless{}{-}}\StringTok{ }\NormalTok{(obs\_test\_stat }\OperatorTok{{-}}\StringTok{ }\NormalTok{pop\_mean)}\OperatorTok{/}\KeywordTok{sqrt}\NormalTok{(fpc\_var)}
+
+\KeywordTok{pnorm}\NormalTok{(}\DataTypeTok{q =}\NormalTok{ z\_score, }\DataTypeTok{lower.tail =} \OtherTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.07270733
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{pnorm}\NormalTok{(}\DataTypeTok{q =}\NormalTok{ obs\_test\_stat, }\DataTypeTok{mean =}\NormalTok{ pop\_mean, }\DataTypeTok{sd =} \KeywordTok{sqrt}\NormalTok{(fpc\_var), }\DataTypeTok{lower.tail =} \OtherTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.07270733
+\end{verbatim}
+
+The \texttt{pnorm} function reports the probability density to the left
+of the observed test statistic by default; but since we expect a
+positive effect, we want the probability density to the right of the
+observed test statistic, which we can do by setting
+\texttt{lower.tail = FALSE}. The normal theory approximation to the
+p-value is \(0.0727\).
+
+A researcher plans to ask six subjects to donate time to an adult
+literacy program. Each subject will be asked to donate either \(30\)
+\((Z = 0)\) or \(60\) \((Z = 1)\) minutes. The researcher is considering
+three methods for randomizing the treatment. Method I is to make
+independent decisions for each subject, tossing a coin each time. Method
+C is to write \texttt{30\textquotesingle{}\textquotesingle{}\ and}60'\,'
+on three playing cards each, and then shuffle the six cards. Method P
+tosses one coin for each of the 3 pairs (1, 2), (3, 4), (5, 6), asking
+for 30 (60) minutes from exactly one member of each pair.
+
+\section*{Question 6}
+
+\subsection*{6a}
+
+Method I independently assigns each subject to treatment \((Z_i=1)\)
+with probability \(0.5\). Under simple random assignment all subjects
+are assigned to groups without regard to the assignments of other
+subjects in the study; this assignment process is especially simple to
+implement. With a small \(n\), however, this method may result in no
+subjects in one of the two conditions. If \(n = 6\), then, under simple
+random assignment (method I), the probability that all units are
+assigned to the treatment condition is \(0.5^6 = 0.015625\) and the
+probability that all units are assigned to the control condition is also
+\(0.5^6 = 0.015625\). Although small, the probability of these two
+outcomes taken together is \(0.015625 + 0.015625 = 0.03125\). Method C
+has the benefit of enabling the researcher to assign a predetermined
+number of subjects to treatment and control such that there is a fixed
+number of participants in each condition. Method P assigns units to
+treatment and control within blocked pairs, which (if covariates are
+predictive of potential outcomes) decreases the variance of the
+randomization distribution.
+
+\subsection*{6b}
+
+If \(n\) increases to \(600\), then the probability that all \(600\)
+units are assigned to treatment is
+\(0.5^{600} = 2.40992 \times 10^{-181}\) and the probability that all
+units are assigned to control is also
+\(0.5^{600} = 2.40992 \times 10^{-181}\). Thus, the probability that all
+units are assigned to one of the two treatment conditions is
+\(0.5^{600} + 0.5^{600} = 4.81984 \times 10^{-181}\). The aformentioned
+weakness of method \(I\) is far less of a concern if \(n\) were \(600\)
+instead of \(6\).
+
+\subsection*{6c}
+
+In Question \ref{qu: 5} above, we showed that in a complete, uniform
+randomized experiment, the probability that \(Z_i\) is assigned to
+treatment---i.e., that \(Z_i = 1\)---is \(\frac{n_t}{n}\). Since
+\(Z_i \in \left\{0, 1\right\}\), then, by the law of total probability,
+\(\Pr\left(Z_i = 0\right) = n - \frac{n_t}{n}\). Therefore, the expected
+value of \(Z_i\) is
+\(\E\left[Z_i\right] = 0\left(n - \frac{n_t}{n}\right) + 1 \left(\frac{n_t}{n}\right)\),
+which, for methods C and P, is \(\frac{3}{6} = 0.5\).
+
+Indeed, if we examine all possible treatment assignment vectors in
+\(\Omega\), we can see that exactly \(\frac{n_t}{n} = 0.5\) of these
+vectors are those in which \(Z_1 = 1\).
+
+\begin{align*}
+\Omega & = \left\{ \ \begin{bmatrix} 1 \\ 1 \\ 1 \\ 0 \\ 0 \\ 0 \end{bmatrix}, \  \begin{bmatrix} 1 \\ 1 \\ 0 \\ 1 \\ 0 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 1 \\ 0 \\ 0 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 1 \\ 0 \\ 0 \\ 0 \\ 1 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 1 \\ 1 \\ 0 \\ 0 \end{bmatrix}, \dots %\ \begin{bmatrix} 1 \\ 0 \\ 1 \\ 0 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 1 \\ 0 \\ 0 \\ 1 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 1 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 1 \\ 0 \\ 1 \end{bmatrix}, \ \begin{bmatrix}1 \\ 0 \\ 0 \\ 0 \\ 1 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 1 \\ 1 \\ 0 \\ 0  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 1 \\ 0 \\ 1 \\ 0  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 1 \\ 0 \\ 0 \\ 1  \end{bmatrix}, \begin{bmatrix} 0 \\ 1 \\ 0 \\ 1 \\ 1 \\ 0  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 0 \\ 1 \\ 0 \\ 1  \end{bmatrix}, \ 
+, \ \begin{bmatrix} 0 \\ 1 \\ 0 \\ 0 \\ 1 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 1 \\ 1 \\ 1 \\ 0  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 1 \\ 1 \\ 0 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 1 \\ 0 \\ 1 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 0 \\ 1 \\ 1 \\ 1  \end{bmatrix} \ \right\}.
+\end{align*}
+
+Method \(P\) is equivalent to uniform randomized experiments within
+blocks, and since all blocks have the same number of units,
+\(\E\left[Z_i\right] = \frac{n_t}{n}\), too.
+
+For method \(S\), one could calculate the probability that \(Z_i = 1\)
+by simply reasoning that for each unit \(i\),
+\(Z_i \in \left\{0, 1\right\}\) and each possible outcome
+\(\left(0 \text{ or } 1\right)\) has a \(0.5\) probability of occurence.
+Hence, the expected value of \(Z_i\) is:
+\(\E\left[Z_i\right] = 0(0.5) + 1(0.5) = 0.5\).
+
+However, in order to encourage thinking about possible treatment
+assignment vectors in the set \(\Omega\), \(\mathbf{Z} = \mathbf{z}\)
+vectors for which \(Z_i = 1\), \(\E\left[Z_i\right]\) can also be
+calculated as follows: \begin{align*}
+\Pr\left(Z_i = 1, n_t = 0\right) + \dots + \Pr\left(Z_i = 1, n_t = n\right) \\
+\\
+\Pr\left(Z_i = 1 | n_t = 0\right)\Pr\left(n_t = 0\right) + \dots + \Pr\left(Z_i = 1 | n_t = n\right)\Pr\left(n_t = n\right) \\
+\\
+\frac{0}{n}\left(\frac{{n \choose 0}}{{n \choose 0} + \dots + {n \choose n}}\right) + \dots + \frac{n}{n}\left(\frac{{n \choose n}}{{n \choose 0} + \dots + {n \choose n}}\right)
+\end{align*}
+
+In the case of the specific experiment with \(6\) units and simple
+random assignment, the probability of \(Z_i = 1\), which is equivalent
+to \(\E\left[Z_i\right]\), can be calculated as follows:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{n\_t \textless{}{-}}\StringTok{ }\DecValTok{0}\OperatorTok{:}\DecValTok{6}
+
+\CommentTok{\#\# Total number of treatment assignment vectors}
+\NormalTok{Omega \textless{}{-}}\StringTok{ }\KeywordTok{sum}\NormalTok{(}\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =}\NormalTok{ n\_t, }\DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{}
+    \KeywordTok{choose}\NormalTok{(}\DataTypeTok{n =} \DecValTok{6}\NormalTok{, }\DataTypeTok{k =}\NormalTok{ x)}
+\NormalTok{\}))}
+
+\NormalTok{srs\_probs \textless{}{-}}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.n\_t, .n, .Omega) \{}
+    
+    \KeywordTok{return}\NormalTok{((.n\_t}\OperatorTok{/}\NormalTok{.n) }\OperatorTok{*}\StringTok{ }\NormalTok{(}\KeywordTok{choose}\NormalTok{(}\DataTypeTok{n =}\NormalTok{ .n, }\DataTypeTok{k =}\NormalTok{ .n\_t)}\OperatorTok{/}\NormalTok{.Omega))}
+    
+\NormalTok{\}}
+
+\CommentTok{\#\# 0.5}
+\KeywordTok{sum}\NormalTok{(}\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =}\NormalTok{ n\_t, }\DataTypeTok{FUN =}\NormalTok{ srs\_probs, }\DataTypeTok{.n =} \DecValTok{6}\NormalTok{, }\DataTypeTok{.Omega =}\NormalTok{ Omega))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0.5
+\end{verbatim}
+
+\subsection*{6d}
+
+After having calculated that \(\E\left[Z_i\right] = 0.5\) under each
+method, by the linearity of expectations, we know that \begin{align*}
+\E\left[Z_1 + \dots + Z_6\right] \\
+& = \E\left[Z_1\right] + \dots + \E\left[Z_6\right] \\
+& = 0.5 + \dots + 0.5 \\
+& = 3
+\end{align*} for all methods.
+
+\subsection*{6e}
+
+Under method I, we can easily calculate
+\(\E\left[\mathbf{Z}^{\prime}\mathbf{Z}\right]\) via the following
+\texttt{R} code:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{n\_t\_sra \textless{}{-}}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.n, .k, .p) \{}
+    
+    \KeywordTok{return}\NormalTok{(}\KeywordTok{choose}\NormalTok{(}\DataTypeTok{n =}\NormalTok{ .n, }\DataTypeTok{k =}\NormalTok{ .k) }\OperatorTok{*}\StringTok{ }\NormalTok{.p}\OperatorTok{\^{}}\NormalTok{(.k) }\OperatorTok{*}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\NormalTok{.p)}\OperatorTok{\^{}}\NormalTok{(.n }\OperatorTok{{-}}\StringTok{ }\NormalTok{.k))}
+    
+\NormalTok{\}}
+
+\NormalTok{probs \textless{}{-}}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \KeywordTok{seq}\NormalTok{(}\DataTypeTok{from =} \DecValTok{0}\NormalTok{, }\DataTypeTok{to =} \DecValTok{6}\NormalTok{, }\DataTypeTok{by =} \DecValTok{1}\NormalTok{), }\DataTypeTok{FUN =}\NormalTok{ n\_t\_sra, }\DataTypeTok{.n =} \DecValTok{6}\NormalTok{, }\DataTypeTok{.p =} \FloatTok{0.5}\NormalTok{)}
+
+
+\NormalTok{events \textless{}{-}}\StringTok{ }\KeywordTok{seq}\NormalTok{(}\DataTypeTok{from =} \DecValTok{0}\NormalTok{, }\DataTypeTok{to =} \DecValTok{6}\NormalTok{, }\DataTypeTok{by =} \DecValTok{1}\NormalTok{)}
+
+\KeywordTok{sum}\NormalTok{(events }\OperatorTok{*}\StringTok{ }\NormalTok{probs)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 3
+\end{verbatim}
+
+Since all units have the same treatment assignment probability,
+\begin{align*}
+\E\left[\mathbf{Z}^{\prime}\mathbf{Z}\right] & = \\ 
+\frac{{6 \choose 0}}{{6 \choose 0} + \dots + {6 \choose 6}}0 + \frac{{6 \choose 1}}{{6 \choose 0} + \dots + {6 \choose 6}}1 + \frac{{6 \choose 2}}{{6 \choose 0} + \dots + {6 \choose 6}}2 + \frac{{6 \choose 3}}{{6 \choose 0} + \dots + {6 \choose 6}}3 \\
++ \frac{{6 \choose 4}}{{6 \choose 0} + \dots + {6 \choose 6}}4 + \frac{{6 \choose 5}}{{6 \choose 0} + \dots + {6 \choose 6}}5  + \frac{{6 \choose 6}}{{6 \choose 0} + \dots + {6 \choose 6}}6 \\
+& = 3
+\end{align*}
+
+In general, for block random assignment, the number of treatment
+assignment permutations is
+\(\left| \Omega \right| = \prod \limits_{b = 1}^B {n_b \choose n_{bt}}\).
+Thus, for method P there are
+\({2 \choose 1}{2 \choose 1}{2 \choose 1} = {2 \choose 1}^3 = 8\)
+treatment assignment permutations: \begin{align*}
+\Omega & = \left\{ \ \begin{bmatrix} 1 \\ 0 \\ 1 \\ 0 \\ 1 \\ 0 \end{bmatrix}, \  \begin{bmatrix} 0 \\ 1 \\ 1 \\ 0 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 1 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 0 \\ 1 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 1 \\ 0 \\ 0 \\ 1 \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 1 \\ 0 \\ 0 \\ 1 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 1 \\ 0 \\ 1 \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 0 \\ 1 \\ 0 \\ 1 \end{bmatrix} \ \right\}.
+\end{align*} For each \(\mathbf{Z} = \mathbf{z} \in \Omega\),
+\(\mathbf{Z}^{\prime}\mathbf{Z} = 3\). Probabilities are uniformly
+distributed on \(\mathbf{Z} = \mathbf{Z} \in \Omega\) and the expected
+value of \(\mathbf{Z}^{\prime}\mathbf{Z}\) is: \begin{align*}
+\E\left[\mathbf{Z}^{\prime}\mathbf{Z}\right] & = \left(3\right)\left(\frac{1}{8}\right) + \dots + \left(3\right)\left(\frac{1}{8}\right) \\
+& = 3.
+\end{align*}
+
+\subsection*{6f}
+
+For methods C and P, the variance of \(\mathbf{Z}^{\prime} \mathbf{Z}\)
+is \(0\), since under every treatment assignment permutation in
+\(\Omega\), the value of \(\mathbf{Z}^{\prime}\mathbf{Z}\) is constant.
+
+We know that
+\(\mathrm{Var}\left[X\right] = \E\left[X^2\right] - \E\left[X\right]^2\);
+hence, for method I we can calculate the variance as follows:
+\begin{align*}
+\E\left[\left(\mathbf{Z}^{\prime}\mathbf{Z}\right)^2\right] - \E\left[\mathbf{Z}^{\prime}\mathbf{Z}\right]^2 & = 10.5 - 9 \\
+& = 1.5
+\end{align*}
+
+\subsection*{6h}
+
+For methods C and P, \(\mathbf{Z}^{\prime}\mathbf{Z}\) is a constant
+that is equal to \(n_t\). The expected value of a constant is the
+constant; hence, \begin{align*}
+\E\left[\mathbf{Z}^{\prime}\mathbf{Z}\right] \\
+& \equiv \E\left[n_t\right] \\
+& \equiv n_t
+\end{align*} Therefore, we can express
+\(\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{Z}}\right]\)
+as follows: \begin{align*}
+\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{Z}}\right] \\
+& \equiv \E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{n_t}\right] \\
+& \equiv \E\left[n_t^{-1}\mathbf{Z}^{\prime}\mathbf{x}\right] \\
+& \equiv n_t^{-1} \E\left[\mathbf{Z}^{\prime}\mathbf{x}\right] \\
+& \equiv n_t^{-1} \E\left[\sum \limits_{i = 1}^n Z_i x_i\right] \\
+& \equiv n_t^{-1} \sum \limits_{n = 1}^n \E_0\left[Z_i x_i\right]  \\
+& \equiv n_t^{-1} \sum \limits_{n = 1}^n x_i \E_0\left[Z_i\right]  \\
+& \equiv n_t^{-1} \sum \limits_{n = 1}^n x_i \frac{n_t}{n} \\
+& \equiv n_t^{-1}  \left(x_{1} \frac{n_t}{n}\right) + \dots + \left(x_n \frac{n_t}{n}\right)  \\
+& \equiv n_t^{-1} \frac{n_t}{n} \left(x_1 + \dots + x_n\right) \\
+& \equiv \frac{1}{n_t} \frac{n_t}{n} \left(x_1 + \dots + x_n\right)  \\
+& \equiv \frac{1}{n} \left(x_1 + \dots + x_n\right)  \\
+& \equiv \frac{\left(x_1 + \dots + x_n\right)}{n} \\
+& \equiv \overline{x},
+\end{align*} which is simply the mean of \(\mathbf{x}\).
+
+For method I, \(\mathbf{Z}^{\prime}\mathbf{Z}\) varies across different
+realizations of treatment assignment vectors; hence, the number of
+treated units, \(\mathbf{Z}^{\prime}\mathbf{Z}\), is a random variable,
+which means that
+\(\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{Z}}\right]\)
+does not reduce to the mean \(\mathbf{x}\). In fact,
+\(\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{Z}}\right]\)
+is undefined because the probability of all units' being assigned to
+control is positive, in which case
+\(\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{Z}}\)
+is undefined and so is its expected value.
+
+\newpage
+
+\renewcommand\refname{References}
+  \bibliography{Bibliography.bib}
+
+\end{document}
