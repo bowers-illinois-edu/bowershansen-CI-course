@@ -213,12 +213,12 @@ Average & 15 & 20 & 5  \\ \hline
 \begin{itemize}
 \item Intuitively, the variance of an estimator is the average squared distance of the estimator from its expected value: \pause 
 \begin{itemize}
-\item $\E\left[\left(t\left(\mathbf{Z}, \mathbf{Y}\right) - \E\left[t\left(\mathbf{Z}' \mathbf{Y}\right)\right]\right)^2\right]$ \pause 
-\item Because the Difference-in-Means estimator is unbiased, i.e., $\E\left[t\left(\mathbf{Z}, \mathbf{Y}\right)\right] = \bar{\tau}$, we can write the estimator's variance as $\E\left[\left(t\left(\mathbf{Z}' \mathbf{Y}\right) - \bar{\tau}\right)^2\right]$
+\item $\E\left[\left(\hat{\bar{\tau}} - \E\left[\hat{\bar{\tau}}\right]\right)^2\right]$ \pause 
+\item Because the Difference-in-Means estimator is unbiased, i.e., $\E\left[\hat{\bar{\tau}}\right] = \bar{\tau}$, we can write the estimator's variance as $\E\left[\left(\hat{\bar{\tau}} - \bar{\tau}\right)^2\right]$
 \end{itemize} \pause 
 \item In the ``village heads'' example with 21 possible assignments under CRA, \pause 
 \begin{align*}
-\left(t\left(\mathbf{z}_1, \mathbf{y}_1\right) - \bar{\tau}\right)^2 \Pr\left(\mathbf{Z} = \mathbf{z}_1\right) + \ldots + \left(t\left(\mathbf{z}_{21}, \mathbf{y}_{21}\right) - \bar{\tau}\right)^2 \Pr\left(\mathbf{Z} = \mathbf{z}_{21}\right)
+\left(\hat{\bar{\tau}}_{1} - \bar{\tau}\right)^2 \Pr\left(\mathbf{Z} = \mathbf{z}_1\right) + \ldots + \left(\hat{\bar{\tau}}_{21} - \bar{\tau}\right)^2 \Pr\left(\mathbf{Z} = \mathbf{z}_{21}\right)
 \end{align*} \pause 
 \item The variance of the estimator in the ``village heads'' example under CRA is $\approx 21.19$
 \end{itemize}

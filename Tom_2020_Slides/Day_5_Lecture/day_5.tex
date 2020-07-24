@@ -1,0 +1,206 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+% PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass[table, xcolor={dvipsnames}, 9pt]{beamer}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\mode<presentation> {
+
+% The Beamer class comes with a number of default slide themes
+% which change the colors and layouts of slides. Below this is a list
+% of all the themes, uncomment each in turn to see what they look like.
+
+%\usetheme{default}
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Dresden}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+% \usetheme{Madrid}
+\usetheme{metropolis}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+% As well as themes, the Beamer class has a number of color themes
+% for any slide theme. Uncomment each of these in turn to see how it
+% changes the colors of your current slide theme.
+
+%\usecolortheme{albatross}
+%\usecolortheme{beaver}
+%\usecolortheme{beetle}
+%\usecolortheme{crane}
+%\usecolortheme{dolphin}
+%\usecolortheme{dove}
+%\usecolortheme{fly}
+%\usecolortheme{lily}
+%\usecolortheme{orchid}
+%\usecolortheme{rose}
+%\usecolortheme{seagull}
+%\usecolortheme{seahorse}
+%\usecolortheme{whale}
+%\usecolortheme{wolverine}
+
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{multirow}
+\usepackage{natbib}
+\usepackage[]{hyperref}
+\usepackage{diagbox}
+\usepackage{makecell}
+\usepackage{subfig}
+\usepackage{amsmath}
+\usepackage{amsfonts,amsthm,amsmath,amssymb}    
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{empheq}
+
+\hypersetup{unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1}}
+\usepackage{xcolor}
+\newcommand\myheading[1]{%
+  \par\bigskip
+  {\Large\bfseries#1}\par\smallskip}
+\newcommand\given[1][]{\:#1\vert\:}
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newtheorem{defin}{Definition}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathrm{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\e}{\rm{e}}
+\DeclareMathOperator{\logit}{\rm{logit}}
+\DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
+%\DeclareMathOperator{\Pr}{\rm{Pr}}
+\newenvironment{Column}[1][.5\linewidth]{\begin{column}{#1}}{\end{column}}
+%----------------------------------------------------------------------------------------
+% TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[]{Sharp null hypothesis testing} % The short title appears at the bottom of every slide, the full title is only on the title page
+
+\author{Thomas Leavitt} % Your name
+\institute[] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+% Your institution for the title page
+\medskip
+\textit{} % Your email address
+}
+\date{\today} % Date, can be changed to a custom date
+
+\begin{document}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+%\begin{frame}
+%\frametitle{Overview} % Table of contents slide, comment this block out to remove it
+%\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+%\end{frame}
+
+%------------------------------------------------------------------------
+% PRESENTATION SLIDES
+%------------------------------------------------------------------------
+\begin{frame}{}
+
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{}
+
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{}
+
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}
+
+
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{}
+
+
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{} 
+
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{} 
+
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{} 
+
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{}
+
+
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{}
+
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{}
+
+\end{frame}
+%------------------------------------------------------------------------
+\end{document}
