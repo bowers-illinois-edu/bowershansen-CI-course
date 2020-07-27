@@ -1,6 +1,6 @@
 # bowershansen-CI-course
 
-Source files for Jake and Ben's causal inference course materials
+Source files for Jake and Ben and Tom's causal inference course materials
 
 ## Compiling `.Rnw` files
 
@@ -14,6 +14,8 @@ Source files for Jake and Ben's causal inference course materials
 
 
 ## From within R and at the Command Line
+
+Start R from within the root directory of this repository. We are using `renv` <https://rstudio.github.io/renv/> to help us keep our packages up to date across collaborators.
 
 ```
 library(knitr)
