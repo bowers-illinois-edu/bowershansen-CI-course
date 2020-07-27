@@ -1,7 +1,7 @@
 ---
 title: Statistical Adjustment and Assessment of Adjustment in Observational Studies
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-author: ICPSR 2019 Session 2
+author: ICPSR 2020 Session 2
 bibliography:
  - BIB/refs.bib
  - BIB/master.bib

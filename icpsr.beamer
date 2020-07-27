@@ -1,3 +1,4 @@
+\RequirePackage{etex}
 \documentclass[$if(fontsize)$$fontsize$,$endif$$if(lang)$$babel-lang$,$endif$$if(handout)$handout,$endif$$if(colorlinks)$dvipsnames,$endif$$if(beamer)$ignorenonframetext,$endif$$for(classoption)$$classoption$$sep$,$endfor$]{$documentclass$}
 % built from https://github.com/jgm/pandoc-templates/blob/master/default.beamer
 %\documentclass[11pt,ignorenonframetext,xcolor={svgnames}]{beamer}
@@ -14,8 +15,8 @@ $else$
 \usepackage{lmodern}
 $endif$
 
-\usepackage{etex}
-\reserveinserts{28}
+%\usepackage{etex}
+%\reserveinserts{28}
 \usepackage{presentation}
 \usepackage{notation}
 \usepackage{caption}
