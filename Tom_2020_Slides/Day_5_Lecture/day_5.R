@@ -1,275 +1,300 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 rm(list = ls())
 
-## Complete random assignment
-n <- 7
-n_1_cra <- 2
+acorn_data <- read.csv("acorn03.csv")
 
-y_c <- c(10, 15, 20, 20, 10, 15, 15)
-y_t <- c(15, 15, 30, 15, 20, 15, 30)
-tau <- y_t - y_c
-ATE <- mean(tau)
+acorn_data <- dplyr::select(.data = acorn_data, unit, size, z, vote03)
 
-mean((y_c - mean(y_c)) * (y_t - mean(y_t)))
+#acorn_Omega <- apply(X = combn(x = 1:nrow(acorn_data),
+#                               m = sum(acorn_data$z),
+#                               simplify = TRUE) ,
+#                     MARGIN = 2,
+#                     FUN = function(x) as.integer(1:nrow(acorn_data) %in% x))
 
-mean((y_c - mean(y_c))^2)
-
-## Don't worry about understanding this line of code
-## Just note that it generates all 21 possible assignments
-Omega_cra <- apply(X = combn(x = n,
-                             m = n_1_cra,
-                             simplify = TRUE),
-                   MARGIN = 2,
-                   FUN = function(x) as.integer(1:n %in% x))
-
-## Assumes uniform random assignment
-probs_cra <- rep(x = 1/ncol(Omega_cra), times = ncol(Omega_cra))
-
-## generate observed outcome for each of 21 possible assignments
-obs_outs_cra <- sapply(X = 1:ncol(Omega_cra),
-                       FUN = function(x) Omega_cra[,x] * y_t + (1 - Omega_cra[,x]) * y_c )
-
-## calculate estimate for each of 21 possible realizations of data
-ests_cra <- sapply(X = 1:ncol(Omega_cra),
-               FUN = function(x) { mean(obs_outs_cra[,x][which(Omega_cra[,x] == 1)]) - mean(obs_outs_cra[,x][which(Omega_cra[,x] == 0)]) })
-
-obs_outs_cra[,1]
-Omega_cra[,1]
+#save(acorn_Omega, file = "acorn_Omega.RData")
+#load(file = "acorn_Omega.RData")
+set.seed(1:5)
+acorn_Omega <- replicate(n = 10^3, expr = sample(x = acorn_data$z))
 
 
-## unbiased
-ests_cra_EV <- sum(ests_cra * probs_cra)
+obs_test_stat <- mean(acorn_data$vote03[which(acorn_data$z == 1)]) - mean(acorn_data$vote03[which(acorn_data$z == 0)])
 
-ests_cra_Var <- mean((ests_cra - ests_cra_EV)^2)
+null_diff_means_no_effect <- sapply(X = 1:ncol(acorn_Omega),
+                                    FUN = function(x) { mean(acorn_data$vote03[which(acorn_Omega[,x] == 1)]) -
+                                        mean(acorn_data$vote03[which(acorn_Omega[,x] == 0)]) })
 
-round(x = ests_cra_Var, digits = 2)
+null_dist_data_no_effect <- data.frame(null_test_stat = null_diff_means_no_effect)
 
-## analytic expression for variance
-var_y_c <- mean((y_c - mean(y_c))^2)
-round(x = var_y_c, digits = 2)
-var_y_t <- mean((y_t - mean(y_t))^2)
-round(x = var_y_t, digits = 2)
-cov_y_c_y_t <- mean((y_c - mean(y_c)) * (y_t - mean(y_t)))
-round(x = cov_y_c_y_t, digits = 2)
+null_dist_data_no_effect <- dplyr::mutate(.data = null_dist_data_no_effect,
+                                          greater_obs = ifelse(test = null_test_stat >= obs_test_stat,
+                                                               yes = "yes",
+                                                               no = "no"))
 
-diff_means_var <- function(.n,
-                           .n_t,
-                           .y_c,
-                           .y_t) {
-  
-  
-  
-  var_y_c = mean((.y_c - mean(.y_c))^2)
-  
-  var_y_t = mean((.y_t - mean(.y_t))^2)
-  
-  cov_y_c_y_t = mean((.y_c - mean(.y_c)) * (.y_t - mean(.y_t)))
-  
-  var = (1/(.n - 1)) * ((.n_t * var_y_c) / (.n - .n_t) +
-                          
-                          (((.n - .n_t) * var_y_t) / .n_t) +
-                          
-                          (2 * cov_y_c_y_t))
-  
-  return(var)
-  
-}
-
-
-true_var_diff_means_est_cra <- diff_means_var(.n = n,
-                                              .n_t = n_1_cra,
-                                              .y_c = y_c,
-                                              .y_t = y_t)
-
-diff_means_var_est <- function(.n,
-                               .n_1,
-                               .z,
-                               .y) {
-  
-  obs_y_c = .y[which(.z == 0)]
-  obs_y_t = .y[which(.z == 1)]
-  
-  est_mean_y_c = mean(obs_y_c)
-  est_mean_y_t = mean(obs_y_t)
-  
-  est_var_y_c = ((.n - 1)/(.n * ((.n - .n_1) - 1))) * sum((obs_y_c - est_mean_y_c)^2)
-  
-  est_var_y_t = ((.n - 1)/(.n * (.n_1 - 1))) * sum((obs_y_t - est_mean_y_t)^2)
-  
-  return((.n/(.n - 1)) * ( (est_var_y_c/(.n - .n_1)) + (est_var_y_t/.n_1)))
-  
-  
-}
-
-var_ests_cra <- sapply(X = 1:ncol(Omega_cra),
-                       FUN = function(x) { diff_means_var_est(.n = n,
-                                                              .n_1 = n_1_cra,
-                                                              .z = Omega_cra[,x],
-                                                              .y = obs_outs_cra[,x]) })
-var_ests_cra_EV <- sum(var_ests_cra * probs_cra)
-## create dataframe for plot
-cra_dist_var_est_data <- data.frame(var_est = var_ests_cra, 
-                                    prob = probs_cra)
-
+bw_no_effect <- 2 * IQR(null_dist_data_no_effect$null_test_stat) / length(null_dist_data_no_effect$null_test_stat)^(1/3)
 library(ggplot2)
-cra_var_est_dist_plot <- ggplot(data = cra_dist_var_est_data,
-                                mapping = aes(x = var_est,
-                                              y = prob)) +
-  geom_bar(stat = "identity") +
-  geom_vline(xintercept = var_ests_cra_EV,
+null_dist_no_effect_plot <- ggplot(data = null_dist_data_no_effect,
+                                   mapping = aes(x = null_test_stat ,
+                                                 y = (..count..)/sum(..count..),
+                                                 fill = greater_obs)) +
+  geom_histogram(data = null_dist_data_no_effect,
+                 binwidth = bw_no_effect) +
+  geom_vline(xintercept = obs_test_stat,
              linetype = "dashed") +
-  geom_vline(xintercept = true_var_diff_means_est_cra,
-             linetype = "solid") +
+  scale_fill_manual(values = c("grey", "black")) +
+  guides(fill = FALSE) +
   theme_bw() +
-  xlab(label = "Variance estimates") +
+  xlab(label = "Null test statistics") +
   ylab(label = "Probability")
 
-cra_var_est_dist_plot
-
-ggsave(plot = cra_var_est_dist_plot,
-       file = "cra_var_est_dist_plot.pdf",
+ggsave(plot = null_dist_no_effect_plot,
+       file = "null_dist_no_effect_plot.pdf",
        width = 6,
        height = 4,
        units = "in",
        dpi = 600)
 
-## Show asymptotic properties
-asymp_ests <- function(.y_c,
-                       .y_t,
-                       .prop_t,
-                       .h){
-  
-  y_c = c(.y_c, rep(x = .y_c, times = .h - 1))
-  
-  y_t = c(.y_t, rep(x = .y_t, times = .h - 1))
-  
-  Omega = apply(X = combn(x = length(y_c),
-                          m = length(y_c) * .prop_t,
-                          simplify = TRUE),
-                MARGIN = 2,
-                FUN = function(x) as.integer(1:(length(y_c)) %in% x))
-  
-  true_EV_diff_means_est = mean(y_t) - mean(y_c)
-  
-  true_var_diff_means_est = diff_means_var(.n = length(y_c),
-                                           .n_t = length(y_c) * .prop_t,
-                                           .y_c = y_c,
-                                           .y_t = y_t)
-  
-  obs_pot_outs = sapply(X = 1:ncol(Omega),
-                        FUN = function(x) { y_t * Omega[,x] + y_c * (1 - Omega[,x]) })
-  
-  diff_means_ests = sapply(X = 1:ncol(Omega),
-                           FUN = function(x) { mean(obs_pot_outs[,x][Omega[,x] == 1]) -
-                               mean(obs_pot_outs[,x][Omega[,x] == 0]) })
-  
-  var_ests = sapply(X = 1:ncol(Omega),
-                    FUN = function(x) { diff_means_var_est(.n = length(y_c),
-                                                           .n_1 = length(y_c) * .prop_t,
-                                                           .z = Omega[,x],
-                                                           .y = obs_pot_outs[,x]) })
-  
-  return(list(Omega, true_EV_diff_means_est, true_var_diff_means_est, obs_pot_outs, diff_means_ests, var_ests))
-  
-}
+## How would we test another sharp null other than 0 
+## Let's test tau = .05 for all 28 precincts
+tau <- 0.05
+y_c_null <- acorn_data$vote03 - acorn_data$z * tau
+y_t_null <- acorn_data$vote03 + (1 - acorn_data$z) * tau
 
-asymp_ests_h_1_3 <- lapply(X = 1:3,
-                           FUN = function(x) { asymp_ests(.y_c = y_c,
-                                                          .y_t = y_t,
-                                                          .prop_t = (2/7),
-                                                          .h = x)})
+null_obs_outs <- sapply(X = 1:ncol(acorn_Omega),
+                        FUN = function(x) { acorn_Omega[,x] * y_t_null + (1 - acorn_Omega[,x]) * y_c_null  })
 
-var_ests_EVs <- sapply(X = 1:3,
-                       FUN = function(x) { mean(asymp_ests_h_1_3[[x]][[6]]) })
+cbind(acorn_data$z, null_obs_outs[,2])
 
-true_vars <- c(asymp_ests_h_1_3[[1]][[3]], asymp_ests_h_1_3[[2]][[3]], asymp_ests_h_1_3[[3]][[3]])
+################################################################################################################################################################################
+cbind(acorn_data$z, acorn_data$vote03)
 
-asym_var_ests_data <- data.frame(var_ests = c(asymp_ests_h_1_3[[1]][[6]], asymp_ests_h_1_3[[2]][[6]], asymp_ests_h_1_3[[3]][[6]]),
-                                 h = as.factor(c(rep(x = 1, times = length(asymp_ests_h_1_3[[1]][[6]])),
-                                                 rep(x = 2, times = length(asymp_ests_h_1_3[[2]][[6]])),
-                                                 rep(x = 3, times = length(asymp_ests_h_1_3[[3]][[6]])))))
+p <- rep(x = .02, times = nrow(acorn_data))
 
-levels(asym_var_ests_data$h) <- c("h = 1",
-                              "h = 2",
-                              "h = 3")
+y_c_null <- acorn_data$vote03 - acorn_data$z * p
 
-vline_data <- data.frame(h = levels(asym_var_ests_data$h),
-                         solid_vl = true_vars,
-                         dashed_vl = var_ests_EVs) 
+y_t_null <- acorn_data$vote03 + (1 - acorn_data$z) * p
 
-asymp_var_ests_plot <- ggplot(data = asym_var_ests_data,
-                              mapping = aes(x = var_ests, y = (..count..)/sum(..count..))) +
-  geom_histogram(data = subset(x = asym_var_ests_data,
-                               subset = h == "h = 1"),
-                 binwidth = 1) +
-  geom_histogram(data = subset(x = asym_var_ests_data,
-                               subset = h == "h = 2"),
-                 binwidth = 1) +
-  geom_histogram(data = subset(x = asym_var_ests_data,
-                               subset = h == "h = 3"),
-                 binwidth = 1) +
-  geom_vline(mapping = aes(xintercept = solid_vl), linetype = "solid", data = vline_data) +
-  geom_vline(mapping = aes(xintercept = dashed_vl), linetype = "dashed", data = vline_data) +
-  xlab(label = "Variance estimates") +
-  ylab(label = "Probability") +
+cbind(y_c_null, y_t_null)
+
+acorn_Omega <- replicate(n = 10^3, expr = sample(acorn_data$z))
+
+
+null_obs_outs <- sapply(X = 1:ncol(acorn_Omega),
+                   FUN = function(x) { acorn_Omega[,x] * y_t_null + (1 - acorn_Omega[,x]) * y_c_null })
+dim(null_obs_outs)
+
+
+null_obs_outs[,c(1:5)]
+
+null_test_stats <- sapply(X = 1:ncol(acorn_Omega),
+                          FUN = function(x) { mean(null_obs_outs[,x][which(acorn_Omega[,x] == 1)]) -
+                              mean(null_obs_outs[,x][which(acorn_Omega[,x] == 0)]) })
+
+
+mean(null_test_stats >= obs_test_stat)
+
+################################################################################################################################################################################
+
+
+
+
+null_diff_means <- sapply(X = 1:ncol(acorn_Omega),
+                          FUN = function(x) { mean(null_obs_outs[,x][which(acorn_Omega[,x] == 1)]) -
+                              mean(null_obs_outs[,x][which(acorn_Omega[,x] == 0)]) })
+
+
+y_c_unif <- acorn_data$vote03 - acorn_data$z * tau
+
+unif_obs_test_stat <- mean(y_c_unif[which(acorn_data$z == 1)]) - mean(y_c_unif[which(acorn_data$z == 0)])
+
+null_unif_diff_means <- sapply(X = 1:ncol(acorn_Omega),
+                               FUN = function(x) { mean(y_c_unif[which(acorn_Omega[,x] == 1)]) -
+                                   mean(y_c_unif[which(acorn_Omega[,x] == 0)]) })
+
+mean(null_unif_diff_means >= unif_obs_test_stat)
+
+null_dist_data <- data.frame(null_test_stat = c(null_diff_means, null_unif_diff_means),
+                             unif = rep(x = c("Non uniformity trial", "Uniformity trial"),
+                                        each = ncol(acorn_Omega)))
+
+levels(null_dist_data$unif) <- c("Non uniformity trial",
+                                 "Uniformity trial")
+
+vline_data <- data.frame(unif = levels(null_dist_data$unif),
+                         vl = c(obs_test_stat, unif_obs_test_stat)) 
+
+bw <- 2 * IQR(null_dist_data$null_test_stat) / length(null_dist_data$null_test_stat)^(1/3)
+
+null_plots <- ggplot(data = null_dist_data,
+                     mapping = aes(x = null_test_stat,
+                                   y = (..count..)/sum(..count..))) +
+  geom_histogram(data = subset(x = null_dist_data,
+                               subset = unif == "Non uniformity trial"),
+                 binwidth = bw) +
+  geom_histogram(data = subset(x = null_dist_data,
+                               subset = unif == "Uniformity trial"),
+                 binwidth = bw) +
+  geom_vline(mapping = aes(xintercept = vl),
+             linetype = "dashed",
+             data = subset(x = vline_data,
+                           subset = unif == "Non uniformity trial")) +
+  geom_vline(mapping = aes(xintercept = vl),
+             linetype = "dashed",
+             data = subset(x = vline_data,
+                           subset = unif == "Uniformity trial")) +
   theme_bw() +
-  facet_wrap(facets = .~ h,
-             nrow = 1,
-             ncol = 3) 
-
-ggsave(plot = asymp_var_ests_plot,
-       file = "asymp_var_ests_plot.pdf",
-       width = 6,
-       height = 4,
-       units = "in",
-       dpi = 600)
-
-## Assess Normal approximation
-asym_stand_ests_data <- data.frame(stand_ests = c((asymp_ests_h_1_3[[1]][[5]] - asymp_ests_h_1_3[[1]][[2]])/sqrt(asymp_ests_h_1_3[[1]][[3]]),
-                                                  (asymp_ests_h_1_3[[2]][[5]] - asymp_ests_h_1_3[[2]][[2]])/sqrt(asymp_ests_h_1_3[[2]][[3]]),
-                                                  (asymp_ests_h_1_3[[3]][[5]] - asymp_ests_h_1_3[[3]][[2]])/sqrt(asymp_ests_h_1_3[[3]][[3]])),
-                                   h = as.factor(c(rep(x = 1, times = length((asymp_ests_h_1_3[[1]][[5]] - asymp_ests_h_1_3[[1]][[2]])/sqrt(asymp_ests_h_1_3[[1]][[3]]) )),
-                                                   rep(x = 2, times = length((asymp_ests_h_1_3[[2]][[5]] - asymp_ests_h_1_3[[2]][[2]])/sqrt(asymp_ests_h_1_3[[2]][[3]]) )),
-                                                   rep(x = 3, times = length((asymp_ests_h_1_3[[3]][[5]] - asymp_ests_h_1_3[[3]][[2]])/sqrt(asymp_ests_h_1_3[[3]][[3]]))))))
-
-levels(asym_stand_ests_data$h) <- c("h = 1",
-                                    "h = 2",
-                                    "h = 3")
-
-asym_stand_ests_plot <- ggplot(data = asym_stand_ests_data,
-                               mapping = aes(x = stand_ests, y = (..count..)/sum(..count..))) +
-  geom_histogram(data = subset(x = asym_stand_ests_data,
-                               subset = h == "h = 1"),
-                 binwidth = 1/3) +
-  geom_histogram(data = subset(x = asym_stand_ests_data,
-                               subset = h == "h = 2"),
-                 binwidth = 1/3) +
-  geom_histogram(data = subset(x = asym_stand_ests_data,
-                               subset = h == "h = 3"),
-                 binwidth = 1/3) +
-  xlab(label = "Standardized estimates") +
+  xlab(label = "Null test statistic") +
   ylab(label = "Probability") +
-  theme_bw() +
-  facet_wrap(facets = .~ h,
+  theme(axis.text.x = element_text(size = 7.5),
+        axis.text.y = element_text(size = 7.5)) +
+  facet_wrap(facets = .~ unif,
              nrow = 1,
-             ncol = 3,
-             scales = "free") 
+             ncol = 2) 
 
-ggsave(plot = asym_stand_ests_plot,
-       file = "asym_stand_ests_plot.pdf",
+ggsave(plot = null_plots,
+       file = "null_plots.pdf",
        width = 6,
        height = 4,
        units = "in",
        dpi = 600)
 
 
+bw <- 2 * IQR(null_dist_data$null_test_stat[which(null_dist_data$unif == "Non uniformity trial")]) / length(null_dist_data$null_test_stat[which(null_dist_data$unif == "Non uniformity trial")])^(1/3)
+null_dist_plot <- ggplot(data = subset(x = null_dist_data,
+                                       subset = unif == "Non uniformity trial"),
+                         mapping = aes(x = null_test_stat ,
+                                       y = (..count..)/sum(..count..))) +
+  geom_histogram(data = subset(x = null_dist_data,
+                               subset = unif == "Non uniformity trial"),
+                 binwidth = bw) +
+  geom_vline(xintercept = obs_test_stat,
+             linetype = "dashed") +
+  guides(fill = FALSE) +
+  theme_bw() +
+  xlab(label = "Null test statistics") +
+  ylab(label = "Probability")
+
+ggsave(plot = null_dist_plot,
+       file = "null_dist_plot.pdf",
+       width = 6,
+       height = 4,
+       units = "in",
+       dpi = 600)
+
+## Hodes-Lehmann estimate
+HL_y_c_unif <- acorn_data$vote03 - acorn_data$z * obs_test_stat
+
+HL_unif_obs_test_stat <- mean(HL_y_c_unif[which(acorn_data$z == 1)]) - mean(HL_y_c_unif[which(acorn_data$z == 0)])
+
+HL_null_unif_diff_means <- sapply(X = 1:ncol(acorn_Omega),
+                                  FUN = function(x) { mean(HL_y_c_unif[which(acorn_Omega[,x] == 1)]) -
+                                      mean(HL_y_c_unif[which(acorn_Omega[,x] == 0)]) })
+
+HL_null_dist_data <- data.frame(null_test_stat = HL_null_unif_diff_means)
+
+bw <- 2 * IQR(HL_null_dist_data$null_test_stat) / length(HL_null_dist_data$null_test_stat)^(1/3)
+
+HL_null_dist_plot <- ggplot(data = HL_null_dist_data,
+                         mapping = aes(x = null_test_stat ,
+                                       y = (..count..)/sum(..count..))) +
+  geom_histogram(data = HL_null_dist_data,
+                 binwidth = bw) +
+  geom_vline(xintercept = HL_unif_obs_test_stat,
+             linetype = "dashed") +
+  guides(fill = FALSE) +
+  theme_bw() +
+  xlab(label = "Null test statistics") +
+  ylab(label = "Probability")
+
+ggsave(plot = HL_null_dist_plot,
+       file = "HL_null_dist_plot.pdf",
+       width = 6,
+       height = 4,
+       units = "in",
+       dpi = 600)
+
+###################################################################################################################################################################################################################################################################
+###################################################################################################################################################################################################################################################################
+## Generate confidence set
+nulls <- seq(from = -0.05, to = .15, by = .001)
+
+unif_hyp_tests <- function(.obs_y,
+                           .z,
+                           .null_hyp,
+                           .Omega){
+  
+  y_unif = .obs_y - .z * .null_hyp
+  
+  obs_stat = mean(y_unif[which(.z == 1)]) - mean(y_unif[which(.z == 0)])
+  
+  null_stats = sapply(X = 1:ncol(.Omega),
+                      FUN = function(x) { mean(y_unif[which(.Omega[,x] == 1)]) -
+                          mean(y_unif[which(.Omega[,x] == 0)]) })
+  
+  lower_p_value = mean(null_stats <= obs_stat)
+  upper_p_value = mean(null_stats >= obs_stat)
+  
+  return(list("lower_p_value" = lower_p_value,
+              "upper_p_value" = upper_p_value))
+  
+  }
+
+upper_p_values <- sapply(X = nulls,
+                         FUN = function(x) { unif_hyp_tests(.obs_y = acorn_data$vote03,
+                                                            .z = acorn_data$z,
+                                                            .null_hyp = x,
+                                                            .Omega = acorn_Omega)$upper_p_value })
+
+upper_conf_set <- nulls[which(upper_p_values >= 0.05)]
+
+lower_p_values <- sapply(X = nulls,
+                         FUN = function(x) { unif_hyp_tests(.obs_y = acorn_data$vote03,
+                                                            .z = acorn_data$z,
+                                                            .null_hyp = x,
+                                                            .Omega = acorn_Omega)$lower_p_value })
+
+lower_conf_set <- nulls[which(lower_p_values >= 0.05)]
+
+two_sided_conf_set <- intersect(lower_conf_set, upper_conf_set)
+
+##################################################################################################################################################################################################################
+##################################################################################################################################################################################################################
+
+## Assess power of test of sharp null when true effect is 0.025
+y_t <- acorn_data$vote03 + (1 - acorn_data$z) * 0
+y_c <- acorn_data$vote03 - acorn_data$z * 0
+
+cbind(y_t, y_c)
+
+obs_outs <- sapply(X = 1:ncol(acorn_Omega),
+                   FUN = function(x) { acorn_Omega[,x] * y_t + (1 - acorn_Omega[,x]) * y_c })
+
+obs_test_stats <- sapply(X = 1:ncol(acorn_Omega),
+                         FUN = function(x) { mean(obs_outs[,x][which(acorn_Omega[,x] == 1)]) -
+                             mean(obs_outs[,x][which(acorn_Omega[,x] == 0)]) })
+
+null_dists <- list()
 
 
+sapply(X = 1:ncol(acorn_Omega),
+       FUN = function(x) { mean(obs_outs[,1][which(acorn_Omega[,x] == 1)]) -
+           mean(obs_outs[,1][which(acorn_Omega[,x] == 0)]) })
 
 
+mean(obs_outs[,][which(acorn_Omega[,3] == 1)]) -
+  mean(obs_outs[,1][which(acorn_Omega[,3] == 0)])
 
 
+for(i in 1:ncol(obs_outs)){
+  
+  null_dists[[i]] = sapply(X = 1:ncol(acorn_Omega),
+                           FUN = function(x) { mean(obs_outs[,i][which(acorn_Omega[,x] == 1)]) -
+                               mean(obs_outs[,i][which(acorn_Omega[,x] == 0)]) })
+  }
 
+upper_p_values <- sapply(X = 1:ncol(acorn_Omega),
+                         FUN = function(x) { mean(null_dists[[x]] >= obs_test_stats[x]) })
 
+## power
+mean(upper_p_values <= 0.05)
 
 
