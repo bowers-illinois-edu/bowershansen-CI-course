@@ -1,0 +1,86 @@
+---
+title: |
+  | Linear Regression in Observational Studies
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: |
+  | ICPSR 2020 Session 2
+  | Jake Bowers, Ben Hansen, Tom Leavitt
+bibliography:
+ - BIB/Master_Bibliography.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    incremental: true
+    includes:
+        in_header:
+           - defs-all.sty
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
+---
+
+
+<!-- To show notes  -->
+<!-- https://stackoverflow.com/questions/44906264/add-speaker-notes-to-beamer-presentations-using-rmarkdown -->
+
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
+```
+
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+## Load all of the libraries that we will use when we compile this file
+## We are using the renv system. So these will all be loaded from a local library directory
+library(dplyr)
+library(ggplot2)
+library(estimatr)
+library(coin)
+library(DeclareDesign)
+```
+
+## Today
+
+ 1. Agenda: Linear regression for covariance adjustment in observational studies ("controlling for")
+ 2. Random break-out rooms to work on the code for the day and/or the assignments.
+ 3. Questions arising from the reading or assignments or life.
+
+## So far
+
+  - There is more than one way to use what we observe to reason about
+    unobserved potential outcomes: testing (Fisher/Rosenbaum), estimating
+    (Neyman/many people including Angrist \& Pischke, Gerber \& Green),
+    predicting (Bayes and Rubin).
+
+## So far
+
+  - In **non-experimental studies** we worry about confounding --- background
+    variables (aka "covariates") which provide alternative explanations (often
+    represented by $x$) for a given $Z \rightarrow Y$ relationship. And a
+    common approach is to "control for" those variables using linear
+    regression. (We didn't talk about this last time but this is context for
+    last time.)
+  - In **experimental studies we do not control for covariates** since we
+    control the assignment of the causal driver, $Z$. However, we can **use**
+    covariates to improve our design and/or estimation and/or testing by (a)
+    blocking or stratification and/or (b) **covariance adjustment**.
+  - Although covariance adjustment in an experiment looks like "controlling
+    for" in an observational study, it is not the same. Think of it as
+    "removing non-treatment related noise from the outcome" rather than
+    "clarifying comparisons". 
+    - It also involves some bias. Although the bias may be small.
+    - And there are multiple approaches to de-noise the outcome so as to
+      increase precision while minimizing (but not eliminating bias): direct
+      approach `Y~Z+x`, the Lin approach `Y~Z + Z*(x-mean(x)) + (x-mean(x))`,
+      and the Rosenbaum approach `resid_Y_x ~ Z` after `resid_Y_x <-
+      resid(lm(Y~x))`.
+
+## Summary of the Day
+
+## References
+
