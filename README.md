@@ -1,6 +1,10 @@
-# bowershansen-CI-course
+# Causal Inference for Social Scientists
 
-Source files for Jake and Ben and Tom's causal inference course materials
+Source files for Jake and Ben and Tom's causal inference course materials. This file provides some instructions for ourselves and future collaborators in regards building course materials
+
+## Bibliographies
+
+We encourage the use of the `BIB/Master_Bibliography.bib` file.
 
 ## Compiling `.Rnw` files
 
