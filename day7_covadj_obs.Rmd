@@ -408,6 +408,25 @@ c(est_ate1,coef(est_ate1a)[["Z"]],coef(est_ate1b)[["Z"]],coef(est_ate1c)[["Z"]])
 c(est_ate2,coef(est_ate2a)[["Z"]],coef(est_ate2b)[["Z"]],coef(est_ate2c)[["Z"]])
 ```
 
+## Finally, what about variable selection?
+
+We could use a penalized model (like the lasso or adaptive lasso) or some other approach (like random forests) to **automatically choose** a specification.
+
+```{r}
+library(glmnet)
+
+cv1 <- cv.glmnet(mm,y=dat$Y)
+cv1
+plot(cv1$glmnet.fit,xvar="lambda")
+abline(v=.705)
+sol1 <- coef(cv1$glmnet.fit,s=.705)
+sol1
+
+
+```
+
+Of course, then we have to argue that our **tuning parameter choice** made sense. And, again, we have no standard for knowing when we have done **enough**.
+
 ## Summary of the Day
 
  - It is not so simple to "control for" even one covariate in an observational study let alone more than one. We worry about:
