@@ -415,11 +415,11 @@ We could use a penalized model (like the lasso or adaptive lasso) or some other 
 ```{r}
 library(glmnet)
 
-cv1 <- cv.glmnet(mm,y=dat$Y)
+cv1 <- cv.glmnet(mm[,3:15],y=dat$Y)
 cv1
 plot(cv1$glmnet.fit,xvar="lambda")
-abline(v=.705)
-sol1 <- coef(cv1$glmnet.fit,s=.705)
+abline(v=.743)
+sol1 <- coef(cv1$glmnet.fit,s=.743)
 sol1
 
 
