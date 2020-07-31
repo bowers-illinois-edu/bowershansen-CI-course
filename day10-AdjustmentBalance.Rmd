@@ -1,11 +1,12 @@
 ---
-title: Statistical Adjustment and Assessment of Adjustment in Observational Studies
+title: |
+ | Statistical Adjustment and Assessment of Adjustment in Observational Studies
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-author: ICPSR 2020 Session 2
+author: |
+  | ICPSR 2020 Session 2
+  | Jake Bowers, Ben Hansen, Tom Leavitt
 bibliography:
- - BIB/refs.bib
- - BIB/master.bib
- - BIB/misc.bib
+ - 'BIB/Master_Bibliography.bib'
 fontsize: 10pt
 geometry: margin=1in
 graphics: yes
@@ -21,140 +22,63 @@ output:
     template: icpsr.beamer
     incremental: true
     includes:
-      in_header:
-        - defs-all.sty
+        in_header:
+           - defs-all.sty
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
     pandoc_args: [ "--csl", "chicago-author-date.csl" ]
-  revealjs::revealjs_presentation:
-    slide_level: 2
-    incremental: true
-    transition: none
-    fig_caption: true
-    self_contained: false
-    reveal_plugins: ["notes","search","zoom","chalkboard"]
-    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
-    includes:
-      in_header: icpsr-revealjs.html
 ---
 
 
-<!-- https://stackoverflow.com/questions/41655383/r-markdown-similar-feature-to-newcommand-in-latex -->
-<!-- For HTML Only -->
-`r if (!knitr:::is_latex_output()) '
-$\\newcommand{\\Pdistsym}{P}$
-$\\newcommand{\\Pdistsymn}{P_n}$
-$\\newcommand{\\Qdistsym}{Q}$
-$\\newcommand{\\Qdistsymn}{Q_n}$
-$\\newcommand{\\Qdistsymni}{Q_{n_i}}$
-$\\newcommand{\\Qdistsymt}{Q[t]}$
-$\\newcommand{\\dQdP}{\\ensuremath{\\frac{dQ}{dP}}}$
-$\\newcommand{\\dQdPn}{\\ensuremath{\\frac{dQ_{n}}{dP_{n}}}}$
-$\\newcommand{\\EE}{\\ensuremath{\\mathbf{E}}}$
-$\\newcommand{\\EEp}{\\ensuremath{\\mathbf{E}_{P}}}$
-$\\newcommand{\\EEpn}{\\ensuremath{\\mathbf{E}_{P_{n}}}}$
-$\\newcommand{\\EEq}{\\ensuremath{\\mathbf{E}_{Q}}}$
-$\\newcommand{\\EEqn}{\\ensuremath{\\mathbf{E}_{Q_{n}}}}$
-$\\newcommand{\\EEqni}{\\ensuremath{\\mathbf{E}_{Q_{n[i]}}}}$
-$\\newcommand{\\EEqt}{\\ensuremath{\\mathbf{E}_{Q[t]}}}$
-$\\newcommand{\\PP}{\\ensuremath{\\mathbf{Pr}}}$
-$\\newcommand{\\PPp}{\\ensuremath{\\mathbf{Pr}_{P}}}$
-$\\newcommand{\\PPpn}{\\ensuremath{\\mathbf{Pr}_{P_{n}}}}$
-$\\newcommand{\\PPq}{\\ensuremath{\\mathbf{Pr}_{Q}}}$
-$\\newcommand{\\PPqn}{\\ensuremath{\\mathbf{Pr}_{Q_{n}}}}$
-$\\newcommand{\\PPqt}{\\ensuremath{\\mathbf{Pr}_{Q[t]}}}$
-$\\newcommand{\\var}{\\ensuremath{\\mathbf{V}}}$
-$\\newcommand{\\varp}{\\ensuremath{\\mathbf{V}_{P}}}$
-$\\newcommand{\\varpn}{\\ensuremath{\\mathbf{V}_{P_{n}}}}$
-$\\newcommand{\\varq}{\\ensuremath{\\mathbf{V}_{Q}}}$
-$\\newcommand{\\cov}{\\ensuremath{\\mathbf{Cov}}}$
-$\\newcommand{\\covp}{\\ensuremath{\\mathbf{Cov}_{P}}}$
-$\\newcommand{\\covpn}{\\ensuremath{\\mathbf{Cov}_{P_{n}}}}$
-$\\newcommand{\\covq}{\\ensuremath{\\mathbf{Cov}_{Q}}}$
-$\\newcommand{\\hatvar}{\\ensuremath{\\widehat{\\mathrm{Var}}}}$
-$\\newcommand{\\hatcov}{\\ensuremath{\\widehat{\\mathrm{Cov}}}}$
-$\\newcommand{\\sehat}{\\ensuremath{\\widehat{\\mathrm{se}}}}$
-$\\newcommand{\\combdiff}[1]{\\ensuremath{\\Delta_{{z}}[#1]}}$
-$\\newcommand{\\Combdiff}[1]{\\ensuremath{\\Delta_{{Z}}[#1]}}$
-$\\newcommand{\\psvec}{\\ensuremath{\\varphi}}$
-$\\newcommand{\\psvecgc}{\\ensuremath{\\tilde{\\varphi}}}$
-$\\newcommand{\\atob}[2]{\\ensuremath{#1\\!\\! :\\!\\! #2}}$
-$\\newcommand{\\stratA}{\\ensuremath{\\mathbf{S}}}$
-$\\newcommand{\\stratAnumstrat}{\\ensuremath{S}}$
-$\\newcommand{\\sAsi}{\\ensuremath{s}}$
-$\\newcommand{\\permsd}{\\ensuremath{\\sigma_{\\Pdistsym}}}$
-$\\newcommand{\\dZ}[1]{\\ensuremath{d_{Z}[{#1}]}}$
-$\\newcommand{\\tz}[1]{\\ensuremath{t_{{z}}[#1]}}$
-$\\newcommand{\\tZ}[1]{\\ensuremath{t_{{Z}}[#1]}} $
-'`
+<!-- To show notes  -->
+<!-- https://stackoverflow.com/questions/44906264/add-speaker-notes-to-beamer-presentations-using-rmarkdown -->
 
-<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
-
-
-```{r include=FALSE, cache=FALSE}
-# Some customization.  You can alter or delete as desired (if you know what you are doing).
-# knitr settings to control how R chunks work.
-rm(list=ls())
-
-require(knitr)
-
-## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
-
-knitr::knit_hooks$set(mysize = function(before, options, envir) {
-			      if (before){
-				      return(options$size)
-			      } else {
-				      return("\\normalsize")}
-
-})
-
-knit_hooks$set(plotdefault = function(before, options, envir) {
-    if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
-})
-
-opts_chunk$set(
-  tidy=FALSE,     # display code as typed
-  echo=TRUE,
-  results='markup',
-  strip.white=TRUE,
-  fig.path='figs/fig',
-  cache=FALSE,
-  highlight=TRUE,
-  width.cutoff=132,
-  size='\\scriptsize',
-  out.width='.8\\textwidth',
-  fig.retina=FALSE,
-  message=FALSE,
-  comment=NA,
-  mysize=TRUE,
-  plotdefault=TRUE)
-
-if(!file.exists('figs')) dir.create('figs')
-
-options(digits=4,
-	scipen=8,
-	width=132,
-	show.signif.stars=FALSE)
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
 ```
 
-```{r eval=FALSE, include=FALSE, echo=FALSE}
-## Run this only once and then not again until we want a new version from github
-library('devtools')
-library('withr')
-with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
-```
-
-```{r echo=FALSE}
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+## Load all of the libraries that we will use when we compile this file
+## We are using the renv system. So these will all be loaded from a local library directory
 library(dplyr)
 library(ggplot2)
 library(coin)
-library(RItools,lib.loc="./lib")
+library(RItools)
 library(optmatch)
 ```
 ## Today
 
-  1. Agenda:
-The problem of covariance adjustment to reduce "bias"/ confounding. \textbf{How can we answer the question about whether we have adjusted enough.} A simple approach: stratification on one categorical variable (and interaction effects). A more complex approach: find sets that are as similar as possible in terms of a continuous variable (bipartite matching). Balance assessment after stratification.
-  2. Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and @ho:etal:07.
+  1. Agenda: The problem of covariance adjustment to reduce "bias"/
+     confounding. **How can we answer the question about whether we have
+     adjusted enough.** A simple approach: stratification on one categorical
+     variable (and interaction effects). A more complex approach: find sets
+     that are as similar as possible in terms of a continuous variable
+     (bipartite matching). Balance assessment after stratification.
+  2. Reading for tomorrow and next week: DOS 8--9, 13 and
+     \cite[\S~9.5]{gelman2006dau}, and @ho:etal:07.
   3. Questions arising from the reading or assignments or life?
+
+## So far/Recently
+
+ - We can learn about the causal effects of non-randomized variables, $D$, if we have an instrument, $Z$ under certain assumptions:
+
+\begin{center}
+\begin{tikzcd}[column sep=large]
+Z  \arrow[from=1-1,to=1-2, "\not{0}"] \arrow[from=1-1, to=1-4, bend left, "\text{0 (exclusion)}"] & d  \arrow[from=1-2,to=1-4] & & y \\
+(x_1 \ldots x_p) \arrow[from=2-1,to=1-1, "\text{0 (as if randomized)}"]  \arrow[from=2-1,to=1-2] \arrow[from=2-1,to=1-4]
+\end{tikzcd}
+\end{center}
+
+ - The @angrist1996 assumptions for estimating the CACE/LATE are: (1) sutva, (2) ignorable $Z$ (see above),
+   (3) exclusion (see above), (4) no defiers (or they might call this
+   "monotonicity"), (5) non-zero causal effect of $Z$ on $D$.
+
+ - This enables **Encouragement Designs** --- allows randomized experiments to
+   help us learn about theory using interventions/treatments that we can
+   encourage but not fully control.
+
+ - We can test the sharp null of no complier average effects directly (under
+   those assumptions), too: this helps us around the problem of calculating  $\Var\left[\cfrac{\widehat{\text{ITT}}_Y}{\widehat{\text{ITT}}_D}\right]$.
 
 # Strategies for Causal Inference
 
@@ -165,9 +89,13 @@ The problem of covariance adjustment to reduce "bias"/ confounding. \textbf{How 
  - Pre-register your analysis plan and experimental design.
 
 ### After outcome data have been collected
- - Make the case that randomization worked.
- - Increase precision with design and test statistics (and even models of effects)
- - Make sure that your estimator is estimating the right thing (i.e. is not biased or at least is consistent)
+ - Make the case that randomization worked. (often trivial, but in field
+   experiments with long chains of responsibility, an important screening step
+   even if not dispositive of a "failed experiment").
+ - Increase precision with design and test statistics (and even models of
+   effects)
+ - Make sure that your estimator is estimating the right thing (i.e. is not
+   biased or at least is consistent)
  - Make sure that your test has a controlled false positive rate and is as
    powerful as possible (i.e. the coverage rate of a confidence interval is
    nominal, the Type I error rate is controlled).
@@ -178,18 +106,17 @@ The problem of covariance adjustment to reduce "bias"/ confounding. \textbf{How 
  - Find a discontinuity/A Natural Experiment (RDD: either natural experiment
    or continuous forcing function)
  - Multiple controls (i.e. "Choice as an alternative to control"
-   \cite{rosenbaum:1999})
- - "Controlling For"
- - Difference in Differences
+   see [@rosenbaum:1999])
+ - "Controlling For" directly in linear models.
+ - Difference in Differences (if you have some pre- and post-outcomes)
  - Matched Stratification (approximating a block-randomized experiment)
  - Best matched subset selection (approximating a completely or simply
    randomized experiment)
- - Weighting
+ - Weighting (the stratification approaches imply weightings, so we could try to calculate good weightings directly)
  - Direct theoretical modeling / Directed Acyclic Graphs (DAGS) to guide other
    data modeling choices.
 
 # But first, how to assess the randomization process in an experiment.
-
 
 ## The Neyman-Rubin Model for (simple) experiments
 
