@@ -34,6 +34,10 @@ auto
 *.bbl
 *.blg
 *.brf
+*.bcf
+*_files
+renv
+*.xdv
 
 # specific files and directories
 .Rproj.user
