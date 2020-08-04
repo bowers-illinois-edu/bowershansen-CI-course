@@ -259,6 +259,9 @@ table(meddat$nhTrt,fm1)
 pm1 <- pairmatch(absdist,data=meddat)
 summary(pm1, min.controls=0, max.controls=Inf )
 table(meddat$nhTrt,pm1,exclude=c())
+
+fm2 <- fullmatch(absdist,data=meddat,min.controls=.5)
+
 ```
 
 
@@ -358,7 +361,7 @@ setmeanDiffs <- meddat %>% group_by(fm1) %>%
             nCb = sum(1-nhTrt),
             hwt = ( 2*( nCb * nTb ) / (nTb + nCb))
             )
-setmeanDiffs
+setmeanDiffs %>% arrange(desc(abs(diffAboveHS)))
 ```
 
 ## What is xBalance doing with multiple sets/blocks?
@@ -379,8 +382,6 @@ xbfm1$results[,,"hsmatch"]
 
 Recall that $p$-values require distributions, and distributions require processes that can be repeated (even in a Bayesian formulation). What are we repeating in an experiment? (The assignment mechanism). 
 
-
-
 ```{r d1v2, echo=TRUE}
 ## This is another version that might be more clear in regards what is going on.
 dstatv3 <- function(zz,mm,ss){
@@ -394,8 +395,11 @@ dstatv3 <- function(zz,mm,ss){
     adjmn <- with(datb, sum(mndiff*hbwt))
     return(adjmn)
 }
-
 ```
+
+## What do we mean by "compare to a randomized experiment"?
+
+Recall that $p$-values require distributions, and distributions require processes that can be repeated (even in a Bayesian formulation). What are we repeating in an experiment? (The assignment mechanism). 
 
 
 ```{r xbdist, messages=FALSE, warning=FALSE}
@@ -413,8 +417,13 @@ xbfm1$results
 ```
 
 
-```{r}
+## What do we mean by "compare to a randomized experiment"?
+
+Recall that $p$-values require distributions, and distributions require processes that can be repeated (even in a Bayesian formulation). What are we repeating in an experiment? (The assignment mechanism). 
+
+```{r plotxbnulldist, out.width=".7\\textwidth"}
 plot(density(nulldist))
+rug(nulldist)
 abline(v=obsdstat)
 ```
 
@@ -422,7 +431,7 @@ abline(v=obsdstat)
 
 ## Dimension reduction using the Mahalanobis Distance
 
-The general idea: dimension reduction. When we convert many columns into one column we reduce the dimensions of the dataset (to one column).
+The general idea: dimension reduction. When we convert many columns into one column we reduce the dimensions of the dataset (to one column). If using distance matrices and optimal matching allows us to side-step the problem of choosing cut-points for stratification, we can use the idea of **multivariate distance** to produce distance matrices to minimize **multivariate distances**.
 
 
 ```{r}
