@@ -215,10 +215,21 @@ summary(pmMh1, min.controls = 0, max.controls = Inf)
 
 
 ```{r xbmh, echo=TRUE}
-xbMh <- xBalance(nhTrt ~ nhAboveHS + nhPopD + HomRate03, strata = list(unstrat = NULL, fm1=~fm1, fmMh = ~fmMh, fmMh1 = ~fmMh1, fmMh2=~fmMh2,pmMh1=~pmMh1), report = "all", data = meddat)
+xbMh <- xBalance(nhTrt ~ nhAboveHS + nhPopD + HomRate03, 
+                 strata = list(unstrat = NULL, fm1=~fm1, fmMh = ~fmMh, fmMh1 = ~fmMh1, fmMh2=~fmMh2,pmMh1=~pmMh1), 
+                 report = "all", data = meddat)
 xbMh$overall
 ## xbMh$results
 xbMh$results[,"std.diff",]
+xbMh$results[,"adj.diff",]
+
+## Another way to communicate with xBalance about the stratifications
+strat_dat <- with(meddat,data.frame(unstrat = as.factor(rep(1,nrow(meddat))),
+                                                 fm1=fm1, fmMh = fmMh, fmMh1 = fmMh1, fmMh2=fmMh2,pmMh1=pmMh1))
+xbMh2 <- xBalance(nhTrt ~ nhAboveHS + nhPopD + HomRate03, 
+                 strata = strat_dat, 
+                 report = "all", data = meddat)
+xbMh2$overall
 ```
 
 #  Matching on Many Covariates: Using Propensity Scores
@@ -292,8 +303,19 @@ summary(fmPs2, min.controls = 0, max.controls = Inf, propensity.model=theglm)
 ```{r manycovs, echo=TRUE}
 thecovs <- unique(c(names(meddat)[c(5:7, 9:24)], "HomRate03"))
 balfmla <- reformulate(thecovs, response = "nhTrt")
+glmbig <- glm(balfmla,data=meddat,family=binomial(link="logit"))
+psbig <- match_on(glmbig,data=meddat)
+mhbig <- match_on(balfmla,data=meddat)
+fmMhbig <- fullmatch(mhbig,data=meddat)
+summary(fmMhbig,min.controls=0,max.controls=Inf)
+meddat$fmMhbig <- fmMhbig
+
+fmpsbig <- fullmatch(psbig,data=meddat)
+summary(fmpsbig,min.controls=0,max.controls=Inf)
+meddat$fmpsbig <- fmpsbig
+
 xb5 <- xBalance(balfmla,
-  strata = list(unstrat=NULL,fmMh = ~fmMh, fmMh2=~fmMh2,fmPs = ~fmPs),
+  strata = list(unstrat=NULL,fmMh = ~fmMh, fmMh2=~fmMh2,fmPs = ~fmPs,fmMhbig=~fmMhbig,fmpsbig=~fmpsbig),
   data = meddat, report = "all"
 )
 xb5$overall
