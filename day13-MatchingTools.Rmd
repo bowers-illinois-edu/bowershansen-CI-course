@@ -253,13 +253,13 @@ What do those distances mean? (They are standardized absolute differences.)
 simpdist <- outer(thepscore, thepscore, function(x, y) {
   abs(x - y)
 })
-mad(thepscore[meddat$nhTrt == 1])
-mad(thepscore[meddat$nhTrt == 0])
-(mad(thepscore[meddat$nhTrt == 1]) + mad(thepscore[meddat$nhTrt == 0])) / 2
+mad(thepscore[meddat$nhTrt == 1],na.rm=TRUE)
+mad(thepscore[meddat$nhTrt == 0], na.rm=TRUE)
+(mad(thepscore[meddat$nhTrt == 1],na.rm=TRUE) + mad(thepscore[meddat$nhTrt == 0],na.rm=TRUE)) / 2
 ## We can see the actual R function here: optmatch:::match_on_szn_scale
 optmatch:::match_on_szn_scale(thepscore, Tx = meddat$nhTrt)
 simpdist["101", c("401", "402", "403")]
-simpdist["101", c("401", "402", "403")] / .9137
+simpdist["101", c("401", "402", "403")] / 1.569
 psdist["101", c("401", "402", "403")]
 ```
 
@@ -365,6 +365,7 @@ match keeps all the obs, and has mean distance (1+0+1)/3=.67.
 bookmat <- matrix(c(0, 1, 1, 10, 10, 0, 10, 10, 1, 1, 20, 100 / 0), nrow = 3, byrow = TRUE)
 dimnames(bookmat) <- list(c("Ben", "Jake", "Tom"), c("Mo", "John", "Terry", "Pat"))
 pairmatch(bookmat)
+fullmatch(bookmat)
 ```
 
 \note{
@@ -400,7 +401,7 @@ summary(pmCal1, propensity.model = theglm)
 
 ## Calipers
 
-Another example: We may want to match on mahalanobis distance but disallow any pairs with extreme propensity distance and/or extreme differences in baseline homicide rates (here using many covariates all together).
+Another example: We may want to match on propensity distance but disallow any pairs with extreme mahalnobis distance and/or extreme differences in baseline homicide rates (here using many covariates all together).
 
 
 ```{r}
@@ -430,8 +431,8 @@ as.matrix(mhdist)[5:10, 5:10]
 Now, use this new matrix for the creation of stratified designs --- but possibly excluding some units (also showing here the `tol` argument. The version with the tighter tolerance produces a solution with smaller overall distances)
 
 ```{r}
-fmCal2a <- fullmatch(distCal, data = meddat, tol = .001)
-summary(fmCal2a, min.controls = 0, max.controls = Inf)
+fmCal2a <- fullmatch(distCal, data = meddat, tol = .1)
+summary(fmCal2a, min.controls = 0, max.controls = Inf, propensity.model = theglm)
 fmCal2b <- fullmatch(distCal, data = meddat, tol = .00001)
 summary(fmCal2b, min.controls = 0, max.controls = Inf, propensity.model = theglm)
 
