@@ -63,8 +63,7 @@ row.names(meddat) <- meddat$nh
 
   1. Agenda: How to characterize the information in a matched design (use what
      we know about the variance of estimators from block-randomized
-     experiments) `effective sample size`; Estimating and testing using matched
-     designs.
+     experiments) `effective sample size`; Estimating average causal effects and testing hypotheses about causal effects (focusing on hypotheses of no effects) using stratified designs (the "as-if-randomized approach")
  2. We are now in the "Observational Studies" or Matching part of the course
     (see the reading there).
  3. Questions arising from the reading or assignments or life?
@@ -72,6 +71,7 @@ row.names(meddat) <- meddat$nh
 # But first, review
 
 ## Making stratified research designs using optmatch
+
 **Decision Points**
 
  - Which covariates and their scaling and coding. (For example, exclude covariates with no variation!)
@@ -89,7 +89,7 @@ row.names(meddat) <- meddat$nh
 
 ```{r}
 thecovs <- unique(c(names(meddat)[c(5:7, 9:24)], "HomRate03"))
-balfmla <- reformulate(thecovs[-1], response = "nhTrt")
+balfmla <- reformulate(thecovs[-c(1,14)], response = "nhTrt")
 thebglm <- arm::bayesglm(balfmla, data = meddat, family = binomial(link = "logit"))
 mhdist <- match_on(balfmla, data = meddat)
 psdist <- match_on(thebglm, data = meddat)
@@ -97,10 +97,12 @@ psdist <- match_on(thebglm, data = meddat)
 ## Two versions of a scalar distance: One is standardized (mahalanobis dist is just standardized when you have only one variable)
 hrdist1 <- match_on(nhTrt ~ HomRate03, data = meddat)
 
+## Distance in terms of homicide rate
 tmp <- meddat$HomRate03
 names(tmp) <- rownames(meddat)
 hrdist2 <- match_on(tmp, z = meddat$nhTrt, data = meddat)
 
+## Distance after centering and standardizing
 tmp <- scale(meddat$HomRate03)[, 1]
 names(tmp) <- rownames(meddat)
 hrdist3 <- match_on(tmp, z = meddat$nhTrt, data = meddat)
@@ -109,17 +111,30 @@ hrdist1[1:3, 1:6]
 hrdist2[1:3, 1:6]
 hrdist3[1:3, 1:6]
 
-
 psCal <- quantile(as.vector(psdist), .9)
 mhCal <- quantile(as.vector(mhdist), .9)
 hrCal <- quantile(as.vector(hrdist2), .9)
 
 matchdist <- psdist + caliper(psdist, psCal) + caliper(mhdist, mhCal) + caliper(hrdist2, 2)
+as.matrix(matchdist)[1:3,1:6]
 
 fm0 <- fullmatch(matchdist, data = meddat)
 summary(fm0, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
 fm1 <- fullmatch(matchdist, data = meddat, min.controls = 1)
 summary(fm1, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
+fm3 <- fullmatch(matchdist, data = meddat, mean.controls = .9)
+summary(fm3, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
+
+fm0dists <- unlist(matched.distances(fm0,matchdist))
+fm1dists <- unlist(matched.distances(fm1,matchdist))
+
+matchdistPen <- as.matrix(matchdist)
+maxdist <- max(matchdist[!is.infinite(matchdist)])
+matchdistPen[is.infinite(as.matrix(matchdist))] <- 100
+
+fm2 <- fullmatch(matchdistPen,data=meddat)
+summary(fm2,min.controls=0,max.controls=Inf)
+
 ```
 
 ## Showing matches
@@ -134,12 +149,18 @@ blah0 <- outer(fm0, fm0, FUN = function(x, y) {
 blah1 <- outer(fm1, fm1, FUN = function(x, y) {
   as.numeric(x == y)
 })
-par(mfrow = c(1, 2), mar = c(3, 3, 3, 1))
+blah2 <- outer(fm2, fm2, FUN = function(x, y) {
+  as.numeric(x == y)
+})
+par(mfrow = c(2, 2), mar = c(3, 3, 3, 1))
 plot(graph_from_adjacency_matrix(blah0, mode = "undirected", diag = FALSE),
   vertex.color = c("white", "green")[meddat$nhTrt + 1], main = "Min Ctrls=0, Max Ctrls=Inf"
 )
 plot(graph_from_adjacency_matrix(blah1, mode = "undirected", diag = FALSE),
   vertex.color = c("white", "green")[meddat$nhTrt + 1], main = "Min Ctrls=1, Max Ctrls=Inf"
+)
+plot(graph_from_adjacency_matrix(blah2, mode = "undirected", diag = FALSE),
+  vertex.color = c("white", "green")[meddat$nhTrt + 1], main = "Penalties,Min Ctrls=1, Max Ctrls=Inf"
 )
 ```
 
@@ -223,7 +244,7 @@ stratumStructure(fm0)
 mean(unlist(matched.distances(fm0, matchdist)))
 ```
 
-Notice for `fm0` we weight the 8-to-1 match by `2*(1 * 8)/(8+1)=1.78` and the 1-to-16 match by `2*(16*1)/(16+1)=1.88`.
+Notice for `fm0` we weight the 12-to-1 match by `2*(1 * 11)/(11+1)=1.83` and the 1-to-16 match by `2*(16*1)/(16+1)=1.88`.
 
 In a pairmatch all of the sets have weight `2*(1*1)/(1+1) = 2/2=1`.
 
@@ -628,6 +649,17 @@ rankTestPerm <- wilcox_test(HomRate08 ~ nhTrtF | fm0, data = wdat, distribution 
 
 pvalue(rankTestAsym)
 pvalue(rankTestPerm)
+```
+
+Notice the two distributions:
+
+```{r}
+rdistwc_perm <- rperm(rankTestPerm,n=10000)
+rdistwc_asymp <- rperm(rankTestAsym,n=10000)
+
+plot(density(rdistwc_perm))
+lines(density(rdistwc_asymp),col="blue")
+abline(v=statistic(rankTestAsym))
 ```
 
 See also `RItest` (in development) and the `ri2` and `ri` packages for R.
