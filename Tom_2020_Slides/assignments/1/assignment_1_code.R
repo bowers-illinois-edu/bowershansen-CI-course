@@ -3,7 +3,12 @@ rm(list = ls())
 
 acorn_data <- read.csv("acorn03.csv")
 
+sum(acorn_data$size * acorn_data$contact)/sum(acorn_data$size[which(acorn_data$z == 1)])
+
+
 acorn_data <- dplyr::select(.data = acorn_data, unit, size, z, vote03)
+
+
 
 treat_group_mean <- function(.Z,
                              .y){
@@ -18,6 +23,8 @@ treat_group_mean <- function(.Z,
 
 obs_test_stat <- treat_group_mean(.Z = acorn_data$z,
                                   .y = acorn_data$vote03)
+
+round(x = obs_test_stat, digits = 4)
 
 set.seed(1:5)
 null_test_stats <- replicate(n = 10^3,
@@ -58,14 +65,29 @@ null_dist_plot <- ggplot(data = null_test_stat_dist,
 
 null_dist_plot
 
-mean(null_test_stats)
+round(x = mean(null_test_stats), digits = 4)
+round(x = sum((acorn_data$vote03 - mean(acorn_data$vote03))^2), digits = 4)
 
-mean((null_test_stats - mean(null_test_stats))^2)
+round(x = mean((null_test_stats - mean(null_test_stats))^2), digits = 4)
 
-
-
-
-
+round(x = mean(acorn_data$vote03), digits = 4)
 
 
+round(x = sqrt((1/14) * (1/2) * var(acorn_data$vote03)), digits = 4)
+
+round(x = 
+        t(acorn_data$z) %*% acorn_data$vote03, digits = 4)
+      
+n <- 6
+n_t <- 3
+apply(X = combn(x = n,
+                m = n_t,
+                simplify = TRUE),
+      MARGIN = 2,
+      FUN = function(x) as.integer(1:n %in% x))
+
+
+(n_t/n) * (1/n_t)
+
+1/n
 

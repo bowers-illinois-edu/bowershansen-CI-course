@@ -224,8 +224,10 @@
 \newtheorem{definition}{Definition}
 \newcommand*\diff{\mathop{}\!\mathrm{d}}
 \newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
-\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\E}{\mathrm{E}}
+\DeclareMathOperator{\Var}{\mathrm{Var}}
 \DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\1}{\mathbbm{1}}
 \newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
@@ -233,12 +235,15 @@
 % suppress table numbering
 \captionsetup[table]{labelformat=empty}
 
+\ifluatex
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
 \usepackage[]{natbib}
 \bibliographystyle{apsr}
 
 \title{Assignment 1 Answer Key}
 \author{\href{mailto:tl2624@columbia.edu}{Thomas Leavitt}}
-\date{22 July 2020}
+\date{04 August 2020}
 
 \begin{document}
 \maketitle
@@ -248,7 +253,7 @@
 \subsection*{1a}
 
 Let's first load the data and then write a function to calculate this
-specific test statistic, \(n_t^{-1}\mathbf{Z}^{\prime}\mathbf{y}\),
+specific test statistic, \(n_1^{-1}\mathbf{Z}^{\prime}\mathbf{y}\),
 under the sharp null hypothesis of no effect:
 
 \scriptsize
@@ -257,13 +262,13 @@ under the sharp null hypothesis of no effect:
 \begin{Highlighting}[]
 \NormalTok{acorn\_data \textless{}{-}}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"acorn03.csv"}\NormalTok{)}
 
-\NormalTok{acorn\_data\_subset \textless{}{-}}\StringTok{ }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{select}\NormalTok{(}\DataTypeTok{.data =}\NormalTok{ acorn\_data, unit, size, z, vote03)}
+\NormalTok{acorn\_data \textless{}{-}}\StringTok{ }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{select}\NormalTok{(}\DataTypeTok{.data =}\NormalTok{ acorn\_data, unit, size, z, vote03)}
 
 \NormalTok{treat\_group\_mean \textless{}{-}}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.Z, .y) \{}
     
-\NormalTok{    n\_t =}\StringTok{ }\KeywordTok{sum}\NormalTok{(.Z }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)}
+\NormalTok{    n\_}\DecValTok{1}\NormalTok{ =}\StringTok{ }\KeywordTok{sum}\NormalTok{(.Z }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)}
     
-\NormalTok{    test\_stat =}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(n\_t}\OperatorTok{\^{}}\NormalTok{\{}
+\NormalTok{    test\_stat =}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(n\_}\DecValTok{1}\OperatorTok{\^{}}\NormalTok{\{}
         \DecValTok{{-}1}
 \NormalTok{    \} }\OperatorTok{*}\StringTok{ }\KeywordTok{t}\NormalTok{(.Z) }\OperatorTok{\%*\%}\StringTok{ }\NormalTok{.y)}
     
@@ -279,7 +284,7 @@ Calculate the observed test statistic as follows: \scriptsize
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{obs\_test\_stat \textless{}{-}}\StringTok{ }\KeywordTok{treat\_group\_mean}\NormalTok{(}\DataTypeTok{.Z =}\NormalTok{ acorn\_data\_subset}\OperatorTok{$}\NormalTok{z, }\DataTypeTok{.y =}\NormalTok{ acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03)}
+\NormalTok{obs\_test\_stat \textless{}{-}}\StringTok{ }\KeywordTok{treat\_group\_mean}\NormalTok{(}\DataTypeTok{.Z =}\NormalTok{ acorn\_data}\OperatorTok{$}\NormalTok{z, }\DataTypeTok{.y =}\NormalTok{ acorn\_data}\OperatorTok{$}\NormalTok{vote03)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -297,8 +302,8 @@ statistic under all possible assignments.
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{set.seed}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{)}
-\NormalTok{null\_test\_stats \textless{}{-}}\StringTok{ }\KeywordTok{replicate}\NormalTok{(}\DataTypeTok{n =} \DecValTok{10}\OperatorTok{\^{}}\DecValTok{5}\NormalTok{, }\DataTypeTok{expr =} \KeywordTok{treat\_group\_mean}\NormalTok{(}\DataTypeTok{.Z =} \KeywordTok{sample}\NormalTok{(acorn\_data\_subset}\OperatorTok{$}\NormalTok{z), }
-    \DataTypeTok{.y =}\NormalTok{ acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03))}
+\NormalTok{null\_test\_stats \textless{}{-}}\StringTok{ }\KeywordTok{replicate}\NormalTok{(}\DataTypeTok{n =} \DecValTok{10}\OperatorTok{\^{}}\DecValTok{5}\NormalTok{, }\DataTypeTok{expr =} \KeywordTok{treat\_group\_mean}\NormalTok{(}\DataTypeTok{.Z =} \KeywordTok{sample}\NormalTok{(acorn\_data}\OperatorTok{$}\NormalTok{z), }
+    \DataTypeTok{.y =}\NormalTok{ acorn\_data}\OperatorTok{$}\NormalTok{vote03))}
 
 \NormalTok{null\_test\_stat\_dist \textless{}{-}}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{null\_test\_stat =}\NormalTok{ null\_test\_stats)}
 \end{Highlighting}
@@ -325,7 +330,7 @@ statistic under all possible assignments.
 
 The upper, one-sided p-value is simply the proportion of null test
 statistics greater than or equal to the observed test statistic (the
-dsahed line in the plot above).
+dashed line in the plot above). \scriptsize
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -339,10 +344,12 @@ dsahed line in the plot above).
 [1] 0.07516
 \end{verbatim}
 
+\normalsize
 \subsection*{1b}
 
 To calculate the null expected value of our test statistic, simply take
 the mean of our simulations of the test statistic under the null.
+\scriptsize
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -356,9 +363,10 @@ the mean of our simulations of the test statistic under the null.
 [1] 0.3066652
 \end{verbatim}
 
+\normalsize
 \subsection*{1c}
 
-We can do the same for the variance.
+We can do the same for the variance. \scriptsize
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -372,91 +380,79 @@ We can do the same for the variance.
 [1] 0.0001552291
 \end{verbatim}
 
+\normalsize
 \section*{Question 2}
 
-We can calculate the null expected value of the sample mean estimator,
-\(\E_0\left[n_t^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right]\), from first
-principles via the logic described below.
+We can calculate the null expected value of the test statistic,
+\(\E\left[n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right]\), from first
+principles via the logic given below. Note that holding the vector
+\(\mathbf{y}\) fixed as \(\mathbf{Z}\) varies corresponds to the sharp
+null hypothesis of no effect.
 
-Since the vector \(\mathbf{y}_t\) is equivalent to the observed vector
-of outcomes \(\mathbf{y}\) under the sharp null hypothesis of no effect,
-\(\E_0\left[n_t^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right] \equiv \E_0\left[n_t^{-1} \mathbf{Z}^{\prime}\mathbf{y}_t\right]\).
 Drawing upon basic properties of expectations, we can express
-\(\E_0\left[n_t^{-1} \mathbf{Z}^{\prime}\mathbf{y}_t\right]\) as
-follows:
+\(\E\left[n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}_t\right]\) as follows:
 
 \begin{align*}
-\E_0\left[n_t^{-1} \mathbf{Z}^{\prime}\mathbf{y}_t\right] \\
-& \equiv n_t^{-1} \E_0\left[\mathbf{Z}^{\prime}\mathbf{y}_t\right] & \text{Since } \E\left[c\right] = c \\
-& \equiv n_t^{-1} \E_0\left[\sum \limits_{n = 1}^n Z_i y_{ti}\right] & \text{By the definition of matrix multiplication} \\
-& \equiv n_t^{-1} \sum \limits_{n = 1}^n \E_0\left[Z_i y_{ti}\right] & \text{By the linearity of expectations} \\
-& \equiv n_t^{-1} \sum \limits_{n = 1}^n y_{ti} \E_0\left[Z_i\right] & \text{Since } y_{ti} \text{ is a constant} \\
-& \equiv n_t^{-1} \sum \limits_{n = 1}^n y_{ti} \frac{n_t}{n} & \text{By the random assignment process of the experiment} \\
-& \equiv n_t^{-1}  \left(y_{t1} \frac{n_t}{n}\right) + \dots + \left(y_{tn} \frac{n_t}{n}\right) & \text{By the definition of the summation operator} \\
-& \equiv n_t^{-1} \frac{n_t}{n} \left(y_{t1} + \dots + y_{tn}\right) & \text{By the distributive property } (a b) + (a  c) = a(b + c) \\
-& \equiv \frac{1}{n_t} \frac{n_t}{n} \left(y_{t1} + \dots + y_{tn}\right) & \text{Since } n_t^{-1} = \frac{1}{n_t} \\
-& \equiv \frac{1}{n} \left(y_{t1} + \dots + y_{tn}\right) & \text{Since } \frac{n_t}{n n_t} = \frac{1}{n} \\
-& \equiv \frac{\left(y_{t1} + \dots + y_{tn}\right)}{n} \\
-& \equiv \overline{y_t}
+\E\left[n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right] \\
+& = n_1^{-1} \E\left[\mathbf{Z}^{\prime}\mathbf{y}\right] & \text{Since } \E\left[c\right] = c \\
+& = n_1^{-1} \E\left[\sum \limits_{n = 1}^n Z_i y_{i}\right] & \text{By the definition of matrix multiplication} \\
+& = n_1^{-1} \sum \limits_{n = 1}^n \E\left[Z_i y_{i}\right] & \text{By the linearity of expectations} \\
+& = n_1^{-1} \sum \limits_{n = 1}^n y_{ti} \E\left[Z_i\right] & \text{Since } y_{i} \text{ is a constant} \\
+& = n_1^{-1} \sum \limits_{n = 1}^n y_{i} \frac{n_1}{n} & \text{By the random assignment process of the experiment} \\
+& = n_1^{-1}  \left(y_{1} \frac{n_1}{n}\right) + \dots + \left(y_{n} \frac{n_1}{n}\right) & \text{By the definition of the summation operator} \\
+& = n_1^{-1} \frac{n_1}{n} \left(y_{1} + \dots + y_{n}\right) & \text{By the distributive property } (a b) + (a  c) = a(b + c) \\
+& = \frac{1}{n_1} \frac{n_1}{n} \left(y_{1} + \dots + y_{n}\right) & \text{Since } n_1^{-1} = \frac{1}{n_1} \\
+& = \frac{1}{n} \left(y_{1} + \dots + y_{n}\right) & \text{Since } \frac{n_1}{n n_1} = \frac{1}{n} \\
+& = \frac{\left(y_{1} + \dots + y_{n}\right)}{n} \\
+& = \overline{y}
 \end{align*}
+
+The steps enumerated above show that the expected value of
+\(n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}\) is equal to the mean of the
+outcome among all \(1, \dots , n\) units.
 
 \section*{Question 3}
 
-In introductory textbooks, you may have seen the expression for the
-variance of the sample mean when sampling from a finite population as
-follows: \begin{equation}
-\sigma^2_{\overline{Y}} = \frac{N - n}{N - 1} \frac{\sigma^2_y}{n},
-\label{eq: fpc sample mean variance}
-\end{equation} where \(N\) denotes the size of the population from which
-one is sampling and \(n\) denotes the sample size. The term
-\(\frac{N - n}{N - 1}\) is typically known as a
-\textit{finite population correction factor}.
-
-To translate this expression into the experimentcal context, let's
-denote \(n\) by \(n_t\), which is the number of treated units, and \(N\)
-by \(n\), which is the size of the experimental population. Therefore,
-we can rexpress (and further manipulate) Equation
-\ref{eq: fpc sample mean variance} above as follows: \begin{align*}
-\sigma^2_{\overline{Y}} & = \frac{n - n_t}{n - 1} \frac{\sigma^2_y}{n_t} \\
-& = \frac{n_c}{n - 1} \frac{\sigma^2_y}{n_t} \\
-& = \frac{n_c}{n - 1} \sigma^2_y \frac{1}{n_t} \\
-& = \frac{n_c}{n - 1} \frac{\sum_{i = 1}^n \left(y_i - \bar{y}\right)}{n} \frac{1}{n_t} \\
-& = \frac{n_c \left(\sum_{i = 1}^n \left(y_i - \bar{y}\right)\right)}{\left(n - 1\right)\left(n\right) \left(n_t\right)} \\
-& = \frac{1}{n_t} \frac{n_c}{n} \frac{\sum_{i = 1}^n \left(y_i - \bar{y}\right)}{n - 1} \\
-& = n_t^{-1} \frac{n_c}{n} \frac{\sum_{i = 1}^n \left(y_i - \bar{y}\right)}{n - 1},
+In our finite population, experimental setup,
+\(\Var\left[n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right] = \frac{1}{n_1} \frac{n_0}{n} \frac{\sum \limits_{i = 1}^n \left(y_i - \bar{y}\right)^2}{n - 1}\).
+we can reexpress the variance of the test statistic as follows:
+\begin{align*}
+\Var\left[n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right] & = \frac{1}{n_1} \frac{n_0}{n} \frac{\sum \limits_{i = 1}^n \left(y_i - \bar{y}\right)^2}{n - 1} \\ 
+& = \frac{1}{n_1} \frac{n_0}{n} \frac{\sum_{i = 1}^n \left(y_i - \bar{y}\right)}{n - 1} \\
+& = \frac{n_0 \left(\sum_{i = 1}^n \left(y_i - \bar{y}\right)\right)}{\left(n - 1\right)\left(n\right) \left(n_1\right)} \\
+& = \frac{n_0}{n - 1} \frac{\sum_{i = 1}^n \left(y_i - \bar{y}\right)}{n} \frac{1}{n_1} \\
+& = \frac{n_0}{n - 1} \sigma^2_y \frac{1}{n_1} \\
+& = \frac{n - n_1}{n - 1} \frac{\sigma^2_y}{n_1}
 \end{align*} which is the expression for the variance of the sample mean
 given in the question.
 
-If we examine the expression for the finite population sample mean
-variance, \(\frac{n - n_t}{n - 1} \frac{\sigma^2_y}{n_t}\), we can see
-that if \(n_t > 1\), then \(\frac{n - n_t}{n - 1}\) will be less than 1,
-in which case the standard error, \(\frac{\sigma^2_y}{n_t}\), will be
-smaller \textit{with} the finite population correction factor relative
-to the standard error \textit{without} the finite population corrections
-factor. The sample mean estimator is therefore more precise with this
-correction factor. Notice, though, that as the size of the finite
-population, \(n\), approaches \(\infty\), the finite population
-correction factor, \(\frac{n - n_t}{n - 1}\) approaches \(1\), in which
-case \(\frac{n - n_t}{n - 1} \frac{\sigma^2_y}{n_t}\) converges to the
-conventional variance formula of \(\frac{\sigma^2_y}{n_t}\).
+It is now simple to assess when
+\(\Var\left[n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right] = \frac{n - n_1}{n - 1} \frac{\sigma^2_y}{n_1}\)
+is smaller than the standard expression for the variance we normally
+encounter in introductory textbooks given by \(\frac{\sigma^2_y}{n_1}\),
+which assumes random sampling from an infinite superpopulation of
+outcomes. In particular, we can see that if \(n_1 > 1\), then
+\(\frac{n - n_1}{n - 1}\) will be less than 1, in which case
+\(\frac{n - n_1}{n - 1} \frac{\sigma^2_y}{n_1}\) will be less than
+\(\frac{\sigma^2_y}{n_1}\).
 
 \section*{Question 4}
 
 For this experiment, the test statistic is
-\(n_t^{-1}\mathbf{Z}^{\prime}\mathbf{y}\). The observed test statistic,
-\(n_t^{-1}\mathbf{z}^{\prime}\mathbf{y}\), then, is simply
+\(n_1^{-1}\mathbf{Z}^{\prime}\mathbf{y}\). The observed test statistic,
+\(n_1^{-1}\mathbf{z}^{\prime}\mathbf{y}\), then, is simply
 \begin{align*}
-\left(\frac{1}{14}\right) \begin{bmatrix} 0 & 0 & \dots & 1 & 1 \end{bmatrix} \begin{bmatrix}  0.3832 \\ 0.1865 \\ \vdots \\ 0.369 \\ 0.2924 \end{bmatrix} & = \left(\frac{1}{14}\right)\begin{bmatrix} 4.547345 \end{bmatrix} \\
+\left(\frac{1}{14}\right) \begin{bmatrix} 0 & 0 & \dots & 1 & 1 \end{bmatrix} \begin{bmatrix}  0.3832 \\ 0.1865 \\ \vdots \\ 0.3690 \\ 0.2924 \end{bmatrix} & \approx \left(\frac{1}{14}\right)\begin{bmatrix} 4.5473 \end{bmatrix} \\
 & \approx 0.3248.
 \end{align*} This quantity is the mean turnout proportion among treated
 units.
 
-We can calculate this value in \texttt{R} as follows:
+We can calculate this value in \texttt{R} as follows: \scriptsize
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\#\# t() is to transpose a matrix; \%*\% is the matrix multiplication operator}
-\NormalTok{(}\DecValTok{1}\OperatorTok{/}\KeywordTok{sum}\NormalTok{(acorn\_data\_subset}\OperatorTok{$}\NormalTok{z)) }\OperatorTok{*}\StringTok{ }\KeywordTok{t}\NormalTok{(acorn\_data\_subset}\OperatorTok{$}\NormalTok{z) }\OperatorTok{\%*\%}\StringTok{ }\NormalTok{acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03}
+\NormalTok{(}\DecValTok{1}\OperatorTok{/}\KeywordTok{sum}\NormalTok{(acorn\_data}\OperatorTok{$}\NormalTok{z)) }\OperatorTok{*}\StringTok{ }\KeywordTok{t}\NormalTok{(acorn\_data}\OperatorTok{$}\NormalTok{z) }\OperatorTok{\%*\%}\StringTok{ }\NormalTok{acorn\_data}\OperatorTok{$}\NormalTok{vote03}
 \end{Highlighting}
 \end{Shaded}
 
@@ -465,35 +461,40 @@ We can calculate this value in \texttt{R} as follows:
 [1,] 0.3248104
 \end{verbatim}
 
-Under the sharp null hypothesis of no effect, we know both potential
-outcomes for all \(i = 1 , \dots , 28\) units:
+\normalsize
+
+Under the sharp null hypothesis of no effect, the observed outcome
+\(y_i\), is fixed for all \(i \in \left\{1 , \dots , 28\right\}\) units
+over all possible random assignments:
 
 \begin{table}[ht]
 \centering
-\begin{tabular}{rrrrr}
+\begin{tabular}{rrr}
 \hline
-Unit Index & z & y & $y_c$ & $y_t$ \\ 
+Unit Index & $\mathbf{z}$ & $\mathbf{y}$ \\ 
 \hline
-1  & 0  & 0.3832 & 0.3832 & 0.3832 \\ 
-2  & 0  & 0.1865 & 0.1865 & 0.1865 \\ 
-$\vdots$ & $\vdots$  & $\vdots$ & $\vdots$ & $\vdots$ \\ 
-27 & 1  & 0.3699 & 0.3699 & 0.3699 \\ 
-28 & 1  & 0.2924 & 0.2924 & 0.2924 \\ 
+1  & 0  & 0.3832  \\ 
+2  & 0  & 0.1865  \\ 
+$\vdots$ & $\vdots$ \\ 
+27 & 1  & 0.3699 \\ 
+28 & 1  & 0.2924 \\ 
 \hline
 \end{tabular}
 \end{table}
 
 Therefore, we can directly calculate the population mean and variance of
-all \(28\) \(y_t\) values under the sharp null hypothesis of no effect.
-The population mean and variance of \(y_t\) under the sharp null
-hyothesis of no effect are \(\mu_{y_t} = 0.3066632\) and
-\(\sigma^2_{y_t} = 0.004194751\), respectively.
+all \(28\) outcome values under the sharp null hypothesis of no effect.
+The population mean and variance of the outcome under the sharp null
+hypothesis of no effect are \(\mu_{y} \approx 0.3071\) and
+\(\sigma^2_{y} \approx 0.0042\), respectively.
+
+\scriptsize
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{pop\_mean \textless{}{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{(acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03)}
+\NormalTok{pop\_mean \textless{}{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{(acorn\_data}\OperatorTok{$}\NormalTok{vote03)}
 
-\NormalTok{pop\_var \textless{}{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{((acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03 }\OperatorTok{{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{(acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03))}\OperatorTok{\^{}}\DecValTok{2}\NormalTok{)}
+\NormalTok{pop\_var \textless{}{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{((acorn\_data}\OperatorTok{$}\NormalTok{vote03 }\OperatorTok{{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{(acorn\_data}\OperatorTok{$}\NormalTok{vote03))}\OperatorTok{\^{}}\DecValTok{2}\NormalTok{)}
 
 \KeywordTok{cbind}\NormalTok{(pop\_mean, pop\_var)}
 \end{Highlighting}
@@ -504,27 +505,32 @@ hyothesis of no effect are \(\mu_{y_t} = 0.3066632\) and
 [1,] 0.3066632 0.004194751
 \end{verbatim}
 
-Given that we now know \(\mu_{y_t}\) and \(\sigma^2_{y_t}\) under the
-sharp null hypothesis, we can directly calculate
-\(\mathrm{Var}_0\left[n_t^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]\):
+\normalsize
+
+Given that we now know \(\mu_{y}\) and \(\sigma^2_{y}\) under the sharp
+null hypothesis, we can directly calculate
+\(\Var\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]\):
 \begin{align*}
-\mathrm{Var}_0\left[n_t^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right] & = \left(n_t^{-1}\right) \left(\frac{n_c}{n}\right) \left(\frac{\sum \limits_{i = 1}^n \left(y_i - \bar{y}\right)^2}{n - 1}\right) \\
-& = \left(\frac{1}{14}\right) \left(\frac{14}{28}\right) \left(\frac{0.117453}{28 - 1}\right) \\
-& = 0.0001553611.
-\end{align*} This quantity is the variance of the sampling distribution,
-which is distinct from the variance of the population from which we are
-sampling.
+\Var\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right] & = \left(n_1^{-1}\right) \left(\frac{n_0}{n}\right) \left(\frac{\sum \limits_{i = 1}^n \left(y_i - \bar{y}\right)^2}{n - 1}\right) \\
+& \approx \left(\frac{1}{14}\right) \left(\frac{14}{28}\right) \left(\frac{0.1175}{28 - 1}\right) \\
+& \approx 0.0002.
+\end{align*} This quantity is the variance of the randomization
+distribution, which is distinct from the variance of the finite
+population of \(28\) outcomes under the sharp null hypothesis of no
+effect.
+
+\scriptsize
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{fpc\_var\_sample\_mean \textless{}{-}}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.y, .n\_t) \{}
+\NormalTok{fpc\_var\_sample\_mean \textless{}{-}}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.y, .n\_}\DecValTok{1}\NormalTok{) \{}
     
-\NormalTok{    (.n\_t}\OperatorTok{\^{}}\NormalTok{(}\OperatorTok{{-}}\DecValTok{1}\NormalTok{)) }\OperatorTok{*}\StringTok{ }\NormalTok{((}\KeywordTok{length}\NormalTok{(.y) }\OperatorTok{{-}}\StringTok{ }\NormalTok{.n\_t)}\OperatorTok{/}\KeywordTok{length}\NormalTok{(.y)) }\OperatorTok{*}\StringTok{ }\NormalTok{(}\KeywordTok{sum}\NormalTok{((.y }\OperatorTok{{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{(.y))}\OperatorTok{\^{}}\DecValTok{2}\NormalTok{))}\OperatorTok{/}\NormalTok{(}\KeywordTok{length}\NormalTok{(.y) }\OperatorTok{{-}}\StringTok{ }
+\NormalTok{    (.n\_}\DecValTok{1}\OperatorTok{\^{}}\NormalTok{(}\OperatorTok{{-}}\DecValTok{1}\NormalTok{)) }\OperatorTok{*}\StringTok{ }\NormalTok{((}\KeywordTok{length}\NormalTok{(.y) }\OperatorTok{{-}}\StringTok{ }\NormalTok{.n\_}\DecValTok{1}\NormalTok{)}\OperatorTok{/}\KeywordTok{length}\NormalTok{(.y)) }\OperatorTok{*}\StringTok{ }\NormalTok{(}\KeywordTok{sum}\NormalTok{((.y }\OperatorTok{{-}}\StringTok{ }\KeywordTok{mean}\NormalTok{(.y))}\OperatorTok{\^{}}\DecValTok{2}\NormalTok{))}\OperatorTok{/}\NormalTok{(}\KeywordTok{length}\NormalTok{(.y) }\OperatorTok{{-}}\StringTok{ }
 \StringTok{        }\DecValTok{1}\NormalTok{)}
     
 \NormalTok{\}}
 
-\NormalTok{fpc\_var \textless{}{-}}\StringTok{ }\KeywordTok{fpc\_var\_sample\_mean}\NormalTok{(}\DataTypeTok{.y =}\NormalTok{ acorn\_data\_subset}\OperatorTok{$}\NormalTok{vote03, }\DataTypeTok{.n\_t =} \KeywordTok{sum}\NormalTok{(acorn\_data\_subset}\OperatorTok{$}\NormalTok{z))}
+\NormalTok{fpc\_var \textless{}{-}}\StringTok{ }\KeywordTok{fpc\_var\_sample\_mean}\NormalTok{(}\DataTypeTok{.y =}\NormalTok{ acorn\_data}\OperatorTok{$}\NormalTok{vote03, }\DataTypeTok{.n\_1 =} \KeywordTok{sum}\NormalTok{(acorn\_data}\OperatorTok{$}\NormalTok{z))}
 
 \NormalTok{fpc\_var}
 \end{Highlighting}
@@ -544,26 +550,40 @@ sampling.
 [1] 0.08497887
 \end{verbatim}
 
+\normalsize
+
 The error of the simulation based approximation, expressed as a
 percentage of
-\(\mathrm{Var}\left[n_t^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]\) is:
+\(\mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]\) is:
 \begin{align*}
-\left(\frac{\left|\mathrm{Var}_{sim} - \mathrm{Var}_0\right|}{\mathrm{Var}_0}\right) 100 \\
-& = 0.5318 \%.
+\left(\frac{\left|\mathrm{Var}_{sim}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right] - \mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]\right|}{\mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]}\right) 100 = 0.5318 \%.
 \end{align*}
 
 \section*{Question 5}
 
 In the case of the Acorn experiment, we can calculate the Z-score as
 follows: \begin{align*}
-\text{Z-score} & = \frac{n_t^{-1}\mathbf{Z}^{\prime}\mathbf{y} - \E\left[n_t^{-1}\mathbf{Z}^{\prime}\mathbf{y}\right]}{\sqrt{\mathrm{Var}\left[n_t^{-1}\mathbf{Z}^{\prime}\mathbf{y}\right]}} \\
-& = \frac{\left(0.3248104 - 0.3066632\right)}{0.01246439}
+\text{Z-score} & = \frac{n_1^{-1}\mathbf{Z}^{\prime}\mathbf{y} - \E\left[n_1^{-1}\mathbf{Z}^{\prime}\mathbf{y}\right]}{\sqrt{\mathrm{Var}\left[n_1^{-1}\mathbf{Z}^{\prime}\mathbf{y}\right]}} \\
+& \approx \frac{\left(0.3248 - .3067\right)}{0.0125}
 \end{align*}
+
+\scriptsize
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{z\_score \textless{}{-}}\StringTok{ }\NormalTok{(obs\_test\_stat }\OperatorTok{{-}}\StringTok{ }\NormalTok{pop\_mean)}\OperatorTok{/}\KeywordTok{sqrt}\NormalTok{(fpc\_var)}
+\end{Highlighting}
+\end{Shaded}
 
+\normalsize
+
+We can now calculate the Normal approximation based upper, one-sided
+p-value as follows:
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \KeywordTok{pnorm}\NormalTok{(}\DataTypeTok{q =}\NormalTok{ z\_score, }\DataTypeTok{lower.tail =} \OtherTok{FALSE}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -572,48 +592,39 @@ follows: \begin{align*}
 [1] 0.07270733
 \end{verbatim}
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\KeywordTok{pnorm}\NormalTok{(}\DataTypeTok{q =}\NormalTok{ obs\_test\_stat, }\DataTypeTok{mean =}\NormalTok{ pop\_mean, }\DataTypeTok{sd =} \KeywordTok{sqrt}\NormalTok{(fpc\_var), }\DataTypeTok{lower.tail =} \OtherTok{FALSE}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-[1] 0.07270733
-\end{verbatim}
+\normalsize
 
 The \texttt{pnorm} function reports the probability density to the left
 of the observed test statistic by default; but since we expect a
 positive effect, we want the probability density to the right of the
 observed test statistic, which we can do by setting
-\texttt{lower.tail = FALSE}. The normal theory approximation to the
-p-value is \(0.0727\).
+\texttt{lower.tail = FALSE}.
+
+\section*{Question 6}
 
 A researcher plans to ask six subjects to donate time to an adult
 literacy program. Each subject will be asked to donate either \(30\)
 \((Z = 0)\) or \(60\) \((Z = 1)\) minutes. The researcher is considering
 three methods for randomizing the treatment. Method I is to make
 independent decisions for each subject, tossing a coin each time. Method
-C is to write \texttt{30\textquotesingle{}\textquotesingle{}\ and}60'\,'
-on three playing cards each, and then shuffle the six cards. Method P
-tosses one coin for each of the 3 pairs (1, 2), (3, 4), (5, 6), asking
-for 30 (60) minutes from exactly one member of each pair.
-
-\section*{Question 6}
+C is to write ``30'' and ``60'' on three playing cards each, and then
+shuffle the six cards. Method P tosses one coin for each of the 3 pairs
+(1, 2), (3, 4), (5, 6), asking for 30 (60) minutes from exactly one
+member of each pair.
 
 \subsection*{6a}
 
-Method I independently assigns each subject to treatment \((Z_i=1)\)
+Method I independently assigns each subject to treatment \((Z_i = 1)\)
 with probability \(0.5\). Under simple random assignment all subjects
 are assigned to groups without regard to the assignments of other
 subjects in the study; this assignment process is especially simple to
 implement. With a small \(n\), however, this method may result in no
 subjects in one of the two conditions. If \(n = 6\), then, under simple
 random assignment (method I), the probability that all units are
-assigned to the treatment condition is \(0.5^6 = 0.015625\) and the
+assigned to the treatment condition is \(0.5^6 \approx 0.0156\) and the
 probability that all units are assigned to the control condition is also
-\(0.5^6 = 0.015625\). Although small, the probability of these two
-outcomes taken together is \(0.015625 + 0.015625 = 0.03125\). Method C
+\(0.5^6 \approx 0.0156\). Although small, the probability of these two
+outcomes taken together is \(0.5^6 + 0.5^6 \approx 0.0312\). Method C
 has the benefit of enabling the researcher to assign a predetermined
 number of subjects to treatment and control such that there is a fixed
 number of participants in each condition. Method P assigns units to
@@ -624,89 +635,49 @@ randomization distribution.
 \subsection*{6b}
 
 If \(n\) increases to \(600\), then the probability that all \(600\)
-units are assigned to treatment is
-\(0.5^{600} = 2.40992 \times 10^{-181}\) and the probability that all
-units are assigned to control is also
-\(0.5^{600} = 2.40992 \times 10^{-181}\). Thus, the probability that all
-units are assigned to one of the two treatment conditions is
-\(0.5^{600} + 0.5^{600} = 4.81984 \times 10^{-181}\). The aformentioned
-weakness of method \(I\) is far less of a concern if \(n\) were \(600\)
-instead of \(6\).
+units are assigned to treatment is \(0.5^{600}\) and the probability
+that all units are assigned to control is also \(0.5^{600}\). Thus, the
+probability that all units are assigned to one of the two treatment
+conditions is \(0.5^{600} + 0.5^{600}\). The aforementioned weakness of
+method \(I\) is far less of a concern if \(n\) were \(600\) instead of
+\(6\).
 
 \subsection*{6c}
 
-In Question \ref{qu: 5} above, we showed that in a complete, uniform
-randomized experiment, the probability that \(Z_i\) is assigned to
-treatment---i.e., that \(Z_i = 1\)---is \(\frac{n_t}{n}\). Since
-\(Z_i \in \left\{0, 1\right\}\), then, by the law of total probability,
-\(\Pr\left(Z_i = 0\right) = n - \frac{n_t}{n}\). Therefore, the expected
-value of \(Z_i\) is
-\(\E\left[Z_i\right] = 0\left(n - \frac{n_t}{n}\right) + 1 \left(\frac{n_t}{n}\right)\),
-which, for methods C and P, is \(\frac{3}{6} = 0.5\).
-
-Indeed, if we examine all possible treatment assignment vectors in
-\(\Omega\), we can see that exactly \(\frac{n_t}{n} = 0.5\) of these
-vectors are those in which \(Z_1 = 1\).
-
+Let's first consider the set of possible assignments under each method.
+Under method \(I\) the set of possible assignments, \(\Omega_I\) is
 \begin{align*}
-\Omega & = \left\{ \ \begin{bmatrix} 1 \\ 1 \\ 1 \\ 0 \\ 0 \\ 0 \end{bmatrix}, \  \begin{bmatrix} 1 \\ 1 \\ 0 \\ 1 \\ 0 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 1 \\ 0 \\ 0 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 1 \\ 0 \\ 0 \\ 0 \\ 1 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 1 \\ 1 \\ 0 \\ 0 \end{bmatrix}, \dots %\ \begin{bmatrix} 1 \\ 0 \\ 1 \\ 0 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 1 \\ 0 \\ 0 \\ 1 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 1 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 1 \\ 0 \\ 1 \end{bmatrix}, \ \begin{bmatrix}1 \\ 0 \\ 0 \\ 0 \\ 1 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 1 \\ 1 \\ 0 \\ 0  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 1 \\ 0 \\ 1 \\ 0  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 1 \\ 0 \\ 0 \\ 1  \end{bmatrix}, \begin{bmatrix} 0 \\ 1 \\ 0 \\ 1 \\ 1 \\ 0  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 0 \\ 1 \\ 0 \\ 1  \end{bmatrix}, \ 
-, \ \begin{bmatrix} 0 \\ 1 \\ 0 \\ 0 \\ 1 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 1 \\ 1 \\ 1 \\ 0  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 1 \\ 1 \\ 0 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 1 \\ 0 \\ 1 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 0 \\ 1 \\ 1 \\ 1  \end{bmatrix} \ \right\}.
+\Omega_{I} & = \left\{ \ \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}, \  \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}, \ \cdots , \ \begin{bmatrix} 1 \\ 1 \\ 1 \\ 1 \\ 1 \\ 0  \end{bmatrix}, \ \begin{bmatrix} 1 \\ 1 \\ 1 \\ 1 \\ 1 \\ 1  \end{bmatrix} \ \right\}.
 \end{align*}
 
-Method \(P\) is equivalent to uniform randomized experiments within
-blocks, and since all blocks have the same number of units,
-\(\E\left[Z_i\right] = \frac{n_t}{n}\), too.
-
-For method \(S\), one could calculate the probability that \(Z_i = 1\)
-by simply reasoning that for each unit \(i\),
-\(Z_i \in \left\{0, 1\right\}\) and each possible outcome
-\(\left(0 \text{ or } 1\right)\) has a \(0.5\) probability of occurence.
-Hence, the expected value of \(Z_i\) is:
-\(\E\left[Z_i\right] = 0(0.5) + 1(0.5) = 0.5\).
-
-However, in order to encourage thinking about possible treatment
-assignment vectors in the set \(\Omega\), \(\mathbf{Z} = \mathbf{z}\)
-vectors for which \(Z_i = 1\), \(\E\left[Z_i\right]\) can also be
-calculated as follows: \begin{align*}
-\Pr\left(Z_i = 1, n_t = 0\right) + \dots + \Pr\left(Z_i = 1, n_t = n\right) \\
-\\
-\Pr\left(Z_i = 1 | n_t = 0\right)\Pr\left(n_t = 0\right) + \dots + \Pr\left(Z_i = 1 | n_t = n\right)\Pr\left(n_t = n\right) \\
-\\
-\frac{0}{n}\left(\frac{{n \choose 0}}{{n \choose 0} + \dots + {n \choose n}}\right) + \dots + \frac{n}{n}\left(\frac{{n \choose n}}{{n \choose 0} + \dots + {n \choose n}}\right)
+Under method \(C\), the set of assignments, \(\Omega_C\), is
+\begin{align*}
+\Omega_{C} & = \left\{ \mathbf{z}: \sum \limits_{i = 1}^n z_i = n_1 \right\} = \left\{ \ \begin{bmatrix} 1 \\ 1 \\ 0 \\ 1 \\ 0 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}, \ \cdots , \ \begin{bmatrix} 0 \\ 0 \\ 1 \\ 0 \\ 1 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 0 \\ 1 \\ 1 \\ 1  \end{bmatrix} \ \right\}.
 \end{align*}
 
-In the case of the specific experiment with \(6\) units and simple
-random assignment, the probability of \(Z_i = 1\), which is equivalent
-to \(\E\left[Z_i\right]\), can be calculated as follows:
+Finally, under method \(P\), the set of assignments, \(\Omega_P\), is
+\begin{align*}
+\Omega_{P} & = \left\{ \mathbf{z}: \sum \limits_{i = 1}^n z_{bi} = 1, \sum \limits_{i = 1}^n \left(1 - z_{bi}\right) = 1, b = 1, \dots , B \right\} = \left\{ \ \begin{bmatrix} 1 \\ 0 \\ 1 \\ 0 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 1 \\ 0 \\ 1 \\ 0 \end{bmatrix}, \ \cdots , \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 1 \\ 0 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 0 \\ 1 \\ 0 \\ 1  \end{bmatrix} \ \right\},
+\end{align*} where the index \(b \in \left\{1, \dots , B\right\}\) runs
+over the pairs in the randomized experiment.
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{n\_t \textless{}{-}}\StringTok{ }\DecValTok{0}\OperatorTok{:}\DecValTok{6}
-
-\CommentTok{\#\# Total number of treatment assignment vectors}
-\NormalTok{Omega \textless{}{-}}\StringTok{ }\KeywordTok{sum}\NormalTok{(}\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =}\NormalTok{ n\_t, }\DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{}
-    \KeywordTok{choose}\NormalTok{(}\DataTypeTok{n =} \DecValTok{6}\NormalTok{, }\DataTypeTok{k =}\NormalTok{ x)}
-\NormalTok{\}))}
-
-\NormalTok{srs\_probs \textless{}{-}}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.n\_t, .n, .Omega) \{}
-    
-    \KeywordTok{return}\NormalTok{((.n\_t}\OperatorTok{/}\NormalTok{.n) }\OperatorTok{*}\StringTok{ }\NormalTok{(}\KeywordTok{choose}\NormalTok{(}\DataTypeTok{n =}\NormalTok{ .n, }\DataTypeTok{k =}\NormalTok{ .n\_t)}\OperatorTok{/}\NormalTok{.Omega))}
-    
-\NormalTok{\}}
-
-\CommentTok{\#\# 0.5}
-\KeywordTok{sum}\NormalTok{(}\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =}\NormalTok{ n\_t, }\DataTypeTok{FUN =}\NormalTok{ srs\_probs, }\DataTypeTok{.n =} \DecValTok{6}\NormalTok{, }\DataTypeTok{.Omega =}\NormalTok{ Omega))}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-[1] 0.5
-\end{verbatim}
+Under all three methods, the respective probabilities of each possible
+assignment is \(\cfrac{1}{\left\lvert \Omega_I \right \rvert}\),
+\(\cfrac{1}{\left\lvert \Omega_C \right \rvert}\) and
+\(\cfrac{1}{\left\lvert \Omega_P \right \rvert}\), respectively. Recall
+that for a set \(S\), \(\left\lvert S \right\rvert\) denotes the number
+of elements in (i.e., the cardinality of) the set, \(S\). After noting
+that \(\E\left[Z_1\right]\) is equivalent to
+\(\Pr\left(Z_1 = 1\right)\), we can calculate \(\E\left[Z_1\right]\) by
+summing the probabilities of assignment vectors in which \(z_1 = 1\).
+Under all three methods, \(\E\left[Z_1\right] = 0.5\).
 
 \subsection*{6d}
 
-After having calculated that \(\E\left[Z_i\right] = 0.5\) under each
-method, by the linearity of expectations, we know that \begin{align*}
+Along the same lines as the question above, we can also deduce that
+\(\E\left[Z_i\right] = 0.5\) for all
+\(i \in \left\{1, \dots , n\right\}\) under each method. Then, by the
+linearity of expectations, we know that \begin{align*}
 \E\left[Z_1 + \dots + Z_6\right] \\
 & = \E\left[Z_1\right] + \dots + \E\left[Z_6\right] \\
 & = 0.5 + \dots + 0.5 \\
@@ -715,19 +686,28 @@ method, by the linearity of expectations, we know that \begin{align*}
 
 \subsection*{6e}
 
-Under method I, we can easily calculate
-\(\E\left[\mathbf{Z}^{\prime}\mathbf{Z}\right]\) via the following
-\texttt{R} code:
+Under each method, we can calculate
+\(\E\left[\mathbf{Z}^{\prime}\mathbf{1}\right]\), which is the expected
+number of treated units, by calculating \(\mathbf{z}'\mathbf{1}\) for
+each \(\mathbf{z} \in \Omega_{\cdot}\) and then calculating the average
+of all possible values of \(\mathbf{z}'\mathbf{1}\).
+
+For all three methods, the expected number of treated units,
+\(\E\left[\mathbf{Z}'\mathbf{1}\right]\) is equal to \(3\). For example,
+in \texttt{R}, we could calculate the expexted number of treated units
+as follows:
+
+\scriptsize
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{n\_t\_sra \textless{}{-}}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.n, .k, .p) \{}
+\NormalTok{n\_}\DecValTok{1}\NormalTok{\_sra \textless{}{-}}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.n, .k, .p) \{}
     
     \KeywordTok{return}\NormalTok{(}\KeywordTok{choose}\NormalTok{(}\DataTypeTok{n =}\NormalTok{ .n, }\DataTypeTok{k =}\NormalTok{ .k) }\OperatorTok{*}\StringTok{ }\NormalTok{.p}\OperatorTok{\^{}}\NormalTok{(.k) }\OperatorTok{*}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\NormalTok{.p)}\OperatorTok{\^{}}\NormalTok{(.n }\OperatorTok{{-}}\StringTok{ }\NormalTok{.k))}
     
 \NormalTok{\}}
 
-\NormalTok{probs \textless{}{-}}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \KeywordTok{seq}\NormalTok{(}\DataTypeTok{from =} \DecValTok{0}\NormalTok{, }\DataTypeTok{to =} \DecValTok{6}\NormalTok{, }\DataTypeTok{by =} \DecValTok{1}\NormalTok{), }\DataTypeTok{FUN =}\NormalTok{ n\_t\_sra, }\DataTypeTok{.n =} \DecValTok{6}\NormalTok{, }\DataTypeTok{.p =} \FloatTok{0.5}\NormalTok{)}
+\NormalTok{probs \textless{}{-}}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \KeywordTok{seq}\NormalTok{(}\DataTypeTok{from =} \DecValTok{0}\NormalTok{, }\DataTypeTok{to =} \DecValTok{6}\NormalTok{, }\DataTypeTok{by =} \DecValTok{1}\NormalTok{), }\DataTypeTok{FUN =}\NormalTok{ n\_}\DecValTok{1}\NormalTok{\_sra, }\DataTypeTok{.n =} \DecValTok{6}\NormalTok{, }\DataTypeTok{.p =} \FloatTok{0.5}\NormalTok{)}
 
 
 \NormalTok{events \textless{}{-}}\StringTok{ }\KeywordTok{seq}\NormalTok{(}\DataTypeTok{from =} \DecValTok{0}\NormalTok{, }\DataTypeTok{to =} \DecValTok{6}\NormalTok{, }\DataTypeTok{by =} \DecValTok{1}\NormalTok{)}
@@ -740,81 +720,74 @@ Under method I, we can easily calculate
 [1] 3
 \end{verbatim}
 
-Since all units have the same treatment assignment probability,
-\begin{align*}
-\E\left[\mathbf{Z}^{\prime}\mathbf{Z}\right] & = \\ 
-\frac{{6 \choose 0}}{{6 \choose 0} + \dots + {6 \choose 6}}0 + \frac{{6 \choose 1}}{{6 \choose 0} + \dots + {6 \choose 6}}1 + \frac{{6 \choose 2}}{{6 \choose 0} + \dots + {6 \choose 6}}2 + \frac{{6 \choose 3}}{{6 \choose 0} + \dots + {6 \choose 6}}3 \\
-+ \frac{{6 \choose 4}}{{6 \choose 0} + \dots + {6 \choose 6}}4 + \frac{{6 \choose 5}}{{6 \choose 0} + \dots + {6 \choose 6}}5  + \frac{{6 \choose 6}}{{6 \choose 0} + \dots + {6 \choose 6}}6 \\
-& = 3
-\end{align*}
-
-In general, for block random assignment, the number of treatment
-assignment permutations is
-\(\left| \Omega \right| = \prod \limits_{b = 1}^B {n_b \choose n_{bt}}\).
-Thus, for method P there are
-\({2 \choose 1}{2 \choose 1}{2 \choose 1} = {2 \choose 1}^3 = 8\)
-treatment assignment permutations: \begin{align*}
-\Omega & = \left\{ \ \begin{bmatrix} 1 \\ 0 \\ 1 \\ 0 \\ 1 \\ 0 \end{bmatrix}, \  \begin{bmatrix} 0 \\ 1 \\ 1 \\ 0 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 1 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 0 \\ 1 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 1 \\ 0 \\ 0 \\ 1 \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 1 \\ 0 \\ 0 \\ 1 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 1 \\ 0 \\ 1 \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 0 \\ 1 \\ 0 \\ 1 \end{bmatrix} \ \right\}.
-\end{align*} For each \(\mathbf{Z} = \mathbf{z} \in \Omega\),
-\(\mathbf{Z}^{\prime}\mathbf{Z} = 3\). Probabilities are uniformly
-distributed on \(\mathbf{Z} = \mathbf{Z} \in \Omega\) and the expected
-value of \(\mathbf{Z}^{\prime}\mathbf{Z}\) is: \begin{align*}
-\E\left[\mathbf{Z}^{\prime}\mathbf{Z}\right] & = \left(3\right)\left(\frac{1}{8}\right) + \dots + \left(3\right)\left(\frac{1}{8}\right) \\
-& = 3.
-\end{align*}
+\normalsize
 
 \subsection*{6f}
 
-For methods C and P, the variance of \(\mathbf{Z}^{\prime} \mathbf{Z}\)
+For methods C and P, the variance of \(\mathbf{Z}^{\prime} \mathbf{1}\)
 is \(0\), since under every treatment assignment permutation in
-\(\Omega\), the value of \(\mathbf{Z}^{\prime}\mathbf{Z}\) is constant.
+\(\Omega_C\) and \(\Omega_P\), respectively, the value of
+\(\mathbf{Z}^{\prime}\mathbf{1}\) is constant.
 
 We know that
 \(\mathrm{Var}\left[X\right] = \E\left[X^2\right] - \E\left[X\right]^2\);
 hence, for method I we can calculate the variance as follows:
 \begin{align*}
-\E\left[\left(\mathbf{Z}^{\prime}\mathbf{Z}\right)^2\right] - \E\left[\mathbf{Z}^{\prime}\mathbf{Z}\right]^2 & = 10.5 - 9 \\
+\E\left[\left(\mathbf{Z}^{\prime}\mathbf{1}\right)^2\right] - \E\left[\mathbf{Z}^{\prime}\mathbf{1}\right]^2 & = 10.5 - 9 \\
 & = 1.5
 \end{align*}
 
 \subsection*{6h}
 
-For methods C and P, \(\mathbf{Z}^{\prime}\mathbf{Z}\) is a constant
-that is equal to \(n_t\). The expected value of a constant is the
+For methods C and P, \(\mathbf{Z}^{\prime}\mathbf{1}\) is a constant
+that is equal to \(n_1\). The expected value of a constant is the
 constant; hence, \begin{align*}
-\E\left[\mathbf{Z}^{\prime}\mathbf{Z}\right] \\
-& \equiv \E\left[n_t\right] \\
-& \equiv n_t
+\E\left[\mathbf{Z}^{\prime}\mathbf{1}\right] \\
+& = \E\left[n_1\right] \\
+& = n_1
 \end{align*} Therefore, we can express
-\(\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{Z}}\right]\)
+\(\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right]\)
 as follows: \begin{align*}
-\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{Z}}\right] \\
-& \equiv \E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{n_t}\right] \\
-& \equiv \E\left[n_t^{-1}\mathbf{Z}^{\prime}\mathbf{x}\right] \\
-& \equiv n_t^{-1} \E\left[\mathbf{Z}^{\prime}\mathbf{x}\right] \\
-& \equiv n_t^{-1} \E\left[\sum \limits_{i = 1}^n Z_i x_i\right] \\
-& \equiv n_t^{-1} \sum \limits_{n = 1}^n \E_0\left[Z_i x_i\right]  \\
-& \equiv n_t^{-1} \sum \limits_{n = 1}^n x_i \E_0\left[Z_i\right]  \\
-& \equiv n_t^{-1} \sum \limits_{n = 1}^n x_i \frac{n_t}{n} \\
-& \equiv n_t^{-1}  \left(x_{1} \frac{n_t}{n}\right) + \dots + \left(x_n \frac{n_t}{n}\right)  \\
-& \equiv n_t^{-1} \frac{n_t}{n} \left(x_1 + \dots + x_n\right) \\
-& \equiv \frac{1}{n_t} \frac{n_t}{n} \left(x_1 + \dots + x_n\right)  \\
-& \equiv \frac{1}{n} \left(x_1 + \dots + x_n\right)  \\
-& \equiv \frac{\left(x_1 + \dots + x_n\right)}{n} \\
-& \equiv \overline{x},
+\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right] \\
+& = \E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{n_1}\right] \\
+& \vdots  \\
+& = \frac{\left(x_1 + \dots + x_n\right)}{n} \\
+& = \overline{x},
 \end{align*} which is simply the mean of \(\mathbf{x}\).
 
-For method I, \(\mathbf{Z}^{\prime}\mathbf{Z}\) varies across different
-realizations of treatment assignment vectors; hence, the number of
-treated units, \(\mathbf{Z}^{\prime}\mathbf{Z}\), is a random variable,
-which means that
-\(\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{Z}}\right]\)
-does not reduce to the mean \(\mathbf{x}\). In fact,
-\(\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{Z}}\right]\)
-is undefined because the probability of all units' being assigned to
-control is positive, in which case
-\(\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{Z}}\)
-is undefined and so is its expected value.
+For method I, \(\mathbf{Z}^{\prime}\mathbf{1}\) is a random quantity
+that varies across different possible realizations of treatment
+assignment. Since, the number of treated units,
+\(\mathbf{Z}^{\prime}\mathbf{1}\), is a random variable, we can no
+longer write
+\(\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right] = \E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{n_1}\right]\).
+In addition, it is \textit{not} the case in general that
+\(\E\left[\frac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}} \right] = \frac{\E\left[\mathbf{Z}'\mathbf{x} \right]}{\E\left[\mathbf{Z}'\mathbf{1} \right]}\).
+Therefore, the fact that
+\(\cfrac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}} = \bar{x}\) in a
+completely randomized experiment does not immediately carry over to a
+simply randomized experiment.
+
+Nevertheless, so long as \(n_1 > 0\), it follows that \begin{align*}
+\E\left[\frac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}}\big| \mathbf{Z}' \mathbf{1} = n_{1}\right] & = \E\left[\frac{\mathbf{Z}'\mathbf{x}}{n_1}\big| \mathbf{Z}' \mathbf{1} = n_{1}\right] \\
+& \vdots \\
+& = \sum \limits_{i = 1}^n \E\left[\frac{Z_{i}}{n_{1}} \big| \mathbf{Z}'\mathbf{1} = n_{1} \right] x_i \\ 
+& = \sum \limits_{i = 1}^n \E\left[\frac{\left(n_1/n\right)}{n_{1}} \big| \mathbf{Z}'\mathbf{1} = n_{1} \right] x_i \\ 
+& = \sum \limits_{i = 1}^n \E\left[\frac{n_1}{n n_{1}} \big| \mathbf{Z}'\mathbf{1} = n_{1} \right] x_i \\ 
+& = \sum \limits_{i = 1}^n \frac{1}{n} x_i \\ 
+& = \bar{x}
+\end{align*}
+
+But when \(n_1 = 0\), which will occur with probability
+\(\cfrac{1}{\left\lvert \Omega_I \right\rvert}\) under method \(I\), the
+quantity
+\(\frac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}}\big| \mathbf{Z}' \mathbf{1} = n_{1}\)
+is no longer defined. Thus, in general
+\(\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right]\)
+does not reduce to \(\bar{x}\) under simple random assignment. But if
+one were to condition on all assignments in \(\Omega_I\) such that
+\(n_1 > 0\), then it would be the case that
+\(\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right] = \bar{x}\).
 
 \newpage
 

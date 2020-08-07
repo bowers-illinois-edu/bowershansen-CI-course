@@ -1,0 +1,12 @@
+sens_probs <- function(.gamma, .Omega, .u){
+  
+  unnorm_probs = sapply(X = 1:ncol(.Omega),
+                        FUN = function(x) { exp(.gamma * t(.Omega[,x]) %*% .u) })
+  
+  total_prob = sum(unnorm_probs)
+  
+  return(unnorm_probs / total_prob)
+  
+  
+}
+
