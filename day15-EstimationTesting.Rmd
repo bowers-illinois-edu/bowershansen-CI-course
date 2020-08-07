@@ -1,0 +1,797 @@
+---
+title: |
+ | Statistical Adjustment in Observational Studies,
+ | Estimation and Testing 
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: |
+  | ICPSR 2020 Session 2
+  | Jake Bowers, Ben Hansen, Tom Leavitt
+bibliography:
+ - 'BIB/Master_Bibliography.bib'
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    incremental: true
+    includes:
+        in_header:
+           - defs-all.sty
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
+---
+
+
+<!-- To show notes  -->
+<!-- https://stackoverflow.com/questions/44906264/add-speaker-notes-to-beamer-presentations-using-rmarkdown -->
+
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
+```
+
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+## Load all of the libraries that we will use when we compile this file
+## We are using the renv system. So these will all be loaded from a local library directory
+library(dplyr)
+library(ggplot2)
+library(coin)
+library(RItools)
+library(optmatch)
+library(estimatr)
+```
+
+```{r echo=FALSE, cache=TRUE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat <- mutate(meddat,
+  HomRate03 = (HomCount2003 / Pop2003) * 1000,
+  HomRate08 = (HomCount2008 / Pop2008) * 1000
+)
+row.names(meddat) <- meddat$nh
+```
+
+
+## Today
+
+  1. Agenda: Estimating average causal effects and testing hypotheses about causal effects (focusing on hypotheses of no effects) using stratified designs (the "as-if-randomized approach")
+ 2. We are now in the "Observational Studies" or Matching part of the course
+    (see the reading there).
+ 3. Questions arising from the reading or assignments or life?
+
+# But first, review
+
+## Information versus Homogeneity
+
+```{r}
+thecovs <- unique(c(names(meddat)[c(5:7, 9:24)], "HomRate03"))
+balfmla <- reformulate(thecovs[-c(1,14)], response = "nhTrt")
+thebglm <- arm::bayesglm(balfmla, data = meddat, family = binomial(link = "logit"))
+mhdist <- match_on(balfmla, data = meddat)
+psdist <- match_on(thebglm, data = meddat)
+
+## Two versions of a scalar distance: One is standardized (mahalanobis dist is just standardized when you have only one variable)
+hrdist1 <- match_on(nhTrt ~ HomRate03, data = meddat)
+
+## Distance in terms of homicide rate
+tmp <- meddat$HomRate03
+names(tmp) <- rownames(meddat)
+hrdist2 <- match_on(tmp, z = meddat$nhTrt, data = meddat)
+
+## Distance after centering and standardizing
+tmp <- scale(meddat$HomRate03)[, 1]
+names(tmp) <- rownames(meddat)
+hrdist3 <- match_on(tmp, z = meddat$nhTrt, data = meddat)
+
+hrdist1[1:3, 1:6]
+hrdist2[1:3, 1:6]
+hrdist3[1:3, 1:6]
+
+psCal <- quantile(as.vector(psdist), .9)
+mhCal <- quantile(as.vector(mhdist), .9)
+hrCal <- quantile(as.vector(hrdist2), .9)
+
+matchdist <- psdist + caliper(psdist, psCal) + caliper(mhdist, mhCal) + caliper(hrdist2, 2)
+as.matrix(matchdist)[1:3,1:6]
+
+fm0 <- fullmatch(matchdist, data = meddat)
+summary(fm0, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
+fm1 <- fullmatch(matchdist, data = meddat, min.controls = 1)
+summary(fm1, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
+fm3 <- fullmatch(matchdist, data = meddat, mean.controls = .9)
+summary(fm3, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
+
+fm0dists <- unlist(matched.distances(fm0,matchdist))
+fm1dists <- unlist(matched.distances(fm1,matchdist))
+
+maxdist <- max(matchdist[!is.infinite(matchdist)])
+psdist01 <- psdist/max(as.matrix(psdist))
+mhdist01 <- (mhdist - min(as.matrix(mhdist)))/( max(as.matrix(mhdist))  - min(as.matrix(mhdist)))
+hrdist201 <- (hrdist2 - min(as.matrix(hrdist2)))/( max(as.matrix(hrdist2))  - min(as.matrix(hrdist2)))
+
+summary(as.vector(psdist01))
+summary(as.vector(mhdist01))
+summary(as.vector(hrdist201))
+
+matchdistPen <- psdist + psdist01*maxdist + mhdist01*maxdist + hrdist201*maxdist
+
+as.matrix(matchdist)[1:4,1:6]
+matchdistPen[1:4,1:6]
+
+fm2 <- fullmatch(matchdistPen,data=meddat,min.controls=.5,mean.controls=22/23)
+summary(fm2,min.controls=0,max.controls=Inf,propensity.model=thebglm)
+```
+
+## Showing matches
+
+\centering
+```{r out.width=".8\\textwidth", echo=FALSE}
+## perhaps try this https://briatte.github.io/ggnet/#example-2-bipartite-network next time
+library(igraph)
+blah0 <- outer(fm0, fm0, FUN = function(x, y) {
+  as.numeric(x == y)
+})
+blah1 <- outer(fm1, fm1, FUN = function(x, y) {
+  as.numeric(x == y)
+})
+blah2 <- outer(fm2, fm2, FUN = function(x, y) {
+  as.numeric(x == y)
+})
+par(mfrow = c(2, 2), mar = c(3, 3, 3, 1))
+plot(graph_from_adjacency_matrix(blah0, mode = "undirected", diag = FALSE),
+  vertex.color = c("white", "green")[meddat$nhTrt + 1], main = "Min Ctrls=0, Max Ctrls=Inf"
+)
+plot(graph_from_adjacency_matrix(blah1, mode = "undirected", diag = FALSE),
+  vertex.color = c("white", "green")[meddat$nhTrt + 1], main = "Min Ctrls=1, Max Ctrls=Inf"
+)
+plot(graph_from_adjacency_matrix(blah2, mode = "undirected", diag = FALSE),
+  vertex.color = c("white", "green")[meddat$nhTrt + 1], main = "Penalties,Min Ctrls=.5, Max Ctrls=Inf"
+)
+```
+
+
+## Design Search for both precision and balance
+
+Here I demonstrate searching for two calipers.
+
+```{r gridsearch, cache=FALSE}
+findbalance<-function(x,mhdist=mhdist,psdist=psdist,thedat=meddat){
+    ##message(paste(x,collapse=" "))
+    thefm<-try(fullmatch(psdist+caliper(mhdist,x[2])+caliper(psdist,x[1]),data=thedat,tol=.00001))
+
+    if(inherits(thefm,"try-error")){
+        return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA,effn=NA))
+    }
+
+    thedat$thefm <- thefm
+
+    thexb<-try(xBalance(balfmla,strata=list(thefm=~thefm),
+            data=thedat,
+            report=c("chisquare.test","p.values")),silent=TRUE)
+
+    if(inherits(thexb,"try-error")){
+        return(c(x=x,d2p=NA,maxHR03diff=NA,n=NA,effn=NA))
+    }
+
+    maxHomRate03diff<-max(unlist(matched.distances(thefm,distance=hrdist2)))
+
+    return(c(x=x,d2p=thexb$overall["thefm","p.value"],
+            maxHR03diff=maxHomRate03diff,
+            n=sum(!is.na(thefm)),
+            effn=summary(thefm)$effective.sample.size))
+
+}
+
+```
+
+## Design Search for both precision and balance
+
+```{r eval=TRUE,echo=FALSE, cache=TRUE, warning=FALSE}
+## Test the function
+findbalance(c(psCal,mhCal),thedat=meddat,psdist=psdist,mhdist=mhdist)
+## Don't worry about errors for certain combinations of parameters
+maxmhdist<-max(as.vector(mhdist))
+minmhdist<-min(as.vector(mhdist))
+maxpsdist<-max(as.vector(psdist))
+minpsdist<-min(as.vector(psdist))
+```
+
+```{r findbal, eval=FALSE}
+set.seed(123455)
+system.time({
+    results<-replicate(1000,findbalance(x=c(runif(1,minpsdist,maxpsdist),
+                runif(1,minmhdist,maxmhdist)),thedat=meddat,psdist=psdist,mhdist=mhdist))
+}
+)
+```
+
+```{r findbalpar, eval=TRUE, cache=TRUE, echo=FALSE}
+## If you have a mac or linux machine you can speed this up:
+library(parallel)
+system.time({
+    resultsList<-mclapply(1:1000,function(i){
+        findbalance(x=c(runif(1,minpsdist,maxpsdist),
+                runif(1,minmhdist,maxmhdist)),thedat=meddat,psdist=psdist,mhdist=mhdist)
+                },
+        mc.cores=detectCores())
+    resultsListNA<-sapply(resultsList,function(x){ any(is.na(x)) })
+    results<-simplify2array(resultsList[!resultsListNA])
+}
+)
+
+```
+
+
+## Which matched design might we prefer?
+
+Now, how might we interpret the results of this search for matched designs?
+Here are a few ideas.
+
+```{r }
+if(any(class(results)=="list")){
+    resAnyNA<-sapply(results,function(x){ any(is.na(x)) })
+    resNoNA<-simplify2array(results[!resAnyNA])
+} else {
+    resAnyNA<-apply(results,2,function(x){ any(is.na(x)) })
+    resNoNA<-simplify2array(results[,!resAnyNA])
+}
+apply(resNoNA,1,summary)
+highbalres<-resNoNA[,resNoNA["d2p",]>.5]
+apply(highbalres,1,summary)
+```
+
+## Which matched design might we prefer?
+
+The darker points have smaller maximum within set differences on the baseline outcome.
+
+```{r eval=TRUE, echo=FALSE}
+# color points more dark for smaller differences
+plot(resNoNA["d2p",],resNoNA["n",],
+    xlab='d2p',ylab='n',
+    col=gray(1- ( resNoNA["maxHR03diff",]/max(resNoNA["maxHR03diff",]))),
+    pch=19)
+
+## identify(resNoNA["d2p",],resNoNA["n",]) ##,labels=round(resNoNA["maxHR03diff",],3),cex=.7)
+resNoNA[,c(5,114,125,308,514,737)]
+```
+
+## Which matched design might we prefer?
+
+```{r canddesigns, eval=TRUE,echo=TRUE}
+interestingDesigns<- (resNoNA["d2p",]>.5 & resNoNA["n",]>=40 &
+    resNoNA["maxHR03diff",]<10 & resNoNA["effn",] > 12)
+candDesigns <- resNoNA[,interestingDesigns,drop=FALSE]
+str(candDesigns)
+apply(candDesigns,1,summary)
+candDesigns<-candDesigns[,order(candDesigns["d2p",],decreasing=TRUE)]
+candDesigns <- candDesigns[,1]
+```
+
+## How would we use this information in `fullmatch`?
+
+```{r bigmatch}
+stopifnot(nrow(candDesigns)==1)
+fm4<-fullmatch(psdist+caliper(psdist,candDesigns["x1"])+caliper(mhdist,candDesigns["x2"]),data=meddat,tol=.00001)
+summary(fm4,min.controls=0,max.controls=Inf,propensity.model=thebglm)
+meddat$fm4<-NULL ## this line exists to prevent confusion with new fm4 objects
+meddat[names(fm4),"fm4"]<-fm4
+xb3<-xBalance(balfmla,strata=list(fm4=~fm4),
+	      data=meddat, report=c("all"))
+xb3$overall[,1:3]
+zapsmall(xb3$results["HomRate03",,])
+```
+
+## Another approach: more fine tuned optimization
+
+Here is another approach that tries to avoid searching the whole space. It focuses on getting close to a target $p$-value from the omnibus/overall balance test. Here we are just looking for one caliper value that gets us close to a particular target balance using one distance matrix.
+
+```{r eval=TRUE,cache=FALSE}
+matchAndBalance2<-function(x,distmat,alpha){
+	#x is a caliper widths
+	if(x>max(as.vector(distmat)) | x<min(as.vector(distmat))){ return(99999) }
+	thefm<-fullmatch(distmat+caliper(distmat,x),data=meddat,tol=.00001)
+	thexb<-xBalance(balfmla,
+			strata=data.frame(thefm=thefm),
+			data=meddat,
+			report=c("chisquare.test"))
+	return(thexb$overall[,"p.value"])
+}
+
+maxpfn<-function(x,distmat,alpha){
+	## here x is the targeted caliper width and x2 is the next wider
+	## caliper width
+	p1<-matchAndBalance2(x=x[1],distmat,alpha)
+	p2<-matchAndBalance2(x=x[2],distmat,alpha)
+	return(abs( max(p1,p2) - alpha) )
+}
+
+maxpfn(c(minpsdist,minpsdist+1),distmat=psdist,alpha=.25)
+#quantile(as.vector(psdist),seq(0,1,.1))
+#sort(as.vector(psdist))[1:10]
+```
+
+## Another approach: more fine tuned optimization
+
+```{r solnp, warning=FALSE, message=FALSE, cache=TRUE}
+library(Rsolnp)
+### This takes a long time
+results3<-gosolnp(fun=maxpfn,
+		  ineqfun=function(x,distmat,alpha){ x[2] - x[1] },
+		  ineqLB = 0,
+		  ineqUB = maxpsdist,
+		  LB=c(minpsdist,minpsdist+.01),
+		  UB=c(maxpsdist-.01,maxpsdist),
+		  n.restarts=2,
+		  alpha=.5,
+          distmat=psdist,
+		  n.sim=500,
+		  rseed=12345,
+		  control=list(trace=1)
+)
+
+results3$pars
+results3$values
+```
+
+## Another approach: more fine tuned optimization
+
+Results of the optimization search:
+
+```{r}
+maxpfn(results3$pars,distmat=psdist,alpha=.25)
+matchAndBalance2(results3$pars[1],distmat=psdist,alpha=.25)
+```
+
+
+# Cardinality Matching Example
+
+```{r designmatchtry, eval=TRUE}
+library(designmatch)
+thecovs <- unique(c(names(meddat)[c(6:7,9:24)],"HomRate03"))
+balfmla<-reformulate(thecovs,response="nhTrt")
+distmat <- as.matrix(psdist)
+z  <-  as.vector(meddat$nhTrt)
+## mom_covs <- fill.NAs(update(balfmla,~-nhClass+.),data=meddat)
+mom_covs <- meddat[,thecovs]
+## calculated absolute std mean diffs between trt and ctrl on covs
+## differences should be at most .5 sds apart
+mom_tols <- round(absstddif(mom_covs,z,.5),2)
+momlist <- list(covs=mom_covs,tols=mom_tols)
+
+fine_covs <-  matrix(meddat$nhClass,ncol=1)
+finelist  <-  list(covs=fine_covs)
+
+## solverlist <- list(name='gurobi',approximate=0,t_max=1000,round_cplex=0,trace=1)
+solverlist <- list(name='glpk',approximate=1,t_max=1000,round_cplex=0,trace=1)
+
+res <- bmatch(t_ind=z,
+    dist_mat=NULL,
+    mom=momlist,
+    solver=solverlist)
+
+meantab(mom_covs,z,res$t_id,res$c_id)
+
+stopifnot(length(res$t_id)==length(res$c_id))
+dm1 <- rep(1:length(res$t_id),2)
+names(dm1) <- c(meddat$nh[res$t_id],meddat$nh[res$c_id])
+meddat[names(dm1),"dm1"] <- dm1
+meddat[meddat$dm1==2 & !is.na(meddat$dm1),]
+
+pm1 <- pairmatch(psdist,data=meddat)
+meddat$pm1 <- pm1
+
+balfmla2 <- reformulate(thecovs,response="nhTrt")
+xbdm <- xBalance(balfmla2,strata=list(unstrt=NULL,dm1=~dm1,pm1=~pm1),data=meddat,report="all")
+xbdm$overall
+
+xbdm$results[,"std.diff",]
+
+```
+
+
+# Estimation
+
+## Overview: Estimate and Test "as if block-randomized"
+
+What are we estimating? Most people would say ACE=$\bar{\tau}=\bar{y}_1 - \bar{y}_0$. What estimator estimates this without bias?
+
+```{r echo=TRUE}
+meddat[names(fm0), "fm0"] <- fm0
+datB <- meddat %>%
+  filter(!is.na(fm0)) %>%
+  group_by(fm0) %>%
+  summarise(
+    Y = mean(HomRate08[nhTrt == 1]) - mean(HomRate08[nhTrt == 0]),
+    nb = n(),
+    nbwt = unique(nb / nrow(meddat)),
+    nTb = sum(nhTrt),
+    nCb = sum(1 - nhTrt),
+    pb = mean(nhTrt),
+    pbwt = pb * (1 - pb),
+    hbwt1 = pbwt * nb,
+    hbwt2 = pbwt * nbwt,
+    hbwt3 = (2 * (nCb * nTb) / (nTb + nCb))
+  )
+datB
+
+
+## Notice that all of these different ways to express the harmonic mean weight are the same.
+datB$hbwt101 <- datB$hbwt1 / sum(datB$hbwt1)
+datB$hbwt201 <- datB$hbwt2 / sum(datB$hbwt2)
+datB$hbwt301 <- datB$hbwt3 / sum(datB$hbwt3)
+stopifnot(all.equal(datB$hbwt101, datB$hbwt201))
+stopifnot(all.equal(datB$hbwt101, datB$hbwt301))
+```
+
+## Using the weights: Set size weights
+
+First, we could estimate the set-size weighted ATE. Our estimator uses the
+size of the sets to estimate this quantity.
+
+```{r}
+## The set-size weighted version
+atewnb <- with(datB, sum(Y * nb / sum(nb)))
+atewnb
+```
+
+## Using the weights: Set size weights
+
+Sometimes it is convenient to use `lm` (or the more design-friendly `lm_robust`) because there are R functions for design-based standard errors and confidence intervals.
+
+```{r warnings=FALSE}
+meddat$id <- row.names(meddat)
+meddat$nhTrtF <- factor(meddat$nhTrt)
+## See Gerber and Green section 4.5 and also Chapter 3 on block randomized experiments. Also Hansen and Bowers 2008.
+wdat <- meddat %>%
+  filter(!is.na(fm0)) %>%
+  group_by(fm0) %>%
+  mutate(
+    pb = mean(nhTrt),
+    nbwt = nhTrt / pb + (1 - nhTrt) / (1 - pb),
+    gghbwt = 2 * (n() / nrow(meddat)) * (pb * (1 - pb)), ## GG version,
+    gghbwt2 = 2 * (nbwt) * (pb * (1 - pb)), ## GG version,
+    nb = n(),
+    nTb = sum(nhTrt),
+    nCb = nb - nTb,
+    hbwt1 = (2 * (nCb * nTb) / (nTb + nCb)),
+    hbwt2 = nbwt * (pb * (1 - pb))
+  )
+
+row.names(wdat) <- wdat$id ## dplyr strips row.names
+wdat$nhTrtF <- factor(wdat$nhTrtF)
+lm0b <- lm_robust(HomRate08 ~ nhTrt, data = wdat, weight = nbwt)
+lm0b
+```
+
+## Using the weights: precision weights
+
+Set-size weighting is easy to explain but may differ in terms of precision:
+
+```{r}
+atewhb <- with(datB, sum(Y * hbwt1 / sum(hbwt1)))
+atewhb
+lm1 <- lm_robust(HomRate08 ~ nhTrt + fm0, data = wdat)
+summary(lm1)$coef[2, ]
+summary(lm0b)$coef[2, ]
+## Notice that fixed_effects is same as indicator variables is same as weighting
+lm1a <- lm_robust(HomRate08 ~ nhTrt, fixed_effects = ~fm0, data = wdat)
+summary(lm1a)$coef[1, ]
+```
+
+## Precision weighting
+
+Block-mean centering is another approach although notice some precision gains
+for not "estimating fixed effects" --- in quotes because there is nothing to
+estimate here --- set or block-means are fixed quantities and need not be
+estimated in this framework.
+
+```{r}
+wdat$HomRate08Cent <- with(wdat, HomRate08 - ave(HomRate08, fm0))
+wdat$nhTrtCent <- with(wdat, nhTrt - ave(nhTrt, fm0))
+
+lm2 <- lm_robust(HomRate08Cent ~ nhTrtCent, data = wdat)
+summary(lm2)$coef[2, ]
+```
+
+
+## What about random effects?
+
+Notice that one problem we have here is too few sets. Maybe better to use a fully Bayesian version if we wanted to do this.
+
+```{r}
+library(lme4)
+lmer1 <- lmer(HomRate08 ~ nhTrtF + (1 | fm0),
+  data = wdat,
+  verbose = 2, start = 0,
+  control = lmerControl(optimizer = "bobyqa", restart_edge = TRUE, optCtrl = list(maxfun = 10000))
+)
+summary(lmer1)$coef
+```
+
+
+## Which estimator to choose?
+
+The  block-sized weighted approach is unbiased. But unbiased is not the only
+indicator quality in an estimator.
+
+
+```{r}
+library(DeclareDesign)
+
+thepop <- declare_population(wdat)
+theassign <- declare_assignment(blocks = fm0, block_m_each = table(fm0, nhTrt))
+po_fun <- function(data) {
+  data$Y_Z_1 <- data$HomRate08
+  data$Y_Z_0 <- data$HomRate08
+  data
+}
+thepo <- declare_potential_outcomes(handler = po_fun)
+thereveal <- declare_reveal(Y, Z) ## how does assignment reveal potential outcomes
+thedesign <- thepop + theassign + thepo + thereveal
+
+oneexp <- draw_data(thedesign)
+## Test
+origtab <- with(wdat, table(trt = nhTrt, b = fm0))
+all.equal(origtab, with(oneexp, table(trt = Z, b = fm0)))
+```
+
+```{r}
+
+estimand1 <- declare_estimand(ACE = mean(Y_Z_1 - Y_Z_0))
+
+est1 <- declare_estimator(Y ~ Z,
+  estimand = estimand1,
+  model = difference_in_means,
+  label = "E1: Ignoring Blocks"
+)
+est2 <- declare_estimator(Y ~ Z,
+  fixed_effects = ~fm0,
+  estimand = estimand1, model = lm_robust,
+  label = "E2: precision weights fe1"
+)
+est3 <- declare_estimator(Y ~ Z + fm0,
+  estimand = estimand1, model = lm_robust,
+  label = "E3: precision weights fe2"
+)
+
+nbwt_est_fun <- function(data) {
+  data$newnbwt <- with(data, (Z / pb) + ((1 - Z) / (1 - pb)))
+  obj <- lm_robust(Y ~ Z, data = data, weights = newnbwt)
+  res <- tidy(obj) %>% filter(term == "Z")
+  return(res)
+}
+
+hbwt_est_fun <- function(data) {
+  data$newnbwt <- with(data, (Z / pb) + ((1 - Z) / (1 - pb)))
+  data$newhbwt <- with(data, newnbwt * (pb * (1 - pb)))
+  obj <- lm_robust(Y ~ Z, data = data, weights = newhbwt)
+  res <- tidy(obj) %>% filter(term == "Z")
+  return(res)
+}
+
+est4 <- declare_estimator(handler = tidy_estimator(nbwt_est_fun), estimand = estimand1, label = "E4: direct block size weights")
+est5 <- declare_estimator(handler = tidy_estimator(hbwt_est_fun), estimand = estimand1, label = "E5: direct precision weights")
+
+
+
+direct_demean_fun <- function(data) {
+  data$Y <- with(data, Y - ave(Y, fm0))
+  data$Z <- with(data, Z - ave(Z, fm0))
+  obj <- lm_robust(Y ~ Z, data = data)
+  data.frame(
+    term = "Z",
+    estimate = obj$coefficients[[2]],
+    std.error = obj$std.error[[2]],
+    statistic = obj$statistic[[2]],
+    p.value = obj$p.value[[2]],
+    conf.low = obj$conf.low[[2]],
+    conf.high = obj$conf.high[[2]],
+    df = obj$df[[2]],
+    outcome = "Y"
+  )
+}
+
+est6 <- declare_estimator(handler = tidy_estimator(direct_demean_fun), estimand = estimand1, label = "E6: Direct Demeaning")
+
+lmer_est_fun <- function(data) {
+  thelmer <- lmer(Y ~ Z + (1 | fm0),
+    data = data,
+    control = lmerControl(restart_edge = TRUE, optCtrl = list(maxfun = 1000))
+  )
+  obj <- summary(thelmer)
+  cis <- confint(thelmer, parm = "Z")
+  data.frame(
+    term = "Z",
+    estimate = obj$coefficients[2, 1],
+    std.error = obj$coefficients[2, 2],
+    statistic = obj$coefficients[2, 3],
+    p.value = NA,
+    conf.low = cis[1, 1],
+    conf.high = cis[1, 2],
+    df = NA,
+    outcome = "Y"
+  )
+}
+
+
+est7 <- declare_estimator(handler = tidy_estimator(lmer_est_fun), estimand = estimand1, label = "E7: Random Effects")
+# est1(oneexp)
+# est2(oneexp)
+est7(oneexp)
+
+thedesign_plus_est <- thedesign + estimand1 + est1 + est2 + est3 + est4 + est5 + est6 + est7
+```
+
+## Diagnosands and diagnosis
+
+```{r diagnose, cache=TRUE}
+
+set.seed(12345)
+
+thediagnosands <- declare_diagnosands(
+  bias = mean(estimate - estimand),
+  rmse = sqrt(mean((estimate - estimand)^2)),
+  power = mean(p.value < .05),
+  coverage = mean(estimand <= conf.high & estimand >= conf.low),
+  mean_estimate = mean(estimate),
+  sd_estimate = sd(estimate),
+  mean_se = mean(std.error),
+  mean_estimand = mean(estimand)
+)
+
+library(future)
+library(future.apply)
+plan(multicore)
+diagnosis <- diagnose_design(thedesign_plus_est,
+  sims = 1000, bootstrap_sims = 0,
+  diagnosands = thediagnosands
+)
+save(diagnosis, file = "day14diag.rda")
+plan(sequential)
+```
+
+## Results of the Simulation
+
+```{r}
+## reshape_diagnosis(diagnosis, digits = 4)[, -c(1:2, 4)]
+
+kable(reshape_diagnosis(diagnosis, digits = 4)[, -c(1:2, 4)])
+```
+
+
+# Testing Hypotheses by Randomization Inference in a Block-Randomized Trial
+
+## Testing Approach: By Hand
+
+```{r}
+
+newexp <- function(trt, b) {
+  newtrt <- unsplit(lapply(split(trt, b), sample), b)
+  return(newtrt)
+}
+
+mdwt1 <- function(y, trt, b) {
+  datB <- data.frame(y, trt, b) %>%
+    group_by(b) %>%
+    summarise(ateb = mean(y[trt == 1]) - mean(y[trt == 0]), nb = n(),.groups="keep")
+  ate_nbwt <- with(datB, sum(ateb * nb / sum(nb)))
+  return(ate_nbwt)
+}
+
+mdwt2 <- function(y, trt, b) {
+  datB <- data.frame(y, trt, b) %>%
+    group_by(b) %>%
+    summarise(
+      ateb = mean(y[trt == 1]) - mean(y[trt == 0]),
+      nb = n(),
+      nTb = sum(trt),
+      nCb = sum(1 - trt),
+      pb = mean(trt),
+      pbwt = pb * (1 - pb),
+      hbwt1 = pbwt * nb,
+      hbwt3 = (2 * (nCb * nTb) / (nTb + nCb)),.groups="keep"
+    )
+  ate_hbwt <- with(datB, sum(ateb * hbwt1 / sum(hbwt1)))
+  return(ate_hbwt)
+}
+```
+
+## Testing by hand
+
+```{r}
+wdat <- meddat %>% filter(!is.na(meddat$fm0))
+
+obsmd1 <- with(wdat, mdwt1(y = HomRate08, trt = nhTrt, b = fm0))
+obsmd2 <- with(wdat, mdwt2(y = HomRate08, trt = nhTrt, b = fm0))
+
+origtab <- with(wdat, table(trt = nhTrt, b = fm0))
+testtab <- with(wdat, table(trt = newexp(trt = nhTrt, b = fm0), b = fm0))
+all.equal(origtab, testtab)
+```
+
+## Testing by hand
+
+```{r}
+
+set.seed(12345)
+nulldist1 <- replicate(1000, with(wdat, mdwt1(y = HomRate08, trt = newexp(trt = nhTrt, b = fm0), b = fm0)))
+set.seed(12345)
+nulldist2 <- replicate(1000, with(wdat, mdwt2(y = HomRate08, trt = newexp(trt = nhTrt, b = fm0), b = fm0)))
+
+p1 <- mean(nulldist1 <= obsmd1)
+p2 <- mean(nulldist2 <= obsmd2)
+
+var(nulldist1)
+var(nulldist2)
+```
+
+```{r}
+plot(density(nulldist1))
+lines(density(nulldist2), lty = 2)
+```
+
+
+
+## Testing Approach: Faster
+
+These are faster because they use the Central Limit Theorem --- under the belief that our current data are large enough (informative enough) that our reference distribution would be well approximated by a Normal distribution.
+
+```{r}
+
+xbTest1 <- xBalance(nhTrt ~ HomRate08, strata = list(fm0 = ~fm0), data = wdat, report = "all")
+xbTest1$results[, , "fm0"]
+
+```
+
+## Testing Approach: Faster
+
+The `coin` package does something similar --- it also allows for permutation based distributions using the `approximate()` function.
+
+```{r}
+wdat$nhTrtF <- factor(wdat$nhTrt)
+meanTestAsym <- oneway_test(HomRate08 ~ nhTrtF | fm0, data = wdat, distribution = "asymptotic")
+set.seed(12345)
+meanTestPerm <- oneway_test(HomRate08 ~ nhTrtF | fm0, data = wdat, distribution = approximate(nresample = 1000))
+
+pvalue(meanTestAsym)
+pvalue(meanTestPerm)
+
+rankTestAsym <- wilcox_test(HomRate08 ~ nhTrtF | fm0, data = wdat, distribution = "asymptotic")
+set.seed(12345)
+rankTestPerm <- wilcox_test(HomRate08 ~ nhTrtF | fm0, data = wdat, distribution = approximate(nresample = 1000))
+
+pvalue(rankTestAsym)
+pvalue(rankTestPerm)
+```
+
+Notice the two distributions:
+
+```{r}
+rdistwc_perm <- rperm(rankTestPerm,n=10000)
+rdistwc_asymp <- rperm(rankTestAsym,n=10000)
+
+plot(density(rdistwc_perm))
+lines(density(rdistwc_asymp),col="blue")
+abline(v=statistic(rankTestAsym))
+```
+
+See also `RItest` (in development) and the `ri2` and `ri` packages for R.
+
+
+
+
+## Summary and Questions:
+
+What do you think? What questions arise?
+
+
+
+## References
+
