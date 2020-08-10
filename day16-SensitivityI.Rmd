@@ -313,7 +313,7 @@ are:
 \end{equation}
 \end{center}
 
-If we use $\Gamma$ for  $\mathrm{e}^{\gamma}$, then we can express \eqref{eq: treatment odds ratio bounds gamma} as \eqref{eq:treatment_odds_ratio} by substituting $\frac{1}{\Gamma}$ for $\mathrm{e}^{-\gamma}$ and $\Gamma$ for $\mathrm{e}^{\gamma}$.
+If we use $\Gamma$ for  $\mathrm{e}^{\gamma}$, then we can substitute $\frac{1}{\Gamma}$ for $\mathrm{e}^{-\gamma}$ and $\Gamma$ for $\mathrm{e}^{\gamma}$.
 
 ## Why $\Gamma$?
 
@@ -332,7 +332,7 @@ So when $\pi_i = \pi_j$ then $\Gamma=1$: the treatment probabilities are the sam
 
 ## An example of sensitivity analysis: the search for Gamma
 
-The workflow: Second, assess sensitivity at different levels of $\Gamma$ (here
+The workflow: assess sensitivity at different levels of $\Gamma$ (here
 using two different test statistics).
 
 ```{r echo=TRUE}
@@ -347,7 +347,7 @@ sensHresults <- sapply(somegammas, function(g) {
 
 ## An example of sensitivity analysis: the search for Gamma
 
-The workflow: Second, assess sensitivity at different levels of $\Gamma$ (here
+The workflow: assess sensitivity at different levels of $\Gamma$ (here
 using two different test statistics).
 
 ```{r echo=FALSE, out.width=".8\\textwidth"}
@@ -373,6 +373,10 @@ Or you can try to directly find the $\Gamma$ for a given $\alpha$ level test usi
 
 
 ```{r echo=TRUE}
+## Recall that senmv produces a p-value
+senmv(-respmat, gamma = 1, method = "t")$pval
+senmv(-respmat, gamma = 1, method = "h")$pval
+
 findSensG <- function(g, a, method) {
   senmv(-respmat, gamma = g, method = method)$pval - a
 }
@@ -381,9 +385,6 @@ res1_t <- uniroot(f = findSensG, method = "t", lower = 1, upper = 6, a = .05)
 res1_t$root
 res1_h <- uniroot(f = findSensG, method = "h", lower = 1, upper = 6, a = .05)
 res1_h$root
-
-senmv(-respmat, gamma = 1, method = "t")$pval
-senmv(-respmat, gamma = 1, method = "h")$pval
 ```
 
 
@@ -408,19 +409,23 @@ res2_full_g2$pval
 
 ## Some other approaches: senstrat
 
-```{r}
+The `senstrat` package is a bit easier to use for our workflow. It encourages
+you to think about different test statistics using transformations of the
+outcome.
+
+
+```{r echo=TRUE}
 
 mscores1 <- mscores(y=meddat$HomRate0803,z=meddat$nhTrt,st=meddat$fm1)
 hscores1 <- hodgeslehmann(y=meddat$HomRate0803,z=meddat$nhTrt,st=meddat$fm1)
 
-ss_y_g1 <- senstrat(meddat$HomRate0803,z=meddat$nhTrt,st=meddat$fm1,gamma=1, alternative="less")
+ss_y_g1 <- senstrat(meddat$HomRate0803,z=meddat$nhTrt,st=meddat$fm1,gamma=1, alternative="less") #, detail=TRUE)
 ss_h_g1 <- senstrat(hscores1,z=meddat$nhTrt,st=meddat$fm1,gamma=1, alternative="less")
 ss_m_g1 <- senstrat(mscores1,z=meddat$nhTrt,st=meddat$fm1,gamma=1, alternative="less")
 
-ss_y_g2 <- senstrat(meddat$HomRate0803,z=meddat$nhTrt,st=meddat$fm1,gamma=2, alternative="less")
+ss_y_g2 <- senstrat(meddat$HomRate0803,z=meddat$nhTrt,st=meddat$fm1,gamma=2, alternative="less") #,detail=TRUE)
 ss_h_g2 <- senstrat(hscores1,z=meddat$nhTrt,st=meddat$fm1,gamma=2, alternative="less")
 ss_m_g2 <- senstrat(mscores1,z=meddat$nhTrt,st=meddat$fm1,gamma=2, alternative="less")
-
 
 
 ```
