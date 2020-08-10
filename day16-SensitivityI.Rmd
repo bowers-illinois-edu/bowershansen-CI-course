@@ -1,0 +1,520 @@
+---
+title: |
+ | Sensitivity Analysis I: Rosenbaum Style
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: |
+  | ICPSR 2020 Session 2
+  | Jake Bowers, Ben Hansen, Tom Leavitt
+bibliography:
+ - 'BIB/Master_Bibliography.bib'
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    incremental: true
+    includes:
+        in_header:
+           - defs-all.sty
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
+---
+
+
+<!-- To show notes  -->
+<!-- https://stackoverflow.com/questions/44906264/add-speaker-notes-to-beamer-presentations-using-rmarkdown -->
+
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
+```
+
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+## Load all of the libraries that we will use when we compile this file
+## We are using the renv system. So these will all be loaded from a local library directory
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(coin)
+library(RItools)
+library(optmatch)
+library(estimatr)
+library(estimatr)
+library(sensitivitymv)
+library(sensitivitymw)
+library(sensitivitymult)
+library(sensitivityfull)
+library(senstrat)
+library(rbounds)
+```
+
+## Today
+
+ 1. Agenda: Reasoning about how departures from our "as-if randomized" approach
+    might change our substantive conclusions: sensitivity analysis, Rosenbaum
+    style.
+ 2. We are now in the "Sensitivity Analysis" part of the course
+    (see the reading there).
+ 3. Questions arising from the reading or assignments or life?
+
+# But first, review
+
+## Statistical Inference for Stratified Designs
+
+Given a have a research design that (a) can be defended on substantive grounds and (b) compares favorably with a randomized experiment of the same design (i.e. in the case of fullmatching, a block randomized experiment with either 1 treated and 1 or more control units or 1 control unit and 1 or more treated units), how should we do statistical inference? (How should we choose and justify/explain our choices of estimators and tests?)
+
+ - Testing and estimation procedures that have good properties have
+   **distributions** that we can describe and work with.
+   - Most obviously, $p$-values compare observed test stat. to the
+     **distribution** of that test stat. in a hypothesized world. (Recall
+     randomization based tests in randomized experiments).
+   - However an "unbiased estimator" is an estimator having a **distribution**
+     that is centered on the truth (a "precise estimator" has a
+     **distribution** that is narrow, a "consistent estimator" has a
+     **distribution** that makes all individual estimates closer to the truth
+     as information increases)
+
+## Statistical Inference for Stratified Designs
+
+Where can those distributions come from?
+
+  - In a randomized experiment they can come from the **random assignment** (Randomization **justifies** our use of certain distributions and not others for for test statistics and estimators.)
+  - In a random sample from a population the **random sampling** can also justify choice of distribution for test statistics and estimators.
+  - The Central Limit Theorem (CLT) also gives us reason to believe that certain distributions will be Normal.
+  - If we knew that the outcome arose from a stochastic/random process (like $Y \sim \text{Poisson}(\lambda)$ and $\lambda=f(Z,X,\beta)$ ) then the **CLT** *and* **Likelihood** gives us distributions. (An **outcome distribution** and functional form plus CLT yields distributions of test statistics and estimators).
+  - If we knew a **Likelihood** function *and* a **Prior** distribution for the parameters of the Likelihood function, then **Bayes Rule** gives us distributions.(An **outcome distribution** and functional form plus **prior distribution** yields distributions of test statistics and estimators (versions of **posterior distributions**).
+
+
+## The "As-If randomized" approach
+
+
+Given a have a research design that (a) can be defended on substantive grounds and (b) compares favorably with a randomized experiment of the same design (i.e. in the case of fullmatching, a block randomized experiment with either 1 treated and 1 or more control units or 1 control unit and 1 or more treated units), how should we do statistical inference? (How should we choose and justify/explain our choices of estimators and tests?)
+
+Why not treat this design **as-if it had been randomized** for the sake of argument? One can say, "If this had been an experiment, the results would be $\hat{\tau}$, $p=.02$."
+
+Advantages:
+
+ - No probability model of outcomes to justify
+ - No functional form/structural model of covariates and intervention/treatment to justify
+ - No population and sampling needed --- inference can focus on the pool of observations available.
+ - No CLT required --- CLT for convenience only
+ - We already showed that, for many covariates, the design compares favorably to an experiment.
+
+
+## The "As-If randomized" approach
+
+
+Given a have a research design that (a) can be defended on substantive grounds and (b) compares favorably with a randomized experiment of the same design (i.e. in the case of fullmatching, a block randomized experiment with either 1 treated and 1 or more control units or 1 control unit and 1 or more treated units), how should we do statistical inference? (How should we choose and justify/explain our choices of estimators and tests?)
+
+Why not treat this design **as-if it had been randomized** for the sake of argument? One can say, "If this had been an experiment, the results would be $\hat{\tau}$, $p=.02$."
+
+Disadvantages:
+
+ - This is not a randomized experiment. How might our results differ if (1) our design did not adequately capture the intervention/selection process or (2) we used a different basis for statistical inference?
+
+Sensitivity analysis aims to answer such questions --- especially question 1.
+
+```{r loaddat, echo=FALSE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat$id <- row.names(meddat)
+meddat <- mutate(meddat,
+  HomRate03 = (HomCount2003 / Pop2003) * 1000,
+  HomRate08 = (HomCount2008 / Pop2008) * 1000,
+  HomRate0803 = (HomRate08 - HomRate03)
+) %>% column_to_rownames("id")
+options(show.signif.stars = FALSE)
+```
+
+## Make a matched design:
+
+I  use a gain score approach aka difference-in-differences design using a
+pairmatch.
+
+```{r echo=TRUE}
+balfmla <- nhTrt ~ HomRate03 + nhPopD + nhHS + nhAboveHS + nhEmp + nhAgeMid + nhAgeYoung + nhMarDom + nhOwn + nhRent
+glm1 <- arm::bayesglm(balfmla, data = meddat)
+meddat <- transform(meddat, pairm = pairmatch(glm1, data = meddat))
+xb1 <- xBalance(balfmla, strata = list(pm = ~pairm), data = meddat, report = "chisquare.test")
+xb1$overall
+```
+
+And here is an outcome analysis using `HomRate08 - HomRate03` as my outcome:
+
+```{r echo=TRUE}
+xbtest3 <- xBalance(nhTrt ~ HomRate0803, strata = list(pairm = ~pairm), data = meddat[matched(meddat$pairm), ], report = "all")
+xbtest3$overall
+xbtest3$results[, c("adj.diff", "z", "p"), ]
+## OR using a different asymptotic approximation:
+lm1 <- lm_robust(HomRate0803 ~ nhTrt, fixed_effects = ~pairm, data = meddat, subset = !is.na(pairm))
+lm1
+```
+
+
+## What about unobserved confounders?
+
+A high $p$-value from an omnibus balance test gives us some basis to claim
+that our comparison contains as much confounding on *observed* covariates
+(those assessed by our balance test) as would be seen in a block-randomized
+experiment. That is, our treatment-vs-control comparison contains demonstrably
+little bias from the variables that we have balanced.
+
+\medskip
+
+But, we haven't said anything about *unobserved* covariates (which a truly
+randomized study would balance, but which our study **does not**).
+
+## Sensitivity analysis as a formalized thought experiment {.fragile}
+
+> "In an observational study, a sensitivity analysis replaces qualitative claims about whether unmeasured biases are present with an objective quantitative statement about the magnitude of bias that would need to be present to change the conclusions." (Rosenbaum, sensitivitymv manual)
+
+
+>  "The sensitivity analysis asks about the magnitude, gamma, of bias in treatment assignment in observational studies that would need to be present to alter the conclusions of a randomization test that assumed matching for observed covariates removes all bias."  (Rosenbaum, sensitivitymv manual)
+
+All non-randomized studies have some bias from unobserved confounders. The question is how big the bias could be without changing our substantive conclusions.
+
+
+\begin{center}
+\begin{tikzcd}[column sep=large,every arrow/.append style=-latex]
+u = f(u_1,u_2,\ldots) \arrow[from=1-1,to=2-2, bend right, "\Gamma" near start] \arrow[from=1-1,to=2-3, bend left, "\rho" near start] \\
+& Z  \arrow[from=2-2,to=2-3, "\tau"] &  y \\
+x_1 \arrow[from=3-1,to=2-2, "\beta_1" ] \arrow[from=3-1,to=2-3,grey] &
+x_2 \arrow[from=3-2,to=2-2, "\beta_2" ] \arrow[from=3-2,to=2-3,grey]
+\end{tikzcd}
+\end{center}
+
+
+
+
+```{r dosens, echo=FALSE,results="hide"}
+#' Reshape Optmatch Output for Sensitivity Analysis
+#'
+#' A function to reformat the output of optmatch::fullmatch for use with sensmv/mw such that the first column is the treated unit and the remaining columns are the control units.  We assume that y,z, and fm have no missing data.
+#' @param y is a vector of outcomes
+#' @param z is a vector of binary treatment indicators (0=control,1=treated)
+#' @param fm is a vector containing the factor indicating set membership
+#' @param senfm is TRUE if the output should be formatted for use in [sensitivityfull::senfm]: for 1:K sets, the first column will be treated and for K:1 sets, the first column will be controls.
+reshape_sensitivity <- function(y, z, fm, senfm=FALSE) {
+    #dat <- data.frame(y = y, z = z, fm = fm)[order(fm, z, decreasing = TRUE), ]
+    #dat1 <- dat %>% group_by(fm) %>%    mutate(idb = row_number()) %>%  pivot_wider(names_from=idb,values_from=y)
+    # dat2 <- dat1 %>% group_by(fm) %>% summarize()
+    numcols <- max(table(fm))
+    resplist <- lapply(
+        split(data.frame(y,z), fm),
+         function(dat) {
+           numtrt <- sum(dat$z)
+           numctrl <- sum(1-dat$z)
+           stopifnot(numtrt==1 | numctrl==1)
+           if(numtrt==1){
+             res <- with(dat,c(y[z==1],y[z!=1],rep(NA, max(numcols - length(y))), 1))
+           }
+           if(numctrl==1 & numtrt>1){
+             res <- with(dat,c(y[z==0],y[z!=0],rep(NA, max(numcols - length(y))),0))
+           }
+           return(res)
+          #return(c(x, rep(NA, max(numcols - length(x), 0))))
+         }
+    )
+    respmat <- t(simplify2array(resplist))
+    if(senfm){
+  return(respmat)
+    } else {
+      ## remove the indicator of whether the singleton is control or treated
+      return(respmat[,-ncol(respmat)])
+    }
+    }
+```
+
+## An example of sensitivity analysis with `senmv`.
+
+
+The workflow: First, reshape the matched design into the appropriate shape (one treated unit in column 1, controls in columns 2+).^[So notice that `senmv` requires 1:K matches although K can vary. The `sensitivityfull::senfm` function allows for unrestricted `fullmatch` output (but still reorganized into a matrix).]
+
+```{r echo=TRUE}
+respmat <- with(meddat[matched(meddat$pairm), ], reshape_sensitivity(HomRate0803, nhTrt, pairm))
+respmat[1:4, ]
+meddat <- transform(meddat, fm = fullmatch(balfmla, data = meddat, min.controls = 1))
+respmat2 <- with(meddat[matched(meddat$fm), ], reshape_sensitivity(HomRate0803, nhTrt, fm))
+respmat2[12:18, ]
+```
+
+
+## An example of sensitivity analysis: the search for Gamma
+
+The workflow: Second, assess sensitivity at different levels of $\Gamma$. (using `-respmat` here because the differences between treated and controls are negative --- stations are associated with reductions in violence.)
+
+```{r echo=TRUE}
+sensG1 <- senmv(-respmat, method = "t", gamma = 1)
+sensG2 <- senmv(-respmat, method = "t", gamma = 2)
+sensG1$pval
+sensG2$pval
+```
+
+If we used a paired $t$-test to assess the hypothesis of no effects and:
+
+ - Metrocable stations were really randomized within pair (no unobserved confounding), our $p$-value would be about `r round(sensG1$pval,2)`.
+
+ - An unobserved confounder (or a function of many unobserved confounders) made neighborhoods with Metrocable stations within pair **twice as likely** to receive those stations as the neighborhoods without the stations, then our **maximum $p$-value** would be about `r round(sensG2$pval,2)`.
+
+
+##  Why $\Gamma$? Can we model unobserved confounding?
+
+In what ways can an unobserved covariate confuse our causal inferences? *We need to have a model to help us reason about this.*  @rosenbaum2002observational starts with a *treatment odds ratio* for two units $i$ and $j$ having the same background values for covariates in a vector $\bx$ (as if they were perfectly matched on $\bx$).
+
+\begin{center}
+\begin{align}
+\frac{\left(\frac{\pi_i}{1 - \pi_i} \right)}{\left(\frac{\pi_j}{1 - \pi_j} \right)} \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j \notag  \implies
+& \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j.
+\end{align}
+\end{center}
+ which implies a model that links treatment odds, $\frac{\pi_i}{(1 - \pi_i)}$, to the *observed and unobserved* covariates $(\mathbf{x}_i, u_i)$,
+
+\begin{center}
+\begin{equation}
+\label{eq: unobserved confounding}
+\text{log} \left(\frac{\pi_i}{1 - \pi_i} \right) = \kappa(\mathbf{x}_i) + \gamma u_i,
+\end{equation}
+\end{center}
+
+where $\kappa(\cdot)$ is an unknown function and $\gamma$ is an unknown parameter.
+
+\note{
+\begin{center}
+\textbf{Remember}:
+\end{center}
+A logarithm is simply the power to which a number must be raised in order to get some other number. In this case we're dealing with natural logarithms. Thus, we can read $\text{log} \left(\frac{\pi_i}{1 - \pi_i} \right)$ as asking: $\mathrm{e}$ to the power of what gives us $\left(\frac{\pi_i}{1 - \pi_i} \right)$? And the answer is $\mathrm{e}$ to the power of $\kappa(\mathbf{x}_i) + \gamma u_i$. If $\mathbf{x}_i = \mathbf{x}_j$, then $\text{log} \left(\frac{\pi_i}{1 - \pi_i} \right) = \gamma u_i$, which means that $\mathrm{e}^{\gamma u_i} = \left(\frac{\pi_i}{1 - \pi_i} \right)$.
+}
+
+## Why $\Gamma$?
+
+Say, we rescale $u$ to $[0,1]$, then we can write the original ratio of treatment odds using the logistic model and the unobserved covariate $u$:
+
+\begin{center}
+\begin{equation}
+\frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} = \mathrm{e}^{\gamma(u_i - u_j)} \ \text{if} \ \mathbf{x}_i = \mathbf{x}_j.
+\end{equation}
+\end{center}
+
+Since the minimum and maximum possible value for $u_i - u_j$ are $-1$ and $1$,
+for any fixed $\gamma$ the upper and lower bounds on the treatment odds ratio
+are:
+
+\begin{center}
+\begin{equation}
+\label{eq: treatment odds ratio bounds gamma}
+\frac{1}{\mathrm{e}^{\gamma}} \leq \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \leq \mathrm{e}^{\gamma}.
+\end{equation}
+\end{center}
+
+If we use $\Gamma$ for  $\mathrm{e}^{\gamma}$, then we can express \eqref{eq: treatment odds ratio bounds gamma} as \eqref{eq:treatment_odds_ratio} by substituting $\frac{1}{\Gamma}$ for $\mathrm{e}^{-\gamma}$ and $\Gamma$ for $\mathrm{e}^{\gamma}$.
+
+## Why $\Gamma$?
+
+\ldots so we can write the odds of treatment in terms of $\Gamma$ (the effect
+of $u$ on the odds of treatment) for any two units $i$ and $j$ with the same
+covariates (i.e. in the same matched set):
+
+\begin{center}
+\begin{equation}
+\frac{1}{\Gamma} \leq \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \leq \Gamma \ \forall \ i,j \ \text{with } \mathbf{x}_i = \mathbf{x}_j
+\end{equation}
+\end{center}
+
+So when $\pi_i = \pi_j$ then $\Gamma=1$: the treatment probabilities are the same for the two units --- just as we would expect in a randomized study.
+
+
+## An example of sensitivity analysis: the search for Gamma
+
+The workflow: Second, assess sensitivity at different levels of $\Gamma$ (here
+using two different test statistics).
+
+```{r echo=TRUE}
+somegammas <- seq(1, 5, .1)
+sensTresults <- sapply(somegammas, function(g) {
+  c(gamma = g, senmv(-respmat, method = "t", gamma = g))
+})
+sensHresults <- sapply(somegammas, function(g) {
+  c(gamma = g, senmv(-respmat, gamma = g))
+})
+```
+
+## An example of sensitivity analysis: the search for Gamma
+
+The workflow: Second, assess sensitivity at different levels of $\Gamma$ (here
+using two different test statistics).
+
+```{r echo=FALSE, out.width=".8\\textwidth"}
+par(mar = c(3, 3, 2, 1))
+plot(
+  x = sensTresults["gamma", ],
+  y = sensTresults["pval", ],
+  xlab = "Gamma", ylab = "P-Value",
+  main = "Sensitivity Analysis", ylim = c(0, .2)
+)
+points(
+  x = sensHresults["gamma", ],
+  y = sensHresults["pval", ], pch = 2
+)
+abline(h = 0.05)
+text(sensTresults["gamma", 20], sensTresults["pval", 20], label = "T stat (Mean diff)",pos=2)
+text(sensHresults["gamma", 22], sensHresults["pval", 22], label = "Influential point resistent\n mean diff",pos=4)
+```
+
+## An example of sensitivity analysis: the search for Gamma
+
+Or you can try to directly find the $\Gamma$ for a given $\alpha$ level test using an optimization routine:
+
+
+```{r echo=TRUE}
+findSensG <- function(g, a, method) {
+  senmv(-respmat, gamma = g, method = method)$pval - a
+}
+
+res1_t <- uniroot(f = findSensG, method = "t", lower = 1, upper = 6, a = .05)
+res1_t$root
+res1_h <- uniroot(f = findSensG, method = "h", lower = 1, upper = 6, a = .05)
+res1_h$root
+
+senmv(-respmat, gamma = 1, method = "t")$pval
+senmv(-respmat, gamma = 1, method = "h")$pval
+```
+
+
+## Some other approaches: senfm
+
+If we have sets with multiple treated units, we can use `senfm`. And here we assess sensitivity of this match to the Gamma found earlier (of `r res1_h$root`)
+
+```{r echo=TRUE}
+meddat <- transform(meddat, fm1 = fullmatch(glm1, data = meddat))
+respmat3 <- with(meddat[matched(meddat$fm1), ], reshape_sensitivity(HomRate0803, nhTrt, fm1,senfm=TRUE))
+
+## The last column tells us whether this is a 1:K (1) versus K:1 (0) match
+respmat4 <- respmat3[,-ncol(respmat3)]
+settype <- respmat3[,10]==1
+
+res2_full <- senfm(-respmat4, treated1 = settype, gamma = 1)
+res2_full$pval
+
+res2_full_g2 <- senfm(-respmat4, treated1 = settype, gamma = res1_h$root)
+res2_full_g2$pval
+```
+
+## Some other approaches: senstrat
+
+```{r}
+
+mscores1 <- mscores(y=meddat$HomRate0803,z=meddat$nhTrt,st=meddat$fm1)
+hscores1 <- hodgeslehmann(y=meddat$HomRate0803,z=meddat$nhTrt,st=meddat$fm1)
+
+ss_y_g1 <- senstrat(meddat$HomRate0803,z=meddat$nhTrt,st=meddat$fm1,gamma=1, alternative="less")
+ss_h_g1 <- senstrat(hscores1,z=meddat$nhTrt,st=meddat$fm1,gamma=1, alternative="less")
+ss_m_g1 <- senstrat(mscores1,z=meddat$nhTrt,st=meddat$fm1,gamma=1, alternative="less")
+
+ss_y_g2 <- senstrat(meddat$HomRate0803,z=meddat$nhTrt,st=meddat$fm1,gamma=2, alternative="less")
+ss_h_g2 <- senstrat(hscores1,z=meddat$nhTrt,st=meddat$fm1,gamma=2, alternative="less")
+ss_m_g2 <- senstrat(mscores1,z=meddat$nhTrt,st=meddat$fm1,gamma=2, alternative="less")
+
+
+
+```
+
+
+## Some other approaches:
+
+See also:
+
+ - https://cran.r-project.org/web/packages/treatSens/index.html (for parametric
+models)
+ - https://cran.r-project.org/web/packages/sensitivityPStrat/index.html
+ - See the piece "Do We Really Know the WTO Cures Cancer?"<http://www.stephenchaudoin.com/CHH_Cancer_bjps.pdf>
+ - See the piece "The sensitivity of linear regression coefficients’ confidence limits to the omission of a confounder" <https://projecteuclid.org/euclid.aoas/1280842143>
+
+
+
+
+## Confidence Intervals
+
+Since we have fixed size sets (i.e. all 1:1 or all 1:2...), we can also look at
+an example involving point-estimates for bias of at most $\Gamma$ and
+confidence intervals assuming an additive effect of treatment. Notice also that
+that when $\Gamma$ is greater than 1, we have a range of point estimates
+consistent with that $\Gamma$.
+
+```{r cis}
+respmatPm <- with(droplevels(meddat[matched(meddat$pairm), ]), reshape_sensitivity(HomRate0803, nhTrt, pairm))
+(sensCItwosidedG1 <- senmwCI(-respmatPm, method = "t", one.sided = FALSE))
+(sensCIonesidedG1 <- senmwCI(-respmatPm, method = "t", one.sided = TRUE))
+(sensCItwosidedG2 <- senmwCI(-respmatPm, method = "t", one.sided = FALSE, gamma = 2))
+(sensCIonesidedG2 <- senmwCI(-respmatPm, method = "t", one.sided = TRUE, gamma = 2))
+```
+
+\note{
+ Notice that the
+two-sided intervals have lower bounds that are lower than the one-sided
+intervals. }
+
+
+## Confidence Intervals
+
+Or with a pairmatch we could use the \texttt{rbounds} package:
+
+```{r }
+hlsens(respmatPm[, 2], respmatPm[, 1])
+```
+
+## Confidence Intervals
+
+Or with a pairmatch we could use the \texttt{rbounds} package:
+
+```{r}
+psens(respmatPm[, 2], respmatPm[, 1])
+```
+
+## Interpreting sensitivity analyses
+
+
+ As an aid to interpreting sensitivity analyses,
+  @rosenbaum2009amplification propose a way decompose $\Gamma$ into two
+  pieces: one $\Delta$ gauges the relationship between an unobserved
+  confounder at the outcome (it records the maximum effect of the unobserved
+  confounder on the odds of a positive response (imagining a binary outcome))
+  and the other $\Lambda$ gauges the maximum relationship between the unobserved
+  confounder and treatment assignment.
+
+```{r amplify}
+lambdas <- seq(round(res1_h$root, 1) + .1, 2 * res1_h$root, length = 100)
+ampres1 <- amplify(round(res1_h$root, 1), lambda = lambdas)
+ampres2 <- amplify(2, lambda = lambdas)
+```
+
+```{r echo=FALSE, out.width=".5\\textwidth"}
+par(mar = c(3, 3, 1, 1), mgp = c(1.5, .5, 0))
+plot(as.numeric(names(ampres1)), ampres1,
+  xlab = "Lambda (maximum selection effect of confounder)",
+  ylab = "Delta (maximum outcome effect of confounder)",
+  main = paste("Decomposition of Gamma=", round(res1_h$root, 2))
+)
+## Add a line for another Gamma
+## lines(as.numeric(names(ampres2)), ampres2, type = "b")
+```
+
+
+
+
+
+
+## Summary and Questions:
+
+What do you think? What questions arise?
+
+
+
+## References
+
