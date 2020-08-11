@@ -1,0 +1,197 @@
+---
+title: "Assignment 2 Answer Key"
+author: \href{mailto:tl2624@columbia.edu}{Thomas Leavitt}
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  pdf_document:
+    citation_package: natbib
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    highlight: tango
+    keep_tex: true
+    latex_engine: xelatex
+    toc: no
+    toc_depth: 1
+    includes:
+      in_header: mystyle.sty
+fontsize: 12pt
+classoption: leqno
+geometry: margin = 1.5cm
+bibliography: Bibliography.bib
+biblio-style: apsr
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include = FALSE}
+#install.packages("knitr")
+
+#install.packages("rmdformats")
+library(knitr)
+library(rmdformats)
+
+## Global options
+options(max.print = "75")
+opts_chunk$set(echo = TRUE,
+	             cache = TRUE,
+               prompt = FALSE,
+               tidy = TRUE,
+               comment = NA,
+               message = FALSE,
+               warning = FALSE)
+opts_knit$set(width = 75)
+
+```
+
+\section*{Question 1}
+
+Assuming SUTVA (i.e., no interference and no hidden levels of treatment assignment) and the random assignment of the instrument (encouragement), the average causal effect of encouragement, $Z$, on dose, $D$, is
+\begin{align*}
+\bar{\tau}_D & = \bar{d}_T - \bar{d}_C \\
+& = \left(\frac{1}{n}\right) \sum \limits_{i = 1}^n d_{Ti} - \left(\frac{1}{n}\right) \sum \limits_{i = 1}^nd_{Ci} \\ 
+& = \left(\frac{1}{n}\right) \sum \limits_{i = 1}^n \left(d_{Ti} - d_{Ci}\right) \\ 
+& = \left(\frac{1}{n}\right) \sum \limits_{i = 1}^n \tau_{Di} \\
+& = \left(\frac{1}{n}\right) \sum \limits_{i = 1}^n \tau_{Di}
+\end{align*}
+We can estimate this effect via the $ITT_D$ estimator, which is
+\begin{align*}
+\widehat{ITT_D} & = \frac{\mathbf{Z}^{t}\mathbf{D}}{\mathbf{Z}^{t}\mathbf{1}} - \frac{\left(\mathbf{1} - \mathbf{Z}\right)^{t}\mathbf{D}}{\left(\mathbf{1} - \mathbf{Z}\right)^{t}\mathbf{1}} \\ 
+& = \left(\frac{1}{\sum_{i = 1}^n Z_i}\right) \sum_{i = 1}^n Z_i D_i - \left(\frac{1}{\sum_{i = 1}^n \left(1 - Z_i\right)}\right) \sum_{i = 1}^n \left(1 - Z_i\right) D_i,
+\end{align*}
+where the superscript $t$ denotes matrix transposition and $D_i = Z_i d_{Ti} + \left(1 - Z_i\right) d_{Ci}$.
+
+For the first study, the estimate of the effect of encouragement on program viewing is $\frac{244}{510} - \frac{74}{579} \approx 0.3506$, and for the second study, the estimate is $ \frac{117}{259} - \frac{11}{248} \approx 0.4074$.
+
+\section*{Question 2}
+
+A hypothetical outcome variable one could collect is ``views on addiction policy,'' measured on a scale from 0 -- 10 in which 0 represents no support for public treatment programs and 10 is full support. Let's imagine that the sum of this outcome among the 510 treated units is 3,723 and the sum of this outcome among the 579 control units is 2,895, yielding an average outcome of $7.3$ and $5$ in treated and control groups, respectively.
+\begin{align*}
+\frac{3723}{510} - \frac{2895}{579} & = 7.3 - 5 \\
+& = 2.3.
+\end{align*}
+
+The CACE (complier average causal effect) estimator is $\frac{\widehat{\text{ITT}}_Y}{\widehat{\text{ITT}}_D}$, where $\widehat{\text{ITT}}_D$ is as defined above and $\widehat{\text{ITT}}_Y$ is
+\begin{align*}
+\widehat{ITT}_Y & = \cfrac{\mathbf{Z}^{t}\mathbf{Y}}{\mathbf{Z}^{t}\mathbf{1}} - \cfrac{\left(\mathbf{1} - \mathbf{Z}\right)^{t}\mathbf{Y}}{\left(\mathbf{1} - \mathbf{Z}\right)^{t}\mathbf{1}} \\ 
+& = \left(\cfrac{1}{\sum_{i = 1}^n Z_i}\right) \sum_{i = 1}^n Z_i Y_i - \left(\cfrac{1}{\sum_{i = 1}^n \left(1 - Z_i\right)}\right) \sum_{i = 1}^n \left(1 - Z_i\right) Y_i
+\end{align*}
+
+Using the hypothetical results described earlier, out CACE estimate is simply the ratio of our estimate of $\text{ITT}_Y$ (the average causal effect of $Z$ on $Y$) and $\text{ITT}_D$ (the average causal effect of $Z$ on $D$), which is
+\begin{align*}
+\frac{2.3}{0.3506} & \approx 6.5602
+\end{align*}
+
+
+\section*{Question 3}
+
+@albertsonlawrence2009[276--277] write that "[b]y using a random sample, we avoid the external validity problems associated with samples of convenience that are generally used in laboratory experiments. In addition, by assigning respondents at random to viewing and nonviewing conditions, these studies benefit from experimental control. Yet unlike laboratory experiments, this design allows respondents to view programs in their own homes, thus more closely approximating regular viewing conditions."
+
+\section*{Question 4}
+
+\section*{(a)}
+
+\citet{albertsonlawrence2009} state that the study they analyzed used random sampling from five metropolitan areas to recruit individuals into the study. Among individuals who were successfully recruited, the researchers assigned units to treatment and control groups. Among the individuals in this study population, the researchers were able to contact only 80\% of them to measure outcomes in Round 2 \citep[284]{albertsonlawrence2009}.
+
+Since we know that there were $1089$ individuals who responded in Round 2 and that these individuals make up 80\% of the round 1 study popuation, we can reason backwards to infer that there were $\frac{1089}{0.8} \approx 1361$ individuals in the study, only $1089$ of which responded in Round 2.
+
+Let $r_{Ti}$ be an indicator for whether subject $i$ would respond in Round 2 if assigned to treatment and let $r_{Ci}$ be an indicator for whether subject $i$ would respond in Round 2 if assigned to control. Potential outcomes are translated into observed outcomes according to the following equation:
+\begin{equation}
+\label{eq:obs_outcomes}
+Y_i = \begin{cases} y_{Ci} + [y_{Ti} - y_{Ci}] Z_i & \text{if } R_i = 1 \\
+\text{NA} & \text{if } R_i = 0, \end{cases}
+\end{equation}
+where $R_i = Z_i r_{Ti} + \left(1 - Z_i\right) r_{Ci}$.
+
+From Equation \ref{eq:obs_outcomes} above, we can see that if $R_i = 1$, then the researcher will observe $y_{Ci}$ for unit $i$ if $Z_i = 0$ and $y_{Ti}$ for unit $i$ if $Z_i = 1$. By contrast, if $R_i = 0$, then $Y_i$ will be unobserved --- i.e., NA.
+
+Now we can define four distinct types of subjects with regard to attrition:
+\begin{table}[h]
+\centering
+    \begin{tabular}{lll}
+    \toprule
+    $z_i = 0$ & $z_i = 1$ & Type of Subject       \\
+    \midrule
+    $r_{Ci} = 1$ & $r_{Ti} = 1$ & \textit{Always-Reporter} \\
+    $r_{Ci} = 0$ & $r_{Ti} = 1$ & \textit{If-Treated-Reporter} \\
+    $r_{Ci} = 1$ & $r_{Ti} = 0$ & \textit{If-Untreated-Reporter} \\
+    $r_{Ci} = 0$ & $r_{Ti} = 0$ & \textit{Never-Reporter} \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\citet{albertsonlawrence2009} measure $D_i$ and $Y_i$ among only 80\% of the individuals who were assigned to treatment and control. A treated individual whose outcome the researchers are able to measure could be an Always-Reporters or an If-Treated-Reporters. By contrast, a control individual whose outcome the researchers are able to measure could be an Always-Reporter or an If-Untreated-Reporter. \citet{albertsonlawrence2009} restrict their analysis to only the individuals whose $D_i$ and $Y_i$ outcomes they did observe.
+
+To see how attrition can lead to bias in the Difference-in-Means estimator under complete random assignment, let's first rewrite the Difference-in-Means estimator as
+\begin{align*}
+\hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{Y}, \mathbf{R}\right) & = \left(\frac{1}{\sum \limits_{i = 1}^n Z_i R_i}\right) \sum \limits_{i = 1}^n Z_i R_i Y_i - \left(\frac{1}{\sum \limits_{i = 1}^n \left(1 - Z_i\right)R_i}\right) \sum \limits_{i = 1}^n \left(1 - Z_i\right) R_i Y_i.
+\end{align*}
+
+If $r_{TI} = 1$ and $r_{Ci} = 1$ for all $i \in \left\{1, \dots , n\right\}$ units, then the Difference-in-Means estimator is equivalent to how it is usually written as
+\begin{align*}
+\hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{Y}\right) & = \left(\frac{1}{\sum \limits_{i = 1}^n Z_i}\right) \sum \limits_{i = 1}^n Z_i Y_i - \left(\frac{1}{\sum \limits_{i = 1}^n \left(1 - Z_i\right)}\right) \sum \limits_{i = 1}^n \left(1 - Z_i\right) Y_i.
+\end{align*}
+
+However, when attrition does exist, it is useful to decompose the average causal effect as
+$\delta_{AR}\pi_{AR} + \delta_{ITR} \pi_{ITR} + \delta_{IUR}\pi_{IUR} + \delta_{NR} \pi_{NR}$.
+
+Note that $\cfrac{1}{\E\left[\sum\limits_{i = 1}^n Z_i R_i\right]} = \cfrac{n}{n_1 R^T}$ and $\cfrac{1}{\E\left[\sum\limits_{i = 1}^n \left(1 - Z_i\right) R_i\right]} = \cfrac{n}{n_0 R^C}$, where $R^T = \sum \limits_{i = 1}^n r_{Ti}$ and $R^C = \sum \limits_{i = 1}^n r_{Ci}$.
+
+We can also note that 
+
+\section*{Question 5}
+
+To answer this question, first note that $\bar{\tau}_D = \bar{d}_T - \bar{d}_C$ is equivalent to the proportion of Compliers, $\pi^C$, minus the proportion of Defiers, $\pi^D$. To see this point, note that $d_c \in \left\{0, 1\right\}$ and $d_t \in \left\{0, 1\right\}$. The individual causal effect, $\tau_{Di}$, is $1$ for Compliers, $-1$ for Defiers and $0$ for both Always-Takers and Never-Takers. Hence, $\sum \limits_{i = 1}^n \tau_{Di}$ is the number of Compliers, $n^C$ minus the number of Defiers, $n^D$. 
+The average causal effect of $Z$ on $D$ is
+\begin{align*}
+\bar{\tau}_D & = \left(\frac{1}{n}\right)\sum \limits_{i = 1}^n \left(d_{Ti} - d_{Ci}\right) \\
+& = \left(\frac{1}{n}\right) \sum \limits_{i = 1}^n \tau_{Di} \\
+& = \left(\frac{1}{n}\right)\left(n^C - n^D\right) \\ 
+& = \frac{n^C}{n} - \frac{n^D}{n}\\ 
+& = \pi^C - \pi^D
+\end{align*}
+
+The strength of an instrument is defined in multiple ways. One definition states that an instrument (or encouragement) is weak when it has a small impact on whether or not units in a study actually receive treatment. In order for the ratio $\cfrac{\bar{\tau}_Y}{\bar{\tau}_D}$ to be defined it must be the case that $\bar{\tau}_D > 0$, although we would ideally like $\bar{\tau}_D$ to be much larger than $0$. Without assuming no Defiers, i.e., that $pi^D = $, the required condition that $\bar{\tau}_D > 0$ requires only that the proportion of Compliers is greater than the proportion of Defiers, $\pi^C > \pi^D$.
+
+In this class, we have defined the strength of an instrument as equivalent to the proportion of Compliers, $\pi^C$. The quantity of interest is $\cfrac{\bar{\tau}_Y}{\pi^C}$ and, hence, it must be the case that $\pi^C > 0$ in order for this quantity of interest to be defined. However, defining the strength of instrument as the size of $\bar{\tau}_D$ or as the size of $\pi^C$ is equivalent when there are no Defiers, i.e., $\pi^D = 0$.
+
+We cannot actually know the values of $\bar{\tau}_D$ and $\pi^C$. However, the estimator $\widehat{\text{ITT}}_D$ is unbiased and consistent for $\bar{\tau}_D$, where $\bar{\tau}_D = \pi^C$ when $\pi^D = 0$. Written mathematically, unbiasedness and consistency in this context mean that $\E\left[\widehat{\text{ITT}}_D\right] = \bar{\tau}_D$ and $\widehat{\text{ITT}}_D \overset{p}{\to} \bar{\tau}_D$.
+
+The estimate of $\bar{\tau}_D$ in Study 1 (PBS, \textit{Moyers on Addiction: Close to Home}) is $\frac{244}{510} - \frac{74}{579} \approx 0.3506$ and in Study 2 (\textit{Fox News}, "Channel 11 Special on Proposition 209") is $\frac{117}{259} - \frac{11}{248} \approx 0.4074$.
+
+In the @arceneaux2005 study, we can calculate the proportion of people in each precinct who were successfully contacted by multiplying the size of each precinct by the proportion of people contacted.
+
+\scriptsize
+```{r}
+
+acorn_data <- read.csv("acorn03.csv")
+
+n_contact <- acorn_data$size * acorn_data$contact
+
+```
+\normalsize
+
+Then we can calculate the proportion of people successfully contacted among all people in treated precincts and subtract from this value the proportion of people successfully contacted among all people in control precincts.
+
+\scriptsize
+```{r}
+
+n_c <- t(1 - acorn_data$z) %*% acorn_data$size
+n_t <- t(acorn_data$z) %*% acorn_data$size
+
+t(acorn_data$z) %*% (n_contact)/n_t -
+  t(1 - acorn_data$z) %*% (n_contact)/n_c
+
+```
+\normalsize
+
+The estimate of the strength of the instrument in the Acorn study [@arceneaux2005] is $\frac{3095}{4933} - \frac{0}{4779} \approx 0.6274$, which is larger than the estimates of instrument strength in the other two studies.
+
+Therefore, our best guess of which study has the weakest instrument is Study 1 (PBS, \textit{Moyers on Addiction: Close to Home}) in which we estimate $\bar{\tau}_D$ to be roughly $0.3506$.
+
+\newpage
+# References
+
+
+
+
