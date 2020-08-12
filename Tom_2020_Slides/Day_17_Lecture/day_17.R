@@ -1,5 +1,6 @@
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-rm(list = ls())
+#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+#rm(list = ls())
+library(here)
 library(dplyr)
 library(tidyverse)
 library(magrittr)
@@ -8,6 +9,7 @@ library(parallel)
 library(haven)
 library(optmatch)
 library(RItools)
+library(blkvar)
 
 z <- c(1, 0, 0, 1)
 n <- 4
@@ -365,7 +367,7 @@ ggsave(plot = rdd_sens_plot,
 ########################################################################################################################################################################################################################
 ############ Matching
 
-data <- read_dta("peace_pre_match.dta")
+data <- read_dta(here::here("Tom_2020_Slides/Day_17_Lecture","peace_pre_match.dta"))
 covs <- c("lwdeaths", "lwdurat", "milper", "pop", "ethfrac",
           "lmtnest", "bwplty2", "ssafrica", "asia", "lamerica")  
 
@@ -412,7 +414,6 @@ match_data <- filter(.data = data, !is.na(fm))
 match_data <- arrange(.data = match_data, fm, desc(dur))
 match_data <- select(.data = match_data, UN, dur, fm)
 
-library(blkvar)
 obs_diff_means <- block_estimator(Yobs = dur,
                                   Z = UN,
                                   B = fm,
