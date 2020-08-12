@@ -427,7 +427,6 @@ ss_y_g2 <- senstrat(meddat$HomRate0803,z=meddat$nhTrt,st=meddat$fm1,gamma=2, alt
 ss_h_g2 <- senstrat(hscores1,z=meddat$nhTrt,st=meddat$fm1,gamma=2, alternative="less")
 ss_m_g2 <- senstrat(mscores1,z=meddat$nhTrt,st=meddat$fm1,gamma=2, alternative="less")
 
-
 ```
 
 
