@@ -358,6 +358,16 @@ xb2$overall[2:3, ]
 xb2$results[, "p", c("nbp1", "nbp2")]
 ```
 
+## Try designmatch
+
+```{r eval=FALSE}
+library(designmatch)
+
+resnb <- nmatch()
+
+```
+
+
 ## Assess this new match
 
 ```{r echo=FALSE,out.width=".8\\textwidth"}
