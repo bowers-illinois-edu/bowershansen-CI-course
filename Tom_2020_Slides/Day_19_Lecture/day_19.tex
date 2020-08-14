@@ -1,0 +1,360 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+% PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass[table, xcolor={dvipsnames}, 9pt]{beamer}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\mode<presentation> {
+
+% The Beamer class comes with a number of default slide themes
+% which change the colors and layouts of slides. Below this is a list
+% of all the themes, uncomment each in turn to see what they look like.
+
+%\usetheme{default}
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Dresden}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+% \usetheme{Madrid}
+\usetheme{metropolis}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+% As well as themes, the Beamer class has a number of color themes
+% for any slide theme. Uncomment each of these in turn to see how it
+% changes the colors of your current slide theme.
+
+%\usecolortheme{albatross}
+%\usecolortheme{beaver}
+%\usecolortheme{beetle}
+%\usecolortheme{crane}
+%\usecolortheme{dolphin}
+%\usecolortheme{dove}
+%\usecolortheme{fly}
+%\usecolortheme{lily}
+%\usecolortheme{orchid}
+%\usecolortheme{rose}
+%\usecolortheme{seagull}
+%\usecolortheme{seahorse}
+%\usecolortheme{whale}
+%\usecolortheme{wolverine}
+
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+\setbeamertemplate{footline}{}
+\addtobeamertemplate{footnote}{}{\vspace{24pt}}
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{multirow}
+\usepackage{natbib}
+\usepackage[]{hyperref}
+\usepackage{diagbox}
+\usepackage{makecell}
+\usepackage{subfig}
+\usepackage{amsmath}
+\usepackage{amsfonts,amsthm,amsmath,amssymb}    
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{empheq}
+\makeatletter
+\let\save@measuring@true\measuring@true
+\def\measuring@true{%
+  \save@measuring@true
+  \def\beamer@sortzero##1{\beamer@ifnextcharospec{\beamer@sortzeroread{##1}}{}}%
+  \def\beamer@sortzeroread##1<##2>{}%
+  \def\beamer@finalnospec{}%
+}
+\makeatother
+\hypersetup{unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1}}
+\usepackage{xcolor}
+\newcommand\myheading[1]{%
+  \par\bigskip
+  {\Large\bfseries#1}\par\smallskip}
+\newcommand\given[1][]{\:#1\vert\:}
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newtheorem{defin}{Definition}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathrm{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\e}{\rm{e}}
+\DeclareMathOperator{\logit}{\rm{logit}}
+\DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
+%\DeclareMathOperator{\Pr}{\rm{Pr}}
+\newenvironment{Column}[1][.5\linewidth]{\begin{column}{#1}}{\end{column}}
+%----------------------------------------------------------------------------------------
+% TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[]{Difference-in-Differences} % The short title appears at the bottom of every slide, the full title is only on the title page
+
+\author{Thomas Leavitt} % Your name
+\institute[] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+% Your institution for the title page
+\medskip
+\textit{} % Your email address
+}
+\date{\today} % Date, can be changed to a custom date
+
+\begin{document}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+%\begin{frame}
+%\frametitle{Overview} % Table of contents slide, comment this block out to remove it
+%\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+%\end{frame}
+
+%------------------------------------------------------------------------
+% PRESENTATION SLIDES
+%------------------------------------------------------------------------
+\section{Introduction}
+\begin{frame}{Difference-in-Differences}
+\begin{itemize}
+\item Difference-in-Difference (DID) is one of most popuar \textit{design-based} methods
+\item \pause Inference based on ability to accurately predict treated units' unobserved counterfactual outcomes
+\item \pause Uses after-minus-before difference in control group to predict how treated group would have changed had treatment not occurred  
+\item \pause Inference is \textit{not} based on the assumption that control units could have been treated and treated units could have been untreated
+\item \pause DID is a design \textit{without controls} --- i.e., controls were ``were never eligible for treatment'' \citep[][155]{rosenbaum2017}
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Difference-in-Differences}
+\begin{figure}[H]
+\includegraphics[width = \linewidth]{DID_plot.pdf}
+\end{figure}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Formal framework}
+\begin{itemize}
+\item Consider a population, $\mathcal{P}$, of $N$ units that belong to one of two groups, $G = 0$ and $G = 1$, which are of sizes $N_0$ and $N_1$
+\item \pause All units bear measurements over $T$ time periods, $t \in \left\{1, \dots , T\right\}$
+\item \pause All units in $\mathcal{P}$ are untreated in time periods $t \in \left\{1, \dots , T-1\right\}$
+\item \pause In time period $T$, group $G = 1$ is treated and group $G = 0$ is not such that $G = Z_T$ 
+\item \pause The ATT in the population, $\text{ATT}_{\mathcal{P}}$, is $\left(\mu_{1T} \given Z_T = 1\right) - \left(\mu_{0T} \given Z_T = 1\right)$
+\item \pause We have an unbiased estimator for $\left(\mu_{1T} \given Z_T = 1\right)$, but not for $\left(\mu_{0T} \given Z_T = 1\right)$
+\end{itemize}	
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Causal identification}
+\begin{itemize}
+\item Let $\mathcal{S}$ be an i.i.d. sample of size $n$ from the population $\mathcal{P}$ that is stratified by $G$, where $n_0$ and $n_1$ are the fixed numbers of sampled units from $G = 0$ and $G = 1$
+\item \pause Define DID estimator as difference between
+\begin{enumerate}
+\item \pause after-minus-before sample mean among treated units
+\item \pause after-minus-before sample mean among control units
+\end{enumerate} \pause 
+\begin{align*}
+\widehat{\text{DID}}_{\mathcal{P}} = \left(\frac{1}{n_1}\right)\sum_{i = n_0 + 1}^{n} \left[Y_{iT}(1) - Y_{iT-1}\right] - \left[\left(\frac{1}{n_0}\right)\sum_{i = 1}^{n_0} \left[Y_{iT} - Y_{iT-1}\right]\right]
+\end{align*}
+\item \pause DID estimator is unbiased for \textit{descriptive difference} between treated and control populations:
+\begin{align*} \pause 
+\E\left[\widehat{\text{DID}}_{\mathcal{P}}\right] & = \left(\mu_{1T} - \mu_{T-1} \given Z_T = 1\right) - \left(\mu_{T} - \mu_{T-1} \given Z_T = 0\right)
+\end{align*}
+\item \pause Under what conditions does this descriptive difference equal the ATT?
+\end{itemize}	
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Parallel trends assumption}
+\begin{itemize}
+\item Parallel trends assumption: \pause
+\begin{align*}  
+\underbrace{\left(\mu_{0T}\given Z_T = 1\right)}_{\text{Counterfactual}} - \left(\mu_{T-1} \given Z_T = 1\right) & = \left(\mu_{T} \given Z_T = 0\right) - \left(\mu_{T-1} \given Z_T = 0\right)
+\end{align*}
+\item \pause Rearranging yields
+\begin{align*}
+\underbrace{\left(\mu_{0T}\given Z_T = 1\right)}_{\text{Counterfactual}} - \left(\mu_{T-1} \given Z_T = 1\right) + \left(\mu_{T-1} \given Z_T = 0\right) & = \left(\mu_{T} \given Z_T = 0\right)
+\end{align*}
+\item \pause Substitute for $\left(\mu_{T} \given Z_T = 0\right)$
+\item \pause Then simple algebra yields \pause 
+\begin{align*}
+\underbrace{\left(\mu_{1T} - \mu_{T-1} \given Z_T = 1\right) - \left(\mu_{T} - \mu_{T-1} \given Z_T = 0\right)}_{ = \E\left[\widehat{\text{DID}}_{\mathcal{P}}\right]} & = \underbrace{\left(\mu_{1T} - \mu_{0T} \given Z_T = 1\right)}_{ = \text{ATT}_{\mathcal{P}}}
+\end{align*}
+\item \pause Hence, $\widehat{\text{DID}}_{\mathcal{P}}$ unbiased for $\text{ATT}_{\mathcal{P}}$
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Parallel trends assumption}
+\begin{figure}[H]
+\includegraphics[width = \linewidth]{DID_no_pt_plot.pdf}
+\end{figure}
+\end{frame}
+%------------------------------------------------------------------------
+\section{Problems with standard DID}
+\begin{frame}{Problems with standard DID}
+\begin{enumerate}
+\item Scale dependence problem
+\item \pause Statistical uncertainty
+\end{enumerate}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Scale dependence}
+\begin{itemize}
+\item[]	
+\begin{figure}[H]
+\includegraphics[width = \linewidth]{standard_scale_DID_plot.pdf}
+\end{figure}
+\item $\text{ATT}_{\mathcal{P}} \approx 12.08$
+\item $\E\left[\widehat{\text{DID}}_{\mathcal{P}}\right] \approx 21.01$	
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Scale dependence problem}
+\begin{itemize}
+\item[]	
+\begin{figure}[H]
+\includegraphics[width = \linewidth]{log_scale_DID_plot.pdf}
+\end{figure}
+\item $\text{ATT}_{\mathcal{P}} = 0.25$
+\item $\E\left[\widehat{\text{DID}}_{\mathcal{P}}\right] = 0.25$	
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Scale dependence problem}
+\begin{center}
+``It makes no sense, scientifically or mathematically, to say that the null hypothesis of no treatment effect is false for a response, $R_i$, but true for its logarithm, $\log\left(R_i\right)$'' \citep{rosenbaum2017}
+\end{center}
+\end{frame}
+%------------------------------------------------------------------------
+\section{Statistical uncertainty}
+\begin{frame}{}
+\begin{itemize}
+\item Two types of design-based inference: 
+\begin{enumerate}
+\item[(1)] \pause  Descriptive inference:
+\begin{itemize}
+\item[] \pause $\text{Sample} \to \text{Population}$ based on sampling mechanism  
+\end{itemize}
+\item[(2)] \pause Causal inference: 
+\begin{itemize}
+\item[] \pause  $\text{Observed outcomes} \to \text{counterfactual outcomes}$ based on assignment mechanism 
+\end{itemize}
+\end{enumerate}	
+\item \pause  Causal uncertainty is difficult to represent: 
+\begin{itemize}
+\item \pause DID design's validity depends on parallel trends, \textit{not} assignment mechanism  
+\item No analogy with randomized experiment 
+\end{itemize}	
+\item Inference reflects only sampling uncertainty
+\item To see this point, ask what is our uncertainty when our target is the ATT in our sample?
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\section{Decomposition of DID uncertainty}
+\begin{frame}
+\frametitle{Decomposition of DID uncertainty}
+\begin{itemize}
+\item Define $\Delta_{\mathcal{P}}$ as difference in counterfactual trends: \pause 
+\begin{align*}
+\Delta_{\mathcal{P}} = \underbrace{\E\left[Y_{iT}(0) \given z_{iT} = 1\right]}_{\text{Inestimable}} - \underbrace{\E\left[Y_{iT-1} \given z_{iT} = 1\right]}_{\text{Estimable}} - \\ \left[\underbrace{\E\left[Y_{iT} \given z_{iT} = 0\right]}_{\text{Estimable}} - \underbrace{\E\left[Y_{iT-1} \given z_{iT} = 0\right]}_{\text{Estimable}}\right]
+\end{align*} 
+\item \pause $\E\left[\widehat{\text{DID}}_{\mathcal{P}}\right] - \Delta_{\mathcal{P}} = \text{ATT}_{\mathcal{P}}$
+\item \pause Parallel trends is special case in which \normalsize $\Delta_{\mathcal{P}} = 0$ \large
+\item \pause Decompose $\text{ATT}_{\mathcal{P}}$  as $\text{ATT}_{\mathcal{P}} = \underbrace{\E\left[\widehat{\text{DID}}_{\mathcal{P}}\right]}_{\substack{\text{Sampling} \\ \text{uncertainty}}} - \underbrace{\Delta_{\mathcal{P}}}_{\substack{\text{Counterfactual} \\ \text{uncertainty}}}$ 
+\item \pause How do we account for counterfactual uncertainty?
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\section{Counterfactual uncertainty}
+\begin{frame}
+\frametitle{Counterfactual uncertainty}
+\begin{itemize}
+\item Propose new finite sample estimator: $\widehat{\text{DID}}_{\mathcal{S}} - \Delta^{\text{imp}}_{\mathcal{S}}$
+\begin{itemize}
+\item \pause Assume target is ATT in finite sample such that \pause 
+\begin{align*}
+\text{ATT}_{\mathcal{S}} = \left(\frac{1}{n_1}\right) \sum \limits_{i = n_0 + 1}^n \left(y_{iT}(1) - y_{iT}(0)\right)
+\end{align*}
+and \pause
+\begin{align*}
+\Delta_{\mathcal{S}} = \underbrace{\left(\frac{1}{n_1}\right)\sum_{i = n_0 + 1}^{n} y_{iT}(0)}_{\text{unobserved}} - \underbrace{\left(\frac{1}{n_1}\right)\sum_{i = n_0 + 1}^{n} y_{iT-1}}_{\text{observed}} - \\ \left[\underbrace{\left(\frac{1}{n_0}\right)\sum_{i = 1}^{n_0} y_{iT}}_{\text{observed}} - \underbrace{\left(\frac{1}{n_0}\right)\sum_{i = 1}^{n_0} y_{iT-1}}_{\text{observed}}\right]
+\end{align*} 
+\item \pause Distribution on predictions of $\left(\frac{1}{n_1}\right)\sum \limits_{i = n_0 + 1}^{n} y_{iT}(0) \implies$ distribution on $\Delta_{\mathcal{S}}$
+\item \pause Fit predictive models to pre-treatment data in treated and control groups and then impute for $\left(\frac{1}{n_1}\right)\sum \limits_{i = n_0 + 1}^{n} y_{iT}(0)$
+\end{itemize}
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}
+\frametitle{Counterfactual uncertainty}
+\begin{itemize}
+\item Uncertainty represented via quasi Bayesian approach \citep[][chapter 7]{gelmanhill2006}
+\begin{itemize}
+\item \pause Intuitively, random distribution of plausible projected counterfactuals based on pre-treatment trends
+\item \pause Formally, data-driven prior distribution on nuisance parameter, $\Delta_{\mathcal{S}}$
+\end{itemize}	
+\item \pause Uncertainty in counterfactual predictions decreasing in 
+\begin{enumerate}
+\item \pause Stability of pre-treatment trends 
+\item \pause Amount of pre-treatment data
+\end{enumerate} 
+\item \pause Derive conditions for unbiasedness of Bayes' estimator under conditions more general than parallel trends
+\item \pause Show robustness to violations of conditions
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[allowframebreaks]
+\frametitle{References} 
+\scriptsize
+\bibliographystyle{chicago}
+\bibliography{master_bibliography}   % name your BibTeX data base
+\end{frame}
+%------------------------------------------------------------------------
+\end{document}
