@@ -33,12 +33,12 @@ DID_plot <- ggplot(data = DID_data,
         legend.title = element_blank(),
         legend.position = "right")
 
-ggsave(plot = DID_plot,
-       file = "DID_plot.pdf",
-       width = 6,
-       height = 4,
-       units = "in",
-       dpi = 600)
+#ggsave(plot = DID_plot,
+#       file = "DID_plot.pdf",
+#       width = 6,
+#       height = 4,
+#       units = "in",
+#       dpi = 600)
 
 DID_data_no_pt <- data.frame(mean_outcome = c(NA, NA, 60, 90,
                                               55, 58, 60, 100,
@@ -66,17 +66,19 @@ DID_no_pt_plot <- ggplot(data = DID_data_no_pt,
         legend.title = element_blank(),
         legend.position = "right")
 
-ggsave(plot = DID_no_pt_plot,
-       file = "DID_no_pt_plot.pdf",
-       width = 6,
-       height = 4,
-       units = "in",
-       dpi = 600)
+#ggsave(plot = DID_no_pt_plot,
+#       file = "DID_no_pt_plot.pdf",
+#       width = 6,
+#       height = 4,
+#       units = "in",
+#       dpi = 600)
 
 ATT <- exp(4) - exp(3.75)
 round(x = ATT, digits = 2)
 DID_est <- exp(4) - exp(3.5) - (exp(.76) - exp(.51))
 round(x = DID_est, digits = 2)
+ATT - DID_est
+
 
 standard_scale_DID_data <- data.frame(mean_outcome = c(NA, NA, exp(3.5), exp(3.75),
                                                        exp(3), exp(3.25), exp(3.5), exp(4),
@@ -105,17 +107,18 @@ standard_scale_DID_plot <- ggplot(data = standard_scale_DID_data,
         legend.title = element_blank(),
         legend.position = "right")
 
-ggsave(plot = standard_scale_DID_plot,
-       file = "standard_scale_DID_plot.pdf",
-       width = 6,
-       height = 4,
-       units = "in",
-       dpi = 600)
+#ggsave(plot = standard_scale_DID_plot,
+#       file = "standard_scale_DID_plot.pdf",
+#       width = 6,
+#       height = 4,
+#       units = "in",
+#       dpi = 600)
 
 log_scale_ATT <- log(exp(4)) - log(exp(3.75))
 round(x = log_scale_ATT, digits = 2)
 log_scale_DID_est <- log(exp(4)) - log(exp(3.5)) - (log(exp(.76)) - log(exp(.51)))
 round(x = log_scale_DID_est, digits = 2)
+log_scale_ATT - log_scale_DID_est
 
 log_scale_DID_data <- data.frame(mean_outcome = c(NA, NA, log(exp(3.5)), log(exp(3.75)),
                                                   log(exp(3)), log(exp(3.25)), log(exp(3.5)), log(exp(4)),
@@ -143,13 +146,18 @@ log_scale_DID_plot <- ggplot(data = log_scale_DID_data,
         legend.title = element_blank(),
         legend.position = "right")
 
-ggsave(plot = log_scale_DID_plot,
-       file = "log_scale_DID_plot.pdf",
-       width = 6,
-       height = 4,
-       units = "in",
-       dpi = 600)
+#ggsave(plot = log_scale_DID_plot,
+#       file = "log_scale_DID_plot.pdf",
+#       width = 6,
+#       height = 4,
+#       units = "in",
+#       dpi = 600)
 
 
+ATT <- 4 - 3.75
+DID_est <- 4 - 3.5 - (.76 - .51)
+3.75 - 3.5 - (.76 - .51)
+log(3.75) - log(3.5) - (log(.76) - log(.51))
 
+log(4) - log(3.5) - (log(.76) - log(.51))
 

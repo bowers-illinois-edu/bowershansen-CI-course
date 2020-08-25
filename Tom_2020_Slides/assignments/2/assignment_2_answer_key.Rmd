@@ -61,7 +61,7 @@ We can estimate this effect via the $ITT_D$ estimator, which is
 \end{align*}
 where the superscript $t$ denotes matrix transposition and $D_i = Z_i d_{Ti} + \left(1 - Z_i\right) d_{Ci}$.
 
-For the first study, the estimate of the effect of encouragement on program viewing is $\frac{244}{510} - \frac{74}{579} \approx 0.3506$, and for the second study, the estimate is $ \frac{117}{259} - \frac{11}{248} \approx 0.4074$.
+For the first study, the estimate of the effect of encouragement on program viewing is $\frac{244}{510} - \frac{74}{579} \approx 0.3506$, and for the second study, the estimate is $\frac{117}{259} - \frac{11}{248} \approx 0.4074$.
 
 \section*{Question 2}
 
@@ -91,7 +91,7 @@ Using the hypothetical results described earlier, out CACE estimate is simply th
 
 \section*{(a)}
 
-\citet{albertsonlawrence2009} state that the study they analyzed used random sampling from five metropolitan areas to recruit individuals into the study. Among individuals who were successfully recruited, the researchers assigned units to treatment and control groups. Among the individuals in this study population, the researchers were able to contact only 80\% of them to measure outcomes in Round 2 \citep[284]{albertsonlawrence2009}.
+\citet{albertsonlawrence2009} state that the study they analyzed used random sampling from five metropolitan areas to recruit individuals into the study. Among individuals who were successfully recruited, the researchers assigned units to treatment and control groups. Among the individuals in this study population, the researchers were able to contact only 80\% of them to measure outcomes in Round 2 [@albertsonlawrence2009, 284].
 
 Since we know that there were $1089$ individuals who responded in Round 2 and that these individuals make up 80\% of the round 1 study popuation, we can reason backwards to infer that there were $\frac{1089}{0.8} \approx 1361$ individuals in the study, only $1089$ of which responded in Round 2.
 
@@ -120,24 +120,44 @@ Now we can define four distinct types of subjects with regard to attrition:
     \end{tabular}
 \end{table}
 
-\citet{albertsonlawrence2009} measure $D_i$ and $Y_i$ among only 80\% of the individuals who were assigned to treatment and control. A treated individual whose outcome the researchers are able to measure could be an Always-Reporters or an If-Treated-Reporters. By contrast, a control individual whose outcome the researchers are able to measure could be an Always-Reporter or an If-Untreated-Reporter. \citet{albertsonlawrence2009} restrict their analysis to only the individuals whose $D_i$ and $Y_i$ outcomes they did observe.
+@albertsonlawrence2009 measure $D_i$ and $Y_i$ among only 80\% of the individuals who were assigned to treatment and control. A treated individual whose outcome the researchers are able to measure could be an Always-Reporters or an If-Treated-Reporters. By contrast, a control individual whose outcome the researchers are able to measure could be an Always-Reporter or an If-Untreated-Reporter. @albertsonlawrence2009 restrict their analysis to only the individuals whose $D_i$ and $Y_i$ outcomes they did observe.
 
 To see how attrition can lead to bias in the Difference-in-Means estimator under complete random assignment, let's first rewrite the Difference-in-Means estimator as
 \begin{align*}
-\hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{Y}, \mathbf{R}\right) & = \left(\frac{1}{\sum \limits_{i = 1}^n Z_i R_i}\right) \sum \limits_{i = 1}^n Z_i R_i Y_i - \left(\frac{1}{\sum \limits_{i = 1}^n \left(1 - Z_i\right)R_i}\right) \sum \limits_{i = 1}^n \left(1 - Z_i\right) R_i Y_i.
+\hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{Y}, \mathbf{R}\right) & = \cfrac{\left(\mathbf{Z} \circ \mathbf{R}\right)'\mathbf{Y}}{\left(\mathbf{Z} \circ \mathbf{R}\right)'\mathbf{1}} - \cfrac{\left(\left(\mathbf{1} - \mathbf{Z}\right) \circ \mathbf{R}\right)'\mathbf{Y}}{\left(\left(\mathbf{1} - \mathbf{Z}\right) \circ \mathbf{R}\right)'\mathbf{1}} \\
+& = \left(\frac{1}{\sum \limits_{i = 1}^n Z_i R_i}\right) \sum \limits_{i = 1}^n \left(Z_i R_i\right) Y_i - \left(\frac{1}{\sum \limits_{i = 1}^n \left(1 - Z_i\right)R_i}\right) \sum \limits_{i = 1}^n \left(\left(1 - Z_i\right) R_i\right) Y_i \\
+& = \left(\frac{1}{\sum \limits_{i = 1}^n Z_i r_{Ti}}\right) \sum \limits_{i = 1}^n \left(Z_i r_{Ti}\right) y_{Ti} - \left(\frac{1}{\sum \limits_{i = 1}^n \left(1 - Z_i\right)r_{Ci}}\right) \sum \limits_{i = 1}^n \left(\left(1 - Z_i\right) r_{Ci}\right) y_{Ci},
 \end{align*}
+where, for two matrices $\mathbf{A}$ and $\mathbf{B}$,  $\mathbf{A} \circ \mathbf{B}$ is the entry-wise (or Hadamard) product of $\mathbf{A}$ and $\mathbf{B}$.
 
 If $r_{TI} = 1$ and $r_{Ci} = 1$ for all $i \in \left\{1, \dots , n\right\}$ units, then the Difference-in-Means estimator is equivalent to how it is usually written as
 \begin{align*}
 \hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{Y}\right) & = \left(\frac{1}{\sum \limits_{i = 1}^n Z_i}\right) \sum \limits_{i = 1}^n Z_i Y_i - \left(\frac{1}{\sum \limits_{i = 1}^n \left(1 - Z_i\right)}\right) \sum \limits_{i = 1}^n \left(1 - Z_i\right) Y_i.
 \end{align*}
 
-However, when attrition does exist, it is useful to decompose the average causal effect as
-$\delta_{AR}\pi_{AR} + \delta_{ITR} \pi_{ITR} + \delta_{IUR}\pi_{IUR} + \delta_{NR} \pi_{NR}$.
+However, when attrition does exist, the Difference-in-Means estimator is not necessarily unbiased.  To see this point, note that, unlike the case in which all units are Always-Reporters, both $\sum \limits_{i = 1}^n Z_i r_{Ti}$ and $\sum \limits_{i = 1}^n \left(1 - Z_i\right)r_{Ci}$ are no longer fixed quantities equal to $n_1$ and $n_0$, respectively, over all possible assignments. Instead, $\sum \limits_{i = 1}^n Z_i r_{Ti}$ can take on any integer between $\max\left\{0, n_1 - \sum \limits_{i = 1}^n \left(1 - r_{Ti}\right)\right\}$ and $\min\left\{n_1, \sum \limits_{i = 1}^n r_{Ti}\right\}$ and $\sum \limits_{i = 1}^n \left(1 - Z_i\right) r_{Ci}$ can take on any integer between $\max\left\{0, n_0 - \sum \limits_{i = 1}^n \left(1 - r_{Ci}\right)\right\}$ and $\min\left\{n_0, \sum \limits_{i = 1}^n r_{Ci}\right\}$. Note that when $\sum \limits_{i = 1}^n Z_i r_{Ti} = 0$ or $\sum \limits_{i = 1}^n \left(1 - Z_i\right) r_{Ci} = 0$, the estimator is undefined. Although in principle it could be the case that $\sum \limits_{i = 1}^n Z_i r_{Ti} = 0$ and $\sum \limits_{i = 1}^n \left(1 - Z_i\right) r_{Ci} = 0$, we will assume that the number of treated units who report their outcomes and the number of control units who report their outcomes are both greater than $0$ for all possible assignments.
 
-Note that $\cfrac{1}{\E\left[\sum\limits_{i = 1}^n Z_i R_i\right]} = \cfrac{n}{n_1 R^T}$ and $\cfrac{1}{\E\left[\sum\limits_{i = 1}^n \left(1 - Z_i\right) R_i\right]} = \cfrac{n}{n_0 R^C}$, where $R^T = \sum \limits_{i = 1}^n r_{Ti}$ and $R^C = \sum \limits_{i = 1}^n r_{Ci}$.
+Focusing on the first term of the estimator, $\left(\frac{1}{\sum \limits_{i = 1}^n Z_i r_{Ti}}\right) \sum \limits_{i = 1}^n \left(Z_i r_{Ti}\right) y_{Ti}$, write $n_1^{r_T = 1}$ as the number of treated units whose outcomes are observed, which is equivalent to the number of Always-Reporters and If-Treated-Reporters randomized into the treatment group. In general, it is \textit{not} the case that $\E\left[\cfrac{\left(\mathbf{Z} \circ \mathbf{R}\right)'\mathbf{Y}}{\left(\mathbf{Z} \circ \mathbf{R}\right)'\mathbf{1}}\right] = \cfrac{\E\left[\left(\mathbf{Z} \circ \mathbf{R}\right)'\mathbf{Y}\right]}{\E\left[\left(\mathbf{Z} \circ \mathbf{R}\right)'\mathbf{1}\right]}$.  However, so long as $n_1^{r_T = 1} > 0$, it follows that 
 
-We can also note that 
+\begin{align*}
+\E\left[\cfrac{\left(\mathbf{Z} \circ \mathbf{r_T}\right)' \mathbf{y_T}}{\left(\mathbf{Z} \circ \mathbf{r_T}\right)' \mathbf{1}} | \left(\mathbf{Z} \circ \mathbf{r_T}\right)' \mathbf{1} = n_1^{r_T = 1}\right] & = \E\left[\cfrac{\left(\mathbf{Z} \circ \mathbf{r_T}\right)' \mathbf{y_T}}{n_1^{r_T = 1}} | \left(\mathbf{Z} \circ \mathbf{r_T}\right)' \mathbf{1} = n_1^{r_T = 1}\right] \\ 
+& = \E\left[\cfrac{\sum \limits_{i = 1}^n \left(Z_i r_{Ti}\right) y_{Ti}}{n_1^{r_T = 1}} | \left(\mathbf{Z} \circ \mathbf{R}\right)' \mathbf{1} = n_1^{r_T = 1}\right] \\
+& = \cfrac{1}{n_1^{r_T = 1}} \E\left[\sum \limits_{i = 1}^n \left(Z_i r_{Ti}\right) y_{Ti} | \left(\mathbf{Z} \circ \mathbf{R}\right)' \mathbf{1} = n_1^{r_T = 1}\right] \\
+& = \cfrac{1}{n_1^{r_T = 1}} \E\left[\sum \limits_{i: r_{iT} = 1} Z_i y_{Ti} | \left(\mathbf{Z} \circ \mathbf{R}\right)' \mathbf{1} = n_1^{r_T = 1}\right] \\ 
+& = \cfrac{1}{n_1^{r_T = 1}} \sum \limits_{i: r_{iT} = 1} \E\left[Z_i y_{Ti} | \left(\mathbf{Z} \circ \mathbf{R}\right)' \mathbf{1} = n_1^{r_T = 1}\right] \\
+& = \cfrac{1}{n_1^{r_T = 1}} \sum \limits_{i: r_{iT} = 1} y_{Ti} \E\left[Z_i | \left(\mathbf{Z} \circ \mathbf{R}\right)' \mathbf{1} = n_1^{r_T = 1}\right]
+\end{align*}
+
+Note that the proportion of assignments in which an arbitrary $i: r_{Ti} = 1$ is in the treatment condition for some $n_1^{r_T = 1}$ and $n^{r_T = 1}$ is $\cfrac{n_1^{r_T = 1}}{n^{r_T = 1}}$, which under uniform random assignment implies that $\Pr\left(Z_{i:r_{Ti} = 1} = 1\right) = \cfrac{n_1^{r_T = 1}}{n^{r_T = 1}}$. It therefore follows that
+
+\begin{align*}
+& = \cfrac{1}{n_1^{r_T = 1}} \sum \limits_{i: r_{iT} = 1} y_{Ti} \left(\cfrac{n_1^{r_T = 1}}{n^{r_T = 1}}\right) \\ 
+& = \cfrac{1}{n_1^{r_T = 1}} \left(\cfrac{n_1^{r_T = 1}}{n^{r_T = 1}}\right) \sum \limits_{i: r_{iT} = 1} y_{Ti} \\ 
+& = \cfrac{1}{n^{r_T = 1}} \sum \limits_{i: r_{iT} = 1} y_{Ti},
+\end{align*}
+which is the mean treated potential outcome among Always-Reporters and If-Treated-Reporters, which can be reexpressed as $\bar{y}_T^{\text{AR}} \pi^{\text{AR}} + \bar{y}_T^{\text{ITR}} \pi^{\text{ITR}}$. While the expected value of the estimator is equal to $\bar{y}_T^{\text{AR}} \pi^{\text{AR}} + \bar{y}_T^{\text{ITR}} \pi^{\text{ITR}}$, this quantity may not be equal to $\bar{y}_T$.
+
+The same logic applies to the control group, in which the expected value of the second term of the Difference-in-Means estimator will be equal to $\cfrac{1}{n^{r_C = 1}} \sum \limits_{i: r_{iC} = 1} y_{Ci}$, which also may not be equal to $\bar{y}_C$.
 
 \section*{Question 5}
 
@@ -151,13 +171,11 @@ The average causal effect of $Z$ on $D$ is
 & = \pi^C - \pi^D
 \end{align*}
 
-The strength of an instrument is defined in multiple ways. One definition states that an instrument (or encouragement) is weak when it has a small impact on whether or not units in a study actually receive treatment. In order for the ratio $\cfrac{\bar{\tau}_Y}{\bar{\tau}_D}$ to be defined it must be the case that $\bar{\tau}_D > 0$, although we would ideally like $\bar{\tau}_D$ to be much larger than $0$. Without assuming no Defiers, i.e., that $pi^D = $, the required condition that $\bar{\tau}_D > 0$ requires only that the proportion of Compliers is greater than the proportion of Defiers, $\pi^C > \pi^D$.
+An instrument (or encouragement) is weak when it has a small impact on whether or not units in a study actually receive treatment. In order for the ratio $\cfrac{\bar{\tau}_Y}{\bar{\tau}_D}$ to be defined it must be the case that $\bar{\tau}_D > 0$. The quantity $\bar{\tau}_D$ is equal to $\pi^C - \pi^D$. However, under the usual assumption of no Defiers, i.e., that $\pi^D = 0$, $\bar{\tau}_D$ is equal to the size of $\pi^C$.
 
-In this class, we have defined the strength of an instrument as equivalent to the proportion of Compliers, $\pi^C$. The quantity of interest is $\cfrac{\bar{\tau}_Y}{\pi^C}$ and, hence, it must be the case that $\pi^C > 0$ in order for this quantity of interest to be defined. However, defining the strength of instrument as the size of $\bar{\tau}_D$ or as the size of $\pi^C$ is equivalent when there are no Defiers, i.e., $\pi^D = 0$.
+We cannot actually know the value of $\pi^C$. However, the estimator $\widehat{\text{ITT}}_D$ is unbiased and consistent for $\bar{\tau}_D$, where $\bar{\tau}_D = \pi^C$ when $\pi^D = 0$. Written mathematically, unbiasedness and consistency in this context mean that $\E\left[\widehat{\text{ITT}}_D\right] = \pi^C$ and $\widehat{\text{ITT}}_D \overset{p}{\to} \pi^C$.
 
-We cannot actually know the values of $\bar{\tau}_D$ and $\pi^C$. However, the estimator $\widehat{\text{ITT}}_D$ is unbiased and consistent for $\bar{\tau}_D$, where $\bar{\tau}_D = \pi^C$ when $\pi^D = 0$. Written mathematically, unbiasedness and consistency in this context mean that $\E\left[\widehat{\text{ITT}}_D\right] = \bar{\tau}_D$ and $\widehat{\text{ITT}}_D \overset{p}{\to} \bar{\tau}_D$.
-
-The estimate of $\bar{\tau}_D$ in Study 1 (PBS, \textit{Moyers on Addiction: Close to Home}) is $\frac{244}{510} - \frac{74}{579} \approx 0.3506$ and in Study 2 (\textit{Fox News}, "Channel 11 Special on Proposition 209") is $\frac{117}{259} - \frac{11}{248} \approx 0.4074$.
+The estimate of $\pi^C$ in Study 1 (PBS, \textit{Moyers on Addiction: Close to Home}) is $\frac{244}{510} - \frac{74}{579} \approx 0.3506$ and in Study 2 (\textit{Fox News}, "Channel 11 Special on Proposition 209") is $\frac{117}{259} - \frac{11}{248} \approx 0.4074$.
 
 In the @arceneaux2005 study, we can calculate the proportion of people in each precinct who were successfully contacted by multiplying the size of each precinct by the proportion of people contacted.
 
@@ -185,9 +203,7 @@ t(acorn_data$z) %*% (n_contact)/n_t -
 ```
 \normalsize
 
-The estimate of the strength of the instrument in the Acorn study [@arceneaux2005] is $\frac{3095}{4933} - \frac{0}{4779} \approx 0.6274$, which is larger than the estimates of instrument strength in the other two studies.
-
-Therefore, our best guess of which study has the weakest instrument is Study 1 (PBS, \textit{Moyers on Addiction: Close to Home}) in which we estimate $\bar{\tau}_D$ to be roughly $0.3506$.
+The estimate of the strength of the instrument in the Acorn study [@arceneaux2005] is $\frac{3095}{4933} - \frac{0}{4779} \approx 0.6274$, which is larger than the estimates of instrument strength in the other two studies. Therefore, our best guess of which study has the weakest instrument is Study 1 (PBS, \textit{Moyers on Addiction: Close to Home}) in which we estimate $\pi^C$ to be roughly $0.3506$.
 
 \newpage
 # References
