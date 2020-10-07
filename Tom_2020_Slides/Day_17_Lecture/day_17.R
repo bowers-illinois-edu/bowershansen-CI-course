@@ -371,6 +371,9 @@ data <- read_dta(here::here("Tom_2020_Slides/Day_17_Lecture","peace_pre_match.dt
 covs <- c("lwdeaths", "lwdurat", "milper", "pop", "ethfrac",
           "lmtnest", "bwplty2", "ssafrica", "asia", "lamerica")  
 
+reformulate(termlabels = covs, response = "DemWin")
+
+
 psm <- glm(formula = UN ~ lwdeaths + lwdurat + milper +
              pop + ethfrac + lmtnest + bwplty2 + ssafrica + asia + lamerica,
            family = binomial(link = "logit"),
