@@ -98,7 +98,12 @@ analysis in social science, by century:
     this regard statisticians' concept of ``experiment'' is slightly
     idiosyncratic.  Compare Kinder \& Palfrey's (1993) definition to that of
     Rosenbaum (2010, ch 2.)}
-  \item Central characteristics of an ideal situation
+\item Central characteristics of an ideal situation
+  \item (Shares outward manifestations of Stats 101 stats ---
+    randomness, p-values, ``bias,'' confidence levels etc --- but
+    \textit{without} the ideas that our sample is sampled from some
+    superpopulation, or a probabilistic data generating mechanism.
+    At least, those ideas are optional.) 
   \item The ideal reveals its merits in a variety of disciplines over
     the 20th c.
   \end{itemize}
@@ -192,27 +197,36 @@ analysis in social science, by century:
 
 \begin{frame}{Exercises}
 
- We need a volunteer or two to taste coffee. Otherwise, please do exercise
- below.
- 
   \begin{columns}
-    \begin{Column}
-  \begin{itemize}
-  \item Data at right are daily emergency-room admissions, from a paired
+    \begin{Column}[.35\linewidth]
+%  \begin{itemize}
+    %\item
+      Data at right are daily emergency-room admissions, from a paired
     ``quasi-experiment.'' Cols = Control, Treatment. 
-  \item  Analyze as if tosses of a fair coin determined which days
-    were C and T, separately for each month.
- \end{itemize}      
+  %\item
+% \end{itemize}      
     \end{Column}
-    \begin{Column}
+    \begin{Column}[.65\linewidth]
       \igrphx{scalonetal93-tab3-small}
     \end{Column}
   \end{columns}  
 
-Assume absolutely no effect. Simulate your own new total for T (the
-    left column).
-   
+    To analyze as if tosses of a fair coin determined which days
+    were C and T, you can simulate  hypothetical random assignments
+    (of ``unlucky Friday'' status).
+  
+  \begin{enumerate}
+   \item Using a coin from your pocket, simulate such an assignment for
+    each of the 7 months.  Calculate columnwise means; record the
+    difference of means.
+  \item Pool findings and repeat as needed, until you have 3-5 simulated
+    differences of means. 
+  \item Compare actual actual result to simulations: stand out, or fit
+    right in?
+  \end{enumerate}
+  
 \end{frame}
+\end{document}
 \subsection{Conceptual framework}
 \begin{frame}{Goals of experimental design}
 
@@ -441,7 +455,7 @@ findings as summarized by Rosenbaum, \textit{DOS} ch1?}
   \begin{center}
     \begin{tabular}{ll|l|r|l|l|r|l|l}
 \hline
-$i$ &year & month & Fri6th & $y_{i1C}$ & 4y_{i1T}$ & Fri13th & $y_{i2C}$ & $y_{i2T}$\\
+$i$ &year & month & Fri6th & $y_{i1C}$ & $y_{i1T}$ & Fri13th & $y_{i2C}$ & $y_{i2T}$\\
 \hline
 1 & '89 & Oct. & 9 & 9  & ? & 13 & ? & 13  \\
 \hline                                  
