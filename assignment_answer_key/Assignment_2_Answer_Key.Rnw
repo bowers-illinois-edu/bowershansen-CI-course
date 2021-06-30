@@ -228,7 +228,7 @@ p_load(MASS,
 
 \citet[276--277]{albertsonlawrence2009} write that ``[b]y using a random sample, we avoid the external validity problems associated with samples of convenience that are generally used in laboratory experiments. In addition, by assigning respondents at random to viewing and nonviewing conditions, these studies benefit from experimental control. Yet unlike laboratory experiments, this design allows respondents to view programs in their own homes, thus more closely approximating regular viewing conditions.''
 
-\subsection{\texttt{unit02-Ex.pdf} Question 1}
+\subsection{Question 1}
 
 If we assume that the IV assumptions are valid for the Round 2 respondents in the \citet{albertsonlawrence2009} study, we can estimate the average causal effect of encouragement, $\mathbf{Z}$, on dose, $\mathbf{D}$, via the estimator of the $ITT_D$, which is as follows:
 \begin{align*}
@@ -245,7 +245,7 @@ For the second study, the estimate is:
 \frac{117}{259} - \frac{11}{248} & \approx 0.4074.
 \end{align*}
 
-\subsection{\texttt{unit02-Ex.pdf} Question 2}
+\subsection{Question 2}
 
 A hypothetical outcome variable one could collect is ``Views on Addiction Policy,'' measured on a scale from 0 -- 10 in which 0 represents no support for public treatment programs and 10 is full support. Let's imagine that we have the following results:
 \begin{align*}
@@ -264,15 +264,11 @@ Using the hypothetical results described earlier, out CACE estimate is simply th
 \frac{2.3}{0.3506} & = 6.559718.
 \end{align*}
 
-\subsection{\texttt{unit02-Ex.pdf} Question 3}
+\subsection{Question 3}
 
 The Round 1 sample recruitment consisted of a survey conducted on a random sample of individuals from five metropolitan areas. If the researcher wants to make causal inferences among only the individuals who responded to the initial sample recruitment, then knowledge of the response rates are not necessary.
 
-\subsection{\texttt{unit02-Ex.pdf} Question 4}
-
-We would, however, want to know about the random digit dialing (RDD) recruitment effort in round $1$ if we wanted to generalize the experimental results to the general population from which the ``study population'' was sampled.
-
-\subsection{\texttt{unit02-Ex.pdf} Question 5}
+\subsection{Question 4}
 
 \citet{albertsonlawrence2009} state that the study they analyzed used random sampling from five metropolitan areas to recruit individuals into the study. Among individuals who were successfully recruited, the researchers assigned units to treatment and control groups. Among the individuals in this study population, the researchers were able to contact only 80\% of them to measure outcomes in Round 2 \citep[284]{albertsonlawrence2009}.
 
@@ -324,50 +320,7 @@ But, if there is attrition that is \textit{not} independent of treatment assignm
 
 On the other hand, if $\forall i: r_{t_i} = r_{c_i}$, then random assignment does indeed hold. For example, if $r_{t_i}, r_{t_j} = 1$ and $r_{c_i}, r_{c_j} = 1$, then the probability distribution on $Y_i$ and $Y_j$ is identical since both units' potential outcomes will always be observed. In fact, so long as $r_{c_i} = r_{t_i}$, if the researcher simply omits the units whose outcomes were not, as \citet{albertsonlawrence2009} do, then the random assignment remains valid among the units whose outcomes are \textit{not} missing under the assumption that their outcomes woudl have also been observed had treated units been assigned to control and vice versa. Notice, though, that now one's inferences pertain only to the subset of the study population that consists of ``Always-Reporters,'' as defined in the table above.
 
-\section{B}
 
-For the \citet{arceneaux2005} study, we can determine the number of people who were successfully contacted in each precinct by multiplying the contact rate by the size of each precinct:
-
-<<>>=
-
-acorn <- read.csv2("acorn03.csv", sep = ",") 
-
-acorn_indiv <- data.frame(unit = acorn$unit,
-                          size = acorn$size,
-                          z = acorn$z,
-                          contact = as.numeric(acorn$contact) * acorn$size,
-                          vote = as.numeric(acorn$vote03) * acorn$size)
-
-@
-
-We can estimate the ITT of this study with the $\widehat{ITT}$ estimator described above. Our estimate of the ITT is $0.0440186$. That is, our estimate of the increase in the percentage of voters if all units had received the voter mobilization intervention compared to if all units had not is almost 5\%.
-
-<<>>=
-
-ITT_hat <- (sum(acorn_indiv$vote[acorn_indiv$z == 1]) / sum(acorn_indiv$size[acorn_indiv$z == 1])) -
-  (sum(acorn_indiv$vote[acorn_indiv$z == 0]) / sum(acorn_indiv$size[acorn_indiv$z == 0]))
-
-@
-
-The estimate of the complier average causal effect using the $\widehat{CACE}$ estimator defiend above as $\frac{\widehat{ITT}}{\widehat{ITT_D}}$ is roughly $0.07015953$, which means that among the subset of experimental units who are compliers, the increase in voter turnout due to the voter mobilization intervention is roughly 7\%.
-
-<<>>=
-
-ITT_D_hat <- (sum(acorn_indiv$contact[acorn_indiv$z == 1]) / sum(acorn_indiv$size[acorn_indiv$z == 1])) -
-  (sum(acorn_indiv$contact[acorn_indiv$z == 0]) / sum(acorn_indiv$size[acorn_indiv$z == 0]))
-
-CACE_hat <- ITT_hat / ITT_D_hat
-
-
-@
-
-\section{C}
-
-The strength of an instrument is equivalent to the proportion of compliers, where the greater is the proportion of compliers, then the greater is the strength of the instrument. There are $1089$ round 2 respondents in the \citet{albertsonlawrence2009} study and $9712$ individuals in the \citet{arceneaux2005} study, although in the latter study units were assigned to experimental conditions as members of groups (specifically precincts), not as individuals.
-
-In the \citet{albertsonlawrence2009} study, of the 510 units who were assigned to the encouragement condition, 244 units actually watched the television show, while 74 of the 579 units who were assigned to the control condition did watch the show. Among the units assigned to control, the 74 whow atched the show must be Always-Takers under the assumption of no defiers. Among the 510 units who were encouraged to watch the show, the 244 units who did can be either Always-Takers or Compliers. Since in expectation the proprotion of Always-Takers should be identical among treatment nd control conditions, the difference of $\frac{244}{510} - \frac{74}{579}$ is our best guess of the proportion of compliers, which is roughly $0.35$. By contrast, in the \citet{arceneaux2005} study, the estimated proportion of compliers is $\frac{3095}{4933} - \frac{0}{4779}$, which is roughly $0.63$.
-
-We cannot actually know which study has the stronger instrument, but since the estimated prortion of compliers is greater in the \citet{arceneaux2005} study than in the \citet{albertsonlawrence2009} study (and these two estimates come from an estimator that tracks the true proportion of compliers), we can thereby infer that the \citet{arceneaux2005} study has a stronger instrument than does the \citet{albertsonlawrence2009} study.
 
 \newpage
 \bibliographystyle{chicago}

@@ -1,13 +1,13 @@
 ---
-title: Statistical Inference for Causal Quantities when the Active Ingredient is not Random
+title: |
+  | Taking Stock \&
+  | Linear Regression in Experiments and Observational Studies
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2019 Session 2
+  | ICPSR 2020 Session 2
   | Jake Bowers, Ben Hansen, Tom Leavitt
 bibliography:
- - BIB/refs.bib
- - BIB/master.bib
- - BIB/misc.bib
+ - BIB/Master_Bibliography.bib
 fontsize: 10pt
 geometry: margin=1in
 graphics: yes
@@ -23,565 +23,637 @@ output:
     includes:
         in_header:
            - defs-all.sty
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
 ---
 
 
 <!-- To show notes  -->
 <!-- https://stackoverflow.com/questions/44906264/add-speaker-notes-to-beamer-presentations-using-rmarkdown -->
 
-```{r echo=FALSE, include=FALSE, cache=FALSE}
-# Some customization.  You can alter or delete as desired (if you know what you are doing).
-# knitr settings to control how R chunks work.
-rm(list=ls())
-
-require(knitr)
-
-## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
-knitr::knit_hooks$set(mysize = function(before, options, envir) {
-			      if (before)
-				      return(options$size)
-                              else return("\\normalsize")
-})
-
-knit_hooks$set(plotdefault = function(before, options, envir) {
-		       if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
-})
-
-opts_chunk$set(
-	       tidy='styler',
-	       echo=TRUE,
-	       results='markup',
-	       strip.white=TRUE,
-	       fig.path='figs/fig',
-	       cache=FALSE,
-	       highlight=TRUE,
-	       width.cutoff=132,
-	       size='\\scriptsize',
-	       out.width='.7\\textwidth',
-	       fig.retina=FALSE,
-	       message=FALSE,
-	       comment=NA,
-	       mysize=TRUE,
-	       plotdefault=TRUE)
-
-options(digits=4,
-	scipen=8,
-	width=132,
-	show.signif.stars=FALSE)
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
 ```
 
-```{r loadlibs,include=FALSE, echo=FALSE}
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+## Load all of the libraries that we will use when we compile this file
+## We are using the renv system. So these will all be loaded from a local library directory
 library(dplyr)
 library(ggplot2)
-library(sandwich)
-library(lmtest)
 library(estimatr)
 library(coin)
-```
-
-```{r makedirs, echo=FALSE, include=FALSE}
-if(!dir.exists('figs')) dir.create('figs')
-
-## Make a local library directory
-if(!dir.exists(here::here('libraries'))){
-        dir.create(here::here('libraries'))
-}
-```
-
-
-```{r eval=FALSE, include=FALSE, echo=FALSE}
-## Run this next just once.
-library('devtools')
-library('withr')
-with_libpaths(here::here('libraries'), install_github("markmfredrickson/RItools",force=TRUE), 'pre')
-```
-
-```{r loadlibs2, echo=FALSE}
-library('RItools',lib.loc = here::here('libraries'))
-library(optmatch)
+library(DeclareDesign)
 ```
 
 ## Today
 
  1. Agenda: Introductions, Overview and context for where we are in the
-course, Statistical Inference and Causal Inference, Instrumental Variables or Encouragement Designs.
- 2. Reading: @angrist1996 including the @rosenbaum1996 discussion; @gerbergreen2012, Chapter 5.
- 3. Questions arising from the reading or assignments or life?
+course, Statistical Inference and Causal Inference, Linear regresssion for estimation in randomized experiments, Linear regression for covariance adjustment in randomized experiments, Linear regression for covariance adjustment in observational studies ("controlling for")a
+ 2. Random break-out rooms to work on the code for the day and/or the assignments.
+ 3. Questions arising from the reading or assignments or life.
 
-# But first: Who am I? Who are you?
+# An overview of approaches to statistical inference for causal quantities
 
-## Brief Introductions
+## Three General Approaches To Learning About The Unobserved Using Data
 
-Name, Organization/Affiliation, Research Interest
+\centering
+  \includegraphics[width=.5\textwidth]{images/MorrowPlots.jpg}
+  \hfill
+  \includegraphics[width=.5\textwidth]{images/aces-research-history-morrow-plots--uw.jpg}
 
-# But second: An overview of approaches to statistical inference for causal quantities
+## Potential Outcomes
 
+  \includegraphics[width=.65\textwidth]{images/cartoonNeymanBayesFisherCropped.pdf}
 
-## Design Based Approach 1: Test Models of Potential Outcomes
+Imagine we would observe so many bushels of corn, $y$, if plot $i$ were randomly assigned to new fertilizer, $y_{i,Z_i=1}$ (where $Z_i=1$ means "assigned to new fertilizer" and $Z_i=0$ means "assigned status quo fertilizer") and another amount of corn, $y_{i,Z_i=0}$, if the same plot were  assigned the status quo fertilizer condition.
+These $y$ are are *potential* or *partially observed* outcomes.
+
+## Notation
+
+  - *Treatment* $Z_i=1$ for treatment and $Z_i=0$ for control for units $i$
+
+  - In a two arm experiment each unit has at least a pair of *potential outcomes* $(y_{i,Z_i=1},y_{i,Z_i=0})$
+    (also written  $(y_{i,1},y_{i,0})$  to indicate that $y_{1,Z_1=1,Z_2=1} = y_{1,Z_1=1,Z_2=0}$ --- unit 1's outcome depends only on treatment assignment to unit 1 and not to unit 2.)
+  - *Causal Effect* for unit $i$ is $\tau_i$,  $\tau_i   =
+    f(y_{i,1},y_{i,0})$. For example, $\tau_i =  y_{i,1} - y_{i,0}$.
+
+  - *Fundamental Problem of (Counterfactual) Causality* We only see one
+    potential outcome $Y_i = Z_i  y_{i,1} + (1-Z_i) y_{i,0}$ in our observed outcome, $Y_i$. Treatment reveals one potential outcome to us in a simple randomized experiment.
+
+\bigskip
+
+So how do we learn about $\tau_i$ if we cannot directly see it?
+
+## Design Based 1: Compare Models of Potential Outcomes to Data
+
+ 1. Make a guess about (or model of) $\tau_i = f(y_{i,1},y_{i,0})$. For example
+    $H_0: y_{i,1}=y_{i,0}+\tau_{i}$ and $\tau_i=0$ is the sharp null hypothesis
+    of no effects.
+ 2. Measure consistency of the data with this model given the research design and choice of test statistic (summarizing the treatment-to-outcome relationship).
+
+\centering
+  \includegraphics[width=.65\textwidth]{images/cartoonFisherQuestionMarks.pdf}
+
+## Design Based 1: Compare Models of Potential Outcomes to Data
 
  1. Make a guess (or model of) about $\tau_i$.
- 2. Measure consistency of data with this model given the design.
+ 2. Measure consistency of data with this model given the design and test statistic.
 
 \centering
-  \includegraphics[width=.7\textwidth]{images/cartoonFisherNew1.pdf}
+  \includegraphics[width=.65\textwidth]{images/cartoonFisher.pdf}
 
-## Design Based Approach 1: Test Models of Potential Outcomes
+## Design Based 1: Compare Models of Potential Outcomes to Data
 
-\centering
-  \includegraphics[width=\textwidth]{images/cartoonFisherNew1.pdf}
-
-## Design Based Approach 1: Test Models of Potential Outcomes
+Comparing the model, $H_0: \tau_i = 0 \implies y_{i,1} = y_{i,0}$ to data:
 
 \centering
-  \includegraphics[width=\textwidth]{images/cartoonFisherNew2.pdf}
+\includegraphics[width=\textwidth]{images/cartoonFisherNew1.pdf}
 
-## Design Based Approach 1: Test Models of Potential Outcomes
+## Design Based 1: Compare Models of Potential Outcomes to Data
 
-  \centering
-  \includegraphics[width=.9\textwidth]{images/cartoonFisher.pdf}
+\centering
+\includegraphics[width=.9\textwidth]{images/cartoonFisherNew2.pdf}
 
-##  Design Based Approach 1: Test Models of Potential Outcomes
+##  Design Based 1: Compare Models of Potential Outcomes to Data
+\framesubtitle{Testing Models of No-Effects.}
 
-```{r}
-smdat <- data.frame(Z=c(0,1,0,1),Y=c(16,22,7,4000))
+Here is some fake data from a tiny experiment with weird outcomes.
 
-tz_mean_diff <- function(z,y){
-	mean(y[z==1]) - mean(y[z==0])
-}
-
-tz_mean_rank_diff <- function(z,y){
-	ry <- rank(y)
-	mean(ry[z==1]) - mean(ry[z==0])
-}
-
-newexp <- function(z){
-	sample(z)
-}
-```
-
-##  Design Based Approach 1: Test Models of Potential Outcomes
-
-
-```{r repexp, cache=TRUE}
-set.seed(12345)
-rand_dist_md <- replicate(1000,tz_mean_diff(z=newexp(smdat$Z),y=smdat$Y))
-rand_dist_rank_md <- replicate(1000,tz_mean_rank_diff(z=newexp(smdat$Z),y=smdat$Y))
-
-```
-
-```{r calc}
-obs_md <- tz_mean_diff(z=smdat$Z,y=smdat$Y)
-obs_rank_md <- tz_mean_rank_diff(z=smdat$Z,y=smdat$Y)
-c(obs_md,obs_rank_md)
-table(rand_dist_md)
-table(rand_dist_rank_md)
-p_md <- mean(rand_dist_md >= obs_md)
-p_rank_md <- mean(rand_dist_rank_md >= obs_rank_md)
-c(p_md, p_rank_md)
-```
-
-##  Design Based Approach 1: Test Models of Potential Outcomes
-
-```{r}
+```{r makesmdat, echo=FALSE}
+smdat <- data.frame(Z=c(0,1,0,1),y0=c(16,22,7,3990),y1=c(16,24,10,4000))
+smdat$Y <- with(smdat,Z*y1 + (1-Z)*y0)
 smdat$zF <- factor(smdat$Z)
 smdat$rY <- rank(smdat$Y)
-
-md_test_exact <- oneway_test(Y~zF,data=smdat,distribution=exact(),alternative="less")
-md_test_sim <- oneway_test(Y~zF,data=smdat,distribution=approximate(nresample=1000),
-			   alternative="less")
-md_test_asymp<- oneway_test(Y~zF,data=smdat,distribution=asymptotic(),alternative="less")
-
-rank_md_test_exact <- oneway_test(rY~zF,data=smdat,distribution=exact(),alternative="less")
-rank_md_test_asymp<- oneway_test(rY~zF,data=smdat,distribution=asymptotic(),alternative="less")
-rank_md_test_sim <- oneway_test(rY~zF,data=smdat,distribution=approximate(nresample=1000),
-			   alternative="less")
+print(smdat)
 ```
 
-##  Design Based Approach 1: Test Models of Potential Outcomes
+Next, define a function that compares treated to control outcomes:
 
-```{r}
-pvalue(md_test_exact)
-pvalue(md_test_sim)
-pvalue(md_test_asymp)
-pvalue(rank_md_test_exact)
-pvalue(rank_md_test_sim)
-pvalue(rank_md_test_asymp)
-```
-##  Design Based Approach 1: Test Models of Potential Outcomes
-
-```{r}
-s_rank_md_exact <- support(rank_md_test_exact)
-d_rank_md_exact <- dperm(rank_md_test_exact,s_rank_md_exact)
-d_rank_md_asymp <- dperm(rank_md_test_asymp,seq(-1.6,1.6,.1))
-
-s_md_exact <- support(md_test_exact)
-d_md_exact <- dperm(md_test_exact,s_md_exact)
-d_md_asymp <- dperm(md_test_asymp,seq(-1.6,1.6,.1))
+```{r teststats_and_fns, echo=TRUE}
+## A mean difference test statistic
+tz_mean_diff <- function(z,y){
+    mean(y[z==1]) - mean(y[z==0])
+}
+## A mean difference of ranks test statistic
+tz_mean_rank_diff <- function(z,y){
+  ry <- rank(y)
+  mean(ry[z==1]) - mean(ry[z==0])
+}
 ```
 
-```{r plotexactdists, echo=FALSE}
-par(mfrow=c(1,2))
-plot(s_rank_md_exact,d_rank_md_exact,type="h",xlim=c(-1.6,1.6),ylim=c(0,.4),lwd=3)
-lines(seq(-1.6,1.6,.1),d_rank_md_asymp)
-plot(s_md_exact,d_md_exact,type="h",xlim=c(-1.6,1.6),ylim=c(0,.4),lwd=3)
-lines(seq(-1.6,1.6,.1),d_md_asymp)
+And define a function to repeat the experimental randomization
+
+```{r echo=TRUE}
+## Function to repeat the experimental randomization
+newexp <- function(z){
+  sample(z)
+}
 ```
 
-## Design Based Approach 2: Estimate Averages of Potential Outcomes
+```{r echo=FALSE}
+set.seed(12345)
+```
 
-  1. Notice that the observed $Y_i$ are a sample from  the (small, finite) population of $(y_{i,1},y_{i,0})$.
+##  Design Based 1: Compare Models of Potential Outcomes to Data
+\framesubtitle{Testing Models of No-Effects.}
+
+```{r repexp, echo=TRUE, cache=TRUE}
+rand_dist_md <- with(smdat,replicate(1000,tz_mean_diff(z=newexp(Z),y=Y)))
+rand_dist_rank_md <- with(smdat,replicate(1000,tz_mean_rank_diff(z=newexp(Z),y=Y)))
+obs_md <- with(smdat,tz_mean_diff(z=Z,y=Y))
+obs_rank_md <- with(smdat,tz_mean_rank_diff(z=Z,y=Y))
+c(observed_mean_diff=obs_md,observed_mean_rank_diff=obs_rank_md)
+table(rand_dist_md)/1000 ## Probability Distributions Under the Null of No Effects
+table(rand_dist_rank_md)/1000
+p_md <- mean(rand_dist_md >= obs_md) ## P-Values
+p_rank_md <- mean(rand_dist_rank_md >= obs_rank_md)
+c(mean_diff_p=p_md, mean_rank_diff_p=p_rank_md)
+```
+
+##  Design Based 1: Compare Models of Potential Outcomes to Data
+\framesubtitle{Testing Models of Effects.}
+
+To learn about whether the data are consistent with $\tau_i=100$ for all $i$ notice how treatment assignment reveals part of the unobserved outcomes: $Y_{i} = Z_i  y_{i,1} + (1-Z_i)  y_{i,0}$ and if $H_0: \tau_i=100$ or $H_0: y_{i,1}=y_{i,0}+100$ then:
+
+\begin{align}
+Y_{i} & =   Z_i  ( y_{i,0} + 100 ) + (1-Z_i)  y_{i,0} \\
+ & =  Z_i  y_{i,0} + Z_i 100 + y_{i,0} - Z_i y_{i,0} \\
+ & =  Z_i  100 + y_{i,0} \\
+ y_{i,0} =  Y_{i} & - Z_i 100
+ \end{align}
+
+##  Design Based 1:  Compare Models of Potential Outcomes to Data
+\framesubtitle{Testing Models of Effects.}
+
+To test a *model of causal effects* we adjust the observed outcomes to be consistent
+with our hypothesis about unobserved outcomes and then repeat the experiment:
+
+```{r model_effects, echo=TRUE}
+tz_mean_diff_effects <- function(z,y,tauvec){
+    adjy <- y - z*tauvec
+    radjy <- rank(adjy)
+    mean(radjy[z==1]) - mean(radjy[z==0])
+}
+rand_dist_md_tau_cae <- with(smdat,replicate(1000,tz_mean_diff_effects(z=newexp(Z),y=Y,tauvec=c(100,100,100,100))))
+obs_md_tau_cae <- with(smdat,tz_mean_diff_effects(z=Z,y=Y,tauvec=c(100,100,100,100)))
+mean(rand_dist_md_tau_cae >= obs_md_tau_cae)
+```
+
+
+## Design Based 1: Compare Models of Potential Outcomes to Data
+\framesubtitle{Testing Models of Effects.}
+
+Now let's test a model with different effects for each unit --- $H_0: \symbf{\tau} = \{0,2,3,10\}$
+
+\smallskip
+
+```{r model_effects2, echo=TRUE}
+rand_dist_md_taux<- with(smdat,replicate(1000,tz_mean_diff_effects(z=newexp(Z),y=Y,
+                                                                   tauvec=c(0,2,3,10))))
+obs_md_taux <- with(smdat,tz_mean_diff_effects(z=Z,y=Y,tauvec=c(0,2,3,10)))
+mean(rand_dist_md_taux >= obs_md_taux)
+```
+
+Questions about this first approach to using statistical inference to help with counterfactual causal inference?
+
+## Design Based 2: Estimate Averages of Potential Outcomes
+
+  1. Notice that the observed $Y_i$ are a sample from the (small, finite) population of unobserved potential outcomes $(y_{i,1},y_{i,0})$.
   2. Decide to focus on the average, $\bar{\tau}$, because sample averages, $\hat{\bar{\tau}}$ are unbiased and consistent estimators of population averages.
-  3. Estimate $\bar{\tau}$ with the observed difference in means.
+  3. Estimate $\bar{\tau}$ with the observed difference in means as $\hat{\bar{\tau}}$.
 
 \centering
-  \includegraphics[width=.5\textwidth]{images/cartoonNeyman.pdf}
+  \includegraphics[width=.8\textwidth]{images/cartoonNeyman.pdf}
 
-## Design Based Approach 2: Estimate Averages of Potential Outcomes
+## Design Based 2: Estimate Averages of Potential Outcomes
 
 \centering
-  \includegraphics[width=.9\textwidth]{images/cartoonNeyman.pdf}
+  \includegraphics[width=.95\textwidth]{images/cartoonNeyman.pdf}
 
 
-## Design Based Approach 2: Estimate Averages of Potential Outcomes
+## Design Based 2: Estimate Averages of Potential Outcomes
 
-```{r}
+Here using Neyman's standard errors (same as HC2 SEs) and Central Limit Theorem based $p$-values and 95% confidence intervals:
 
+\smallskip
+
+```{r dim, echo=TRUE}
 est1 <- difference_in_means(Y~Z,data=smdat)
 est1
 ```
 
-## Design Based Approach 2: Estimate Averages of Potential Outcomes
-
-Is this estimator a good guess about the unobserved causal effect? Let's simulate to learn.
-
-First, make up a simulated research design and underlying potential outcomes:
-
-```{r setupdd}
-library(DeclareDesign)
-
-set.seed(12345)
-smdat$x <- runif(4,min=0,max=1)
-smdat$e0 <- round(runif(4,min=min(smdat$Y[smdat$Z==0]),max=max(smdat$Y[smdat$Z==0])))
-smdat$y0 <- with(smdat,3*sd(e0)*x + e0)
-smdat$y1 <- smdat$Y - smdat$y0
-
-thepop <- declare_population(smdat[,c("y0","y1","x")])
-theassign <- declare_assignment(m=2)
-po_fun <- function(data){
-	data$Y_Z_1   <- data$y0
-	data$Y_Z_0 <- data$y1
-	data
-}
-thepo <- declare_potential_outcomes(handler=po_fun)
-thereveal <- declare_reveal(Y,Z) ## how does assignment reveal potential outcomes
-thedesign <- thepop + theassign + thepo + thereveal
-
-oneexp <- draw_data(thedesign)
-```
-
-## Design Based Approach 2: Estimate Averages of Potential Outcomes
-
-Next specify our estimator and compare to a couple of others:
-
-```{r}
-theestimand <- declare_estimand(ATE = mean(Y_Z_1 - Y_Z_0))
-theest1 <- declare_estimator(Y~Z, estimand=theestimand, model=difference_in_means,
-			     label="est1: diff means1")
-theest2 <- declare_estimator(Y~Z, estimand=theestimand, model=lm_robust,
-			     label="est2: diff means2")
-theest3 <- declare_estimator(Y~Z+x, estimand=theestimand, model=lm_robust,
-			     label="est3: covadj diff means")
-
-thedesign_plus_est <- thedesign + theestimand + theest1 + theest2 + theest3
-theest1(oneexp)
-theest2(oneexp)
-theest3(oneexp)
-
-```
-
-## Design Based Approach 2: Estimate Averages of Potential Outcomes
-
-Finally, repeat the design, applying our estimators and comparing to our known potential outcomes.
-
-```{r diagnose1, warnings=FALSE, cache=TRUE}
-require(DeclareDesign)
-set.seed(12345)
-
-thediagnosands <- declare_diagnosands(
-     bias = mean(estimate - estimand),
-     rmse = sqrt(mean((estimate - estimand) ^ 2)),
-     power = mean(p.value < .25),
-     coverage = mean(estimand <= conf.high & estimand >= conf.low),
-     mean_estimate = mean(estimate),
-     sd_estimate = sd(estimate),
-     mean_se = mean(std.error),
-     mean_estimand = mean(estimand)
-     )
-
-diagnosis <- diagnose_design(thedesign_plus_est,sims=1000,bootstrap_sims=0,
-			     diagnosands = thediagnosands)
-```
-
-
-## Design Based Approach 2: Estimate Averages of Potential Outcomes
-
-```{r}
-kable(reshape_diagnosis(diagnosis)[,-c(1:2,4)])
-```
-
-```{r simmethod, eval=FALSE, echo=FALSE}
-thedesign_sims<- simulate_design(thedesign_plus_est,sims=1000)
-res <- thedesign_sims %>% group_by(estimator_label) %>% summarize(bias=mean(estimate-estimand))
-```
-
-
-
-## Model Based Approach 1: Predict Potential Outcomes}
+## Model Based 1: Predict Distributions of Potential Outcomes
 
   \smallskip
   \centering
-  \includegraphics[width=.9\textwidth]{images/cartoonBayes.pdf}
+  \includegraphics[width=.95\textwidth]{images/cartoonBayesNew.pdf}
 
-## Statistical Inference and Causal Inference?
+## Model Based 1: Predict Distributions of $(y_{i,1},y_{i,0})$
+> 1. Given a model of $Y_i$:^[see [this website](https://mc-stan.org/users/documentation/case-studies/model-based_causal_inference_for_RCT.html).]
+\begin{equation}
+\mathrm{Pr}(Y_{i}^{obs} \vert \mathrm{Z}, \theta) \sim \mathsf{Normal}(Z_{i} \cdot \mu_{1} + (1 - Z_{i}) \cdot \mu_{0} , Z_{i} \sigma_{1}^{2} + (1 - Z_{i}) \cdot \sigma_{0}^{2})
+\end{equation}
+where $\mu_{0}=\alpha$ and $\mu_{1}=\alpha + \tau$.
 
-How does statistical inference help us make causal inferences?
+> 2. And a model of the pair $\{y_{i,0},y_{i,1}\} \equiv \{Y_{i}(0), Y_{i}(1)\}$ but random not fixed as before (and so written as upper-case):
 
-# And third, some more context: The creation of interpretable comparisons.
+\begin{equation}
+\begin{pmatrix} Y_{i}(0) \\ Y_{i}(1) \end{pmatrix} \biggm\vert \theta
+\sim
+\mathsf{Normal}
+\begin{pmatrix}
+\begin{pmatrix} \mu_{0} \\ \mu_{1} \end{pmatrix},
+\begin{pmatrix} \sigma_{0}^{2} & \rho \sigma_{0} \sigma_{1} \\ \rho \sigma_{0} \sigma_{1} & \sigma_{1}^{2} \end{pmatrix}
+\end{pmatrix}
+\end{equation}
 
-## Research designs to aid the creation of interpretable comparisons
+> 3. And a model of $Z_i$ is known because of randomization so we can write: $\mathrm{Pr}(\mathrm{Z}|\mathrm{Y}(0), \mathrm{Z}(1)) = \mathrm{Pr}(\mathrm{Z})$
 
-   - Randomized experiments (randomized $Z$ changes $y$) <!-- (more precision from reducing heterogeneity in $Y$) -->
-     - No systematic differences between groups
-     - Known reference distribution for tests of the sharp null and, in large
-       samples, the weak null.
-   - Instrumental variables (randomized $Z$ changes $D$ which changes $y$)
-   - Natural Experiments / Discontinuities (one $X$ creates $Z$ which \ldots)
-   - Semi-/Non-parametric Covariance Adjustment ($Z$ out of our control, but we can choose how to organize and observe given $X$) (matching and difference-in-differences)
-   - Parametric covariance adjustment (same as above, but with a model for statistical adjustment, i.e. "controlling for")
+> 4. And given priors on $\theta= \{ \alpha$, $\tau$, $\sigma_c$, $\sigma_t \}$ (here make them all independent Normal(0,5))).
 
+We can generate the posterior distribution of $\alpha$, $\tau$, $\sigma_c$, and $\sigma_t$ and thus can impute $\{Y_{i}(0),Y_{i}(1)\}$ to generate a distribution for $\tau_i$.
 
-# Now: Instruments, the ITT and CACE/LATE
+## Model Based 1: Predict Distributions of Potential Outcomes
 
-## Instruments, the ITT and CACE/LATE
+A snippet of `rctbayes.stan`:
 
-**Context:** An NGO invites you to help design and evaluate a program to increase donations involving in-person, door-to-door, discussions about the canvasser's own personal experiences. Building rapport with another person should increase willingness to donate, according to the NGO who had just read @broockman2016durably.
+```
+model {
+   // PRIORS
+   alpha ~ normal(0, 5);
+   tau ~ normal(0, 5);
+   sigma_c ~ normal(0, 5);
+   sigma_t ~ normal(0, 5);
 
-\smallskip
-
-**Opportunity for learning about theory** You know have been interested in
-understanding why and how social norms influence behavior. So, you ask to
-that canvassers appeal to a descriptive social norm ("other people we have
-spoken with agree") toward the end of the discussion.
-
-\smallskip
-
-**Design:** The NGO randomizes visits by canvassers to a set of addresses and
-measures the amount pledged online in the following month.
-
-\smallskip
-
-**Analysis:** The NGO cares about the cost effectiveness of the approach. Did
-it work? You (and the NGO should care) about **why** it worked (or did not
-work).
-
-
-## Defining causal effects
-
- - $Z_i$ is random assignment to a visit ($Z_i=1$) or not ($Z_i=0$).
- - $d_{i,Z_i=1}=1$ means that person $i$ opened the door to have a conversation when assigned a visit. Opening the door is an outcome of the treatment, is caused by the treatment.
- - $y_{i,Z_i = 1, d_{i,Z_i=1}=1}$ is the potential outcome for people who were assigned a visit and who opened the door.
- - $y_{i,Z_i = 1, d_{i,Z_i=1}=0}$ is the potential outcome for people who were assigned a visit and who did not open the door.
- - $y_{i,Z_i = 0, d_{i,Z_i=0}=1}$ is the potential outcome for people who were not assigned a visit and who opened the door.
- - $y_{i,Z_i = 0, d_{i,Z_i=0}=0}$ is the potential outcome for people who were not assigned a visit and who would not have opened the door.
- - We could also write $y_{i,Z_i = 0, d_{i,Z_i=1}=1}$ for people who were not
-   assigned a visit who would have opened the door had they been assigned a
-   visit etc..
-
-In this case, $y_{i,Z_i = 0, d_{i,Z_i=1}=1} = y_{i,Z_i = 0, d_{i,Z_i=1}=0}
-\equiv y_{i,Z_i=0}$ because you can't open the door unless visited.
-
-And also $y_{i,Z_i = 1, d_{i,Z_i=1}=0} = y_{i,Z_i=0}$ because there can be no
-effect of the visit if you don't open the door.
-
-##  Defining our causal effects
-
-People refer to an "Intent To Treat Effect" (ITT) as the (average) causal effect of
-**assignment** to treatment. In our case, we can write the ITT as a weighted
-sum of the responses to treatment  minus the response to assignment to control
-( where $p(d_1=1)$ is the proportion of people opening their doors ).
+   // LIKELIHOOD
+   y ~ normal(alpha + tau*w, sigma_t*w + sigma_c*(1 - w));
+}
+```
 
 
-$$ITT= ( \bar{y}_{Z=1,d_1=1} \cdot p(d_1=1) + \bar{y}_{Z=1,d_1=0} \cdot (1-p(d_1=1)) )  - \bar{y}_{Z=0}$$
+## Model Based 1: Predict Distributions of Potential Outcomes
+
+
+```{r loadstan, echo=FALSE, message=FALSE,results='hide'}
+## Not putting rstan in the top because installation can be involved and we don't plan to use it otherwise in this course.
+library(rstan)
+rstan_options(auto_write = TRUE)
+```
+
+```{r stanbayes, echo=TRUE, cache=TRUE, results="hide",warning=FALSE,message=FALSE}
+## rho is correlation between the potential outcomes
+stan_data <- list(N = 4, y = smdat$Y, w = smdat$Z, rho = 0)
+# Compile and run the stan model
+fit_simdat <- stan(file = "rctbayes.stan", data = stan_data, iter = 5000, warmup=2500,chains = 4,control=list(adapt_delta=.99))
+res <- as.matrix(fit_simdat)
+```
+
+```{r rctbayes2, echo=TRUE, results="markup"}
+## Summary of the 2000 Predicted Treatment effects for units 1 and 4
+t(apply(res[,c("tau_unit[1]","tau_unit[4]")],2,summary))
+## Probability that effect on unit 1 is greater than 0
+mean(res[,"tau_unit[1]"]>0)
+## Overall mean of the effects:
+mean_tau <- rowMeans(res[,c("tau_unit[1]","tau_unit[2]","tau_unit[3]","tau_unit[4]")])
+summary(mean_tau)
+```
+
+## Summmary: Modes of Statistical Inference for Causal Effects
+
+We can infer about unobserved counterfactuals by:
+
+  1. assessing claims or models or hypotheses about relationships between unobserved potential outcomes (Fisher's testing approach via Rosenbaum)
+  2. estimating averages (or other summaries) of unobserved potential outcomes (Neyman's estimation approach)
+  3. predicting individual level outcomes based on probability models of outcomes, interventions, etc. (Bayes's predictive approach via Rubin)
+
+## Summary: Modes of Statistical Inference for Causal Effects
+
+Statistical inferences --- formalized reasoning about "what if" statements
+("What if I had randomly assigned other plots to treatment?") --- and their properties (like bias, error rates, precision) arise from:
+
+  1. Repeating the design and using the hypothesis and test statistics to
+     generate a reference distribution that describes the variation in the hypothetical world. Compare the observed to the hypothesized to measure consistency between hypothesis, or model, and observed outcomes (*Fisher and Rosenbaum's
+     randomization-based inference for individual causal effects*).
+  2. Repeating the design and the estimation such that standard errors, $p$-values,
+     and confidence intervals reflect design-based variability. Probability distributions (like the Normal or t-distribution) arise from Limit Theorems in large samples.
+     (*Neyman's randomization-based inference for average causal effects*).
+  3. Repeatedly drawing from the probability distributions that generate the
+     observed data (that represent the design) --- the likelihood and the
+     priors --- to describe a posterior distribution for unit-level causal
+     effects. Calculate posterior distributions for aggregated causal effects (like averages of individual level
+     effects). (*Bayes and Rubin's predictive model-based causal inference*).
+
+## Summary: Applications of the Model-Based Prediction Approach
+
+Examples of use of the model-based prediction approach:
+
+ - Estimating causal effects when we need to model processes of missing outcomes, missing treatment indicators, or complex non-compliance with treatment \parencite{barnard2003psa}
+ - Searching for heterogeneity (subgroup differences) in how units react to treatment (ex. \parencite{hahn2020bayesian} but see also literature on BART, Bayesian Machine Learning as applied to causal inference questions).
+
+## Summary: Applications of the Testing Approach
+
+Examples of use of the testing approach:
+
+ - Assessing evidence of pareto optimal effects or no aberrant effect (i.e. no
+   unit was made worse off by the treatment) \parencite{caughey2016beyond, rosenbaum2008aberrant}.
+ - Assessing evidence that the treatment group was made better than the control
+   group (but being agnostic about the precise nature of the difference) (ex.
+   $p>.2$ with difference of means but $p<.001$ with difference of ranks in
+   Office of Evaluation Sciences study of General Services Administration
+   Auctions)
+ - Focusing on detection rather than on estimation (for example to identify
+   promising sites for future research in experiments with many blocks or
+   strata) (Bowers and Chen 2020 working paper).
+ - Assessing hypotheses of no effects in small samples, with rare outcomes,
+   cluster randomization, or other designs where reference distributions may
+   not be Normal (see for example, \parencite{gerber2012field}).
+ - Assessing structural models of causal effects (for example models of
+   treatment effect propagation across networks)
+   \parencite{bowers2016research,bowers2013sutva,bowers2018models}.
+
+
+# Linear Regression in Experiments and Observational Studies
+
+## What does linear regression do in an experiment?
+
+Let's make a slightly bigger dataset where the potential outcomes depend on a background covariate:
+
+```{r newdat, echo=TRUE}
+N <- 100
+tau <- .2
+dat <- data.frame(id=1:N,
+                  x1 = rpois(n = N, lambda = 10))
+dat <- mutate(dat,
+      y0 = .5*sd(x1)*x1 + runif(n = N,min=-2*sd(x1),max=2*sd(x1)),
+      y1 = y0 + tau * sd(y0) #+ runif(n = N,min=-.5*sd(y0),max=.5*sd(y0)),
+    )
+set.seed(12345)
+dat$Z <- complete_ra(N=N,m=floor(N/2))
+dat <- mutate(dat,Y=Z*y1 + (1-Z)*y0)
+dat$tau <- with(dat,y1-y0)
+head(dat)
+##summary(lm(y0~x1,data=dat))$r.squared
+## blah <- lm_robust(Y~Z,data=dat); blah$p.value["Z"]
+##blah2 <- lm_robust(Y~Z+x1,data=dat); blah2$p.value["Z"]
+```
+
+## What does linear regression do in an experiment?
+
+Let's make a slightly bigger dataset where the potential outcomes depend on a background covariate:
+
+
+Notice that background outcomes are now a function of a background covariate:
+```{r echo=TRUE}
+with(dat,cor(x1,y0))
+summary(lm(y0~x1,data=dat))$r.squared
+with(dat,plot(x1,y0))
+```
+
+## What does linear regression do in an experiment?
+
+First, how does linear regression "adjust" for x1?
+
+```{r simpcovadj, echo=TRUE}
+unadj_est <- lm_robust(Y~Z,data=dat)
+adj_est <- lm_robust(Y~Z+x1,data=dat)
+c(coef(unadj_est)[2],coef(adj_est)[2])
+```
+
+## What does linear regression do in an experiment?
+
+First, how does linear regression "adjust" for x1? (Answer: by removing linear relationships between `x1` and `Z` and between `x1` and `Y`):
+
+
+```{r covadj2, echo=TRUE}
+lm_Y_x1 <- lm(Y~x1,data=dat)
+lm_Z_x1 <- lm(Z~x1,data=dat)
+dat$resid_Y_x1 <- resid(lm_Y_x1)
+dat$resid_Z_x1 <- resid(lm_Z_x1)
+lm_resid_Y_x1 <- lm(resid_Y_x1~x1,data=dat)
+lm_resid_Z_x1 <- lm(resid_Z_x1~x1,data=dat)
+```
+
+```{r plotresids, echo=FALSE,out.width=".8\\textwidth"}
+par(mfrow=c(2,2),mar=c(2,3,1,0),mgp=c(1.25,.5,0),oma=rep(0,4))
+with(dat,plot(x1,Y,col=c("black","blue")[dat$Z+1],pch=c(1,19)[dat$Z+1]))
+abline(lm_Y_x1)
+with(dat,plot(x1,resid_Y_x1,ylab="Y - b*x1 or Y without linear relation with x1",col=c("black","blue")[dat$Z+1],pch=c(1,19)[dat$Z+1]))
+abline(lm_resid_Y_x1)
+# with(dat,plot(x1,jitter(Z,factor=.1)))
+with(dat,plot(x1,Z,col=c("black","blue")[dat$Z+1],pch=c(1,19)[dat$Z+1]))
+abline(lm_Z_x1)
+with(dat,plot(x1,resid_Z_x1,ylab="Y - b*x1 or Y without linear relation with x1",col=c("black","blue")[dat$Z+1],pch=c(1,19)[dat$Z+1]))
+abline(lm_resid_Z_x1)
+```
+
+## What does linear regression do in an experiment?
+
+Linear regression "adjusts" the $Z \rightarrow Y$ relationship for a background covariate $x$  by removing linear relationships: For example, here we how it works after removing the linear relationships between `x1` and `Z` and between `x1` and `Y`):
+
+```{r residlm, echo=TRUE}
+coef(adj_est)[2]
+adj_est2 <- lm(resid_Y_x1 ~ resid_Z_x1,data=dat)
+coef(adj_est2)[2]
+stopifnot(all.equal(coef(adj_est)[[2]],coef(adj_est2)[[2]]))
+```
+
+## What does linear regression do in an experiment?
+
+Linear regression "adjusts" the $Z \rightarrow Y$ relationship for a background covariate $x$  by removing linear relationships: For example, here we how it works after removing the linear relationships between `x1` and `Z` and between `x1` and `Y`):
+
+```{r plot2, out.width=".8\\textwidth"}
+dat$ZF <- factor(dat$Z)
+with(dat,plot(x1,Y,col=c("black","blue")[dat$Z+1],pch=c(1,19)[dat$Z+1]))
+preddat <- expand.grid(Z=c(0,1),x1=range(dat$x1))
+preddat$fit <- predict(adj_est,newdata=preddat)
+with(preddat[preddat$Z==0,],lines(x1,fit))
+with(preddat[preddat$Z==1,],lines(x1,fit,col="blue",lwd=2))
+```
+
+## What does linear regression do in an experiment?
+
+Why might we adjust in an experiment? The idea is to increase precision. Notice the smaller standard errors:
+
+```{r expadj, echo=TRUE}
+unadj_est$std.error["Z"]
+adj_est$std.error["Z"]
+```
+
+But what about bias? The point estimates differ here:
+
+```{r bias1, echo=TRUE}
+coef(unadj_est)[["Z"]]
+coef(adj_est)[["Z"]]
+```
+
+## How would we know whether the bias is too big?
+
+Different may not mean worse. Let's see how these (and some other) estimators work. First, just specify a bunch of different estimators:
+
+```{r biassimsetup, echo=TRUE}
+## The truth:
+trueATE_estimand <- with(dat,mean(y1-y0))
+
+## A function to make a new experiment.
+new_exp <- function(Z){
+    ## This next shuffles Z
+    newZ <- sample(Z)
+    return(newZ)
+}
+
+## The est1.. functions are estimators of the trueATE, each returning a single number --- the estimatedATE
+est1 <- function(Z,Y,x=NULL){
+    mean(Y[Z==1]) - mean(Y[Z==0])
+}
+est2 <- function(Z,Y,x=NULL){
+    coef(lm(Y~Z))[["Z"]]
+}
+est3 <- function(Z,Y,x){
+  ## "controlling for" but not really because this is an experiment.
+    coef(lm(Y~Z+x))[["Z"]]
+}
+est4 <- function(Z,Y,x){
+    quantY <- quantile(Y,.9)
+    ## Recode highest 10% of outcome scores to 90% percentile to minimize effect of outliers.
+    Y[Y>quantY] <- quantY
+    coef(lm(Y~Z+x))[["Z"]]
+}
+est5 <- function(Z,Y,x){
+    ## Use the Lin method of covariance adjustment to minimize bias
+    thedat <- data.frame(Z=Z,Y=Y,x=x)
+    lm_lin_mod <- lm_lin(Y~Z,covariates=~x,data=thedat)
+    coef(lm_lin_mod)[["Z"]]
+}
+est6 <- function(Z,Y,x){
+    ## Use the Rosenbaum method of covariance adjustment to increase precision
+    resids1 <- resid(lm(Y~x))
+    coef(lm(resids1~Z))[["Z"]]
+}
+
+## A function to use them all on a new experiment --- after repeating it and re-revealing potential outcomes.
+compare_ests <- function(Z,y1,y0,x){
+    newZ <- new_exp(Z)
+    newY <- newZ * y1 + (1-newZ)*y0
+    est1_coef <- est1(Z=newZ,Y=newY)
+    est2_coef <- est2(Z=newZ,Y=newY)
+    est3_coef <- est3(Z=newZ,Y=newY,x=x)
+    est4_coef <- est4(Z=newZ,Y=newY,x=x)
+    est5_coef <- est5(Z=newZ,Y=newY,x=x)
+    est6_coef <- est6(Z=newZ,Y=newY,x=x)
+    return(c(est1=est1_coef,est2=est2_coef,est3=est3_coef,
+             est4=est4_coef,est5=est5_coef,est6=est6_coef))
+}
+```
+
+```{r dobiassims, echo=TRUE, cache=TRUE}
+set.seed(1235)
+nsims <- 5000
+dist_ests <- with(dat,
+    replicate(nsims,compare_ests(Z=Z,y1=y1,y0=y0,x=x1)))
+apply(dist_ests,1,summary)
+apply(dist_ests,1,function(x){ trueATE_estimand - mean(x)})
+```
+
+
+## How would we know whether the bias is too big?
+
+Different may not mean worse. Let's see how these estimators work:
+
+```{r out.width=".9\\textwidth"}
+estdat <- data.frame(tauhat = c(dist_ests[1,],dist_ests[2,],dist_ests[3,],dist_ests[4,],dist_ests[5,],dist_ests[6,]),
+    est=rep(c("mean diff","lm","cov adj","topcoded+adj","lin adj","rose adj"),each=nsims))
+estmeans <- estdat %>% group_by(est) %>% summarize(mnest=mean(tauhat))
+
+# http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/#a-colorblind-friendly-palette
+# The palette with black:
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# To use for fills, add
+#  scale_fill_manual(values=cbPalette)
+
+# To use for line and point colors, add
+
+g1 <- ggplot(data=estdat,aes(x=tauhat,group=est,color=est))+
+    geom_density() +
+    geom_point(data=estmeans,aes(y=.1,x=mnest,group=est,color=est)) +
+    geom_vline(xintercept=trueATE_estimand) +
+    scale_colour_manual(values=cbbPalette) +
+    theme_bw()
+print(g1)
+```
+
+## More on the Rosenbaum 2002 approach:
+
+The first approach worked because the treatment was independent of the covariate. Yet, in a finite sample, there is still some relationship --- that was why the plot `Z` by `x1` and the plot of the `resid_Z_x1` by `x1` were not the same.
+
+```{r echo=TRUE}
+summary(lm(Z~x1,dat))$r.squared
+```
+
+Another approach (from @rosenbaum2002) does not adjust `Z` at all --- after all, we know that is randomized. We have no need to adjust `Z` we just want to remove non-treatment related noise in our outcome in order to increase precision. Notice that we also gain in precision here by not reducing the variation in `Z`.
+
+```{r echo=TRUE}
+rose_mod <- lm_robust(resid_Y_x1~Z,data=dat)
+rose_mod$p.value["Z"]
+unadj_est$p.value["Z"]
+adj_est$p.value["Z"]
+```
+
+## More on the Lin 2013 approach:
+
+@freedman2008a showed the bias in simple covariance adjusted estimates of the ATE. @lin2013 showed how to significantly reduce this bias.
+
+```{r linapproach, echo=TRUE}
+## remove the mean from the covariate, center the covariate.
+dat$x1_c <- with(dat,x1 - mean(x1))
+## fit a model interacting the centered covariate with the treatment
+lm_lin1 <- lm_robust(Y~Z + Z*x1_c,data=dat)
+coef(lm_lin1)[["Z"]]
+lm_lin2 <- lm_lin(Y~Z,covariates=~x1,data=dat)
+coef(lm_lin2)[["Z"]]
+c(lm_lin2$std.error["Z"],
+    lm_lin1$std.error["Z"],
+    adj_est$std.error["Z"],
+    rose_mod$std.error["Z"],
+    unadj_est$std.error["Z"])
+```
+
+
+
+## Linear Regression for Covariance Adjustment in a RCT
+
+ Covariance adjustment is the removal of linear relationships. We can think of
+ "removing a linear relationship" as "residualization".
+
+ - In randomized experiments:
+   - Direct covariance adjustment can increase precision in the estimation of average
+     causal effects.
+   - The precision comes with some bias (perhaps a very small amount, perhaps worthwhile making the bias versus variance tradeoff in some cases, perhaps not in others).
+   - We can reduce the bias following @lin2013.
+   - More precision can arise if we don't adjust the treatment following @rosenbaum2002 (could involve some bias here too).
+
 
 \medskip
 
-Notice that if everyone opens the door when visited then $y_{i,Z=1,d_1=1} =
-y_{i,Z=1}$  so the ITT=ATE.
-
-\medskip
-
-Why give it a new name?
-
-## A simulation to understand the design and analysis
-
-Setting up the simulation and analysis before going into the field.
-
-```{r}
-library(randomizr)
-set.seed(20190730)
-n <- 1000
-## Make a covariate, like age
-xtmp <- rnorm(n,mean=45,sd=10)
-x <- pmax(xtmp,18)
-## Make potential outcome to control
-y0tmp <- round(rnorm(n,mean=0,sd=10)) + x/2
-y0 <- pmax(y0tmp,0)
-Z <- complete_ra(n)
-## Door opening is a function of x (age) and Z (visits)
-probd <- ( x-min(x) )/( max(x) - min(x) )
-mean(probd)
-d <- ifelse(Z==1, rbinom(sum(Z==1),prob=probd/2,size=1), 0)
-table(Z,d,exclude=c())
-mean(d[Z==1])
-```
-
-```{r}
-## No effects possible if not visited
-y0d0 <- y0
-y0d1 <- y0
-y1d0 <- y0
-taubar <- .25*sd(y0) ## Effect of .25 sds on compliers/door openers
-## The treatment also changes variance of y1d1
-y1d1 <- mean(y0) + taubar + (y0 - mean(y0))/2
-## Define observed outcome
-Y <-  Z*d*y1d1 + Z*(1-d)*y1d0 + (1-Z)*d*y0d1 + (1-Z)*(1-d)*y0d0
-dat <- data.frame(y1d1,y1d0,y0d1,y0d0,y0,Y,Z,d,x,probd)
-dat$y1 <- (1-Z)*y0 + Z*d*y1d1 + Z*(1-d)*y1d0
-```
-
-## A simulation to understand the design and analysis
-
-
-```{r}
-boxplot(Y~Z*d,data=dat)
-```
-
-
-## Learning about the ITT
-
-First, let's learn about the effect of the policy itself, about the ITT.
-
-```{r}
-## True ITT with one-sided non-compliance
-pd <- mean(dat$d[dat$Z==1])
-
-bary1 <- mean(dat$y1d1)*pd + mean(dat$y1d0)*(1-pd)
-bary0 <- mean(dat$y0)
-
-trueITT <- bary1 - bary0
-```
-
-
-\smallskip
-
-What evidence do we have against the claim that the policy had no effects? How
-would we assess whether this testing procedure is trustworthy --- controls its
-false positive error rate?
-
-\smallskip
-
-What is our best guess about the ITT itself? How would we assess whether or
-not this estimator is biased or not?
-
-\smallskip
-
-What is our best guess about how our estimate of the ITT would vary from
-experiment to experiment?
-
-
-## Some code notes
-
-```{r, eval=FALSE}
-newExp <- function(trt){ sample(trt) }
-testStat <- function(outcome,trt){  mean(outcome[trt==1]) - mean(outcome[trt==0]) }
-obsTestStat <- testStat(outcome=dat$Y,trt=dat$Z)
-nullDist <- replicate(1000,testStat(outcome=dat$Y,trt=newExp(dat$Z)))
-upperP <- mean(nullDist >= obsTestStat)
-```
-
-
-```{r, eval=FALSE}
-##taubarhat <- with(dat, mean(Y[Z==1]) - mean(Y[Z==0]))
-## or taubarhat <- coef(lm(Y~Z))[["Z"]]
-library(estimatr)
-taubarhat <- difference_in_means(Y~Z,data=dat)
-## sqrt( var(Y[Z==1])/sum(Z==1) + var(Y[Z==0])/sum(Z==0) )
-```
-
-
-## The Complier Average Causal Effect or Local Average Treatment Effect (on the Compliers)
-
-Now we would like to learn about the causal effect of answering the door and having the
-conversation, the theoretically interesting effect. But, this comparison is confounded
-by $x$ (tells us about differences in the outcome due to $x$ in addition to
-the difference caused by $D$).
-
-```{r}
-with(dat,cor(Y,x))
-with(dat,cor(d,x))
-with(dat,cor(Z,x)) ## should be near 0
-```
-
-
-## Identifying the causal effect of opening the door
-
-We want to learn about the Complier Average Causal Effect (aka the Local
-Average Treatment Effect): CACE$= \bar{y_{i,Z=1,d_1=1}} -
-\bar{y_{i,Z=0,d_1=1}}$
-
-
-Let $p$ be the proportion of compliers ($\sum_{i=1}^N I(d_{i,1} = 1)/N$).
-
-\begin{align*}
-ITT & = \left( \bar{y}_{1,d_1=1}p + \bar{y}_{1,d_1=0}(1-p) \right)  - \bar{y}_{0} \\
-    & = ( \bar{y}_{1,d_1=1}p + \bar{y}_{1,d_1=0}(1-p) )  - ( \bar{y}_{0,d_0=1}p+ \bar{y}_{0,d_0=0}(1-p) )  \\
-    & = ( \bar{y}_{1,d_1=1}p - \bar{y}_{0,d_0=1}p )  +  ( \bar{y}_{1,d_1=0}(1-p)  - \bar{y}_{0,d_0=0}(1-p) )  \\
-    & = ( \bar{y}_{1,d_1=1} - \bar{y}_{0,d_0=1} )p  +  ( \bar{y}_{1,d_1=0}  - \bar{y}_{0,d_0=0}) (1-p)  \\
-\intertext{but $\bar{y}_{1,d_1=0} = \bar{y}_{0,d_1=0} = \bar{y}_{0,d_0=0}$ so }
-  ITT  & = ( \bar{y}_{1,d_1=1} - \bar{y}_{0,d_0=1} ) p \\
-  ITT  & = ( CACE ) p \\
-\intertext{so we can write the CACE as ITT/p}
-  ITT/p & = CACE
-\end{align*}
-
-This means that we can write the CACE as $CACE = ITT/\text{proportion of compliers}$
-
-## Code snippets
-
-```{r}
-ITT <- with(dat,mean(Y[Z==1]) - mean(Y[Z==0]))
-pd <- with(dat, mean(d[Z==1]) - mean(d[Z==0]))
-ITT/pd
-
-library(AER)
-iv1 <- ivreg(Y~d | Z, data=dat)
-
-```
+We don't say "controlling for" when we adjust for covariates in an experiment
+because we not removing their relationship with $Z$ (after all, randomization
+is supposed to have already done that. If asked "What is the correlation
+between $X$ and $Z$?" the answer is "On average, 0.")
 
 
 
 ## Summary of the Day
 
-  - More than one way to use what we observe to reason about potential
-    outcomes: testing, estimating, predicting
+  - There is more than one way to use what we observe to reason about potential
+    outcomes: testing, estimating, predicting.
+  - Linear regression is the most common way to "adjust for" background
+    covariates in non-experimentable studies. We learned about what it means to
+    adjust for covariates in experimental studies so that we can better
+    evaluate linear regression in observational studies (tomorrow).
   - Structure of the course. Where we are now. Where we are going: away from
-    randomized experiments toward observational studies, but with the statistical basis
-    developed from our understanding of randomized experiments.
-  - An instrument moves a dose. The effect of the dose is specific, or local,
-    to those who took a dose, to those who experienced the treatment.
-  - The ITT and CACE/LATE represent different causal effects. ITT tends to be
-    the policy-relevant effect.
-  - An "as-treated" analysis is no longer an experiment.
+    randomized experiments toward observational studies, but with the
+    statistical basis developed from our understanding of randomized
+    experiments.
 
 ## References
 

@@ -1,0 +1,547 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+  12pt,
+  leqno]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Assignment 2 Answer Key},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin = 1.5cm]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+% \usepackage{microtype} %
+% \usepackage{setspace}
+% \onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb,bm}          % AMS Fonts
+% \usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+% \usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfigure}
+\usepackage{array}
+% \usepackage{cancel}
+\usepackage{longtable}
+% % \usepackage{lmodern}
+% % \usepackage{libertine} \usepackage[libertine]{newtxmath}
+% \usepackage{stix}
+% % \usepackage[osf,sc]{mathpazo}     % alternative math
+% \usepackage[T1]{fontenc}
+% \usepackage{fontspec}
+% \setmainfont{Times New Roman}
+% \usepackage{mathtools}          % multlined environment with size option
+% \usepackage{verbatim}
+% \usepackage{geometry}
+% \usepackage{bigfoot}
+% \geometry{verbose,margin=.8in,nomarginpar}
+% \setcounter{secnumdepth}{2}
+% \setcounter{tocdepth}{2}
+% \usepackage{lscape}
+
+\setlist{nosep}
+
+
+% \usepackage{url}
+% \usepackage[nobreak=true]{mdframed} % put box around section with \begin{mdframed}\end{mdframed}
+
+% \usepackage{relsize}            % \mathlarger{} environment
+% \usepackage[unicode=true,
+%             pdfusetitle,
+%             bookmarks=true,
+%             bookmarksnumbered=true,
+%             bookmarksopen=true,
+%             bookmarksopenlevel=2,
+%             breaklinks=false,
+%             pdfborder={0 0 1},
+%             backref=false,
+%             colorlinks=true,
+%             hypertexnames=false]{hyperref}
+% \hypersetup{pdfstartview={XYZ null null 1},
+%             citecolor=blue!50,
+%             linkcolor=red,
+%             urlcolor=green!70!black}
+
+\usepackage{multirow}
+% \usepackage{tikz}
+% \usetikzlibrary{trees, positioning, arrows, automata}
+
+% \tikzset{
+%   treenode/.style = {align=center, inner sep=0pt, text centered,
+%     font=\sffamily},
+%   arn_n/.style = {treenode, rectangle, black, fill=white, text width=6em},
+%   arn_r/.style = {treenode, circle, red, draw=red, text width=1.5em, thick}
+% }
+
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+\usepackage[small,bf]{caption}  % Captions
+
+% \usepackage[obeyFinal,textwidth=0.8in, colorinlistoftodos,prependcaption,textsize=tiny]{todonotes} % \fxnote*[options]{note}{text} to make sticky notes
+% \usepackage{xargs}
+% \newcommandx{\unsure}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+% \newcommandx{\change}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}}
+% \newcommandx{\info}[2][1=]{\todo[linecolor=OliveGreen,backgroundcolor=OliveGreen!25,bordercolor=OliveGreen,#1]{#2}}
+% \newcommandx{\improvement}[2][1=]{\todo[linecolor=Plum,backgroundcolor=Plum!25,bordercolor=Plum,#1]{#2}}
+
+\parskip=8pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\newcommand{\qedknitr}{\hfill\rule{1.2ex}{1.2ex}}
+
+% \makeatletter
+% \def\thm@space@setup{\thm@preskip=0pt
+% \thm@postskip=0pt}
+% \makeatother
+
+\def\tightlist{}
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+% \newtheoremstyle{newstyle}
+% {} %Aboveskip
+% {} %Below skip
+% {\mdseries} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+% {} %Indent
+% {\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+% {.} %Punctuation afer theorem header
+% { } %Space after theorem header
+% {} %Heading
+
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newtheorem{definition}{Definition}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\DeclareMathOperator{\E}{\mathrm{E}}
+\DeclareMathOperator{\Var}{\mathrm{Var}}
+\DeclareMathOperator{\Cov}{\mathrm{Cov}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\1}{\mathbbm{1}}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+% suppress table numbering
+\captionsetup[table]{labelformat=empty}
+
+\ifluatex
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage[]{natbib}
+\bibliographystyle{apsr}
+
+\title{Assignment 2 Answer Key}
+\author{\href{mailto:tl2624@columbia.edu}{Thomas Leavitt}}
+\date{16 August 2020}
+
+\begin{document}
+\maketitle
+
+\section*{Question 1}
+
+Assuming SUTVA (i.e., no interference and no hidden levels of treatment
+assignment) and the random assignment of the instrument (encouragement),
+the average causal effect of encouragement, \(Z\), on dose, \(D\), is
+\begin{align*}
+\bar{\tau}_D & = \bar{d}_T - \bar{d}_C \\
+& = \left(\frac{1}{n}\right) \sum \limits_{i = 1}^n d_{Ti} - \left(\frac{1}{n}\right) \sum \limits_{i = 1}^nd_{Ci} \\ 
+& = \left(\frac{1}{n}\right) \sum \limits_{i = 1}^n \left(d_{Ti} - d_{Ci}\right) \\ 
+& = \left(\frac{1}{n}\right) \sum \limits_{i = 1}^n \tau_{Di} \\
+& = \left(\frac{1}{n}\right) \sum \limits_{i = 1}^n \tau_{Di}
+\end{align*} We can estimate this effect via the \(ITT_D\) estimator,
+which is \begin{align*}
+\widehat{ITT_D} & = \frac{\mathbf{Z}^{t}\mathbf{D}}{\mathbf{Z}^{t}\mathbf{1}} - \frac{\left(\mathbf{1} - \mathbf{Z}\right)^{t}\mathbf{D}}{\left(\mathbf{1} - \mathbf{Z}\right)^{t}\mathbf{1}} \\ 
+& = \left(\frac{1}{\sum_{i = 1}^n Z_i}\right) \sum_{i = 1}^n Z_i D_i - \left(\frac{1}{\sum_{i = 1}^n \left(1 - Z_i\right)}\right) \sum_{i = 1}^n \left(1 - Z_i\right) D_i,
+\end{align*} where the superscript \(t\) denotes matrix transposition
+and \(D_i = Z_i d_{Ti} + \left(1 - Z_i\right) d_{Ci}\).
+
+For the first study, the estimate of the effect of encouragement on
+program viewing is \(\frac{244}{510} - \frac{74}{579} \approx 0.3506\),
+and for the second study, the estimate is
+\(\frac{117}{259} - \frac{11}{248} \approx 0.4074\).
+
+\section*{Question 2}
+
+A hypothetical outcome variable one could collect is ``views on
+addiction policy,'\,' measured on a scale from 0 -- 10 in which 0
+represents no support for public treatment programs and 10 is full
+support. Let's imagine that the sum of this outcome among the 510
+treated units is 3,723 and the sum of this outcome among the 579 control
+units is 2,895, yielding an average outcome of \(7.3\) and \(5\) in
+treated and control groups, respectively. \begin{align*}
+\frac{3723}{510} - \frac{2895}{579} & = 7.3 - 5 \\
+& = 2.3.
+\end{align*}
+
+The CACE (complier average causal effect) estimator is
+\(\frac{\widehat{\text{ITT}}_Y}{\widehat{\text{ITT}}_D}\), where
+\(\widehat{\text{ITT}}_D\) is as defined above and
+\(\widehat{\text{ITT}}_Y\) is \begin{align*}
+\widehat{ITT}_Y & = \cfrac{\mathbf{Z}^{t}\mathbf{Y}}{\mathbf{Z}^{t}\mathbf{1}} - \cfrac{\left(\mathbf{1} - \mathbf{Z}\right)^{t}\mathbf{Y}}{\left(\mathbf{1} - \mathbf{Z}\right)^{t}\mathbf{1}} \\ 
+& = \left(\cfrac{1}{\sum_{i = 1}^n Z_i}\right) \sum_{i = 1}^n Z_i Y_i - \left(\cfrac{1}{\sum_{i = 1}^n \left(1 - Z_i\right)}\right) \sum_{i = 1}^n \left(1 - Z_i\right) Y_i
+\end{align*}
+
+Using the hypothetical results described earlier, out CACE estimate is
+simply the ratio of our estimate of \(\text{ITT}_Y\) (the average causal
+effect of \(Z\) on \(Y\)) and \(\text{ITT}_D\) (the average causal
+effect of \(Z\) on \(D\)), which is \begin{align*}
+\frac{2.3}{0.3506} & \approx 6.5602
+\end{align*}
+
+\section*{Question 3}
+
+\citet[276--277]{albertsonlawrence2009} write that ``{[}b{]}y using a
+random sample, we avoid the external validity problems associated with
+samples of convenience that are generally used in laboratory
+experiments. In addition, by assigning respondents at random to viewing
+and nonviewing conditions, these studies benefit from experimental
+control. Yet unlike laboratory experiments, this design allows
+respondents to view programs in their own homes, thus more closely
+approximating regular viewing conditions.''
+
+\section*{Question 4}
+
+\section*{(a)}
+
+\citet{albertsonlawrence2009} state that the study they analyzed used
+random sampling from five metropolitan areas to recruit individuals into
+the study. Among individuals who were successfully recruited, the
+researchers assigned units to treatment and control groups. Among the
+individuals in this study population, the researchers were able to
+contact only 80\% of them to measure outcomes in Round 2
+\citep[284]{albertsonlawrence2009}.
+
+Since we know that there were \(1089\) individuals who responded in
+Round 2 and that these individuals make up 80\% of the round 1 study
+popuation, we can reason backwards to infer that there were
+\(\frac{1089}{0.8} \approx 1361\) individuals in the study, only
+\(1089\) of which responded in Round 2.
+
+Let \(r_{Ti}\) be an indicator for whether subject \(i\) would respond
+in Round 2 if assigned to treatment and let \(r_{Ci}\) be an indicator
+for whether subject \(i\) would respond in Round 2 if assigned to
+control. Potential outcomes are translated into observed outcomes
+according to the following equation: \begin{equation}
+\label{eq:obs_outcomes}
+Y_i = \begin{cases} y_{Ci} + [y_{Ti} - y_{Ci}] Z_i & \text{if } R_i = 1 \\
+\text{NA} & \text{if } R_i = 0, \end{cases}
+\end{equation} where \(R_i = Z_i r_{Ti} + \left(1 - Z_i\right) r_{Ci}\).
+
+From Equation \ref{eq:obs_outcomes} above, we can see that if
+\(R_i = 1\), then the researcher will observe \(y_{Ci}\) for unit \(i\)
+if \(Z_i = 0\) and \(y_{Ti}\) for unit \(i\) if \(Z_i = 1\). By
+contrast, if \(R_i = 0\), then \(Y_i\) will be unobserved --- i.e., NA.
+
+Now we can define four distinct types of subjects with regard to
+attrition:
+
+\begin{table}[h]
+\centering
+    \begin{tabular}{lll}
+    \toprule
+    $z_i = 0$ & $z_i = 1$ & Type of Subject       \\
+    \midrule
+    $r_{Ci} = 1$ & $r_{Ti} = 1$ & \textit{Always-Reporter} \\
+    $r_{Ci} = 0$ & $r_{Ti} = 1$ & \textit{If-Treated-Reporter} \\
+    $r_{Ci} = 1$ & $r_{Ti} = 0$ & \textit{If-Untreated-Reporter} \\
+    $r_{Ci} = 0$ & $r_{Ti} = 0$ & \textit{Never-Reporter} \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\citet{albertsonlawrence2009} measure \(D_i\) and \(Y_i\) among only
+80\% of the individuals who were assigned to treatment and control. A
+treated individual whose outcome the researchers are able to measure
+could be an Always-Reporters or an If-Treated-Reporters. By contrast, a
+control individual whose outcome the researchers are able to measure
+could be an Always-Reporter or an If-Untreated-Reporter.
+\citet{albertsonlawrence2009} restrict their analysis to only the
+individuals whose \(D_i\) and \(Y_i\) outcomes they did observe.
+
+To see how attrition can lead to bias in the Difference-in-Means
+estimator under complete random assignment, let's first rewrite the
+Difference-in-Means estimator as \begin{align*}
+\hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{Y}, \mathbf{R}\right) & = \cfrac{\left(\mathbf{Z} \circ \mathbf{R}\right)'\mathbf{Y}}{\left(\mathbf{Z} \circ \mathbf{R}\right)'\mathbf{1}} - \cfrac{\left(\left(\mathbf{1} - \mathbf{Z}\right) \circ \mathbf{R}\right)'\mathbf{Y}}{\left(\left(\mathbf{1} - \mathbf{Z}\right) \circ \mathbf{R}\right)'\mathbf{1}} \\
+& = \left(\frac{1}{\sum \limits_{i = 1}^n Z_i R_i}\right) \sum \limits_{i = 1}^n \left(Z_i R_i\right) Y_i - \left(\frac{1}{\sum \limits_{i = 1}^n \left(1 - Z_i\right)R_i}\right) \sum \limits_{i = 1}^n \left(\left(1 - Z_i\right) R_i\right) Y_i \\
+& = \left(\frac{1}{\sum \limits_{i = 1}^n Z_i r_{Ti}}\right) \sum \limits_{i = 1}^n \left(Z_i r_{Ti}\right) y_{Ti} - \left(\frac{1}{\sum \limits_{i = 1}^n \left(1 - Z_i\right)r_{Ci}}\right) \sum \limits_{i = 1}^n \left(\left(1 - Z_i\right) r_{Ci}\right) y_{Ci},
+\end{align*} where, for two matrices \(\mathbf{A}\) and \(\mathbf{B}\),
+\(\mathbf{A} \circ \mathbf{B}\) is the entry-wise (or Hadamard) product
+of \(\mathbf{A}\) and \(\mathbf{B}\).
+
+If \(r_{TI} = 1\) and \(r_{Ci} = 1\) for all
+\(i \in \left\{1, \dots , n\right\}\) units, then the
+Difference-in-Means estimator is equivalent to how it is usually written
+as \begin{align*}
+\hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{Y}\right) & = \left(\frac{1}{\sum \limits_{i = 1}^n Z_i}\right) \sum \limits_{i = 1}^n Z_i Y_i - \left(\frac{1}{\sum \limits_{i = 1}^n \left(1 - Z_i\right)}\right) \sum \limits_{i = 1}^n \left(1 - Z_i\right) Y_i.
+\end{align*}
+
+However, when attrition does exist, the Difference-in-Means estimator is
+not necessarily unbiased. To see this point, note that, unlike the case
+in which all units are Always-Reporters, both
+\(\sum \limits_{i = 1}^n Z_i r_{Ti}\) and
+\(\sum \limits_{i = 1}^n \left(1 - Z_i\right)r_{Ci}\) are no longer
+fixed quantities equal to \(n_1\) and \(n_0\), respectively, over all
+possible assignments. Instead, \(\sum \limits_{i = 1}^n Z_i r_{Ti}\) can
+take on any integer between
+\(\max\left\{0, n_1 - \sum \limits_{i = 1}^n \left(1 - r_{Ti}\right)\right\}\)
+and \(\min\left\{n_1, \sum \limits_{i = 1}^n r_{Ti}\right\}\) and
+\(\sum \limits_{i = 1}^n \left(1 - Z_i\right) r_{Ci}\) can take on any
+integer between
+\(\max\left\{0, n_0 - \sum \limits_{i = 1}^n \left(1 - r_{Ci}\right)\right\}\)
+and \(\min\left\{n_0, \sum \limits_{i = 1}^n r_{Ci}\right\}\). Note that
+when \(\sum \limits_{i = 1}^n Z_i r_{Ti} = 0\) or
+\(\sum \limits_{i = 1}^n \left(1 - Z_i\right) r_{Ci} = 0\), the
+estimator is undefined. Although in principle it could be the case that
+\(\sum \limits_{i = 1}^n Z_i r_{Ti} = 0\) and
+\(\sum \limits_{i = 1}^n \left(1 - Z_i\right) r_{Ci} = 0\), we will
+assume that the number of treated units who report their outcomes and
+the number of control units who report their outcomes are both greater
+than \(0\) for all possible assignments.
+
+Focusing on the first term of the estimator,
+\(\left(\frac{1}{\sum \limits_{i = 1}^n Z_i r_{Ti}}\right) \sum \limits_{i = 1}^n \left(Z_i r_{Ti}\right) y_{Ti}\),
+write \(n_1^{r_T = 1}\) as the number of treated units whose outcomes
+are observed, which is equivalent to the number of Always-Reporters and
+If-Treated-Reporters randomized into the treatment group. In general, it
+is \textit{not} the case that
+\(\E\left[\cfrac{\left(\mathbf{Z} \circ \mathbf{R}\right)'\mathbf{Y}}{\left(\mathbf{Z} \circ \mathbf{R}\right)'\mathbf{1}}\right] = \cfrac{\E\left[\left(\mathbf{Z} \circ \mathbf{R}\right)'\mathbf{Y}\right]}{\E\left[\left(\mathbf{Z} \circ \mathbf{R}\right)'\mathbf{1}\right]}\).
+However, so long as \(n_1^{r_T = 1} > 0\), it follows that
+
+\begin{align*}
+\E\left[\cfrac{\left(\mathbf{Z} \circ \mathbf{r_T}\right)' \mathbf{y_T}}{\left(\mathbf{Z} \circ \mathbf{r_T}\right)' \mathbf{1}} | \left(\mathbf{Z} \circ \mathbf{r_T}\right)' \mathbf{1} = n_1^{r_T = 1}\right] & = \E\left[\cfrac{\left(\mathbf{Z} \circ \mathbf{r_T}\right)' \mathbf{y_T}}{n_1^{r_T = 1}} | \left(\mathbf{Z} \circ \mathbf{r_T}\right)' \mathbf{1} = n_1^{r_T = 1}\right] \\ 
+& = \E\left[\cfrac{\sum \limits_{i = 1}^n \left(Z_i r_{Ti}\right) y_{Ti}}{n_1^{r_T = 1}} | \left(\mathbf{Z} \circ \mathbf{R}\right)' \mathbf{1} = n_1^{r_T = 1}\right] \\
+& = \cfrac{1}{n_1^{r_T = 1}} \E\left[\sum \limits_{i = 1}^n \left(Z_i r_{Ti}\right) y_{Ti} | \left(\mathbf{Z} \circ \mathbf{R}\right)' \mathbf{1} = n_1^{r_T = 1}\right] \\
+& = \cfrac{1}{n_1^{r_T = 1}} \E\left[\sum \limits_{i: r_{iT} = 1} Z_i y_{Ti} | \left(\mathbf{Z} \circ \mathbf{R}\right)' \mathbf{1} = n_1^{r_T = 1}\right] \\ 
+& = \cfrac{1}{n_1^{r_T = 1}} \sum \limits_{i: r_{iT} = 1} \E\left[Z_i y_{Ti} | \left(\mathbf{Z} \circ \mathbf{R}\right)' \mathbf{1} = n_1^{r_T = 1}\right] \\
+& = \cfrac{1}{n_1^{r_T = 1}} \sum \limits_{i: r_{iT} = 1} y_{Ti} \E\left[Z_i | \left(\mathbf{Z} \circ \mathbf{R}\right)' \mathbf{1} = n_1^{r_T = 1}\right]
+\end{align*}
+
+Note that the proportion of assignments in which an arbitrary
+\(i: r_{Ti} = 1\) is in the treatment condition for some
+\(n_1^{r_T = 1}\) and \(n^{r_T = 1}\) is
+\(\cfrac{n_1^{r_T = 1}}{n^{r_T = 1}}\), which under uniform random
+assignment implies that
+\(\Pr\left(Z_{i:r_{Ti} = 1} = 1\right) = \cfrac{n_1^{r_T = 1}}{n^{r_T = 1}}\).
+It therefore follows that
+
+\begin{align*}
+& = \cfrac{1}{n_1^{r_T = 1}} \sum \limits_{i: r_{iT} = 1} y_{Ti} \left(\cfrac{n_1^{r_T = 1}}{n^{r_T = 1}}\right) \\ 
+& = \cfrac{1}{n_1^{r_T = 1}} \left(\cfrac{n_1^{r_T = 1}}{n^{r_T = 1}}\right) \sum \limits_{i: r_{iT} = 1} y_{Ti} \\ 
+& = \cfrac{1}{n^{r_T = 1}} \sum \limits_{i: r_{iT} = 1} y_{Ti},
+\end{align*} which is the mean treated potential outcome among
+Always-Reporters and If-Treated-Reporters, which can be reexpressed as
+\(\bar{y}_T^{\text{AR}} \pi^{\text{AR}} + \bar{y}_T^{\text{ITR}} \pi^{\text{ITR}}\).
+While the expected value of the estimator is equal to
+\(\bar{y}_T^{\text{AR}} \pi^{\text{AR}} + \bar{y}_T^{\text{ITR}} \pi^{\text{ITR}}\),
+this quantity may not be equal to \(\bar{y}_T\).
+
+The same logic applies to the control group, in which the expected value
+of the second term of the Difference-in-Means estimator will be equal to
+\(\cfrac{1}{n^{r_C = 1}} \sum \limits_{i: r_{iC} = 1} y_{Ci}\), which
+also may not be equal to \(\bar{y}_C\).
+
+\section*{Question 5}
+
+To answer this question, first note that
+\(\bar{\tau}_D = \bar{d}_T - \bar{d}_C\) is equivalent to the proportion
+of Compliers, \(\pi^C\), minus the proportion of Defiers, \(\pi^D\). To
+see this point, note that \(d_c \in \left\{0, 1\right\}\) and
+\(d_t \in \left\{0, 1\right\}\). The individual causal effect,
+\(\tau_{Di}\), is \(1\) for Compliers, \(-1\) for Defiers and \(0\) for
+both Always-Takers and Never-Takers. Hence,
+\(\sum \limits_{i = 1}^n \tau_{Di}\) is the number of Compliers, \(n^C\)
+minus the number of Defiers, \(n^D\). The average causal effect of \(Z\)
+on \(D\) is \begin{align*}
+\bar{\tau}_D & = \left(\frac{1}{n}\right)\sum \limits_{i = 1}^n \left(d_{Ti} - d_{Ci}\right) \\
+& = \left(\frac{1}{n}\right) \sum \limits_{i = 1}^n \tau_{Di} \\
+& = \left(\frac{1}{n}\right)\left(n^C - n^D\right) \\ 
+& = \frac{n^C}{n} - \frac{n^D}{n}\\ 
+& = \pi^C - \pi^D
+\end{align*}
+
+An instrument (or encouragement) is weak when it has a small impact on
+whether or not units in a study actually receive treatment. In order for
+the ratio \(\cfrac{\bar{\tau}_Y}{\bar{\tau}_D}\) to be defined it must
+be the case that \(\bar{\tau}_D > 0\). The quantity \(\bar{\tau}_D\) is
+equal to \(\pi^C - \pi^D\). However, under the usual assumption of no
+Defiers, i.e., that \(\pi^D = 0\), \(\bar{\tau}_D\) is equal to the size
+of \(\pi^C\).
+
+We cannot actually know the value of \(\pi^C\). However, the estimator
+\(\widehat{\text{ITT}}_D\) is unbiased and consistent for
+\(\bar{\tau}_D\), where \(\bar{\tau}_D = \pi^C\) when \(\pi^D = 0\).
+Written mathematically, unbiasedness and consistency in this context
+mean that \(\E\left[\widehat{\text{ITT}}_D\right] = \pi^C\) and
+\(\widehat{\text{ITT}}_D \overset{p}{\to} \pi^C\).
+
+The estimate of \(\pi^C\) in Study 1 (PBS,
+\textit{Moyers on Addiction: Close to Home}) is
+\(\frac{244}{510} - \frac{74}{579} \approx 0.3506\) and in Study 2
+(\textit{Fox News}, ``Channel 11 Special on Proposition 209'') is
+\(\frac{117}{259} - \frac{11}{248} \approx 0.4074\).
+
+In the \citet{arceneaux2005} study, we can calculate the proportion of
+people in each precinct who were successfully contacted by multiplying
+the size of each precinct by the proportion of people contacted.
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{acorn\_data \textless{}{-}}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"acorn03.csv"}\NormalTok{)}
+
+\NormalTok{n\_contact \textless{}{-}}\StringTok{ }\NormalTok{acorn\_data}\OperatorTok{$}\NormalTok{size }\OperatorTok{*}\StringTok{ }\NormalTok{acorn\_data}\OperatorTok{$}\NormalTok{contact}
+\end{Highlighting}
+\end{Shaded}
+
+\normalsize
+
+Then we can calculate the proportion of people successfully contacted
+among all people in treated precincts and subtract from this value the
+proportion of people successfully contacted among all people in control
+precincts.
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{n\_c \textless{}{-}}\StringTok{ }\KeywordTok{t}\NormalTok{(}\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\NormalTok{acorn\_data}\OperatorTok{$}\NormalTok{z) }\OperatorTok{\%*\%}\StringTok{ }\NormalTok{acorn\_data}\OperatorTok{$}\NormalTok{size}
+\NormalTok{n\_t \textless{}{-}}\StringTok{ }\KeywordTok{t}\NormalTok{(acorn\_data}\OperatorTok{$}\NormalTok{z) }\OperatorTok{\%*\%}\StringTok{ }\NormalTok{acorn\_data}\OperatorTok{$}\NormalTok{size}
+
+\KeywordTok{t}\NormalTok{(acorn\_data}\OperatorTok{$}\NormalTok{z) }\OperatorTok{\%*\%}\StringTok{ }\NormalTok{(n\_contact)}\OperatorTok{/}\NormalTok{n\_t }\OperatorTok{{-}}\StringTok{ }\KeywordTok{t}\NormalTok{(}\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\NormalTok{acorn\_data}\OperatorTok{$}\NormalTok{z) }\OperatorTok{\%*\%}\StringTok{ }\NormalTok{(n\_contact)}\OperatorTok{/}\NormalTok{n\_c}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+          [,1]
+[1,] 0.6274073
+\end{verbatim}
+
+\normalsize
+
+The estimate of the strength of the instrument in the Acorn study
+\citep{arceneaux2005} is
+\(\frac{3095}{4933} - \frac{0}{4779} \approx 0.6274\), which is larger
+than the estimates of instrument strength in the other two studies.
+Therefore, our best guess of which study has the weakest instrument is
+Study 1 (PBS, \textit{Moyers on Addiction: Close to Home}) in which we
+estimate \(\pi^C\) to be roughly \(0.3506\).
+
+\newpage
+
+\renewcommand\refname{References}
+  \bibliography{Bibliography.bib}
+
+\end{document}

@@ -1,7 +1,7 @@
 ---
 title: Matching Tools and Approaches
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-author: ICPSR 2019 Session 2
+author: ICPSR 2020 Session 2
 bibliography:
  - BIB/abbrev-long.bib
  - BIB/refs.bib

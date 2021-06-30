@@ -92,6 +92,7 @@
 \renewcommand{\includegraphics}[1]{\Oldincludegraphics[width=\maxwidth]{#1}}
 
 \title{Day 08: Testing Causal Hypotheses with Instrumental Variables  }
+ 
 
 
 
@@ -137,7 +138,8 @@
             bookmarks=true,
             pdfauthor={\href{mailto:t.leavitt718@gmail.com}{Thomas Leavitt} ()},
              pdfkeywords = {},  
-            pdftitle={Day 08: Testing Causal Hypotheses with Instrumental Variables},
+            pdftitle={Day 08: Testing Causal Hypotheses with
+Instrumental Variables},
             colorlinks=true,
             citecolor=blue,
             urlcolor=blue,
@@ -281,10 +283,12 @@
 \captionsetup[table]{labelformat=empty}
 
 
+
 \begin{document}
 	
 % \pagenumbering{arabic}% resets `page` counter to 1 
-%
+%    
+
 % \maketitle
 
 {% \usefont{T1}{pnc}{m}{n}
@@ -345,17 +349,17 @@ compliers, but to test hypotheses about causal effects among Compliers?
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{rm}\NormalTok{(}\DataTypeTok{list =} \KeywordTok{ls}\NormalTok{())}
-\NormalTok{n <-}\StringTok{ }\DecValTok{8}
-\NormalTok{n_}\DecValTok{1}\NormalTok{ <-}\StringTok{ }\DecValTok{4}
+\NormalTok{n \textless{}{-}}\StringTok{ }\DecValTok{8}
+\NormalTok{n\_}\DecValTok{1}\NormalTok{ \textless{}{-}}\StringTok{ }\DecValTok{4}
 
 \KeywordTok{set.seed}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{)}
-\NormalTok{d_c <-}\StringTok{ }\KeywordTok{rbinom}\NormalTok{(}\DataTypeTok{n =}\NormalTok{ n, }\DataTypeTok{size =} \DecValTok{1}\NormalTok{, }\DataTypeTok{prob =} \FloatTok{0.3}\NormalTok{)}
-\NormalTok{d_t <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \OtherTok{NA}\NormalTok{, }\DataTypeTok{times =} \KeywordTok{length}\NormalTok{(d_c))}
-\CommentTok{## HERE WE SATISFY THE AT LEAST ONE COMPLIER (NON-WEAK INSTRUMENT) ASSUMPTION}
-\NormalTok{d_t[}\KeywordTok{which}\NormalTok{(d_c }\OperatorTok{!=}\StringTok{ }\DecValTok{1}\NormalTok{)] <-}\StringTok{ }\KeywordTok{rbinom}\NormalTok{(}\DataTypeTok{n =} \KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d_c }\OperatorTok{!=}\StringTok{ }\DecValTok{1}\NormalTok{)), }\DataTypeTok{size =} \DecValTok{1}\NormalTok{, }\DataTypeTok{prob =} \FloatTok{0.6}\NormalTok{)}
-\CommentTok{## HERE WE SATISFY THE NO DEFIERS (MONOTONICITY) ASSUMPTION}
-\NormalTok{d_t[}\KeywordTok{which}\NormalTok{(d_c }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)] <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d_c }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)))}
-\KeywordTok{cbind}\NormalTok{(d_c, d_t)}
+\NormalTok{d\_c \textless{}{-}}\StringTok{ }\KeywordTok{rbinom}\NormalTok{(}\DataTypeTok{n =}\NormalTok{ n, }\DataTypeTok{size =} \DecValTok{1}\NormalTok{, }\DataTypeTok{prob =} \FloatTok{0.3}\NormalTok{)}
+\NormalTok{d\_t \textless{}{-}}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \OtherTok{NA}\NormalTok{, }\DataTypeTok{times =} \KeywordTok{length}\NormalTok{(d\_c))}
+\CommentTok{\#\# HERE WE SATISFY THE AT LEAST ONE COMPLIER (NON{-}WEAK INSTRUMENT) ASSUMPTION}
+\NormalTok{d\_t[}\KeywordTok{which}\NormalTok{(d\_c }\OperatorTok{!=}\StringTok{ }\DecValTok{1}\NormalTok{)] \textless{}{-}}\StringTok{ }\KeywordTok{rbinom}\NormalTok{(}\DataTypeTok{n =} \KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d\_c }\OperatorTok{!=}\StringTok{ }\DecValTok{1}\NormalTok{)), }\DataTypeTok{size =} \DecValTok{1}\NormalTok{, }\DataTypeTok{prob =} \FloatTok{0.6}\NormalTok{)}
+\CommentTok{\#\# HERE WE SATISFY THE NO DEFIERS (MONOTONICITY) ASSUMPTION}
+\NormalTok{d\_t[}\KeywordTok{which}\NormalTok{(d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)] \textless{}{-}}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)))}
+\KeywordTok{cbind}\NormalTok{(d\_c, d\_t)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -373,25 +377,25 @@ compliers, but to test hypotheses about causal effects among Compliers?
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{prop_comp <-}\StringTok{ }\KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{&}\StringTok{ }\NormalTok{d_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)) }\OperatorTok{/}\StringTok{ }\NormalTok{n}
-\NormalTok{prop_def <-}\StringTok{ }\KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d_c }\OperatorTok{==}\StringTok{ }\DecValTok{1} \OperatorTok{&}\StringTok{ }\NormalTok{d_t }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{)) }\OperatorTok{/}\StringTok{ }\NormalTok{n}
-\NormalTok{prop_at <-}\StringTok{ }\KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d_c }\OperatorTok{==}\StringTok{ }\DecValTok{1} \OperatorTok{&}\StringTok{ }\NormalTok{d_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)) }\OperatorTok{/}\StringTok{ }\NormalTok{n}
-\NormalTok{prop_nt <-}\StringTok{ }\KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{&}\StringTok{ }\NormalTok{d_t }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{)) }\OperatorTok{/}\StringTok{ }\NormalTok{n}
+\NormalTok{prop\_comp \textless{}{-}}\StringTok{ }\KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{\&}\StringTok{ }\NormalTok{d\_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)) }\OperatorTok{/}\StringTok{ }\NormalTok{n}
+\NormalTok{prop\_def \textless{}{-}}\StringTok{ }\KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{1} \OperatorTok{\&}\StringTok{ }\NormalTok{d\_t }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{)) }\OperatorTok{/}\StringTok{ }\NormalTok{n}
+\NormalTok{prop\_at \textless{}{-}}\StringTok{ }\KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{1} \OperatorTok{\&}\StringTok{ }\NormalTok{d\_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)) }\OperatorTok{/}\StringTok{ }\NormalTok{n}
+\NormalTok{prop\_nt \textless{}{-}}\StringTok{ }\KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{\&}\StringTok{ }\NormalTok{d\_t }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{)) }\OperatorTok{/}\StringTok{ }\NormalTok{n}
 
-\CommentTok{## HERE WE SATISFY THE EXCLUSION RESTRICTION ASSUMPTION BY LETTING}
-\CommentTok{## y_c = y_t FOR ALL ALWAYS-TAKERS AND NEVER-TAKERS AND}
-\CommentTok{## WE ALSO SATISFY THE SUTVA ASSUMPTION BY LETTING ALL UNITS HAVE}
-\CommentTok{## ONLY TWO POT OUTS}
+\CommentTok{\#\# HERE WE SATISFY THE EXCLUSION RESTRICTION ASSUMPTION BY LETTING}
+\CommentTok{\#\# y\_c = y\_t FOR ALL ALWAYS{-}TAKERS AND NEVER{-}TAKERS AND}
+\CommentTok{\#\# WE ALSO SATISFY THE SUTVA ASSUMPTION BY LETTING ALL UNITS HAVE}
+\CommentTok{\#\# ONLY TWO POT OUTS}
 \KeywordTok{set.seed}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{)}
-\NormalTok{y_c <-}\StringTok{ }\KeywordTok{round}\NormalTok{(}\DataTypeTok{x =} \KeywordTok{rnorm}\NormalTok{(}\DataTypeTok{n =} \DecValTok{8}\NormalTok{, }\DataTypeTok{mean =} \DecValTok{20}\NormalTok{, }\DataTypeTok{sd =} \DecValTok{10}\NormalTok{), }\DataTypeTok{digits =} \DecValTok{0}\NormalTok{)}
-\NormalTok{y_t_null_false <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \OtherTok{NA}\NormalTok{, }\DataTypeTok{times =}\NormalTok{ n)}
-\NormalTok{y_t_null_false[}\KeywordTok{which}\NormalTok{(d_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{&}\StringTok{ }\NormalTok{d_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)] <-}\StringTok{ }\NormalTok{y_c[}\KeywordTok{which}\NormalTok{(d_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{&}\StringTok{ }\NormalTok{d_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)] }\OperatorTok{+}
-\StringTok{  }\KeywordTok{round}\NormalTok{(}\DataTypeTok{x =} \KeywordTok{rnorm}\NormalTok{(}\DataTypeTok{n =} \KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{&}\StringTok{ }\NormalTok{d_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)),}
+\NormalTok{y\_c \textless{}{-}}\StringTok{ }\KeywordTok{round}\NormalTok{(}\DataTypeTok{x =} \KeywordTok{rnorm}\NormalTok{(}\DataTypeTok{n =} \DecValTok{8}\NormalTok{, }\DataTypeTok{mean =} \DecValTok{20}\NormalTok{, }\DataTypeTok{sd =} \DecValTok{10}\NormalTok{), }\DataTypeTok{digits =} \DecValTok{0}\NormalTok{)}
+\NormalTok{y\_t\_null\_false \textless{}{-}}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \OtherTok{NA}\NormalTok{, }\DataTypeTok{times =}\NormalTok{ n)}
+\NormalTok{y\_t\_null\_false[}\KeywordTok{which}\NormalTok{(d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{\&}\StringTok{ }\NormalTok{d\_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)] \textless{}{-}}\StringTok{ }\NormalTok{y\_c[}\KeywordTok{which}\NormalTok{(d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{\&}\StringTok{ }\NormalTok{d\_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)] }\OperatorTok{+}
+\StringTok{  }\KeywordTok{round}\NormalTok{(}\DataTypeTok{x =} \KeywordTok{rnorm}\NormalTok{(}\DataTypeTok{n =} \KeywordTok{length}\NormalTok{(}\KeywordTok{which}\NormalTok{(d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{\&}\StringTok{ }\NormalTok{d\_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)),}
                   \DataTypeTok{mean =} \DecValTok{10}\NormalTok{,}
                   \DataTypeTok{sd =} \DecValTok{4}\NormalTok{),}
         \DataTypeTok{digits =} \DecValTok{0}\NormalTok{)}
-\NormalTok{y_t_null_false[}\OperatorTok{!}\NormalTok{(d_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{&}\StringTok{ }\NormalTok{d_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)] <-}\StringTok{ }\NormalTok{y_c[}\OperatorTok{!}\NormalTok{(d_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{&}\StringTok{ }\NormalTok{d_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)]}
-\KeywordTok{cbind}\NormalTok{(y_c, y_t_null_false)}
+\NormalTok{y\_t\_null\_false[}\OperatorTok{!}\NormalTok{(d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{\&}\StringTok{ }\NormalTok{d\_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)] \textless{}{-}}\StringTok{ }\NormalTok{y\_c[}\OperatorTok{!}\NormalTok{(d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{\&}\StringTok{ }\NormalTok{d\_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)]}
+\KeywordTok{cbind}\NormalTok{(y\_c, y\_t\_null\_false)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -409,23 +413,23 @@ compliers, but to test hypotheses about causal effects among Compliers?
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{true_data <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{y_t =}\NormalTok{ y_t_null_false,}
-                        \DataTypeTok{y_c =}\NormalTok{ y_c,}
-                        \DataTypeTok{d_t =}\NormalTok{ d_t,}
-                        \DataTypeTok{d_c =}\NormalTok{ d_c,}
-                        \DataTypeTok{tau =}\NormalTok{ y_t_null_false }\OperatorTok{-}\StringTok{ }\NormalTok{y_c)}
+\NormalTok{true\_data \textless{}{-}}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{y\_t =}\NormalTok{ y\_t\_null\_false,}
+                        \DataTypeTok{y\_c =}\NormalTok{ y\_c,}
+                        \DataTypeTok{d\_t =}\NormalTok{ d\_t,}
+                        \DataTypeTok{d\_c =}\NormalTok{ d\_c,}
+                        \DataTypeTok{tau =}\NormalTok{ y\_t\_null\_false }\OperatorTok{{-}}\StringTok{ }\NormalTok{y\_c)}
 
-\NormalTok{true_data }\OperatorTok{%<>%}\StringTok{ }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{type =} \OtherTok{NA}\NormalTok{,}
-                      \DataTypeTok{type =} \KeywordTok{ifelse}\NormalTok{(}\DataTypeTok{test =}\NormalTok{ d_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{&}\StringTok{ }\NormalTok{d_t }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{,}
+\NormalTok{true\_data }\OperatorTok{\%\textless{}\textgreater{}\%}\StringTok{ }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{type =} \OtherTok{NA}\NormalTok{,}
+                      \DataTypeTok{type =} \KeywordTok{ifelse}\NormalTok{(}\DataTypeTok{test =}\NormalTok{ d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{\&}\StringTok{ }\NormalTok{d\_t }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{,}
                                     \DataTypeTok{yes =} \StringTok{"Never Taker"}\NormalTok{,}
                                     \DataTypeTok{no =}\NormalTok{ type),}
-                      \DataTypeTok{type =} \KeywordTok{ifelse}\NormalTok{(}\DataTypeTok{test =}\NormalTok{ d_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{&}\StringTok{ }\NormalTok{d_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{,}
+                      \DataTypeTok{type =} \KeywordTok{ifelse}\NormalTok{(}\DataTypeTok{test =}\NormalTok{ d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{0} \OperatorTok{\&}\StringTok{ }\NormalTok{d\_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{,}
                                     \DataTypeTok{yes =} \StringTok{"Complier"}\NormalTok{,}
                                     \DataTypeTok{no =}\NormalTok{ type),}
-                      \DataTypeTok{type =} \KeywordTok{ifelse}\NormalTok{(}\DataTypeTok{test =}\NormalTok{ d_c }\OperatorTok{==}\StringTok{ }\DecValTok{1} \OperatorTok{&}\StringTok{ }\NormalTok{d_t }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{,}
+                      \DataTypeTok{type =} \KeywordTok{ifelse}\NormalTok{(}\DataTypeTok{test =}\NormalTok{ d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{1} \OperatorTok{\&}\StringTok{ }\NormalTok{d\_t }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{,}
                                     \DataTypeTok{yes =} \StringTok{"Defier"}\NormalTok{,}
                                     \DataTypeTok{no =}\NormalTok{ type),}
-                      \DataTypeTok{type =} \KeywordTok{ifelse}\NormalTok{(}\DataTypeTok{test =}\NormalTok{ d_c }\OperatorTok{==}\StringTok{ }\DecValTok{1} \OperatorTok{&}\StringTok{ }\NormalTok{d_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{,}
+                      \DataTypeTok{type =} \KeywordTok{ifelse}\NormalTok{(}\DataTypeTok{test =}\NormalTok{ d\_c }\OperatorTok{==}\StringTok{ }\DecValTok{1} \OperatorTok{\&}\StringTok{ }\NormalTok{d\_t }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{,}
                                     \DataTypeTok{yes =} \StringTok{"Always Taker"}\NormalTok{,}
                                     \DataTypeTok{no =}\NormalTok{ type))}
 \end{Highlighting}
@@ -433,7 +437,7 @@ compliers, but to test hypotheses about causal effects among Compliers?
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{kable}\NormalTok{(true_data)}
+\KeywordTok{kable}\NormalTok{(true\_data)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -455,31 +459,34 @@ y\_t & y\_c & d\_t & d\_c & tau & type\tabularnewline
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{Omega <-}\StringTok{ }\KeywordTok{apply}\NormalTok{(}\DataTypeTok{X =} \KeywordTok{combn}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\OperatorTok{:}\NormalTok{n,}
-                         \DataTypeTok{m =}\NormalTok{ n_}\DecValTok{1}\NormalTok{),}
+\NormalTok{Omega \textless{}{-}}\StringTok{ }\KeywordTok{apply}\NormalTok{(}\DataTypeTok{X =} \KeywordTok{combn}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\OperatorTok{:}\NormalTok{n,}
+                         \DataTypeTok{m =}\NormalTok{ n\_}\DecValTok{1}\NormalTok{),}
                \DataTypeTok{MARGIN =} \DecValTok{2}\NormalTok{,}
-               \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{as.integer}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n }\OperatorTok{%in%}\StringTok{ }\NormalTok{x) \})}
+               \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{as.integer}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n }\OperatorTok{\%in\%}\StringTok{ }\NormalTok{x) \})}
 
-\NormalTok{assign_vec_probs <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ (}\DecValTok{1}\OperatorTok{/}\DecValTok{70}\NormalTok{), }\DataTypeTok{times =} \KeywordTok{ncol}\NormalTok{(Omega))}
+\NormalTok{assign\_vec\_probs \textless{}{-}}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ (}\DecValTok{1}\OperatorTok{/}\DecValTok{70}\NormalTok{), }\DataTypeTok{times =} \KeywordTok{ncol}\NormalTok{(Omega))}
+\CommentTok{\#\# Omega contains all possible assignments, so the probs should add up to 1}
+\KeywordTok{stopifnot}\NormalTok{(}\KeywordTok{sum}\NormalTok{(assign\_vec\_probs)}\OperatorTok{==}\DecValTok{1}\NormalTok{) }
+\KeywordTok{stopifnot}\NormalTok{(}\KeywordTok{length}\NormalTok{(assign\_vec\_probs)}\OperatorTok{==}\KeywordTok{ncol}\NormalTok{(Omega) )}
 
 \KeywordTok{set.seed}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{)}
-\NormalTok{obs_z <-}\StringTok{ }\NormalTok{Omega[,}\KeywordTok{sample}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega), }\DataTypeTok{size =} \DecValTok{1}\NormalTok{)]}
+\NormalTok{obs\_z \textless{}{-}}\StringTok{ }\NormalTok{Omega[,}\KeywordTok{sample}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega), }\DataTypeTok{size =} \DecValTok{1}\NormalTok{)]}
 
-\CommentTok{#obs_ys <- apply(X = Omega,}
-\CommentTok{## MARGIN = 2,}
-\CommentTok{## FUN = function(x) \{ x * y_t_null_false + (1 - x) * y_c \})}
+\CommentTok{\#obs\_ys \textless{}{-} apply(X = Omega,}
+\CommentTok{\#\# MARGIN = 2,}
+\CommentTok{\#\# FUN = function(x) \{ x * y\_t\_null\_false + (1 {-} x) * y\_c \})}
 
-\CommentTok{#obs_ds <- apply(X = Omega,}
-\CommentTok{##MARGIN = 2,}
-\CommentTok{##FUN = function(x) \{ x * d_t + (1 - x) * d_c \}) }
+\CommentTok{\#obs\_ds \textless{}{-} apply(X = Omega,}
+\CommentTok{\#\#MARGIN = 2,}
+\CommentTok{\#\#FUN = function(x) \{ x * d\_t + (1 {-} x) * d\_c \}) }
 
-\NormalTok{obs_y <-}\StringTok{ }\NormalTok{obs_z }\OperatorTok{*}\StringTok{ }\NormalTok{true_data}\OperatorTok{$}\NormalTok{y_t }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{obs_z) }\OperatorTok{*}\StringTok{ }\NormalTok{true_data}\OperatorTok{$}\NormalTok{y_c}
-\NormalTok{obs_d <-}\StringTok{ }\NormalTok{obs_z }\OperatorTok{*}\StringTok{ }\NormalTok{true_data}\OperatorTok{$}\NormalTok{d_t }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{obs_z) }\OperatorTok{*}\StringTok{ }\NormalTok{true_data}\OperatorTok{$}\NormalTok{d_c}
+\NormalTok{obs\_y \textless{}{-}}\StringTok{ }\NormalTok{obs\_z }\OperatorTok{*}\StringTok{ }\NormalTok{true\_data}\OperatorTok{$}\NormalTok{y\_t }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\NormalTok{obs\_z) }\OperatorTok{*}\StringTok{ }\NormalTok{true\_data}\OperatorTok{$}\NormalTok{y\_c}
+\NormalTok{obs\_d \textless{}{-}}\StringTok{ }\NormalTok{obs\_z }\OperatorTok{*}\StringTok{ }\NormalTok{true\_data}\OperatorTok{$}\NormalTok{d\_t }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\NormalTok{obs\_z) }\OperatorTok{*}\StringTok{ }\NormalTok{true\_data}\OperatorTok{$}\NormalTok{d\_c}
 
-\NormalTok{obs_diff_means <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{((}\KeywordTok{t}\NormalTok{(obs_z) }\OperatorTok{%*%}\StringTok{ }\NormalTok{obs_y) }\OperatorTok{/}\StringTok{ }\NormalTok{(}\KeywordTok{t}\NormalTok{(obs_z) }\OperatorTok{%*%}\StringTok{ }\NormalTok{obs_z) }\OperatorTok{-}
-\StringTok{                               }\NormalTok{(}\KeywordTok{t}\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{obs_z) }\OperatorTok{%*%}\StringTok{ }\NormalTok{obs_y) }\OperatorTok{/}\StringTok{ }\NormalTok{(}\KeywordTok{t}\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{obs_z) }\OperatorTok{%*%}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{obs_z)))}
+\NormalTok{obs\_diff\_means \textless{}{-}}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{((}\KeywordTok{t}\NormalTok{(obs\_z) }\OperatorTok{\%*\%}\StringTok{ }\NormalTok{obs\_y) }\OperatorTok{/}\StringTok{ }\NormalTok{(}\KeywordTok{t}\NormalTok{(obs\_z) }\OperatorTok{\%*\%}\StringTok{ }\NormalTok{obs\_z) }\OperatorTok{{-}}
+\StringTok{                               }\NormalTok{(}\KeywordTok{t}\NormalTok{(}\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\NormalTok{obs\_z) }\OperatorTok{\%*\%}\StringTok{ }\NormalTok{obs\_y) }\OperatorTok{/}\StringTok{ }\NormalTok{(}\KeywordTok{t}\NormalTok{(}\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\NormalTok{obs\_z) }\OperatorTok{\%*\%}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\NormalTok{obs\_z)))}
 
-\KeywordTok{coef}\NormalTok{(}\KeywordTok{lm}\NormalTok{(}\DataTypeTok{formula =}\NormalTok{ obs_y }\OperatorTok{~}\StringTok{ }\NormalTok{obs_z))[[}\StringTok{"obs_z"}\NormalTok{]]}
+\KeywordTok{coef}\NormalTok{(}\KeywordTok{lm}\NormalTok{(}\DataTypeTok{formula =}\NormalTok{ obs\_y }\OperatorTok{\textasciitilde{}}\StringTok{ }\NormalTok{obs\_z))[[}\StringTok{"obs\_z"}\NormalTok{]]}
 \end{Highlighting}
 \end{Shaded}
 
@@ -513,9 +520,9 @@ among units who are Compliers.
 
 Along with the exclusion restriction (i.e., that the individual causal
 effect is \(0\) for Always Takers and Never Takers) and the assumption
-of no Defiers, we can \enquote{fill in} missing potential outcomes
-according to the null hypothesis of no complier causal effect as
-follows: \begin{align*}
+of no Defiers, we can ``fill in'' missing potential outcomes according
+to the null hypothesis of no complier causal effect as follows:
+\begin{align*}
 Y_{c,0,i} & = 
 \begin{cases}
 Y_i - D_i \tau_i & \text{if } D_i = 1 \\
@@ -530,11 +537,11 @@ Y_i + \left(1 - D_i\right) \tau_i & \text{if } D_i = 0,
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{## tau = 0 under exclusion restriction and no complier causal effect}
-\NormalTok{tau <-}\StringTok{ }\DecValTok{0}
+\CommentTok{\#\# tau = 0 under exclusion restriction and no complier causal effect}
+\NormalTok{tau \textless{}{-}}\StringTok{ }\DecValTok{0}
 
-\NormalTok{null_y_c <-}\StringTok{ }\NormalTok{obs_y }\OperatorTok{-}\StringTok{ }\NormalTok{obs_d }\OperatorTok{*}\StringTok{ }\NormalTok{tau}
-\NormalTok{null_y_t <-}\StringTok{ }\NormalTok{obs_y }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{obs_d) }\OperatorTok{*}\StringTok{ }\NormalTok{tau}
+\NormalTok{null\_y\_c \textless{}{-}}\StringTok{ }\NormalTok{obs\_y }\OperatorTok{{-}}\StringTok{ }\NormalTok{obs\_d }\OperatorTok{*}\StringTok{ }\NormalTok{tau}
+\NormalTok{null\_y\_t \textless{}{-}}\StringTok{ }\NormalTok{obs\_y }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\NormalTok{obs\_d) }\OperatorTok{*}\StringTok{ }\NormalTok{tau}
 \end{Highlighting}
 \end{Shaded}
 
@@ -571,25 +578,25 @@ We can now exactly enumerate all possible realizations of data if Table
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{obs_null_pot_outs <-}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega),}
-                            \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ Omega[,x] }\OperatorTok{*}\StringTok{ }\NormalTok{null_y_t }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{Omega[,x]) }\OperatorTok{*}\StringTok{ }\NormalTok{null_y_c \})}
+\NormalTok{obs\_null\_pot\_outs \textless{}{-}}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega),}
+                            \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ Omega[,x] }\OperatorTok{*}\StringTok{ }\NormalTok{null\_y\_t }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\NormalTok{Omega[,x]) }\OperatorTok{*}\StringTok{ }\NormalTok{null\_y\_c \})}
 
-\NormalTok{null_test_stat_dist <-}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega),}
-                              \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{mean}\NormalTok{(obs_null_pot_outs[,x][}\KeywordTok{which}\NormalTok{(Omega[,x] }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)]) }\OperatorTok{-}
-\StringTok{                                  }\KeywordTok{mean}\NormalTok{(obs_null_pot_outs[,x][}\KeywordTok{which}\NormalTok{(Omega[,x] }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{)])\})}
+\NormalTok{null\_test\_stat\_dist \textless{}{-}}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega),}
+                              \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{mean}\NormalTok{(obs\_null\_pot\_outs[,x][}\KeywordTok{which}\NormalTok{(Omega[,x] }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)]) }\OperatorTok{{-}}
+\StringTok{                                  }\KeywordTok{mean}\NormalTok{(obs\_null\_pot\_outs[,x][}\KeywordTok{which}\NormalTok{(Omega[,x] }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{)])\})}
 
-\NormalTok{null_test_stats_data <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{null_test_stat =}\NormalTok{ null_test_stat_dist,}
-                                   \DataTypeTok{prob =}\NormalTok{ assign_vec_probs)}
+\NormalTok{null\_test\_stats\_data \textless{}{-}}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{null\_test\_stat =}\NormalTok{ null\_test\_stat\_dist,}
+                                   \DataTypeTok{prob =}\NormalTok{ assign\_vec\_probs)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{ggplot}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ null_test_stats_data,}
-                         \DataTypeTok{mapping =} \KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ null_test_stat,}
+\KeywordTok{ggplot}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ null\_test\_stats\_data,}
+                         \DataTypeTok{mapping =} \KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ null\_test\_stat,}
                                        \DataTypeTok{y =}\NormalTok{ prob)) }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_bar}\NormalTok{(}\DataTypeTok{stat =} \StringTok{"identity"}\NormalTok{) }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_vline}\NormalTok{(}\DataTypeTok{xintercept =}\NormalTok{ obs_diff_means,}
+\StringTok{  }\KeywordTok{geom\_bar}\NormalTok{(}\DataTypeTok{stat =} \StringTok{"identity"}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom\_vline}\NormalTok{(}\DataTypeTok{xintercept =}\NormalTok{ obs\_diff\_means,}
              \DataTypeTok{color =} \StringTok{"red"}\NormalTok{,}
              \DataTypeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\OperatorTok{+}
 \StringTok{  }\KeywordTok{xlab}\NormalTok{(}\DataTypeTok{label =} \StringTok{"Null Test Statistics"}\NormalTok{) }\OperatorTok{+}
@@ -617,7 +624,7 @@ test statistic and \(T\) is the observed test statistic.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{upper_p_value <-}\StringTok{ }\KeywordTok{sum}\NormalTok{((null_test_stat_dist }\OperatorTok{>=}\StringTok{ }\NormalTok{obs_diff_means) }\OperatorTok{*}\StringTok{ }\NormalTok{assign_vec_probs)}
+\NormalTok{upper\_p\_value \textless{}{-}}\StringTok{ }\KeywordTok{sum}\NormalTok{((null\_test\_stat\_dist }\OperatorTok{\textgreater{}=}\StringTok{ }\NormalTok{obs\_diff\_means) }\OperatorTok{*}\StringTok{ }\NormalTok{assign\_vec\_probs)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -630,16 +637,16 @@ p_u =  1 - \Phi\left(\frac{t\left(\mathbf{z}, \mathbf{y}_0 \right) - \E\left[t\l
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{source}\NormalTok{(}\StringTok{"true_diff_means_var_fun.R"}\NormalTok{)}
+\KeywordTok{source}\NormalTok{(}\StringTok{"true\_diff\_means\_var\_fun.R"}\NormalTok{)}
 
-\NormalTok{var_null_test_stat <-}\StringTok{ }\KeywordTok{true_diff_means_var}\NormalTok{(}\DataTypeTok{.n =}\NormalTok{ n,}
-                                          \DataTypeTok{.n_1 =}\NormalTok{ n_}\DecValTok{1}\NormalTok{,}
-                                          \DataTypeTok{.y_c =}\NormalTok{ null_y_c,}
-                                          \DataTypeTok{.y_t =}\NormalTok{ null_y_t)}\OperatorTok{$}\NormalTok{var}
+\NormalTok{var\_null\_test\_stat \textless{}{-}}\StringTok{ }\KeywordTok{true\_diff\_means\_var}\NormalTok{(}\DataTypeTok{.n =}\NormalTok{ n,}
+                                          \DataTypeTok{.n\_1 =}\NormalTok{ n\_}\DecValTok{1}\NormalTok{,}
+                                          \DataTypeTok{.y\_c =}\NormalTok{ null\_y\_c,}
+                                          \DataTypeTok{.y\_t =}\NormalTok{ null\_y\_t)}\OperatorTok{$}\NormalTok{var}
 
-\NormalTok{z_score <-}\StringTok{ }\NormalTok{(obs_diff_means }\OperatorTok{-}\StringTok{ }\DecValTok{0}\NormalTok{)}\OperatorTok{/}\KeywordTok{sqrt}\NormalTok{(var_null_test_stat)}
+\NormalTok{z\_score \textless{}{-}}\StringTok{ }\NormalTok{(obs\_diff\_means }\OperatorTok{{-}}\StringTok{ }\DecValTok{0}\NormalTok{)}\OperatorTok{/}\KeywordTok{sqrt}\NormalTok{(var\_null\_test\_stat)}
 
-\DecValTok{1} \OperatorTok{-}\StringTok{ }\KeywordTok{pnorm}\NormalTok{(}\DataTypeTok{q =}\NormalTok{ z_score)}
+\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\KeywordTok{pnorm}\NormalTok{(}\DataTypeTok{q =}\NormalTok{ z\_score)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -684,31 +691,31 @@ null distributions of the test statistic,
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{df_a <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{y_c0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{14}\NormalTok{, }\DecValTok{27}\NormalTok{, }\DecValTok{21}\NormalTok{, }\DecValTok{36}\NormalTok{, }\DecValTok{28}\NormalTok{, }\DecValTok{17}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{27}\NormalTok{),}
-                   \DataTypeTok{y_t0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{14}\NormalTok{, }\DecValTok{27}\NormalTok{, }\DecValTok{21}\NormalTok{, }\DecValTok{36}\NormalTok{, }\DecValTok{28}\NormalTok{, }\DecValTok{17}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{27}\NormalTok{),}
-                   \DataTypeTok{d_c0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{),}
-                   \DataTypeTok{d_t0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{))}
+\NormalTok{df\_a \textless{}{-}}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{y\_c0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{14}\NormalTok{, }\DecValTok{27}\NormalTok{, }\DecValTok{21}\NormalTok{, }\DecValTok{36}\NormalTok{, }\DecValTok{28}\NormalTok{, }\DecValTok{17}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{27}\NormalTok{),}
+                   \DataTypeTok{y\_t0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{14}\NormalTok{, }\DecValTok{27}\NormalTok{, }\DecValTok{21}\NormalTok{, }\DecValTok{36}\NormalTok{, }\DecValTok{28}\NormalTok{, }\DecValTok{17}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{27}\NormalTok{),}
+                   \DataTypeTok{d\_c0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{),}
+                   \DataTypeTok{d\_t0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{))}
 
-\NormalTok{df_b <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{y_c0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{14}\NormalTok{, }\DecValTok{27}\NormalTok{, }\DecValTok{21}\NormalTok{, }\DecValTok{36}\NormalTok{, }\DecValTok{28}\NormalTok{, }\DecValTok{17}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{27}\NormalTok{),}
-                   \DataTypeTok{y_t0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{14}\NormalTok{, }\DecValTok{27}\NormalTok{, }\DecValTok{21}\NormalTok{, }\DecValTok{36}\NormalTok{, }\DecValTok{28}\NormalTok{, }\DecValTok{17}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{27}\NormalTok{),}
-                   \DataTypeTok{d_c0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{),}
-                   \DataTypeTok{d_t0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{))}
+\NormalTok{df\_b \textless{}{-}}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{y\_c0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{14}\NormalTok{, }\DecValTok{27}\NormalTok{, }\DecValTok{21}\NormalTok{, }\DecValTok{36}\NormalTok{, }\DecValTok{28}\NormalTok{, }\DecValTok{17}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{27}\NormalTok{),}
+                   \DataTypeTok{y\_t0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{14}\NormalTok{, }\DecValTok{27}\NormalTok{, }\DecValTok{21}\NormalTok{, }\DecValTok{36}\NormalTok{, }\DecValTok{28}\NormalTok{, }\DecValTok{17}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{27}\NormalTok{),}
+                   \DataTypeTok{d\_c0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{),}
+                   \DataTypeTok{d\_t0 =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{))}
 
-\NormalTok{obs_null_pot_outs_a <-}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega),}
-                              \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ Omega[,x] }\OperatorTok{*}\StringTok{ }\NormalTok{df_a}\OperatorTok{$}\NormalTok{y_t0 }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{Omega[,x]) }\OperatorTok{*}\StringTok{ }\NormalTok{df_a}\OperatorTok{$}\NormalTok{y_c0 \})}
+\NormalTok{obs\_null\_pot\_outs\_a \textless{}{-}}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega),}
+                              \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ Omega[,x] }\OperatorTok{*}\StringTok{ }\NormalTok{df\_a}\OperatorTok{$}\NormalTok{y\_t0 }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\NormalTok{Omega[,x]) }\OperatorTok{*}\StringTok{ }\NormalTok{df\_a}\OperatorTok{$}\NormalTok{y\_c0 \})}
 
-\NormalTok{null_test_stat_dist_a <-}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega),}
-                                \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{mean}\NormalTok{(obs_null_pot_outs_a[,x][}\KeywordTok{which}\NormalTok{(Omega[,x] }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)]) }\OperatorTok{-}
-\StringTok{                                    }\KeywordTok{mean}\NormalTok{(obs_null_pot_outs_a[,x][}\KeywordTok{which}\NormalTok{(Omega[,x] }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{)])\})}
+\NormalTok{null\_test\_stat\_dist\_a \textless{}{-}}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega),}
+                                \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{mean}\NormalTok{(obs\_null\_pot\_outs\_a[,x][}\KeywordTok{which}\NormalTok{(Omega[,x] }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)]) }\OperatorTok{{-}}
+\StringTok{                                    }\KeywordTok{mean}\NormalTok{(obs\_null\_pot\_outs\_a[,x][}\KeywordTok{which}\NormalTok{(Omega[,x] }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{)])\})}
 
-\NormalTok{obs_null_pot_outs_b <-}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega),}
-                              \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ Omega[,x] }\OperatorTok{*}\StringTok{ }\NormalTok{df_b}\OperatorTok{$}\NormalTok{y_t0 }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{Omega[,x]) }\OperatorTok{*}\StringTok{ }\NormalTok{df_b}\OperatorTok{$}\NormalTok{y_c0 \})}
+\NormalTok{obs\_null\_pot\_outs\_b \textless{}{-}}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega),}
+                              \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ Omega[,x] }\OperatorTok{*}\StringTok{ }\NormalTok{df\_b}\OperatorTok{$}\NormalTok{y\_t0 }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{{-}}\StringTok{ }\NormalTok{Omega[,x]) }\OperatorTok{*}\StringTok{ }\NormalTok{df\_b}\OperatorTok{$}\NormalTok{y\_c0 \})}
 
-\NormalTok{null_test_stat_dist_b <-}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega),}
-                                \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{mean}\NormalTok{(obs_null_pot_outs_b[,x][}\KeywordTok{which}\NormalTok{(Omega[,x] }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)]) }\OperatorTok{-}
-\StringTok{                                    }\KeywordTok{mean}\NormalTok{(obs_null_pot_outs_b[,x][}\KeywordTok{which}\NormalTok{(Omega[,x] }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{)])\})}
+\NormalTok{null\_test\_stat\_dist\_b \textless{}{-}}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(Omega),}
+                                \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{mean}\NormalTok{(obs\_null\_pot\_outs\_b[,x][}\KeywordTok{which}\NormalTok{(Omega[,x] }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{)]) }\OperatorTok{{-}}
+\StringTok{                                    }\KeywordTok{mean}\NormalTok{(obs\_null\_pot\_outs\_b[,x][}\KeywordTok{which}\NormalTok{(Omega[,x] }\OperatorTok{==}\StringTok{ }\DecValTok{0}\NormalTok{)])\})}
 
-\KeywordTok{cbind}\NormalTok{(null_test_stat_dist_a, null_test_stat_dist_b)}
+\KeywordTok{cbind}\NormalTok{(null\_test\_stat\_dist\_a, null\_test\_stat\_dist\_b)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -794,13 +801,14 @@ the null hypothesis that the causal effect is \(0\) among all compliers.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{adam_smith_data <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{call =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{1325}\NormalTok{), }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{1325}\NormalTok{)),}
+\NormalTok{adam\_smith\_data \textless{}{-}}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{call =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{1325}\NormalTok{), }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{1325}\NormalTok{)),}
                               \DataTypeTok{contact =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{1325} \OperatorTok{+}\StringTok{ }\DecValTok{375}\NormalTok{), }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{950}\NormalTok{)),}
                               \DataTypeTok{vote =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{1010}\NormalTok{), }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{315}\NormalTok{),}
                                        \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{293}\NormalTok{), }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{82}\NormalTok{),}
                                        \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{310}\NormalTok{), }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{640}\NormalTok{)))}
 \end{Highlighting}
 \end{Shaded}
+
 
 \newpage
 \singlespacing 

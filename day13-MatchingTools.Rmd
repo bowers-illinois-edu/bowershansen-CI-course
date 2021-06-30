@@ -1,0 +1,531 @@
+---
+title: |
+ | Statistical Adjustment in Observational Studies,
+ | Matched Stratification for Multiple Variables, Matching Modes, Tools.
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: |
+  | ICPSR 2020 Session 2
+  | Jake Bowers, Ben Hansen, Tom Leavitt
+bibliography:
+ - 'BIB/Master_Bibliography.bib'
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    incremental: true
+    includes:
+        in_header:
+           - defs-all.sty
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
+---
+
+
+<!-- To show notes  -->
+<!-- https://stackoverflow.com/questions/44906264/add-speaker-notes-to-beamer-presentations-using-rmarkdown -->
+
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
+```
+
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+## Load all of the libraries that we will use when we compile this file
+## We are using the renv system. So these will all be loaded from a local library directory
+library(dplyr)
+library(ggplot2)
+library(coin)
+library(RItools)
+library(optmatch)
+library(estimatr)
+```
+
+```{r echo=FALSE, cache=TRUE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat <- mutate(meddat,
+  HomRate03 = (HomCount2003 / Pop2003) * 1000,
+  HomRate08 = (HomCount2008 / Pop2008) * 1000
+)
+row.names(meddat) <- meddat$nh
+```
+
+
+## Today
+
+  1. Agenda: Types of algorithms for matching --- with-replacement,
+     without-replacement, fixed ratio, etc..; Producing useful propensity
+     scores when the number of covariates is large (relative to $N$); Methods
+     for excluding observations (`caliper`) and restricting the matched designs
+     to reflect substantive knowledge and research goals (`exactMatch`),
+     combining distance matrices; Maybe talk about `effective sample size`.
+ 2. We are now in the "Observational Studies" or Matching part of the course
+    (see the reading there).
+ 3. Questions arising from the reading or assignments or life?
+
+# But first, review
+
+## What have we done so far?
+
+How can we argue that we have adequate adjustment for background covariates in observational studies?
+
+  - The potential for making this case for one or more variables using
+    **stratification** stratification reduces extrapolation and interpolation
+    without requiring models of adjustment (models relating $\bx$ to $Z$ and
+    $Y$).
+  - Using optimal, full matching technology to make and evaluate stratified
+    research designs: solve an optimization problem rather than stratify by
+    hand.
+  - Scalar distance --- to represent substantive knowledge about key
+    alternative explanations.
+  - Mahalanobis distance to compare units on $\bx$ --- to try to include all
+    covariates equally.
+  - The propensity score to compare units on $\hat{Z} \leftarrow \bx$ --- to
+    downweight covariates not relevant for confounding.
+  - Assessing stratifications using the block-randomized design as a standard
+    of comparison. (What does this mean in practice? What does  `xBalance` do?
+    How does `xBalance` adjust differences of means for the stratifications?)
+
+## Matching on the Mahalanobis Distance: Setup
+
+Here using the rank based Mahalanobis distance following DOS Chap. 8 (but comparing to the ordinary version).
+
+```{r mhmatch, echo=TRUE}
+mhdist <- match_on(nhTrt ~ nhPopD + nhAboveHS + HomRate03, data = meddat)
+```
+
+## Matching on the Mahalanobis Distance: Creation
+
+```{r matchesmh, echo=TRUE}
+fmMh <- fullmatch(mhdist, data = meddat)
+summary(fmMh, min.controls = 0, max.controls = Inf)
+```
+
+## Matching on the Mahalanobis Distance: Evaluation
+
+
+```{r xbmh, echo=TRUE}
+meddat$fmMh <- fmMh
+xbMh <- xBalance(nhTrt ~ nhAboveHS + nhPopD + HomRate03,
+  strata = list(unstrat = NULL, fmMh = ~fmMh),
+  report = "all", data = meddat
+)
+xbMh$overall
+xbMh$results[, "std.diff", ]
+xbMh$results[, "adj.diff", ]
+```
+
+## Matching on the Mahalanobis Distance: Evaluation
+
+Multiple equivalent approaches to adjusting differences of means for stratification. **Fixed effects is the same as weighting.**
+
+```{r adjmndiffs, echo=TRUE}
+## xBalance calculates this. What does it do?
+xbMh$results["nhPopD", "adj.diff", ]
+
+## Approach 1: Collapse to the stratum, calculated within-stratum differences, weight
+strat_dat <- meddat %>%
+  group_by(fmMh) %>%
+  summarize(
+    mndiffpopd = mean(nhPopD[nhTrt == 1]) - mean(nhPopD[nhTrt == 0]),
+    nb = n(),
+    nbwt = nb / nrow(meddat),
+    pib = mean(nhTrt),
+    hbwt0 = pib * (1 - pib) * nbwt, .groups = "keep"
+  )
+strat_dat$hbwt <- with(strat_dat, hbwt0 / sum(hbwt0))
+strat_dat
+with(strat_dat, sum(mndiffpopd * hbwt))
+```
+
+## Matching on the Mahalanobis Distance: Evaluation
+
+Multiple equivalent approaches to adjusting differences of means for stratification. **Fixed effects is the same as weighting.**
+
+
+```{r adjmnapproach2, echo=TRUE}
+## Approach 2: Create weights at the level of the unit of analysis and measurement, not the strata
+meddat <- meddat %>%
+  group_by(fmMh) %>%
+  mutate(
+    nb = n(),
+    pib = mean(nhTrt),
+    nbwt = (nhTrt / pib) + ((1 - nhTrt) / (1 - pib)),
+    hbwt = nbwt * (pib * (1 - pib))
+  )
+row.names(meddat) <- meddat$nh
+lm_pop_adj <- lm(nhPopD ~ nhTrt, data = meddat, weights = hbwt)
+coef(lm_pop_adj)[["nhTrt"]]
+```
+
+## Matching on the Mahalanobis Distance: Evaluation
+
+Multiple equivalent approaches to adjusting differences of means for stratification. **Fixed effects is the same as weighting.**
+
+
+```{r adjmn3,echo=TRUE}
+## Approach 3: Ask lm_robust to use fixed effects
+lm_pop_adj2 <- lm_robust(nhPopD ~ nhTrt, fixed_effects = ~fmMh, data = meddat)
+coef(lm_pop_adj2)[["nhTrt"]]
+```
+
+## Matching on the Mahalanobis Distance: Evaluation
+
+Multiple equivalent approaches to adjusting differences of means for stratification. **Fixed effects is the same as weighting.**
+
+```{r adjmn4, echo=TRUE}
+## Approach 4: Use indicator or dummy variables in a linear model
+lm_pop_adj3 <- lm_robust(nhPopD ~ nhTrt + fmMh, data = meddat)
+coef(lm_pop_adj3)[["nhTrt"]]
+```
+
+## Matching on the Mahalanobis Distance: Evaluation
+
+Multiple equivalent approaches to adjusting differences of means for stratification. **Fixed effects is the same as weighting.**
+
+```{r adjmn5, echo=TRUE}
+## Approach 5: Remove strata specific means, use strata-mean centered variables
+meddat <- meddat %>%
+  group_by(fmMh) %>%
+  mutate(
+    nhPopD_md = nhPopD - mean(nhPopD),
+    nhTrt_md = nhTrt - mean(nhTrt)
+  )
+row.names(meddat) <- meddat$nh
+lm_pop_adj4 <- lm_robust(nhPopD_md ~ nhTrt_md, data = meddat)
+coef(lm_pop_adj4)[[2]]
+```
+
+## Why a propensity score? {.fragile}
+
+1. The Mahanobis distance weights all covariates equally (and the rank based version especially tries to do this). Maybe not all covariates matter equally for $Z$.
+
+
+\begin{center}
+\begin{tikzcd}[column sep=large,every arrow/.append style=-latex]
+& Z  \arrow[from=1-2,to=1-3, "\tau"] &  y \\
+x_1 \arrow[from=2-1,to=1-2, "\beta_1" ] \arrow[from=2-1,to=1-3,grey] &
+x_2 \arrow[from=2-2,to=1-2, "\beta_2" ] \arrow[from=2-2,to=1-3,grey] &
+\ldots &
+x_p \arrow[from=2-4,to=1-2,  "\beta_p" near start ] \arrow[from=2-4,to=1-3,grey]
+\end{tikzcd}
+\end{center}
+
+2. @rosenbaum:rubi:1983 and @rosenbaum:rubi:1984a show that if we knew the true propensity score (ex. we knew the true model and the correct covariates) then we could stratify on the p-score and have adjusted for all of the covariates. (In practice, we don't know either. But the propensity score often performs well as an ingredient in a matched design)
+
+
+# More on the propensity score: interpreting distances and separation problems
+
+## Matching on the propensity score: What do the distance matrix entries mean?
+
+`optmatch` creates a scaled propensity score distance by default --- scaling by,
+roughly, the pooled median absolute deviation of the covariate (or here, the
+propensity score). So, the distance matrix entries are like standard deviations
+--- standardized scores.
+
+
+```{r glm1, echo=TRUE}
+meddat <- as.data.frame(meddat)
+row.names(meddat) <- meddat$nh
+theglm <- glm(nhTrt ~ nhPopD + nhAboveHS + HomRate03, data = meddat, family = binomial(link = "logit"))
+thepscore <- theglm$linear.predictor
+````
+
+```{r echo=TRUE}
+## Create a distance matrix using the propensity scores
+psdist <- match_on(theglm, data = meddat)
+psdist[1:4, 1:4]
+```
+
+## Matching on the propensity score: What do the distance matrix entries mean?
+
+What do those distances mean? (They are standardized absolute differences.)
+
+```{r echo=TRUE}
+simpdist <- outer(thepscore, thepscore, function(x, y) {
+  abs(x - y)
+})
+mad(thepscore[meddat$nhTrt == 1],na.rm=TRUE)
+mad(thepscore[meddat$nhTrt == 0], na.rm=TRUE)
+(mad(thepscore[meddat$nhTrt == 1],na.rm=TRUE) + mad(thepscore[meddat$nhTrt == 0],na.rm=TRUE)) / 2
+## We can see the actual R function here: optmatch:::match_on_szn_scale
+optmatch:::match_on_szn_scale(thepscore, Tx = meddat$nhTrt)
+simpdist["101", c("401", "402", "403")]
+simpdist["101", c("401", "402", "403")] / 1.569
+psdist["101", c("401", "402", "403")]
+```
+
+
+## What about using many covariates? The separation problem in logistic regression
+
+What if we want to match on more than two covariates? Let's step through the following to discover a problem with logistic regression when the number of covariates is large relative to the size of the dataset.
+
+```{r echo=TRUE}
+library(splines)
+library(arm)
+thecovs <- unique(c(names(meddat)[c(5:7, 9:24)], "HomRate03"))
+balfmla <- reformulate(thecovs, response = "nhTrt")
+psfmla <- update(balfmla, . ~ . + ns(HomRate03, 2) + ns(nhPopD, 2) + ns(nhHS, 2))
+glm0 <- glm(balfmla, data = meddat, family = binomial(link = "logit"))
+glm1 <- glm(psfmla, data = meddat, family = binomial(link = "logit"))
+bayesglm0 <- bayesglm(balfmla, data = meddat, family = binomial(link = "logit"))
+bayesglm1 <- bayesglm(psfmla, data = meddat, family = binomial(link = "logit"))
+psg1 <- predict(glm1, type = "response")
+psg0 <- predict(glm0, type = "response")
+psb1 <- predict(bayesglm1, type = "response")
+psb0 <- predict(bayesglm0, type = "response")
+```
+## The separation problem
+
+Logistic regression is excellent at discriminating between groups \ldots often **too excellent** for us \autocite{gelman2008weakly}. First evidence of this is big and/or missing coefficients in the propensity score model. See the coefficients below (recall that we are predicting `nhTrt` with these covariates in those models):
+
+```{r echo=FALSE}
+thecoefs <- rbind(
+  glm0 = coef(glm0)[1:20],
+  glm1 = coef(glm1)[1:20],
+  bayesglm0 = coef(bayesglm0)[1:20],
+  bayesglm1 = coef(bayesglm1)[1:20]
+)
+thecoefs[, 1:5]
+```
+
+## The separation problem
+
+```{r, echo=FALSE, out.width=".9\\textwidth"}
+par(mfrow = c(1, 2))
+matplot(t(thecoefs), axes = FALSE)
+axis(2)
+axis(1, at = 0:19, labels = colnames(thecoefs), las = 2)
+matplot(t(thecoefs), axes = FALSE, ylim = c(-15, 10))
+axis(2)
+axis(1, at = 0:19, labels = colnames(thecoefs), las = 2)
+legend("topright", col = 1:4, lty = 1:4, legend = c("glm0", "glm1", "bayesglm0", "bayesglm1"))
+```
+
+
+## The separation problem in logistic regression
+
+So, if we are interested in using the propensity score to compare observations in regards the multi-dimensional space of many covariates, we would probably prefer a dimensional reduction model like `bayesglm` over `glm`.
+
+```{r out.width=".9\\textwidth", echo=FALSE}
+par(mfrow = c(2, 2), mar = c(3, 3, 2, .1))
+boxplot(psg0 ~ meddat$nhTrt, main = paste("Logit", length(coef(glm0)), " parms", sep = " "))
+stripchart(psg0 ~ meddat$nhTrt, vertical = TRUE, add = TRUE)
+boxplot(psg1 ~ meddat$nhTrt, main = paste("Logit", length(coef(glm1)), " parms", sep = " "))
+stripchart(psg1 ~ meddat$nhTrt, vertical = TRUE, add = TRUE)
+boxplot(psb0 ~ meddat$nhTrt, main = paste("Shrinkage Logit", length(coef(bayesglm0)), " parms", sep = " "))
+stripchart(psb0 ~ meddat$nhTrt, vertical = TRUE, add = TRUE)
+boxplot(psb1 ~ meddat$nhTrt, main = paste("Shrinkage Logit", length(coef(bayesglm1)), " parms", sep = " "))
+stripchart(psb1 ~ meddat$nhTrt, vertical = TRUE, add = TRUE)
+```
+
+# Major Matching modes: Briefly, Greed versus Optimal Matching
+
+##  Optimal (communitarian) vs greedy (individualistic) matching {.fragile}
+
+Compare the greedy to optimal matched designs:
+
+\begin{center}
+    \begin{tabular}{l|cccc}
+      & \multicolumn{4}{c}{Illustrator} \\
+Writer & Mo& John & Terry  & Pat \\ \hline
+Ben    & 0 & 1 & 1 & 10 \\
+Jake   & 10& 0 & 10 & 10 \\
+Tom    &  1& 1 & 20 & $\infty$ \\ \hline
+    \end{tabular}
+  \end{center}
+
+##  Optimal (communitarian) vs greedy (individualistic) matching {.fragile}
+
+Compare the greedy to optimal matched designs:
+
+\begin{center}
+    \begin{tabular}{l|cccc}
+      & \multicolumn{4}{c}{Illustrator} \\
+Writer & Mo& John & Terry  & Pat \\ \hline
+Ben    & 0 & 1 & 1 & 10 \\
+Jake   & 10& 0 & 10 & 10 \\
+Tom    &  1& 1 & 20 & $\infty$ \\ \hline
+    \end{tabular}
+  \end{center}
+
+
+Greedy match without replacement has mean distance (0+0+20)/3=6.67. The optimal
+match keeps all the obs, and has mean distance (1+0+1)/3=.67.
+
+```{r simpmatch, echo=TRUE, warning=FALSE, messages=FALSE}
+bookmat <- matrix(c(0, 1, 1, 10, 10, 0, 10, 10, 1, 1, 20, 100 / 0), nrow = 3, byrow = TRUE)
+dimnames(bookmat) <- list(c("Ben", "Jake", "Tom"), c("Mo", "John", "Terry", "Pat"))
+pairmatch(bookmat)
+fullmatch(bookmat)
+```
+
+\note{
+*Greedy:* Ben-Mo (0) , Jake-John (0), Tom-Terry (20)
+*Optimal:* Ben-Terry (1), Jake-John (0), Tom-Mo (1)
+}
+
+
+# Matching Tricks of the Trade: Calipers, Exact Matching, Missing Data
+
+## Calipers
+
+The optmatch package allows calipers (which forbids certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we forbid comparisons which differ by more than 2 propensity score standardized distances.
+
+```{r}
+## First inspect the distance matrix itself: how are the distances distributed?
+quantile(as.vector(psdist), seq(0, 1, .1))
+## Next, apply a caliper (setting entries to Infinite)
+psdistCal <- psdist + caliper(psdist, 2)
+as.matrix(psdist)[5:10, 5:10]
+as.matrix(psdistCal)[5:10, 5:10]
+```
+## Calipers
+
+The optmatch package allows calipers (which forbid certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we forbid comparisons which differ by more than 2 standard deviations on the propensity score. (Notice that we also use the `propensity.model` option to `summary` here to get a quick look at the balance test:)
+
+```{r}
+fmCal1 <- fullmatch(psdist + caliper(psdist, 2), data = meddat, tol = .00001)
+summary(fmCal1, min.controls = 0, max.controls = Inf, propensity.model = theglm)
+pmCal1 <- pairmatch(psdist + caliper(psdist, 2), data = meddat, remove.unmatchables = TRUE)
+summary(pmCal1, propensity.model = theglm)
+```
+
+## Calipers
+
+Another example: We may want to match on propensity distance but disallow any pairs with extreme mahalnobis distance and/or extreme differences in baseline homicide rates (here using many covariates all together).
+
+
+```{r}
+## Create an R formulate object from vectors of variable names
+balfmla <- reformulate(c("nhPopD", "nhAboveHS"), response = "nhTrt")
+
+## Create a mahalanobis distance matrix (of rank transformed data)
+mhdist <- match_on(balfmla, data = meddat, method = "rank_mahalanobis")
+
+## Now make a matrix recording absolute differences between neighborhoods in
+## terms of baseline homicide rate
+tmpHom03 <- meddat$HomRate03
+names(tmpHom03) <- rownames(meddat)
+absdist <- match_on(tmpHom03, z = meddat$nhTrt, data = meddat)
+absdist[1:3, 1:3]
+quantile(as.vector(absdist), seq(0, 1, .1))
+quantile(as.vector(mhdist), seq(0, 1, .1))
+## Now create a new distance matrix using two calipers:
+distCal <- psdist + caliper(mhdist, 9) + caliper(absdist, 2)
+as.matrix(distCal)[5:10, 5:10]
+## Compare to:
+as.matrix(mhdist)[5:10, 5:10]
+```
+
+## Calipers
+
+Now, use this new matrix for the creation of stratified designs --- but possibly excluding some units (also showing here the `tol` argument. The version with the tighter tolerance produces a solution with smaller overall distances)
+
+```{r}
+fmCal2a <- fullmatch(distCal, data = meddat, tol = .1)
+summary(fmCal2a, min.controls = 0, max.controls = Inf, propensity.model = theglm)
+fmCal2b <- fullmatch(distCal, data = meddat, tol = .00001)
+summary(fmCal2b, min.controls = 0, max.controls = Inf, propensity.model = theglm)
+
+meddat$fmCal2a <- fmCal2a
+meddat$fmCal2b <- fmCal2b
+
+fmCal2a_dists <- matched.distances(fmCal2a, distCal)
+fmCal2b_dists <- matched.distances(fmCal2b, distCal)
+
+mean(unlist(fmCal2a_dists))
+mean(unlist(fmCal2b_dists))
+```
+
+## Exact Matching
+
+We often have covariates that are categorical/nominal and for which we really care about strong balance. One approach to solve this problem is match **exactly** on one or more of such covariates. If `fullmatch` or `match_on` is going slow, this is also an approach to speed things up.
+
+```{r echo=FALSE}
+meddat$classLowHi <- ifelse(meddat$nhClass %in% c(2, 3), "hi", "lo")
+```
+
+```{r}
+dist2 <- psdist + exactMatch(nhTrt ~ classLowHi, data = meddat)
+## or mhdist <- match_on(balfmla,within=exactMatch(nhTrt~classLowHi,data=meddat),data=meddat,method="rank_mahalanobis")
+## or fmEx1 <- fullmatch(update(balfmla,.~.+strata(classLowHi)),data=meddat,method="rank_mahalanobis")
+fmEx1 <- fullmatch(dist2, data = meddat, tol = .00001)
+summary(fmEx1, min.controls = 0, max.controls = Inf, propensity.model = theglm)
+print(fmEx1, grouped = T)
+meddat$fmEx1 <- fmEx1
+```
+## Exact Matching
+
+```{r}
+ftable(Class = meddat$classLowHi, Trt = meddat$nhTrt, fmEx1, col.vars = c("Class", "Trt"))
+```
+
+## Missing data and matching
+
+What if `nhPopD` had some missing data?
+
+```{r md1, echo=TRUE}
+set.seed(12345)
+meddat$nhPopD[sample(1:45, 10)] <- NA
+summary(meddat$nhPopD)
+xb0 <- xBalance(nhTrt ~ nhPopD + nhAboveHS, data = meddat, report = "all")
+```
+
+We would want to compare units who are equally likely to have `nhPopD` missing. So, we create a new variable:
+
+```{r md2, echo=TRUE}
+newdat <- fill.NAs(meddat[, c("nhAboveHS", "nhPopD")])
+head(newdat)
+stopifnot(all.equal(row.names(newdat), row.names(meddat)))
+newdat <- cbind(newdat, meddat[, c("nhTrt", "HomRate08", "HomRate03")])
+head(newdat)
+```
+
+## Missing data and matching
+
+And we include that variable in our balance testing and matching:
+
+```{r echo=TRUE}
+theglm <- arm::bayesglm(nhTrt ~ nhAboveHS + nhPopD + nhPopD.NA + HomRate03, data = newdat)
+psdist <- match_on(theglm, data = meddat)
+maxCaliper(theglm$linear.predictor, z = newdat$nhTrt, widths = c(.1, .5, 1))
+balfmla <- formula(theglm)
+fm0 <- fullmatch(psdist + caliper(psdist, 2), data = newdat)
+summary(fm0, min.controls = 0, max.controls = Inf, propensity.model = theglm)
+summary(unlist(matched.distances(fm0, psdist)))
+newdat$fm0 <- fm0
+xb0 <- xBalance(balfmla, strata = list(fm0 = ~fm0), data = newdat, report = "all")
+xb0$overall
+xb0$results
+```
+
+## Missing Data and Matching
+
+So:
+
+ 1. Missing data on covariates is not a big problem --- such data reveals
+    information to us about the units pre-treatment, so we just stratify on it.
+    We treat missing data as just another covariate.
+ 2. Missing data on treatment assignment or the outcome is a bigger problem: we
+    will tend to use bounds to report on the range of possible answers in such
+    cases.
+
+
+
+## Summary and Questions:
+
+What do you think? What questions arise?
+
+
+
+## References
+

@@ -1,3 +1,4 @@
+\RequirePackage{etex}
 \documentclass[$if(fontsize)$$fontsize$,$endif$$if(lang)$$babel-lang$,$endif$$if(handout)$handout,$endif$$if(colorlinks)$dvipsnames,$endif$$if(beamer)$ignorenonframetext,$endif$$for(classoption)$$classoption$$sep$,$endfor$]{$documentclass$}
 % built from https://github.com/jgm/pandoc-templates/blob/master/default.beamer
 %\documentclass[11pt,ignorenonframetext,xcolor={svgnames}]{beamer}
@@ -14,19 +15,19 @@ $else$
 \usepackage{lmodern}
 $endif$
 
-\usepackage{etex}
-\reserveinserts{28}
+%\usepackage{etex}
+%\reserveinserts{28}
 \usepackage{presentation}
 \usepackage{notation}
 \usepackage{caption}
-\usepackage{amssymb,amsmath,bm}
+\usepackage{amssymb,amsmath} %,bm} % not sure if we should be using bm or unicode-math
+\usepackage{unicode-math} % for symbf among other stuff
 \usepackage{tikz}
 \usepackage{tikz-cd}
 \usepackage{textpos}
 
 \usepgflibrary{arrows} % also see \tikzstyle spec below after \begin{doc}
 \usetikzlibrary{arrows} % also see \tikzstyle spec below after \begin{doc}
-
 
 \usepackage{ifxetex,ifluatex}
 % \usepackage{fixltx2e} % provides \textsubscript
@@ -35,9 +36,9 @@ $endif$
   \usepackage[utf8]{inputenc}
 \else % if luatex or xelatex
   \ifxetex
-    \usepackage{mathspec}
+    % \usepackage{mathspec}
   \else
-    \usepackage{fontspec}
+   % \usepackage{fontspec}
   \fi
   \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
 $for(fontfamilies)$
@@ -92,8 +93,7 @@ $endfor$
 \setbeamertemplate{items}[circle]
 \setbeamertemplate{sections/subsections in toc}[circle]
 \setbeamersize{description width=2ex}
-% \setbeamersize{text margin left=1ex,text margin right=1ex}
-\setbeamersize{text margin left=2ex,text margin right=2ex}
+\setbeamersize{text margin left=1ex,text margin right=1ex}
 %%\setbeamersize{ParSkip 1ex plus 1pt minus 1pt}
 %% %% %% \setbeamertemplate{caption}[numbered]
 \setbeamertemplate{caption label separator}{:}

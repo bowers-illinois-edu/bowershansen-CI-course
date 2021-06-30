@@ -94,6 +94,13 @@ null_dist_plot <- ggplot(data = null_test_stats_data,
   xlab(label = "Null Test Statistics") +
   ylab(label = "Probability")
 
+ggsave(plot = null_dist_plot,
+       file = "null_dist_plot.pdf",
+       width = 6,
+       height = 4,
+       units = "in",
+       dpi = 600)
+
 source("true_diff_means_var_fun.R")
 
 
