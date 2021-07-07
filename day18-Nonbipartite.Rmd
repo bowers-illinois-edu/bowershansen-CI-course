@@ -1,6 +1,7 @@
 ---
 title: |
- | Matching with more than two treatments: Non-bipartite matching
+ | Matching with more than two treatments: 
+ | Non-bipartite matching
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
   | ICPSR 2020 Session 2
@@ -53,7 +54,7 @@ library(sensitivityfull)
 library(senstrat)
 library(rbounds)
 library(nbpMatching)
-library(lmer)
+library(lme4)
 library(rstanarm)
 ```
 
@@ -86,30 +87,61 @@ library(rstanarm)
 
 ## Sensitivity analysis as a formalized thought experiment {.fragile}
 
-> "In an observational study, a sensitivity analysis replaces qualitative claims about whether unmeasured biases are present with an objective quantitative statement about the magnitude of bias that would need to be present to change the conclusions." (Rosenbaum, sensitivitymv manual)
-
-
->  "The sensitivity analysis asks about the magnitude, gamma, of bias in treatment assignment in observational studies that would need to be present to alter the conclusions of a randomization test that assumed matching for observed covariates removes all bias."  (Rosenbaum, sensitivitymv manual)
 
 *All non-randomized studies have some bias from unobserved confounders.* The
-question is not whehter but about what kinds of bias would change substantive conclusions.
+question is not *whether bias* but about *how much bias* or even *what kinds of bias* would change substantive conclusions.
 
 \begin{center}
 \begin{tikzcd}[column sep=large,every arrow/.append style=-latex]
-u = f(u_1,u_2,\ldots) \arrow[from=1-1,to=2-2, bend right, "\Gamma" near start] \arrow[from=1-1,to=2-3, bend left, "\rho" near start] \\
+ u \arrow[from=1-1,to=2-2, bend right, "\Gamma" near start] \arrow[from=1-1,to=2-3, bend left, "\rho" near start] \\
 & Z  \arrow[from=2-2,to=2-3, "\tau"] &  y \\
 x_1 \arrow[from=3-1,to=2-2, "\beta_1" ] \arrow[from=3-1,to=2-3,grey] &
 x_2 \arrow[from=3-2,to=2-2, "\beta_2" ] \arrow[from=3-2,to=2-3,grey]
 \end{tikzcd}
 \end{center}
 
-What is the worst case $u=\{u_1, \ldots, \u_N \}$ for tests of the sharp null of no effects?
+What is the worst case $u=\{u_1, \ldots, u_N \}$ for tests of the sharp null of no effects?
 
-Other approaches: calibrating the model of unobserved confounding using
+**Other approaches:** calibrating the model of unobserved confounding using
 *observed* covariates (@hosman2010) ("What if the unobserved confounder related
 to $Z$ and $Y$ the way that one of our observed $x$ variable does? (What if it
 is like education? Or income?)"); placebo tests ("Does our treatment predict
 irrelevant differences within strata?")
+
+
+## Confounding depends on both $\Gamma$ and $\rho$
+
+
+  @rosenbaum2009amplification propose a way decompose $\Gamma$ into two
+  pieces: one $\Delta$ gauges the relationship between an unobserved
+  confounder at the outcome (it records the maximum effect of the unobserved
+  confounder on the odds of a positive response (imagining a binary outcome))
+  and the other $\Lambda$ gauges the maximum relationship between the unobserved
+  confounder and treatment assignment.
+
+```{r amplify}
+library(sensitivitymv)
+lambdas1 <- seq(2 + .01, 2 * 2, length = 100)
+ampres1 <- amplify(2, lambda = lambdas1)
+lambdas2 <- seq(3 + .01, 2 * 3, length = 100)
+ampres2 <- amplify(3, lambda = lambdas2)
+```
+\centering
+```{r echo=FALSE, out.width=".6\\textwidth"}
+par(mar = c(3, 3, 1, 1), mgp = c(1.5, .5, 0))
+plot(as.numeric(names(ampres1)), ampres1,
+  xlab = "Lambda (maximum selection effect of confounder)",
+  ylab = "Delta/rho (maximum outcome effect of confounder)",
+  main = "Decomposition of Gamma=2 and 3",
+  ylim=range(c(ampres1,ampres2)),
+  xlim=c(1.9,4),
+  type="b"
+)
+## Add a line for another Gamma
+lines(as.numeric(names(ampres2)), ampres2, type = "b",pch=23)
+```
+
+
 
 # Non-bipartite Matching: An Application with the Study of Race and Place
 
@@ -145,7 +177,7 @@ And here is the question people were asked (groups in random order).
 
 ## Capturing perceptions
 
-White Canadian respondents' reports about "visible minorities" in their hand drawn "local communities".
+White, Engish-speaking, Canadian respondents' reports about "visible minorities" in their hand drawn "local communities".
 
 \centering
 ```{r echo=FALSE}
@@ -275,11 +307,13 @@ balfmla <- reformulate(thecovs, response = "vmdaPct")
 xb1 <- xBalance(balfmla, strata = list(unstrat = NULL, nbp1 = ~nbp1), report = "all", data = wrkdat)
 xb1$overall
 xb1$results[, c("z", "p"), "nbp1"]
+
 ```
 
 ## Improve balance using penalties and dropping observations
 
   For example, we might want to:
+  
    -  require matches within Province,
    -  avoid comparing people in small towns to people in large towns,
    -  avoid comparing people who drew big maps to people who drew small maps,
@@ -335,7 +369,7 @@ vmdaPhPen <- make.phantoms(vmdaPen1, 8, maxval = max(as.vector(vmdaPen1)) * 10)
 
 ## Improve balance using penalties and dropping observations
 
-```{r cache=TRUE}
+```{r echo=TRUE,cache=TRUE}
 vmdaPhPenMat <- distancematrix(vmdaPhPen)
 nbp2match <- nonbimatch(vmdaPhPenMat)
 nbp2 <- get.sets(nbp2match$matches, remove.unpaired = TRUE)
@@ -358,15 +392,6 @@ xb2$overall[2:3, ]
 xb2$results[, "p", c("nbp1", "nbp2")]
 ```
 
-## Try designmatch
-
-```{r eval=FALSE}
-library(designmatch)
-
-resnb <- nmatch()
-
-```
-
 
 ## Assess this new match
 
@@ -377,17 +402,12 @@ nbmplot(wrkdat, yvar = "vmdaPct", xvar = "vm.community.norm2", strata = "nbp2", 
 ## Strength of the treatment
 
 The difference in "treatment" within sets varies --- and so we expect the size
-of the effect to vary. For example, consider the ratio of  objective context
-differences to  perceived context differences:
+of the effect to vary.
 
-```{r}
+```{r treatmentstr, echo=TRUE}
 summary(nbp1vmdiffs)
 summary(nbp1percdiffs)
-percDist <- scalar.dist(wrkdat$vm.community.norm2 * 100)
-da <- vmdaDist[1:5, 1:5]
-perc <- percDist[1:5, 1:5]
-
-da / perc
+summary(nbp2vmdiffs)
 ```
 
 ## Strength of the treatment
@@ -401,9 +421,51 @@ related differences if they are larger.
 For example: if difference in  perceptions is  small,  make the distance very large.
 
 
-```{r}
+```{r penaltytostrengthentreatment, echo=TRUE}
+## Just showing the first 5 respondents as an example
+percDist <- scalar.dist(wrkdat$vm.community.norm2 * 100)
+da <- vmdaDist[1:5, 1:5]
+perc <- percDist[1:5, 1:5]
 da + 1000 * (perc < 2)
 ```
+
+
+## Try designmatch to balance covs and strengthen treatment
+
+The `designmatch` package also has the ability to produce non-bipartite stratifications. It has some nice features that allow for strenghening the effects of the intervention, too.
+
+```{r designmatch, cache=TRUE,eval=TRUE}
+library(designmatch)
+library(gurobi)
+
+wrkdat_new <- na.omit(wrkdat[,c("csd.pop","community_area_km","social.capital01","vm.community.norm2","vmdaPct")])
+
+thecovs <- c("csd.pop","community_area_km")
+mom_covs <- wrkdat_new[, thecovs]
+## calculated absolute std mean diffs between trt and ctrl on covs
+## differences should be at most .5 sds apart
+mom_tols <- round(apply(mom_covs, 2, sd,na.rm=TRUE)*.5, 2)
+momlist <- list(covs = mom_covs, tols = mom_tols)
+
+vmdaDist_new <- scalar.dist(wrkdat_new$vmdaPct)
+dimnames(vmdaDist_new) <- list(row.names(wrkdat_new), row.names(wrkdat_new))
+vmDist_integers <- round(vmdaDist_new*100,1)
+
+farlist <- list(covs=as.matrix(round(wrkdat_new[,"vm.community.norm2",drop=FALSE]*100,1)),far.pairs=c("vm.community.norm2"=1))
+
+#solverlist <- list(name = "glpk", approximate = 1)
+solverlist <- list(name = "gurobi", approximate = 1, trace=1)
+resnb <- nmatch(dist_mat= vmDist_integers,
+    solver = solverlist,
+    mom=momlist,
+    far=farlist
+)
+
+str(resnb)
+
+```
+
+
 
 ## Assess hypotheses about effects
 
@@ -567,15 +629,6 @@ confint(lmer2)["vm.community.norm2", ]
 See: DOS Chapter 11.
 
 Also: this has a lot of applications in experimental design (see `blockTools` and \autocite{moore2012blocktools,moore2012multivariate}).
-
-
-
-## Today: Stratification with more than two groups --- Non-bipartite matching
-
-1. What is the general idea of creating pairs or sets that differ on one key
-   explanatory variable (or causal factor) but do not differ on others.
-2. How do we assess this kind of stratification? What do balance tests mean? (How to interpret the output of `xBalance` in this case?)
-3. What do "effects" mean in this case? How to estimate them?
 
 
 
