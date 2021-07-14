@@ -1,11 +1,11 @@
 %  For slides only
-\input{slidesonly}
+%\input{slidesonly}
 
 % % For handout
 %\input{handout}
 
 %For handout + mynotes
-%\input{handout+mynotes}
+\input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -24,7 +24,7 @@
 
 {\usebeamercolor[fg]{titlelike} Announcements:}\\
 
-\input{announcement-of-the-day}  % announcement-of-the-day.tex not
+\input{announcement-of-the-day}  % 
                                 % announcement-of-the-day.tex not part of repo
 \end{frame}
 
@@ -55,22 +55,22 @@
 % \end{frame}
 
 
-\begin{frame}[label=whatWeWillCoverFr]{Methods we'll study in the course}
-  \begin{itemize}
-  \item Randomization-based analysis for experiments
-  \item Natural experiments, quasi-experiments,
-    difference-in-differences
-  \item Effect estimation \& inference in the presence of interference
-  \item Propensity scores, propensity score matching
-%  \item Regression discontinuity
-  \item Omitted variable sensitivity analysis
-  \item Instrumental variables \& principal stratification
-  \item \ldots
-  \end{itemize}
-\end{frame}
+% \begin{frame}[label=whatWeWillCoverFr]{Methods we'll study in the course}
+%   \begin{itemize}
+%   \item Randomization-based analysis for experiments
+%   \item Natural experiments, quasi-experiments,
+%     difference-in-differences
+%   \item Effect estimation \& inference in the presence of interference
+%   \item Propensity scores, propensity score matching
+% %  \item Regression discontinuity
+%   \item Omitted variable sensitivity analysis
+%   \item Instrumental variables \& principal stratification
+%   \item \ldots
+%   \end{itemize}
+% \end{frame}
 
-\Note{Don't linger, I come back to this slide after Causal Inference
-  in Experiments section}
+% \Note{Don't linger, I come back to this slide after Causal Inference
+%   in Experiments section}
 
 \begin{frame}[handout:0]{Three traditions in quantitative analysis}
 \framesubtitle{A brief, tendentious review}
@@ -130,12 +130,12 @@ analysis in social science, by century:
 \item Exercise: Abstract a relevant 2x2 table
 }
 
-\begin{frame}{The hypothesis of absolutely no effect}
-
+\begin{frame}{The hypothesis of absolutely no effect,  i}
+\framesubtitle{Fisher's null \& a Fisherian test statistic for Salk trial}
   \begin{itemize}
   \item In Placebo group, 162 reported cases ($n_{0}=201K$).  Among
-    Vaccinated, 82 (of $n_{1}=201K$).
-   \item The hypothesis of absolutely no effect says that however
+    Vaccinated, 82 of $n_{1}=201K$; rate = $4.1\times 10^{-4}$ 
+   \item The hypothesis of absolutely no effect --- Fisher's (1935) $H_{0}$ --- says that however
      randomization had turned out, polio would have
      been reported for the same $162 +
      82 = 244$ children (and no others).
@@ -150,23 +150,45 @@ analysis in social science, by century:
        $n_{1}^{-1}\sum_{i=1}^{n} Z_{i}y_{i}$, $n = n_{0} + n_{1}$, or
        $n_{1}^{-1}\mathbf{Z}'\mathbf{y}$.
      \item Basic probability gives
-       $\mathrm{E}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}) = \bar y =
+       $\mathrm{E}_{0}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}) = \bar y =
        244/402K \approx 6\times 10^{-4}$. 
-     \item Statistical theory
-       adds $\mathrm{Var}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}) = n_{1}^{-1}
-  \frac{n_{0}}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar
-    y)^{2}}{n-1}$, evaluating to
-  $\left(4\times 10^{-5}\right)^{2}$.
-     \item Stat. theory also says $n_{1}^{-1}\mathbf{Z}'\mathbf{y}$ is
-       approximately Normal.
-     \item We observed $n_{1}^{-1}\mathbf{z}'\mathbf{y} =4 \times
-       10^{-4}$ --- 5 s.d.'s less than
-       $\mathrm{E}(n_{1}^{-1}\mathbf{Z}'\mathbf{y})$.  
-     \item But \texttt{pnorm(-5)} is \texttt{2.87e-07}.
      \end{itemize}
   \end{itemize}
   \end{frame}
 
+  \begin{frame}{The hypothesis of absolutely no effect,  ii}
+\framesubtitle{Fisherian ``s.e.'' \& large-sample $p$-value}
+
+\begin{itemize}
+\item \ldots we're in the midst of calculating aspects of the \textit{randomization
+  distribution} of our \textit{test statistic}
+$n_{1}^{-1}\mathbf{Z}'\mathbf{y}$, assuming $H_{0}$.  (For the
+time being!) \pause We found
+$\mathrm{E}_{0}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}) \approx 6\times
+10^{-4}$  Continuing, 
+\begin{itemize}
+     \item By statistical theory, 
+       $\mathrm{Var}_{0}(n_{1}^{-1}\mathbf{Z}'\mathbf{y}) = n_{1}^{-1}
+  \frac{n_{0}}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar
+    y)^{2}}{n-1}$.
+  \item (Counter to similar formulas from Stats 101, the sum and
+    average are over all 400K participants, not just the vaccine
+    group.) 
+  \item This evaluates to
+  $\left(4\times 10^{-5}\right)^{2}$.
+     \item Stat. theory also suggests $n_{1}^{-1}\mathbf{Z}'\mathbf{y}$ is
+       approximately Normal.
+     \item With the \textit{realized} treatment assignment
+       $\mathbf{z}$, we  observed $n_{1}^{-1}\mathbf{z}'\mathbf{y} =4 \times
+       10^{-4}$.  That's 5 null s.e.'s less than
+       $\mathrm{E}_{0}(n_{1}^{-1}\mathbf{Z}'\mathbf{y})$!
+     \end{itemize}
+   \item As \texttt{pnorm(-5)} is \texttt{2.87e-07}, we obtain an
+     approximate p-value of $3 \times 10^{-7}$.
+   \item (One can associate a p-value with these data + $H_{0}$ without the
+     Normal approximation, as we'll see later.)
+\end{itemize}
+\end{frame}
 % \itnote{
 % \item[2016] at the
 % blackboard I walked them through strict null for the Salk trial,
