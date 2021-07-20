@@ -1,0 +1,86 @@
+---
+title: Day 1 Exercise Sketch: Two Versions of Randomization Inference, Fisher Style.
+author: Jake Bowers
+---
+
+The version using the central limit theorem for the randomization distribution
+
+```{r}
+n0 <- 201229
+n1 <- 200745
+n <- n0 + n1
+obs_test_stat <- 0/n1
+
+expected_test_stat_h0 <- 4/n
+these_test_stat_h0 <- 5e-6
+
+## The p-value
+pnorm( (obs_test_stat-expected_test_stat_h0)/these_test_stat_h0 )
+```
+
+Another way:
+
+```{r}
+
+dat <- data.frame(Z=c(rep(0,n0),rep(1,n1)),Y=c(rep(1,4),rep(0, (n1+n0)-4 )))
+with(dat,table(Z,Y))
+
+test_stat <- function(z,y){
+    sum(z*y)/sum(z)
+}
+
+## Calculate the observed summary of the treatment and outcome relationship
+obs_test_stat2 <- with(dat,test_stat(z=Z,y=Y))
+## Test the code: the two observed numbers should be the same
+stopifnot(all.equal(obs_test_stat2,obs_test_stat))
+
+```
+
+Now, shuffle treatment assignment and recalculate the test statistic representing the null hypothesis of no effect (shuffling breaks the relationship between treatment assignment and outcome, thus representing "no effects")
+
+```{r}
+
+## This function shuffles treatment assignment
+new_assignment <- function(z){
+    sample(z)
+}
+
+## Does new_assignment() do the right thing?
+
+set.seed(12345)
+nsims <- 1000
+randomization_distribution <- replicate(nsims,test_stat(z=new_assignment(dat$Z),y=dat$Y))
+
+
+summary(randomization_distribution)
+table(randomization_distribution)
+table(randomization_distribution)/nsims
+
+expected_test_stat_h0_2 <- mean(randomization_distribution)
+
+expected_test_stat_h0_2 - expected_test_stat_h0
+
+p_value_2 <- mean(randomization_distribution <= obs_test_stat2)
+
+p_value_2
+
+```
+
+Compare the asymptotic and the permutation-based randomization reference distributions:
+
+
+```{r}
+the_rand_dist_tab <- table(randomization_distribution)/nsims
+the_dist_vals <- as.numeric(names(the_rand_dist_tab))
+
+set.seed(12345)
+the_asymp_rand_dist <- rnorm(10000,mean=expected_test_stat_h0,sd=these_test_stat_h0)
+dens_the_asymp_rand_dist <- density(the_asymp_rand_dist)
+
+hist(randomization_distribution,probability = TRUE,xlim=range(the_asymp_rand_dist))
+points(x=obs_test_stat2,y=-.01,pch=17,cex=2)
+curve(dnorm(x,mean=expected_test_stat_h0,sd=these_test_stat_h0),from=min(the_asymp_rand_dist),to=max(the_asymp_rand_dist),add=TRUE)
+lines(dens_the_asymp_rand_dist$x,dens_the_asymp_rand_dist$y)
+
+```
+
