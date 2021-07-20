@@ -277,7 +277,7 @@ $$
     {\footnotesize
       \begin{eqnarray*}
         \hspace{-0.4in} \E\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] & = & \E\left[\frac{1}{n_T} \sum_{i=1}^N Z_i Y_i - \frac{1}{n_C} \sum_{i = 1}^N (1 - Z_i) Y_i\right]\\
-        \hspace{-0.4in} & = &  \frac{1}{n_T} \sum_{i=1}^N \E(Z_i Y_i)
+        \hspace{-0.4in} & = &  \frac{1}{n_T} \sum_{i=1}^N \E\left[Z_i Y_i\right]
                               - \frac{1}{n_C} \sum_{i=1}^N \E\left[(1 - Z_i) Y_i\right] \hspace{0.1in}
                               \mbox{($\because$ Linearity of $\E$)}\\ 
         \hspace{-0.4in} & = &  \frac{1}{n_T} \sum_{i=1}^N \E\left[Z_i y_{Ti}\right]
