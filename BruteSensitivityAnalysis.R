@@ -1,9 +1,6 @@
 
-\item Finally, here is a general but very slow version of Rosenbaum's
-	sensitivity analysis. Here, I am using the harmonic weighted mean difference
-	as a test statistic for tests of the sharp null of no effect.
+## Finally, here is a general but very slow version of Rosenbaum's sensitivity analysis. Here, I am using the harmonic weighted mean difference as a test statistic for tests of the sharp null of no effect.
 
-<<eval=TRUE,cache=TRUE>>=
 source(url("http://jakebowers.org/ICPSR/bruteSens.R"))
 
 tmpdat<-na.omit(meddat[,c("nhTrt","HomRate0803","bestfm")])
@@ -45,20 +42,14 @@ G5randdist<-apply(G5rands,2,function(newz){
 	 })
 mean(G5randdist<=obscoef)
 
-@
 
-Here is a figure showing how the randomization distributions change as the
-odds of treatment assignment for the treated change:
+#Here is a figure showing how the randomization distributions change as the odds of treatment assignment for the treated change:
 
-<<out.width=".5\\textwidth">>=
 boxplot(list(G1randdist,G2randdist,G3randdist,G5randdist))
 abline(h=obscoef)
-@
 
-And here are the results for a range of $\Gamma$ --- using the parallel
-package to speed up computation.
+#And here are the results for a range of $\Gamma$ --- using the parallel package to speed up computation.
 
-<<GammaRange, cache=TRUE>>=
 
 library(parallel)
 options(mc.cores=4)
@@ -78,7 +69,5 @@ sensresults<-mclapply(theGs,function(theG){
 	 })
 
 sensresults
-
-@
 
 
