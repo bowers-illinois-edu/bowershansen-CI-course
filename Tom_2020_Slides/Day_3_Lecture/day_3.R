@@ -105,10 +105,10 @@ cond_ests_sra <- sapply(X = 1:ncol(cond_Omega_sra),
 sum(cond_ests_sra * cond_probs_sra)
 
 ## Consistency
-asymp_ests <- function(.y_c,
-                       .y_t,
-                       .prop_t,
-                       .h){
+asymp_ests_exact <- function(.y_c,
+                             .y_t,
+                             .prop_t,
+                             .h){
   
   y_c = c(.y_c, rep(x = .y_c, times = .h - 1))
   

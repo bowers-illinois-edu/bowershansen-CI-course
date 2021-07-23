@@ -16,7 +16,6 @@ acorn_data <- dplyr::select(.data = acorn_data, unit, size, z, vote03)
 set.seed(1:5)
 acorn_Omega <- replicate(n = 10^3, expr = sample(x = acorn_data$z))
 
-
 obs_test_stat <- mean(acorn_data$vote03[which(acorn_data$z == 1)]) - mean(acorn_data$vote03[which(acorn_data$z == 0)])
 
 null_diff_means_no_effect <- sapply(X = 1:ncol(acorn_Omega),
@@ -41,7 +40,7 @@ null_dist_no_effect_plot <- ggplot(data = null_dist_data_no_effect,
   geom_vline(xintercept = obs_test_stat,
              linetype = "dashed") +
   scale_fill_manual(values = c("grey", "black")) +
-  guides(fill = FALSE) +
+  guides(fill = "none") +
   theme_bw() +
   xlab(label = "Null test statistics") +
   ylab(label = "Probability")
