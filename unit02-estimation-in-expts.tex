@@ -1,11 +1,11 @@
 %  For slides only
-\input{slidesonly}
+%\input{slidesonly}
 
 % % For handout
 %\input{handout}
 
 %For handout + mynotes
-%\input{handout+mynotes}
+\input{handout+mynotes}
 
 \input{beamer-preamble-bbh-all}
 \input{defs-all}
@@ -750,44 +750,59 @@ $\bar{y}_{1} - \bar{y}_0   \pm \sqrt{\mathrm{SE}(\bar{y}_{1})^{2} +
 
 \subsection{Outmoded alternatives to IV}
 
-\begin{frame}[shrink]{FACEs and ACEs (Holland, 1988, \textit{Soc
-      Meth}) }
+\begin{frame}[shrink]{The Salk vaccine trial(s), revisited}
 
 \visible<2->{\igrphx{SalkVtable-full}}
 
 
 \begin{columns}
   \begin{column}{.45\linewidth}
-  \begin{enumerate}[<+->]
-  \item   Compare $\EE(Y | V=1)$ to $\EE[Y(1)]= \EE(Y_{T})$.  
-\item Comp.  $\EE(Y | V=0)$ to $\EE(Y_{c})$.
-\end{enumerate}    
+  \begin{itemize}[<+->]
+  \item Encouragement designs (Holland 1988, \textit{Soc. Meth.})
+\item The other Salk vaccine trial
+\end{itemize}    
 \end{column}
 \begin{column}{.55\linewidth}
-\begin{enumerate}[<+->]
-\item ACE = $\EE(Y_t - Y_c) = \EE(Y_{t}) - \EE(Y_{c})$
+\begin{itemize}[<+->]
+\item $\mathrm{ACE} = \EE(Y_T - Y_C) = \EE(Y_{T}) - \EE(Y_{C})$
 \item ``FACE'' = $\EE(Y | V=1) - \EE(Y | V=0)$
-\end{enumerate}
+\end{itemize}
 \end{column}
 \end{columns}
-
-
-\pause
- If $\mathrm{Pr}(V_{i}=1 | (Y_{T}, Y_{C})=(y_{T}, y_{C})) = \pi$
-  irrespective of $(y_{T}, y_{C}) $ --- as in the UM but not the
-  ``Ohio State'' Salk trial  --- then ACE = FACE.  
-
-
-
+In either study, $\EE[\bar{Y}_{V=1}- \bar{Y}_{V=0}]=$ FACE.  But
+$\mathrm{FACE} \equiv \mathrm{ACE}$ only
+in RCTs. 
 \end{frame}
 
 \itnote{
-\item Refer to sec 2.6 of G\&G 
+\item Encouragement designs
+  \begin{itemize}
+    \item Even with random assignment, often with ``partial compliance''
+  or``failure-to-treat'' noncompliance.
+ \item To acknowledge in
+  advance, we call it an  ``encouragement design.''  (Whether randomized
+  or not.)
+\item In last week's Salk trial, avoided with the
+  help of an elaborate consent and blinding mechanism. Often
+  impracticable, so we need methods for encouragement designs.
+\end{itemize}
+\item The UM RCT and the other Salk vaccine trial
+\item ACEs \& FACEs (also Holland 1988, \textit{Soc. Meth.})
+  \begin{itemize}
+    \item ACE = $\EE(Y_T - Y_C) = \EE(Y_{T}) - \EE(Y_{C})$
+    \item ``FACE'' = $\EE(Y | V=1) - \EE(Y | V=0)$
+     \item How $\EE(Y | V=1)$ differs from $\EE(Y_{T})$
+    \item Meaning of $\bar{Y}_{V=1}$, why $\EE[\bar{Y}_{V=1}]=\EE(Y |
+      V=1)$
+      \item Why $\EE(Y | V=1)$ may or may not $=\EE(Y_{T})$ in the
+        other trial.
+\end{itemize}
 }
 
 
 \begin{frame} \frametitle{The 1979 special election to replace Marion
     Barry}
+\frametitle{The setting for an early get-out-the-vote experiment}
   \begin{columns}
     \begin{column}{0.6\linewidth}
 
@@ -809,7 +824,9 @@ $\bar{y}_{1} - \bar{y}_0   \pm \sqrt{\mathrm{SE}(\bar{y}_{1})^{2} +
 
 \begin{frame} \frametitle{Adams \& Smith's (1980) telephone GOTV
     experiment, analysis}
-\framesubtitle{``Per-protocol,'' an outmoded mode of analysis}
+    \framesubtitle{A randomized encouragement design marred by
+      ``per-protocol'' analysis}
+
   \begin{columns}
     \begin{column}{0.6\linewidth}
       \begin{tabular}{r@{\hspace{.5em}}rr} \hline
@@ -857,7 +874,9 @@ Additional conventions, this time shared by DOS, G\& G and this course:
 
 (Each may appear in caps or lowercase, indicating an RV or a realization; each may be bolded to indicate a vector.) \pause
 
-In the coffee experiment, $\mathbf{D} \equiv \mathbf{Z}$; also in experiments discussed in G\& G ch.2.  In general they may diverge (non-compliance). 
+In the Salk vaccine RCT, $\mathbf{D} \equiv \mathbf{Z}$; also in
+experiments discussed in G\& G ch.2.  Non- or partial compliance means
+they're not always the same. 
 
 \end{frame}
 
@@ -872,7 +891,8 @@ When there is \textit{non-compliance}, $Z$ and $D$ may differ.  \pause
 $\frac{1}{\# \{i: D_i = 1\}} \sum_{i:D_i=1} Y_i - \frac{1}{\# \{j: D_j = 0\}} \sum_{j:D_j=0} Y_j$
 \bigskip
 
-\uncover<3->{Estimates a FACE-like quantity}
+\uncover<3->{Estimates a FACE-like quantity that may or may not bear
+  causal interpretation}
 \vspace{.5\textheight} 
 \mbox{ }
 
@@ -882,14 +902,20 @@ $\frac{1}{\# \{i: D_i = 1\}} \sum_{i:D_i=1} Y_i - \frac{1}{\# \{j: D_j = 0\}} \s
 $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \sum_{j:Z_j=0} Y_j$
 \bigskip
 
-\uncover<2->{Estimates the intention to treat effect (ITT) --- the ACE of
-  \textit{assignment} to treatment}
+\uncover<2->{Estimates the average causal effect of
+  \textit{assignment} to treatment, a.k.a. the \textit{intention to treat} (ITT) \textit{effect} }
 
 \vspace{.5\textheight} 
 \mbox{ }
     \end{Column}
 
   \end{columns}
+
+ \uncover<3->{ITT effects are often of direct interest. Even when not,
+   usually of indirect interest, because of connections to
+   \textit{complier average causal effects} via concepts \& methods of
+   \textit{instrumental
+     variables}. }
 \end{frame}
 
 \begin{frame} \frametitle{Results of the Adams-Smith experiment}
@@ -930,17 +956,23 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
 \end{columns}
 \vfill \pause
 
-  \begin{itemize}
+  \begin{itemize}[<+->]
   \item Assuming no effects for always-takers or never-takers
-    (exclusivity), $\delta = p_{c} \delta_{c} + p_{d} \delta_{d} $.
+    (excludability), $\delta = p_{c} \delta_{c} + p_{d} \delta_{d} $.
   \item Assuming no defiers (monotonicity), $\delta = p_{c}
     \delta_{c}$. 
-  \item Random assignment, non-interference $\Rightarrow$ both $\delta$ and $p_{c}$ are ACEs of assignment.
+  \item Random assignment, non-interference $\Rightarrow$ both
+    $\delta$ and $p_{c}$ are ACEs of assignment.
+    \item Bloom's method is to estimate $\delta_{c}$ as the quotient
+      of corresponding FACEs, $\hat\delta/\hat{p}_{c}$.
  \end{itemize}
 
 \end{frame}
 \itnote{
-\item Sketch $2 \times 2$ table }
+\item Couldn't make a cross-tab structured like the conceptual table at UR, b/c row and column position are jointly observed for no
+  one. Instead, make progress w/ assumptions and estimation.
+\item $\vdots$
+\item State form of Bloom estimator}
 
 \begin{frame} \frametitle{The Adams-Smith (1980) telephone GOTV
     experiment}
@@ -979,7 +1011,28 @@ $\frac{1}{\# \{i: Z_i = 1\}} \sum_{i:Z_i=1} Y_i - \frac{1}{\# \{j: Z_j = 0\}} \s
 
 
 \begin{frame}{Exercises}
-
+  \begin{columns}
+    \begin{column}{0.4\linewidth}
+      \begin{enumerate}[<+-\mynoteonly>]
+      \item Estimate the ITT effect $\delta$.
+      \item Identify the trap that was layed for
+        you by this presentation of the data.  
+      \item Estimate $p_{c}$. 
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.6\linewidth}
+      \igrphx{SalkVtable-observedonly.jpg}
+    \end{column}
+  \end{columns}
+      \begin{enumerate}[<+-\mynoteonly>] \addtocounter{enumi}{3}
+      \item Are there/may there be ``always-takers''?  
+      \item Are there/may there be ``Never-takers''?
+      \item Are there/may there be ``defiers''?
+      \item Use Bloom's method to estimate the complier-average causal
+        effect $\delta_{c}$.  How does your answer compare to the
+        RCT's estimate of the ACE, $(41 -81) = -40$ cases per 100K
+        innoculations?
+      \end{enumerate}
 \end{frame}
 
 \end{document}
