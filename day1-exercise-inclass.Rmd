@@ -84,3 +84,31 @@ lines(dens_the_asymp_rand_dist$x,dens_the_asymp_rand_dist$y)
 
 ```
 
+
+# From Tom's Slides
+
+
+```{r }
+
+
+y_c <- c(10, 15, 20, 20, 10, 15, 15)
+y_t <- c(15, 15, 30, 15, 20, 15, 30)
+
+true_ate <- mean(y_t - y_c)
+
+z1 <- c(1,1,0,0,0,0,0)
+
+## Notice these two are the same
+Y_obs_1 <- z1*y_t + (1-z1)*y_c
+Y_obs_1a <- ifelse(z1==1,y_t,y_c)
+
+est1 <- mean(Y_obs_1[z1==1]) - mean(Y_obs_1[z1==0])
+
+true_ate
+est1
+
+
+
+```
+
+

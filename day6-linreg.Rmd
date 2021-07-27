@@ -7,7 +7,7 @@ author: |
   | ICPSR 2020 Session 2
   | Jake Bowers, Ben Hansen, Tom Leavitt
 bibliography:
- - BIB/Master_Bibliography.bib
+ - BIB/MasterBibliography.bib
 fontsize: 10pt
 geometry: margin=1in
 graphics: yes
