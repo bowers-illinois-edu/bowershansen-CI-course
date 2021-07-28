@@ -1,5 +1,5 @@
 ---
-title: Day 1 Exercise Sketch: Two Versions of Randomization Inference, Fisher Style.
+title: "Day 1 Exercise Sketch: Two Versions of Randomization Inference, Fisher Style."
 author: Jake Bowers
 ---
 
