@@ -1,0 +1,100 @@
+## Does xBalance have a controlled false positive rate here?
+
+```{r xberror, echo=TRUE, cache=TRUE}
+xbfn <- function() {
+  acorn$newz <- sample(acorn$z)
+  xb1 <- xBalance(newz ~ v_p2003 + v_m2003 + v_g2002 + v_p2002 + v_m2002 + v_s2001 +
+    v_g2000 + v_p2000 + v_m2000 + v_s1999 + v_m1999 + v_g1998 +
+    v_m1998 + v_s1998 + v_m1997 + v_s1997 + v_g1996 + v_p1996 +
+    v_m1996 + v_s1996 + size,
+  data = acorn,
+  report = "chisquare.test"
+  )
+  return(xb1$overall[["p.value"]])
+}
+
+res <- replicate(1000, xbfn())
+```
+
+```{r resout, echo=TRUE}
+summary(res)
+mean(res <= .05)
+mean(res <= .2)
+```
+
+## Does xBalance have a controlled false positive rate here?
+
+Ex. are fewer than 5% of the p-values less than .05?
+
+```{r}
+plot(ecdf(res))
+abline(0, 1)
+abline(v = c(.01, .05, .1))
+```
+
+
+## Does the simulation based approach have a controlled false positive rate here?
+
+
+```{r resdirecterror, cache=TRUE}
+d2pfn <- function(z, X) {
+  newz <- sample(z)
+
+  d_dist <- replicate(1000, d_stat(sample(newz), X, ss = rep(1, nrow(X))))
+
+  obs.d <- d_stat(newz, X, rep(1, nrow(X)))
+
+  dps <- matrix(NA, nrow = length(obs.d), ncol = 1)
+  for (i in 1:length(obs.d)) {
+    dps[i, ] <- 2 * min(mean(d_dist[i, ] >= obs.d[i]), mean(d_dist[i, ] <= obs.d[i]))
+  }
+
+  invCovDDist <- solve(cov(t(d_dist)))
+  obs.d2 <- d2_stat(obs.d, d_dist, invCovDDist)
+
+  d2_dist <- apply(d_dist, 2, function(thed) {
+    d2_stat(thed, theinvcov = invCovDDist)
+  })
+
+  d2_ <- mean(d2_dist >= obs.d2)
+
+  return(d2_)
+}
+```
+
+```{r doresdirect, eval=FALSE, cache=TRUE}
+## This takes awhile!
+resdirect <- replicate(1000, d2pfn(z = acorn$z, X = acorn[, acorncovs]))
+```
+
+```{r doresdirectparallel, eval=TRUE, cache=TRUE}
+library(parallel)
+resdirectlst <- mclapply(1:1000, function(i) {
+  message(i)
+  d2pfn(z = acorn$z, X = acorn[, acorncovs])
+}, mc.cores = detectCores())
+resdirect <- unlist(resdirectlst)
+save(resdirect, file = "day9-resdirect.rda")
+```
+
+## Does the simulation based approach have a controlled false positive rate here?
+
+It looks like it is a bit too high. Hmm... Maybe the simulation needs to be fixed.
+
+```{r lazyload, echo=TRUE}
+## lazyLoad("day9-AdjustmentBalance_cache/beamer/doresdirectparallel_5ec4fa8cdcbcf586138e928bc0f9fc0b")
+## load("day9-resdirect.rda")
+summary(resdirect)
+mean(resdirect <= .05)
+mean(resdirect <= .2)
+```
+
+## Does xBalance have a controlled false positive rate here?
+
+
+```{r}
+plot(ecdf(resdirect))
+abline(0, 1)
+abline(v = c(.01, .05, .1))
+```
+

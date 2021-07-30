@@ -222,11 +222,12 @@ dstats2 <- d_stat_v2(zz = acorn$z, mm = acorn[, acorncovs], ss = rep(1, nrow(aco
 
 dstats1[1:5]
 dstats2[1:5]
+xb1$results[,"adj.diff",]
 
 stopifnot(all.equal(dstats1, dstats2[1, ]))
 
+## Curious whether one function is faster than the other
 library(microbenchmark)
-
 microbenchmark(d_stat(zz = acorn$z, mm = acorn[, acorncovs], ss = rep(1, nrow(acorn))),
   d_stat_v2(zz = acorn$z, mm = acorn[, acorncovs], ss = rep(1, nrow(acorn))),
   times = 100
@@ -255,11 +256,9 @@ for (i in 1:length(obs.d)) {
 round(cbind(randinfps = dps[, 1], xbps = xb1ps, obsdstats = obs.d, xbdstats = xb1ds), 3)
 ```
 
-## Reference distribution of the $d^2$ stat
+## Reference distribution of the $d^2$ stat {.allowframebreaks}
 
-The $d^2$ statistic is a linear function of the $d$-statistics that accounts
-for the covariance between those statistics (across the possible assignments
-under the null hypothesis of no effects).
+The $d^2$ statistic is a linear function of the probably correlated $d$-statistics: a linear combination of correlated variables is $d^{T} \Sigma_d^{-1} d$ where $d$ is a vector of the stratum adjusted differences in means and $\Sigma_d$ is the variance-covariance matrix of the distribution of the $d$ statistics under the sharp null of no differences. With only one variable, this is basically a standardized $d$ statistic (after taking sqrt, and forced to be positive).
 
 ```{r d2stat, echo=TRUE}
 d2_stat <- function(dstats, ddist = NULL, theinvcov = NULL) {
@@ -308,119 +307,15 @@ abline(v = obs.d2)
 I suspect that $N=28$ is too small. `xBalance` uses an asymptotic
 approximation to the randomization distribution.
 
-```{r echo=TRUE, out.width=".8\\textwidth"}
-## Notice that the distribution of d2_dist is not that close to the
-## chi-squared_distribution in this case with N=28
-par(mfrow = c(1, 2))
+```{r echo=FALSE, out.width=".7\\textwidth", cache=FALSE}
+par(mfrow = c(1, 2),pty="m",oma=rep(0,4),mgp=c(1.5,.5,0),mar=c(2,2,0,0))
 qqplot(rchisq(10000, df = 21), d2_dist)
 abline(0, 1)
-
-plot(density(d2_dist))
+plot(density(d2_dist),main="",xlim=c(2,60))
 rug(d2_dist)
-curve(dchisq(x, df = 21), from = 0, to = 40, add = TRUE, col = "grey")
+lines(density(rchisq(10000, df = 21)),col="grey")
+abline(v=c(obs.d2,xb1$overall$chisquare),col=c("black","grey"))
 ```
-
-<!--
-## Does xBalance have a controlled false positive rate here?
-
-```{r xberror, echo=TRUE, cache=TRUE}
-xbfn <- function() {
-  acorn$newz <- sample(acorn$z)
-  xb1 <- xBalance(newz ~ v_p2003 + v_m2003 + v_g2002 + v_p2002 + v_m2002 + v_s2001 +
-    v_g2000 + v_p2000 + v_m2000 + v_s1999 + v_m1999 + v_g1998 +
-    v_m1998 + v_s1998 + v_m1997 + v_s1997 + v_g1996 + v_p1996 +
-    v_m1996 + v_s1996 + size,
-  data = acorn,
-  report = "chisquare.test"
-  )
-  return(xb1$overall[["p.value"]])
-}
-
-res <- replicate(1000, xbfn())
-```
-
-```{r resout, echo=TRUE}
-summary(res)
-mean(res <= .05)
-mean(res <= .2)
-```
-
-## Does xBalance have a controlled false positive rate here?
-
-Ex. are fewer than 5% of the p-values less than .05?
-
-```{r}
-plot(ecdf(res))
-abline(0, 1)
-abline(v = c(.01, .05, .1))
-```
-
-
-## Does the simulation based approach have a controlled false positive rate here?
-
-
-```{r resdirecterror, cache=TRUE}
-d2pfn <- function(z, X) {
-  newz <- sample(z)
-
-  d_dist <- replicate(1000, d_stat(sample(newz), X, ss = rep(1, nrow(X))))
-
-  obs.d <- d_stat(newz, X, rep(1, nrow(X)))
-
-  dps <- matrix(NA, nrow = length(obs.d), ncol = 1)
-  for (i in 1:length(obs.d)) {
-    dps[i, ] <- 2 * min(mean(d_dist[i, ] >= obs.d[i]), mean(d_dist[i, ] <= obs.d[i]))
-  }
-
-  invCovDDist <- solve(cov(t(d_dist)))
-  obs.d2 <- d2_stat(obs.d, d_dist, invCovDDist)
-
-  d2_dist <- apply(d_dist, 2, function(thed) {
-    d2_stat(thed, theinvcov = invCovDDist)
-  })
-
-  d2_ <- mean(d2_dist >= obs.d2)
-
-  return(d2_)
-}
-```
-
-```{r doresdirect, eval=FALSE, cache=TRUE}
-## This takes awhile!
-resdirect <- replicate(1000, d2pfn(z = acorn$z, X = acorn[, acorncovs]))
-```
-
-```{r doresdirectparallel, eval=TRUE, cache=TRUE}
-library(parallel)
-resdirectlst <- mclapply(1:1000, function(i) {
-  message(i)
-  d2pfn(z = acorn$z, X = acorn[, acorncovs])
-}, mc.cores = detectCores())
-resdirect <- unlist(resdirectlst)
-save(resdirect, file = "day9-resdirect.rda")
-```
-
-## Does the simulation based approach have a controlled false positive rate here?
-
-It looks like it is a bit too high. Hmm... Maybe the simulation needs to be fixed.
-
-```{r lazyload, echo=TRUE}
-## lazyLoad("day9-AdjustmentBalance_cache/beamer/doresdirectparallel_5ec4fa8cdcbcf586138e928bc0f9fc0b")
-## load("day9-resdirect.rda")
-summary(resdirect)
-mean(resdirect <= .05)
-mean(resdirect <= .2)
-```
-
-## Does xBalance have a controlled false positive rate here?
-
-
-```{r}
-plot(ecdf(resdirect))
-abline(0, 1)
-abline(v = c(.01, .05, .1))
-```
--->
 
 ## Summary
 
@@ -686,19 +581,42 @@ lm1c <- lm_robust(HomRate08 ~ nhTrt, fixed_effects = ~ I(nhAboveHS >= .1), data 
 coef(lm1c)["nhTrt"]
 lm1d <- lm(HomRate08 ~ nhTrt + I(nhAboveHS >= .1), data = meddat)
 coef(lm1d)["nhTrt"]
+```
+
+## Stratified adjustment V 2.0
+
+One-step stratified testing
+
+```{r}
 xbate1 <- xBalance(nhTrt ~ HomRate08, strata = list(hs = ~ I(nhAboveHS >= .1)), data = meddat, report = "all")
-xbate1$results[, c("nhTrt=1", "nhTrt=0", "adj.diff"), ]
+xbate1$results[, c("nhTrt=1", "nhTrt=0", "adj.diff","p"), ]
+xbate1$overall
+
+hstest2 <- independence_test(HomRate08~nhTrt|factor(nhAboveHS >= .1),data=meddat)
+set.seed(12345)
+hstest2_perm <- independence_test(HomRate08~nhTrt|factor(nhAboveHS >= .1),data=meddat,distribution=approximate(nresample=10000))
+
+pvalue(hstest2)
+pvalue(hstest2_perm)
+
+hstest4 <- independence_test(HomRate08~nhTrt|factor(nhAboveHS >= .1),data=meddat,ytrafo=rank_trafo)
+pvalue(hstest4)
+
+hstest5 <- wilcox_test(HomRate08~factor(nhTrt)|factor(nhAboveHS >= .1),data=meddat)
+pvalue(hstest5)
+
 ```
 
 ## Balance assessment after stratification
 
-Did we adjust enough? What would *enough* mean?
+Did we adjust enough? What would *enough* mean? Use the testing approach but now focus only on the covariate(s) that you are trying to adjust.
 
 ```{r xbHS1, echo=TRUE}
 xbHS1 <- xBalance(nhTrt ~ nhAboveHS, strata = list(hs = ~ I(nhAboveHS >= .1)), data = meddat, report = "all")
 xbHS1$overall
 xbHS1$results[1, c("nhTrt=1", "nhTrt=0", "adj.diff", "std.diff", "z", "p"), ] ## the covariate specific z-test
 ```
+
 ## Disadvantages and Advantages of Simple Stratification
 
   -  (+) Easy to explain what  "controlling for" or "adjustment" means.
