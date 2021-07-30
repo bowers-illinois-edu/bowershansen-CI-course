@@ -654,21 +654,24 @@ scatter3d(HomRate08 ~ nhAboveHS + nhPopD,
 )
 ```
 
-## The Problem of Using  the Linear Model for  Adjustment {.allowframebreaks}
+## The Problem of Using  the Linear Model for  Adjustment 
 
  - Problem of Interepretability: "Controlling for" is  "removing (additive) linear relationships" it is  not "holding constant"
  - Problem of Diagnosis and Assessment: What is the  standard against which we can compare a given linear covariance adjustment specification?
  - Problem of extrapolation and interpolation: Often known as "common support", too.
  - Problems of overly influential points and curse of  dimensionality: As dimensions increase, odds of influential  point increase (ex. bell curve in one dimension, one very influential point in 2 dimensions); also real limits on number of covariates (roughly $\sqrt{n}$ for OLS).
- - Problems of  bias:
+ 
+## The Problem of Using  the Linear Model for  Adjustment 
+
+ - Problems of  bias even in randomized experiments:
 
 \begin{equation}
 Y_i = \beta_0 + \beta_1 Z_i + e_i
-(\#eq:olsbiv)
+\label{eq:olsbiv}
 \end{equation}
 
 This is a common practice because, we know that the formula to estimate
-$\beta_1$ in equation \@ref(eq:olsbiv) is the same as the difference of means
+$\beta_1$ in equation \eqref{eq:olsbiv} is the same as the difference of means
 in $Y$ between treatment and control groups:
 
 \begin{equation}
@@ -676,12 +679,14 @@ in $Y$ between treatment and control groups:
 \end{equation}
 
 \begin{equation}
-Y_i = \beta_0 + \beta_1 Z_i + \beta_2 X_i + e_i (\#eq:olscov)
+Y_i = \beta_0 + \beta_1 Z_i + \beta_2 X_i + e_i \label{eq:olscov}
 \end{equation}
 
-What is $\beta_1$ in this case? We know the matrix representation here $(\bX^{T}\bX)^{-1}\bX^{T}\by$, but here is the scalar formula for this particular case in \@ref(eq:olsbiv):
+What is $\beta_1$ in this case? We know the matrix representation here $(\bX^{T}\bX)^{-1}\bX^{T}\by$, but here is the scalar formula for this particular case in \eqref{eq:olscov}:
 
-$$ \hat{\beta}_1 = \frac{\var(X)\cov(Z,Y) - \cov(X,Z)\cov(X,Y)}{\var(Z)\var(X) - \cov(Z,X)^2} $$
+\begin{equation}
+\hat{\beta}_1 = \frac{\var(X)\cov(Z,Y) - \cov(X,Z)\cov(X,Y)}{\var(Z)\var(X) - \cov(Z,X)^2}
+\end{equation}
 
 ## Can we improve stratified adjustment?
 
@@ -693,10 +698,8 @@ coef(lm1cut3)["nhTrt"]
 ```
 But why those cuts? And why not 4? Why not...?
 
-\medskip
-
-One idea: collect observations into strata such that the sum of the
-differences in means of nhAboveHS within strata is smallest? This is the idea
+**One idea:** collect observations into strata such that the sum of the
+differences in means of `nhAboveHS` within strata is smallest? This is the idea
 behind `optmatch` and other matching approaches.
 
 ## The optmatch workflow: The distance matrix
@@ -720,7 +723,6 @@ fm1 <- fullmatch(absdist, data = meddat)
 summary(fm1, min.controls = 0, max.controls = Inf)
 table(meddat$nhTrt, fm1)
 
-
 pm1 <- pairmatch(absdist, data = meddat)
 summary(pm1, min.controls = 0, max.controls = Inf)
 table(meddat$nhTrt, pm1, exclude = c())
@@ -734,7 +736,7 @@ meddat$fm1 <- fm1
 meddat$pm1 <- pm1
 ```
 
-Differences within sets versus raw differences.
+Differences within sets versus raw differences from the fullmatch.
 
 ```{r echo=FALSE, out.width=".9\\textwidth"}
 library(gridExtra)
@@ -754,6 +756,8 @@ grid.arrange(bpfm1, bporig, ncol = 2, layout_matrix = matrix(c(1, 1, 1, 1, 2), n
 
 ## Evaluate the design: Within set differences
 
+Differences within sets versus raw differences from the pairmatch.
+
 ```{r echo=FALSE, out.width=".9\\textwidth"}
 bppm1 <- ggplot(meddat, aes(x = pm1, y = nhAboveHS)) +
   geom_boxplot() +
@@ -762,7 +766,7 @@ bppm1 <- ggplot(meddat, aes(x = pm1, y = nhAboveHS)) +
 grid.arrange(bppm1, bporig, ncol = 2, layout_matrix = matrix(c(1, 1, 1, 1, 2), nrow = 1))
 ```
 
-## Evaluate the design: Inspecet within set differences
+## Evaluate the design: Inspect within set differences
 
 ```{r sdiffs, echo=FALSE}
 rawmndiffs <- with(meddat, mean(nhAboveHS[nhTrt == 1]) - mean(nhAboveHS[nhTrt == 0]))

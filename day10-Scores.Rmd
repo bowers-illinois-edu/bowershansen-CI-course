@@ -1,27 +1,23 @@
 ---
-title: Statistical Adjustment and Assessment of Adjustment in Observational Studies --- Matched Stratification for One and Multiple Variables.
+title: |
+ | "Statistical Adjustment and Assessment of Adjustment in Observational Studies --- Matched Stratification for One and Multiple Variables."
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-author: ICPSR 2020 Session 2
+author: |
+  | ICPSR 2021 Session 2
+  | Jake Bowers, Ben Hansen, Tom Leavitt
 bibliography:
- - BIB/abbrev-long.bib
- - BIB/refs.bib
- - BIB/master.bib
- - BIB/misc.bib
+ - 'BIB/MasterBibliography.bib'
+ - 'BIB/master.bib'
+ - 'BIB/misc.bib'
+ - 'BIB/refs.bib'
 fontsize: 10pt
 geometry: margin=1in
 graphics: yes
 biblio-style: authoryear-comp
+colorlinks: true
 biblatexoptions:
   - natbib=true
 output:
-  revealjs::revealjs_presentation:
-    slide_level: 2
-    incremental: true
-    transition: none
-    fig_caption: true
-    self_contained: false
-    reveal_plugins: ["notes","search","zoom","chalkboard"]
-    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
   beamer_presentation:
     slide_level: 2
     keep_tex: true
@@ -32,72 +28,35 @@ output:
     includes:
         in_header:
            - defs-all.sty
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
 ---
 
 
-<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+<!-- To show notes  -->
+<!-- https://stackoverflow.com/questions/44906264/add-speaker-notes-to-beamer-presentations-using-rmarkdown -->
 
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
 
-```{r include=FALSE, cache=FALSE}
-# Some customization.  You can alter or delete as desired (if you know what you are doing).
-# knitr settings to control how R chunks work.
-rm(list=ls())
+## Print code by default
+opts_chunk$set(echo = TRUE)
 
-require(knitr)
-
-## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
-
-knitr::knit_hooks$set(mysize = function(before, options, envir) {
-			      if (before){
-				      return(options$size)
-			      } else {
-				      return("\\normalsize")}
-
-})
-
-
-knit_hooks$set(plotdefault = function(before, options, envir) {
-    if (before) par(mar = c(3, 3, .1, .1),oma=rep(0,4),mgp=c(1.5,.5,0))
-})
-
-opts_chunk$set(
-  tidy=FALSE,     # display code as typed
-  echo=TRUE,
-  results='markup',
-  strip.white=TRUE,
-  fig.path='figs/fig',
-  cache=FALSE,
-  highlight=TRUE,
-  width.cutoff=132,
-  size='\\scriptsize',
-  out.width='.8\\textwidth',
-  fig.retina=FALSE,
-  message=FALSE,
-  comment=NA,
-  mysize=TRUE,
-  plotdefault=TRUE)
-
-if(!file.exists('figs')) dir.create('figs')
-
-options(digits=4,
-	scipen=8,
-	width=132,
-	show.signif.stars=FALSE)
 ```
 
-```{r eval=FALSE, include=FALSE, echo=FALSE}
-## Run this only once and then not again until we want a new version from github
-library('devtools')
-library('withr')
-with_libpaths('./lib', install_github("markmfredrickson/RItools"), 'pre')
-```
 
-```{r echo=FALSE}
+
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+## Load all of the libraries that we will use when we compile this file
+## We are using the renv system. So these will all be loaded from a local library directory
 library(dplyr)
 library(ggplot2)
-library(RItools,lib.loc="./lib")
+library(coin)
+library(RItools)
 library(optmatch)
 ```
+
 ## Today
 
 \begin{enumerate}
@@ -106,27 +65,10 @@ Need adjust $\rightarrow$ "fair comparison" $\rightarrow$
   stratification $\rightarrow$ evaluation of the stratification;
   How to do this with one variable and/or more than one
   variable.
-\item Reading for tomorrow and next week: DOS 8--9, 13 and \cite[\S~9.5]{gelman2006dau}, and \cite{hans:04} \cite{ho:etal:07}
 \item Questions arising from the reading or assignments or life?
 \end{enumerate}
 
 # But first, review:
-
-## Review of Instrumental Variables
-
-Say you think you have an instrument: "rainfall", "economic liberalization as
-a result of NAFTA", "a housing/school lottery". You then need to convince
-yourself about:
-
- - SUTVA
- - "As if randomized"/Ignorability
- - That the instrument detectibly changes the dose / The instrument is not
-   weak.
- - That the instrument influences the outcome **only** via the dose
-   (Excludable)
- - (for estimation of CACE/LATE) That there are no defiers / the instrument
-   changes the dose in one direction and the dose changes the outcome in one
-   direction.
 
 ## Review of randomization assessment in a randomized experiment
 
@@ -151,48 +93,21 @@ lmRaw <- lm(HomRate08~nhTrt,data=meddat)
 coef(lmRaw)[["nhTrt"]]
 ```
 
-What do we need to believe or know in order to imagine that we have done a good job adjusting for Proportion with more than HS Education below? (concerns about extrapolation, interpolation, linearity, influential points, parallel slopes, biased estimation of the ACE)
+What do we need to believe or know in order to imagine that we have done a good job adjusting for Proportion with more than HS Education below? (concerns about extrapolation, interpolation, linearity, influential points, parallel slopes) (Ignoring whether we have done a good job **isolating** the causal relationship of interest. Just focusing on defending the claim that we have adjusted for HS Education well enough).
 
 ```{r}
 lmAdj1 <- lm(HomRate08 ~ nhTrt + nhAboveHS, data=meddat)
 coef(lmAdj1)["nhTrt"]
 ```
 
-What about when we try to adjust for more than one variable? (+the curse of
-dimensionality)
+## Review of linear model "control for" 
+
+What about when we try to adjust for more than one variable? (all previous
+problems (but harder to explain choices)+the curse of dimensionality)
 
 ```{r}
 lmAdj2 <- lm(HomRate08 ~ nhTrt + nhAboveHS + nhRent, data=meddat)
 coef(lmAdj2)["nhTrt"]
-```
-
-
-## Another problem with the linear model: How to choose?
-
-Here are 10,000 regression models, each with a different way to adjust for
-between 1 and 4 of the variables below. Restricted to additive functional
-forms, no interaction effects, no smooth non-linearity (no $x^2$).
-
-```{r manyates, cache=TRUE}
-lmadjfn<-function(){
-	covs <- c("nhAboveHS","nhRent","nhMale","nhEmp")
-	ncovs <- sample(1:length(covs),1)
-	somecovs <- sample(covs,size=ncovs)
-	ncuts <- round(runif(ncovs,min=1,max=8))
-	theterms <- ifelse(ncuts==1,somecovs,
-			   paste("cut(",somecovs,",",ncuts,")",sep=""))
-	thefmla <- reformulate(c("nhTrt",theterms),response="HomRate08")
-	thelm <- lm(thefmla,data=meddat)
-	theate <- coef(thelm)[["nhTrt"]]
-	return(theate)
-}
-
-set.seed(12345)
-res <- replicate(10000,lmadjfn())
-```
-
-```{r}
-summary(res)
 ```
 
 # Matching on one variable to create strata
@@ -239,7 +154,7 @@ meddat$pm1 <- pm1
 library(gridExtra)
 bpfm1 <- ggplot(meddat,aes(x=fm1,y=nhAboveHS)) +
 	geom_boxplot() +
-	 stat_summary(fun.y=mean, geom="point", shape=20, size=3, color="red", fill="red")
+	 stat_summary(fun=mean, geom="point", shape=20, size=3, color="red", fill="red")
 
 bporig <- ggplot(meddat,aes(y=nhAboveHS))+
 	 geom_boxplot()
@@ -254,7 +169,7 @@ Look within sets:
 ```{r echo=FALSE, out.width=".7\\textwidth"}
 bppm1 <- ggplot(meddat,aes(x=pm1,y=nhAboveHS)) +
 	geom_boxplot() +
-	 stat_summary(fun.y=mean, geom="point", shape=20, size=3, color="red", fill="red")
+	 stat_summary(fun=mean, geom="point", shape=20, size=3, color="red", fill="red")
 
 bporig <- ggplot(meddat,aes(y=nhAboveHS))+
 	 geom_boxplot()
@@ -329,7 +244,7 @@ The test statistic is a weighted average of the set-specific differences (same
 approach as we would use to test the null in a block-randomized experiment)
 
 ```{r}
-## The descriptive adj.mean diff from balanceTest
+## The descriptive adj.mean diff from xBalance 
 with(setmeanDiffs, sum(diffAboveHS*nTb/sum(nTb)))
 ## The mean diff used as the observed value in the testing
 with(setmeanDiffs, sum(diffAboveHS*hwt/sum(hwt)))
@@ -337,11 +252,9 @@ with(setmeanDiffs, sum(diffAboveHS*hwt/sum(hwt)))
 xbHS2$results[,,"fm"]
 ```
 
-Notice that `balanceTest` prints the set-size weighted difference (the updated
-version differs a little from `xBalance`):
 
 ```{r}
-btHS2 <- balanceTest(nhTrt~nhAboveHS+strata(fm1) +strata(pm1),
+btHS2 <- xBalance(nhTrt~nhAboveHS, strata=list(fm1=~fm1, pm1=~pm1),
                   data=meddat,report="all")
 btHS2
 ```
@@ -353,7 +266,7 @@ btHS2
 The general idea: dimension reduction. When we convert many columns into one column we reduce the dimensions of the dataset (to one column).
 
 
-```{r}
+```{r echo=FALSE}
 X <- meddat[,c("nhAboveHS","nhPopD")]
 plot(meddat$nhAboveHS,meddat$nhPopD,xlim=c(-.3,.6),ylim=c(50,700))
 ```
@@ -374,7 +287,7 @@ text(.4,200,label=round(dist(rbind(colMeans(X),X["407",])),2))
 
 First, let's look at Euclidean distance: $\sqrt{ (x_1 - x_2)^2 + (y_1 - y_2)^2 }$
 
-```{r echo=FALSE, out.width=".5\\textwidth"}
+```{r echo=FALSE, out.width=".4\\textwidth"}
 par(mgp=c(1.25,.5,0),oma=rep(0,4),mar=c(3,3,0,0))
 plot(meddat$nhAboveHS,meddat$nhPopD,xlim=c(-.3,.6),ylim=c(50,700))
 points(mean(X[,1]),mean(X[,2]),pch=19,cex=1)
@@ -396,10 +309,13 @@ Problem: overweights variables with bigger scales (Population Density dominates)
 
 Now the Euclidean distance (on a standardized scale) so neither variable is overly dominant.
 
-```{r echo=FALSE,out.width=".6\\textwidth"}
+```{r echo=TRUE}
 Xsd <-scale(X)
 apply(Xsd,2,sd)
 apply(Xsd,2,mean)
+```
+
+```{r echo=FALSE,out.width=".5\\textwidth"}
 plot(Xsd[,1],Xsd[,2],xlab="nhAboveHS/sd",ylab="nhPopD/sd")
 points(mean(Xsd[,1]),mean(Xsd[,2]),pch=19,cex=1)
 arrows(mean(Xsd[,1]),mean(Xsd[,2]),Xsd["407",1],Xsd["407",2])
@@ -426,36 +342,35 @@ text(X[pts,1],X[pts,2],labels=round(mh[pts],2),pos=1)
 ```{r}
 Xsd <- scale(X)
 tmp<-rbind(c(0,0),Xsd["407",])
-mahalanobis(tmp,center=c(0,0),cov=cov(Xsd))
-edist <- sqrt( (tmp[1,1] - tmp[2,1])^2 + (tmp[1,2]-tmp[2,2])^2 )
-edist
+mahalanobis(tmp,center=c(0,0),cov=cov(Xsd)) ## compare to Euclidean distances
 ```
 
 ## Dimension reduction using the Mahalanobis Distance
 
 
-```{r}
+```{r echo=FALSE, out.width=".6\\textwidth"}
 plot(Xsd[,1],Xsd[,2],xlab="nhAboveHS/sd",ylab="nhPopD/sd")
 ```
 
 ## Dimension reduction using the Mahalanobis Distance
 
 
-```{r}
+```{r out.width=".6\\textwidth"}
 drawMahal(X,center=colMeans(X),covariance=cov(X),quantile=c(.1,.2))
 ```
 
-```{r}
+## Dimension reduction using the Mahalanobis Distance
+
+Should be more circular if no covariance:
+
+```{r echo=TRUE}
 covX <- cov(X)
 newcovX <- covX
 newcovX[1,2] <- 0
 newcovX[2,1] <- 0
 ```
 
-## Dimension reduction using the Mahalanobis Distance
-
-
-```{r}
+```{r out.width=".6\\textwidth"}
 drawMahal(X,center=colMeans(X),covariance=newcovX,quantile=c(.1,.2))
 ```
 
@@ -471,8 +386,9 @@ mhdist2[1:3,1:3]
 mhdist2[,"407"]
 ```
 
+## Matching on the Mahalanobis Distance
 
-```{r}
+```{r echo=FALSE}
 par(mgp=c(1.5,.5,0),oma=rep(0,4),mar=c(3,3,0,0))
 drawMahal(X,center=colMeans(X),covariance=cov(X),
           quantile = c(0.975, 0.75, 0.5, 0.25))
@@ -491,17 +407,14 @@ mhdist2[tpts,"407"]
 ```{r}
 fmMh <- fullmatch(mhdist,data=meddat)
 summary(fmMh,min.controls=0,max.controls=Inf)
-
+## Require no more than one treated in each set
 fmMh1 <- fullmatch(mhdist,data=meddat,min.controls=1)
 summary(fmMh1,min.controls=0,max.controls=Inf)
-
 ```
 
 ```{r}
-
 xbMh <- xBalance(nhTrt~nhAboveHS+nhPopD,strata=list(unstrat=NULL,fmMh=~fmMh,fmMh1=~fmMh1),report="all",data=meddat)
 xbMh
-
 ```
 
 
@@ -540,6 +453,24 @@ fmPs <- fullmatch(psdist,data=meddat)
 summary(fmPs,min.controls=0,max.controls=Inf)
 ```
 
+## Propensity score versus Mahalanobis score
+
+ - The **Mahalanobis distance** uses distance from the center of the
+   distribution of all covariates. Distances between units are distances in $X$
+   space. Rank-based MH distance aims to weight all covariates equally (or at
+   least not overweight because of variance differences.) (See @rosenbaum2010,
+   Chap 8).
+
+ - The **Propensity score distance** uses distance between propensity scores
+   --- which are weighted sums of covariates. The weights are selected so that
+   covariates that relate more to treatment are weighted more, and covariates
+   that relate less to treatment are weighted less.
+
+
+Overall goal: Break the $X \rightarrow Z$ relationship to isolate $Z
+\rightarrow Y$ from $X$ (where $X$ is the matrix of **observed covariates**).
+
+
 ## Can you do better?
 
 **Challenge:** Improve the matched design by adding covariates or functions of
@@ -549,30 +480,17 @@ covariates using either or both of the propensity score or mahalanobis distance
 ```{r}
 thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
 balfmla<-reformulate(thecovs,response="nhTrt")
-xb4 <- balanceTest(update(balfmla,.~.+strata(fmMh)+strata(fmPs)),
-                   data=meddat,report="all",p.adjust.method="none")
-xb4$overall[,]
-xb5 <- xBalance(balfmla,strata=list(fmMh=~fmMh,fmPs=~fmPs),
+xb5 <- xBalance(balfmla,strata=list(unstrat=NULL,fmMh=~fmMh,fmPs=~fmPs),
                    data=meddat,report="all")
 xb5$overall
 ```
-
-```{r}
-
-newexp <- function(z,block){
-
-}
-
-
-```
-
 
 ## Can you do better?
 
 Challenge: Improve the matched design. So far we have:
 
 ```{r}
-plot(xb4)
+plot(xb5)
 ```
 
 ## Summary:
@@ -584,21 +502,20 @@ What do you think?
  - Matching solves the problem of making comparisons that are transparent
    (Question: "Did you adjust enough for X?" Ans: "Here is some evidence about
    how well I did.")
- - You can adjust for one variable or more than one (if more than one, you
-   need to choose one or more methods for reducing many columns to one
-   column).
- - The workflow involves the creation of a distance matrix, asking an
-   algorithm to find the best configuration of sets that minimize the
-   distances within set, and checking balance. (Eventually, it will also be
-   concerned about the effective sample size.)
-  - Next: We will get more into the
-   differences between full matching, optimal matching, greedy matching,
-   matching with and without replacement, etc.. next week. (Also: handling
-   missing data, calipers and other methods of improving design).
+ - You can adjust for one variable or more than one (if more than one, you need
+   to choose one or more methods for reducing many columns to one column).
+ - The workflow involves the creation of a distance matrix, asking an algorithm
+   to find the best configuration of sets that minimize the distances within
+   set, and checking balance. (Eventually, it will also be concerned about the
+   effective sample size.)
+  - Next: We will get more into the differences between full matching, optimal
+    matching, greedy matching, matching with and without replacement, etc..
+    next week. (Also: handling missing data, calipers and other methods of
+    improving design).
   - Next: How to estimate causal effects and test causal hypotheses with a
-    matched design.
-
-
+    matched design. (Although I bet you already can guess about how to do that
+    given our discussions about estimation and testing with stratified
+    experiments.)
 
 ## References
 
