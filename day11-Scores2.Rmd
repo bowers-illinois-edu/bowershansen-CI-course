@@ -4,7 +4,7 @@ title: |
  | Matched Stratification for Multiple Variables.
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2020 Session 2
+  | ICPSR 2021 Session 2
   | Jake Bowers, Ben Hansen, Tom Leavitt
 bibliography:
  - 'BIB/MasterBibliography.bib'
@@ -82,9 +82,9 @@ Two approaches so far:
 meddat$nhAboveHScut3 <- with(meddat, cut(nhAboveHS, breaks = quantile(nhAboveHS, c(0, .75, 1)), include.lowest = TRUE))
 with(meddat, table(nhTrt, nhAboveHScut3, exclude = c()))
 ## If this was a randomized experiment, this next produces precise confidence intervals and biased (perhaps slightly perhaps more) estimates
-## lm1cut3 <- lm_robust(HomRate08~nhTrt,fixed_effects=~nhAboveHScut3,data=meddat)
+lm1cut3 <- lm_robust(HomRate08~nhTrt,fixed_effects=~nhAboveHScut3,data=meddat)
 ## Alternatively this would weight by block size
-## lm2cut3 <- difference_in_means(HomRate08~nhTrt,blocks=nhAboveHScut3,data=meddat)
+lm2cut3 <- difference_in_means(HomRate08~nhTrt,blocks=nhAboveHScut3,data=meddat)
 ```
 
  2. Create strata by solving an optimal matching problem:
