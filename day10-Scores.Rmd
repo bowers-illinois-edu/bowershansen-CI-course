@@ -356,7 +356,7 @@ plot(Xsd[,1],Xsd[,2],xlab="nhAboveHS/sd",ylab="nhPopD/sd")
 
 
 ```{r out.width=".6\\textwidth"}
-drawMahal(X,center=colMeans(X),covariance=cov(X),quantile=c(.1,.2))
+drawMahal(X,center=colMeans(X),covariance=cov(X),quantile=c(.1,.2,.5,.6))
 ```
 
 ## Dimension reduction using the Mahalanobis Distance
