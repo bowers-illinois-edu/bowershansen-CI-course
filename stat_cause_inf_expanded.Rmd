@@ -1,0 +1,294 @@
+
+# An overview of approaches to statistical inference for causal quantities
+
+## Three General Approaches To Learning About The Unobserved Using Data
+
+\centering
+  \includegraphics[width=.6\textwidth]{images/MorrowPlots.jpg}
+
+## Three Approaches To Causal Inference: Potential Outcomes
+
+  \includegraphics[width=.7\textwidth]{images/cartoonNeymanBayesFisherCropped.pdf}
+
+Imagine we would observe so many bushels of corn, $y$, if plot $i$ were randomly assigned to new fertilizer, $y_{i,Z_i=1}$ (where $Z_i=1$ means "assigned to new fertilizer" and $Z_i=0$ means "assigned status quo fertilizer") and another amount of corn, $y_{i,Z_i=0}$, if the same plot were  assigned the status quo fertilizer condition. 
+These $y$ are are *potential* or *partially observed* outcomes.
+
+## Three Approaches To To Causal Inference: Notation
+
+  - *Treatment* $Z_i=1$ for treatment and $Z_i=0$ for control for units $i$
+
+  - In a two arm experiment each unit has at least a pair of *potential outcomes* $(y_{i,Z_i=1},y_{i,Z_i=0})$
+    (also written  $(y_{i,1},y_{i,0})$  to indicate that $y_{1,Z_1=1,Z_2=1} = y_{1,Z_1=1,Z_2=0}$)
+    
+  - *Causal Effect* for unit $i$ is $\tau_i$,  $\tau_i   =
+    f(y_{i,1},y_{i,0})$. For example, $\tau_i =  y_{i,1} - y_{i,0}$.
+
+  - *Fundamental Problem of (Counterfactual) Causality* We only see one
+    potential outcome $Y_i = Z_i * y_{i,1} + (1-Z_i) y_{i,0}$ manifest in our observed outcome, $Y_i$. Treatment reveals one potential outcome to us in a simple randomized experiment.
+
+## Design Based Approach 1: Compare Models of Potential Outcomes to Data
+
+ 1. Make a guess about (or model of) $\tau_i = f(y_{i,1},y_{i,0})$. For example
+    $H_0: y_{i,1}=y_{i,0}+\tau_{i}$ and $\tau_i=0$ is the sharp null hypothesis
+    of no effects.
+ 2. Measure consistency of the data with this model given the research design and choice of test statistic (summarizing the treatment-to-outcome relationship).
+
+\centering
+  \includegraphics[width=.7\textwidth]{images/cartoonFisherQuestionMarks.pdf}
+
+## Design Based Approach 1: Compare Models of Potential Outcomes to Data
+
+ 1. Make a guess (or model of) about $\tau_i$.
+ 2. Measure consistency of data with this model given the design and test statistic.
+
+\centering
+  \includegraphics[width=.7\textwidth]{images/cartoonFisher.pdf}
+
+## Design Based Approach 1: Compare Models of Potential Outcomes to Data
+
+\centering
+\includegraphics[width=\textwidth]{images/cartoonFisherNew1.pdf}
+
+## Design Based Approach 1: Compare Models of Potential Outcomes to Data
+
+\centering
+\includegraphics[width=.9\textwidth]{images/cartoonFisherNew2.pdf}
+
+##  Design Based Approach 1: Compare Models of Potential Outcomes to Data
+\framesubtitle{Testing Models of No-Effects.}
+
+Here is some fake data from a tiny experiment with weird outcomes.
+
+```{r makesmdat, echo=FALSE}
+smdat <- data.frame(Z=c(0,1,0,1),y0=c(16,22,7,3990),y1=c(16,24,10,4000))
+smdat$Y <- with(smdat,Z*y1 + (1-Z)*y0)
+smdat$zF <- factor(smdat$Z)
+smdat$rY <- rank(smdat$Y)
+print(smdat)
+```
+
+
+```{r teststats_and_fns}
+## A mean difference test statistic
+tz_mean_diff <- function(z,y){
+    mean(y[z==1]) - mean(y[z==0])
+}
+## A mean difference of ranks test statistic
+tz_mean_rank_diff <- function(z,y){
+  ry <- rank(y)
+  mean(ry[z==1]) - mean(ry[z==0])
+}
+## Function to repeat the experimental randomization
+newexp <- function(z){
+  sample(z)
+}
+```
+
+```{r echo=FALSE}
+set.seed(12345)
+```
+
+##  Design Based Approach 1: Compare Models of Potential Outcomes to Data
+\framesubtitle{Testing Models of No-Effects.}
+
+```{r repexp, cache=TRUE}
+rand_dist_md <- with(smdat,replicate(1000,tz_mean_diff(z=newexp(Z),y=Y)))
+rand_dist_rank_md <- with(smdat,replicate(1000,tz_mean_rank_diff(z=newexp(Z),y=Y)))
+obs_md <- with(smdat,tz_mean_diff(z=Z,y=Y))
+obs_rank_md <- with(smdat,tz_mean_rank_diff(z=Z,y=Y))
+c(observed_mean_diff=obs_md,observed_mean_rank_diff=obs_rank_md)
+table(rand_dist_md)/1000 ## Probability Distributions Under the Null of No Effects
+table(rand_dist_rank_md)/1000
+p_md <- mean(rand_dist_md >= obs_md) ## P-Values
+p_rank_md <- mean(rand_dist_rank_md >= obs_rank_md)
+c(mean_diff_p=p_md, mean_rank_diff_p=p_rank_md)
+```
+
+##  Design Based Approach 1: Compare Models of Potential Outcomes to Data
+\framesubtitle{Testing Models of Effects.}
+
+To learn about whether the data are consistent with $\tau_i=100$ for all $i$ notice how treatment assignment reveals part of the unobserved outcomes:
+
+$Y_{i} = Z_i * y_{i,1} + (1-Z_i) * y_{i,0}$
+
+and if $H_0: \tau_i=100$ or $H_0: y_{i,1}=y_{i,0}+100$ then:
+
+\begin{align}
+Y_{i} = &  Z_i  ( y_{i,0} + 100 ) + (1-Z_i)  y_{i,0} \\
+ = & Z_i  y_{i,0} + Z_i 100 + y_{i,0} - Z_i y_{i,0} \\
+ = & Z_i  100 + y_{i,0} \\
+ y_{i,0} = Y_{i} - Z_i 100
+ \end{align}
+
+##  Design Based Approach 1:  Compare Models of Potential Outcomes to Data
+\framesubtitle{Testing Models of Effects.}
+
+To test a *model of causal effects* we adjust the observed outcomes to be consistent
+with our hypothesis about unobserved outcomes and then repeat the experiment:
+
+```{r model_effects}
+tz_mean_diff_effects <- function(z,y,tauvec){
+    adjy <- y - z*tauvec
+    radjy <- rank(adjy)
+    mean(radjy[z==1]) - mean(radjy[z==0])
+}
+rand_dist_md_tau_cae <- with(smdat,replicate(1000,tz_mean_diff_effects(z=newexp(Z),y=Y,tauvec=c(100,100,100,100))))
+obs_md_tau_cae <- with(smdat,tz_mean_diff_effects(z=Z,y=Y,tauvec=c(100,100,100,100)))
+mean(rand_dist_md_tau_cae >= obs_md_tau_cae)
+```
+
+
+## Design Based Approach 1: Compare Models of Potential Outcomes to Data
+\framesubtitle{Testing Models of Effects.}
+
+Now let's test $H_0: \symbf{\tau} = \{0,2,3,10\}$
+
+\smallskip
+
+```{r model_effects2}
+rand_dist_md_taux<- with(smdat,replicate(1000,tz_mean_diff_effects(z=newexp(Z),y=Y,
+                                                                   tauvec=c(0,2,3,10))))
+obs_md_taux <- with(smdat,tz_mean_diff_effects(z=Z,y=Y,tauvec=c(0,2,3,10)))
+mean(rand_dist_md_taux >= obs_md_taux)
+```
+
+
+
+## Design Based Approach 2: Estimate Averages of Potential Outcomes
+
+  1. Notice that the observed $Y_i$ are a sample from the (small, finite) population of unobserved potential outcomes $(y_{i,1},y_{i,0})$.
+  2. Decide to focus on the average, $\bar{\tau}$, because sample averages, $\hat{\bar{\tau}}$ are unbiased and consistent estimators of population averages.
+  3. Estimate $\bar{\tau}$ with the observed difference in means as $\hat{\bar{\tau}}$.
+
+\centering
+  \includegraphics[width=.8\textwidth]{images/cartoonNeyman.pdf}
+
+## Design Based Approach 2: Estimate Averages of Potential Outcomes
+
+\centering
+  \includegraphics[width=.9\textwidth]{images/cartoonNeyman.pdf}
+
+
+## Design Based Approach 2: Estimate Averages of Potential Outcomes
+
+Here using Neyman's standard errors (same as HC2 SEs) and Central Limit Theorem based $p$-values and 95% confidence intervals:
+
+\smallskip
+
+```{r dim}
+est1 <- difference_in_means(Y~Z,data=smdat)
+est1
+```
+
+## Model Based Approach 1: Predict Distributions of Potential Outcomes
+
+  \smallskip
+  \centering
+  \includegraphics[width=.9\textwidth]{images/cartoonBayesNew.pdf}
+
+## Model Based Approach 1: Predict Distributions of  Potential Outcomes 
+\framesubtitle{adapted from \url{https://mc-stan.org/users/documentation/case-studies/model-based_causal_inference_for_RCT.html}}
+
+> 1. Given a model of $Y_i$:
+\begin{equation}
+\mathrm{Pr}(Y_{i}^{obs} \vert \mathrm{Z}, \theta) \sim \mathsf{Normal}(Z_{i} \cdot \mu_{1} + (1 - Z_{i}) \cdot \mu_{0} , Z_{i} \sigma_{1}^{2} + (1 - Z_{i}) \cdot \sigma_{0}^{2})
+\end{equation}
+where $\mu_{0}=\alpha$ and $\mu_{1}=\alpha + \tau$.
+ 
+> 2. And a model of the pair $\{y_{i,0},y_{i,1}\} \equiv \{Y_{i}(0), Y_{i}(1)\}$ but random not fixed as before (and so written as upper-case):
+
+\begin{equation}
+\begin{pmatrix} Y_{i}(0) \\ Y_{i}(1) \end{pmatrix} \biggm\vert \theta  
+\sim  
+\mathsf{Normal}
+\begin{pmatrix}
+\begin{pmatrix} \mu_{0} \\ \mu_{1} \end{pmatrix}, 
+\begin{pmatrix} \sigma_{0}^{2} & \rho \sigma_{0} \sigma_{1} \\ \rho \sigma_{0} \sigma_{1} & \sigma_{1}^{2} \end{pmatrix}
+\end{pmatrix}
+\end{equation}
+
+> 3. And a model of $Z_i$ is known because of randomization so we can write: $\mathrm{Pr}(\mathrm{Z}|\mathrm{Y}(0), \mathrm{Z}(1)) = \mathrm{Pr}(\mathrm{Z})$
+
+> 4. And given priors on $\theta= \{ \alpha$, $\tau$, $\sigma_c$, $\sigma_t \}$ (here make them all independent Normal(0,5))).
+
+We can generate the posterior distribution of $\alpha$, $\tau$, $\sigma_c$, and $\sigma_t$ and thus can impute $\{Y_{i}(0),Y_{i}(1)\}$ to generate a distribution for $\tau_i$.
+
+## Model Based Approach 1: Predict Distributions of Potential Outcomes 
+
+
+```{r loadstan, echo=FALSE, message=FALSE,results='hide'}
+library(rstan)
+rstan_options(auto_write = TRUE)
+```
+
+```{r stanbayes, cache=TRUE, results="hide",warning=FALSE,message=FALSE}
+## rho is correlation between the potential outcomes
+stan_data <- list(N = 4, y = smdat$Y, w = smdat$Z, rho = 0)
+# Compile and run the stan model
+fit_simdat <- stan(file = "rctbayes.stan", data = stan_data, iter = 5000, warmup=2500,chains = 4,control=list(adapt_delta=.99))
+res <- as.matrix(fit_simdat)
+```
+
+```{r rctbayes2, results="markup"}
+## Summary of the 2000 Predicted Treatment effects for units 1 and 4
+t(apply(res[,c("tau_unit[1]","tau_unit[4]")],2,summary))
+## Probability that effect on unit 1 is greater than 0
+mean(res[,"tau_unit[1]"]>0)
+## Overall mean of the effects:
+mean_tau <- rowMeans(res[,c("tau_unit[1]","tau_unit[2]","tau_unit[3]","tau_unit[4]")])
+summary(mean_tau)
+```
+
+## Summmary: Modes of Statistical Inference for Causal Effects
+
+We can infer about unobserved counterfactuals by:
+
+  1. assessing claims or models or hypotheses about relationships between unobserved potential outcomes (Fisher's testing approach via Rosenbaum)
+  2. estimating averages (or other summaries) of unobserved potential outcomes (Neyman's estimation approach)
+  3. predicting individual level outcomes based on probability models of outcomes, interventions, etc. (Bayes's predictive approach via Rubin)
+
+## Summary: Modes of Statistical Inference for Causal Effects
+
+Statistical inferences --- formalized reasoning about "what if" statements
+("What if I had randomly assigned other plots to treatment?") --- and their properties (ex.bias, error rates, precision) arise from:
+
+  1. Repeating the design and using the hypothesis and test statistics to
+     generate a reference distribution that describes the variation in the hypothetical world. Compare the observed to the hypothesized to measure consistency between hypothesis, or model, and observed outcomes (*Fisher and Rosenbaum's
+     randomization-based inference for individual causal effects*).
+  2. Repeating the design and the estimation such that standard errors, $p$-values,
+     and confidence intervals reflect design-based variability. Probability distributions (like the Normal or t-distribution) arise from Limit Theorems in large samples.
+     (*Neyman's randomization-based inference for average causal effects*).
+  3. Repeatedly drawing from the probability distributions that generate the
+     observed data (that represent the design) --- the likelihood and the
+     priors --- to describe a posterior distribution for unit-level causal
+     effects. Calculate posterior distributions for aggregated causal effects (like averages of individual level
+     effects). (*Bayes and Rubin's predictive model-based causal inference*).
+
+## Summary: Applications of the Model-Based Prediction Approach
+
+Examples of use of the model-based prediction approach:
+
+ - Estimating causal effects when we need to model processes of missing outcomes, missing treatment indicators, or complex non-compliance with treatment \parencite{barnard2003psa}
+ - Searching for heterogeneity (subgroup differences) in how units react to treatment (ex. \parencite{hahn2020bayesian} but see also literature on BART, Bayesian Machine Learning as applied to causal inference questions).
+
+## Summary: Applications of the Testing Approach
+
+Examples of use of the testing approach:
+
+ - Assessing evidence of pareto optimal effects or no aberrant effect (i.e. no
+   unit was made worse off by the treatment) \parencite{caughey2016beyond, rosenbaum2008aberrant}.
+ - Assessing evidence that the treatment group was made better than the control
+   group (but being agnostic about the precise nature of the difference) (ex.
+   $p>.2$ with difference of means but $p<.001$ with difference of ranks in
+   Office of Evaluation Sciences study of General Services Administration
+   Auctions)
+ - Focusing on detection rather than on estimation (for example to identify
+   promising sites for future research in experiments with many blocks or
+   strata) (Bowers and Chen 2020 working paper).
+ - Assessing hypotheses of no effects in small samples, with rare outcomes,
+   cluster randomization, or other designs where reference distributions may
+   not be Normal (see ex, \parencite{gerber2012field} or ).
+ - Assessing structural models of causal effects (for example models of
+   treatment effect propagation across networks)
+   \parencite{bowers2016research,bowers2013sutva,bowers2018models}.
+
