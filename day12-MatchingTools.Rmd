@@ -106,13 +106,34 @@ mhdist <- match_on(nhTrt ~ nhPopD + nhAboveHS + HomRate03, data = meddat)
 ```{r matchesmh, echo=TRUE}
 fmMh <- fullmatch(mhdist, data = meddat)
 summary(fmMh, min.controls = 0, max.controls = Inf)
+meddat$fmMh <- fmMh
+```
+
+## Matching on the Mahalanobis Distance: Evaluation
+
+For a single variable (or could imagine using the propensity score as a summary):
+
+```{r}
+library(gridExtra)
+bpfm1 <- ggplot(meddat, aes(x = fmMh, y = nhAboveHS)) +
+  geom_boxplot(alpha=.5) +
+  geom_jitter(width=0)+
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "red", fill = "red")
+meddat$nostrata <- rep(1, 45)
+bporig <- ggplot(meddat, aes(x = nostrata, y = nhAboveHS)) +
+  geom_boxplot() +
+  stat_summary(
+    fun = mean, geom = "point",
+    shape = 20, size = 3, color = "red", fill = "red"
+  )
+
+grid.arrange(bpfm1, bporig, ncol = 2, layout_matrix = matrix(c(1, 1, 1, 1, 2), nrow = 1))
 ```
 
 ## Matching on the Mahalanobis Distance: Evaluation
 
 
 ```{r xbmh, echo=TRUE}
-meddat$fmMh <- fmMh
 xbMh <- xBalance(nhTrt ~ nhAboveHS + nhPopD + HomRate03,
   strata = list(unstrat = NULL, fmMh = ~fmMh),
   report = "all", data = meddat
