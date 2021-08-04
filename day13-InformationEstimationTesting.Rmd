@@ -38,7 +38,7 @@ output:
 ```{r setup1_env, echo=FALSE, include=FALSE}
 library(here)
 source(here::here("rmd_setup.R"))
-opts_chunk$set(echo = TRUE)
+opts_chunk$set(echo = TRUE,digits=4)
 ```
 
 ```{r setup2_loadlibs, echo=FALSE, include=FALSE}
@@ -66,35 +66,51 @@ row.names(meddat) <- meddat$nh
 
   1. Agenda: How to characterize the information in a matched design (use what
      we know about the variance of estimators from block-randomized
-     experiments) `effective sample size`; Estimating average causal effects and testing hypotheses about causal effects (focusing on hypotheses of no effects) using stratified designs (the "as-if-randomized approach")
+     experiments) `effective sample size`; Estimating average causal effects
+     and testing hypotheses about causal effects (focusing on hypotheses of no
+     effects) using stratified designs (the "as-if-randomized approach")
+ 2. Today you may want to look at `day13-InformationEstimationTesting.Rmd` and
+    we will probably spend more time in RStudio. Lots of code that runs off the
+    pdf slides.
  3. Questions arising from the reading or assignments or life?
 
 # But first, review
 
-## Making stratified research designs using optmatch
+## Making stratified research designs using optmatch 
 
 **Decision Points**
 
- - Which covariates and their scaling and coding. (For example, exclude covariates with no variation!)
- - Which distance matrices (scalar distances for one or two important variables, Mahalanobis distances (rank  transformed or not), Propensity distances (using linear predictors)).
- - (Possibly) which calipers (and how many, if any, observations to drop. Note about ATT as a random quantity and ATE/ACE as fixed.)
+ - Which covariates and their scaling and coding and functional forms. (For example, exclude covariates with no variation!)
+ - Which distance matrices: scalar distances for one or two important variables, Mahalanobis distances (rank  transformed or not), Propensity distances (using $\hat{\beta}_0 + \hat{\beta}_1 x_1 + \ldots$ rather than forced to the 0 to 1 interval).
+ - (Possibly) which calipers (and how many, if any, observations to drop. Note
+   about ATT as a random quantity and ATE/ACE as fixed.)
  - (Possibly) which exact matching or strata
- - (Possibly) which structure of sets (how many treated per control, how many controls per treated)
+ - (Possibly) which structure of sets (how many treated per control, how many
+   controls per treated)
  - Which remaining differences are  tolerable from a substantive perspective?
- - How well does the resulting research design compare to an equivalent block-randomized study?
- - (Possibly) How much statistical power does this design provide for the quantity of interest?
- - Other questions to ask about a research design aiming to help clarify comparisons.
+ - How well does the resulting research design compare to an equivalent
+   block-randomized study?
+ - (Possibly) How much statistical power does this design provide for the
+   quantity of interest?
+ - Other questions to ask about a research design aiming to help clarify
+   () comparisons.
 
-## Example:
+## Example: Build a stratified design {.allowframebreaks}
 
+Set up some multivariate distances
 
 ```{r}
 thecovs <- unique(c(names(meddat)[c(5:7, 9:24)], "HomRate03"))
 balfmla <- reformulate(thecovs[-c(1, 14)], response = "nhTrt")
+print(balfmla)
 thebglm <- arm::bayesglm(balfmla, data = meddat, family = binomial(link = "logit"))
 mhdist <- match_on(balfmla, data = meddat)
 psdist <- match_on(thebglm, data = meddat)
+```
 
+Set up an important scalar distance on baseline outcome (here noticing differences among versions)
+
+```{r}
 ## Two versions of a scalar distance: One is standardized (mahalanobis dist is just standardized when you have only one variable)
 hrdist1 <- match_on(nhTrt ~ HomRate03, data = meddat)
 
@@ -111,11 +127,19 @@ hrdist3 <- match_on(tmp, z = meddat$nhTrt, data = meddat)
 hrdist1[1:3, 1:6]
 hrdist2[1:3, 1:6]
 hrdist3[1:3, 1:6]
+```
 
+
+Choose calipers to forbid the worst kinds of comparisons (this helps with
+substantive defense/explanation of the design). Combine the elements and ask
+the algorithm to choose optimal sets:
+
+```{r}
 psCal <- quantile(as.vector(psdist), .9)
 mhCal <- quantile(as.vector(mhdist), .9)
 hrCal <- quantile(as.vector(hrdist2), .9)
 
+## The combined distance matrix
 matchdist <- psdist + caliper(psdist, psCal) + caliper(mhdist, mhCal) + caliper(hrdist2, 2)
 as.matrix(matchdist)[1:3, 1:6]
 
@@ -129,6 +153,16 @@ summary(fm3, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
 fm0dists <- unlist(matched.distances(fm0, matchdist))
 fm1dists <- unlist(matched.distances(fm1, matchdist))
 
+fm0dists
+
+fm1dists
+
+```
+
+An example using **penalities** to discourage matches instead of **calipers**
+to forbid matches:
+
+```{r}
 matchdistPen <- as.matrix(matchdist)
 maxdist <- max(matchdist[!is.infinite(matchdist)])
 matchdistPen[is.infinite(as.matrix(matchdist))] <- 100
@@ -172,17 +206,17 @@ plot(graph_from_adjacency_matrix(blah2, mode = "undirected", diag = FALSE),
 In 2-sample comparisons, total sample size can be a misleading as a measure of information content.  Example:
 \begin{itemize}
 \item say $Y$ has same variance, $\sigma^{2}$,in the Tx and the Ctl population.
-\item Ben H. samples 10 Tx and 40 Ctls, and
-\item Jake B. samples 25 Tx and 25 Ctls
+\item Ben H. assigns 10 Tx and 40 Ctls, and
+\item Jake B. assigns 25 Tx and 25 Ctls
 \end{itemize}
---- so that total sample sizes are the same.  However,
+--- so that total study sizes are the same.  However,
 
 \begin{eqnarray*}
   V_{BH}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{10} + \frac{\sigma^{2}}{40}=.125\sigma^{2}\mbox{;}\\
   V_{JB}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{25} + \frac{\sigma^{2}}{25}=.08\sigma^{2}.\\
 \end{eqnarray*}
 
-Similarly, a matched triple is roughly $[(\sigma^{2}/1 + \sigma^{2}/2)/(\sigma^{2}/1 + \sigma^{2}/1)]^{-1}= 1.33$ times as informative as a matched pair.
+Similarly, a matched triple is roughly $[(\sigma^{2}/1 + \sigma^{2}/2)/(\sigma^{2}/1 + \sigma^{2}/1)]^{-1}= 1.33$ times as informative as a matched pair not double.
 
 ## Details
 
@@ -210,9 +244,11 @@ assuming the OLS model and homoskedastic errors.  (This is b/c the anova formula
 For matched pairs, of course, $h_{s}=1$.  Harmonic mean of 1, 2 is $4/3$. Etc.
 
 
-## Matching so as to maximize effective sample size
+## Matching so as to maximize effective sample size {.allowframebreaks}
 
 ```{r echo=TRUE}
+stratumStructure(fm1)
+stratumStructure(fm0)
 effectiveSampleSize(fm1)
 effectiveSampleSize(fm0)
 meddat$fm1 <- fm1
@@ -244,7 +280,7 @@ stratumStructure(fm0)
 mean(unlist(matched.distances(fm0, matchdist)))
 ```
 
-Notice for `fm0` we weight the 12-to-1 match by `2*(1 * 11)/(11+1)=1.83` and the 1-to-16 match by `2*(16*1)/(16+1)=1.88`.
+Notice for `fm0` we weight the 12-to-1 match by `2*(1 * 11)/(11+1)=1.83`.
 
 In a pairmatch all of the sets have weight `2*(1*1)/(1+1) = 2/2=1`.
 
@@ -274,11 +310,14 @@ lm_fm0$std.error
 lm_fm1$std.error
 ```
 
+So, a research design with larger effective sample size has narrower
+randomization distributions / smaller standard errors and thus more statistical
+power.
 
 
 # Estimation
 
-## Overview: Estimate and Test "as if block-randomized"
+## Overview: Estimate and Test "as if block-randomized" {.allowframebreaks}
 
 What are we estimating? Most people would say ACE=$\bar{\tau}=\bar{y}_1 - \bar{y}_0$. What estimator estimates this without bias?
 
@@ -315,19 +354,24 @@ stopifnot(all.equal(datB$hbwt101, datB$hbwt301))
 First, we could estimate the set-size weighted ATE. Our estimator uses the
 size of the sets to estimate this quantity.
 
-```{r}
+```{r warnings=FALSE}
 ## The set-size weighted version
 atewnb <- with(datB, sum(Y * nb / sum(nb)))
 atewnb
+## This is what `difference_in_means` does.
+difference_in_means(HomRate08~nhTrt,blocks=fm0,data=meddat)
 ```
 
 ## Using the weights: Set size weights
 
-Sometimes it is convenient to use `lm` (or the more design-friendly `lm_robust`) because there are R functions for design-based standard errors and confidence intervals.
+Sometimes it is convenient to use `lm` (or the more design-friendly
+`lm_robust`) because there are R functions for design-based standard errors and
+confidence intervals.
 
 ```{r warnings=FALSE}
 meddat$id <- row.names(meddat)
 meddat$nhTrtF <- factor(meddat$nhTrt)
+library(tibble)
 ## See Gerber and Green section 4.5 and also Chapter 3 on block randomized experiments. Also Hansen and Bowers 2008.
 wdat <- meddat %>%
   filter(!is.na(fm0)) %>%
@@ -342,12 +386,12 @@ wdat <- meddat %>%
     nCb = nb - nTb,
     hbwt1 = (2 * (nCb * nTb) / (nTb + nCb)),
     hbwt2 = nbwt * (pb * (1 - pb))
-  )
+  ) %>% ungroup() %>% column_to_rownames(var="id")
 
-row.names(wdat) <- wdat$id ## dplyr strips row.names
 wdat$nhTrtF <- factor(wdat$nhTrtF)
 lm0b <- lm_robust(HomRate08 ~ nhTrt, data = wdat, weight = nbwt)
 lm0b
+atewnb
 ```
 
 ## Using the weights: precision weights
@@ -359,6 +403,7 @@ atewhb <- with(datB, sum(Y * hbwt1 / sum(hbwt1)))
 atewhb
 lm1 <- lm_robust(HomRate08 ~ nhTrt + fm0, data = wdat)
 summary(lm1)$coef[2, ]
+## Compare to the set size weighted results
 summary(lm0b)$coef[2, ]
 ## Notice that fixed_effects is same as indicator variables is same as weighting
 lm1a <- lm_robust(HomRate08 ~ nhTrt, fixed_effects = ~fm0, data = wdat)
@@ -381,18 +426,16 @@ summary(lm2)$coef[2, ]
 ```
 
 
-## What about random effects?
+## What about random effects? {.allowframebreaks}
 
 Using fully Bayesian version multi-level model approach here since we have few
 sets (remember that the consistency etc of multi-level models depends on number
 of higher level clusters).
 
-```{r mlm, cache=FALSE}
+```{r mlm, cache=TRUE, messages=FALSE, warnings=FALSE}
 library(brms)
 aprior <- c(prior(normal(0,5), class = b, coef="nhTrt"))
 mlm1 <- brm(HomRate08 ~ 0 + Intercept + nhTrt + (0+Intercept|fm0) , data = wdat, family=gaussian, prior= aprior)
-
-#, control=list(adapt_delta=.9), prior=aprior)
 summary(mlm1)
 ```
 
@@ -431,6 +474,12 @@ est1 <- declare_estimator(Y ~ Z,
   inquiry = estimand1,
   model = difference_in_means,
   label = "E1: Ignoring Blocks"
+)
+est1a <- declare_estimator(Y ~ Z,
+  inquiry = estimand1,
+  blocks=fm0,
+  model = difference_in_means,
+  label = "E1a: Blocks Sizes"
 )
 est2 <- declare_estimator(Y ~ Z,
   fixed_effects = ~fm0,
@@ -509,12 +558,12 @@ est7 <- declare_estimator(handler = label_estimator(lmer_est_fun), inquiry = est
 # est2(oneexp)
 est7(oneexp)
 
-thedesign_plus_est <- thedesign + estimand1 + est1 + est2 + est3 + est4 + est5 + est6 + est7
+thedesign_plus_est <- thedesign + estimand1 + est1 + est1a + est2 + est3 + est4 + est5 + est6 + est7
 ```
 
 ## Diagnosands and diagnosis
 
-```{r diagnose, cache=TRUE}
+```{r diagnose, cache=TRUE, warnings=FALSE}
 
 set.seed(12345)
 
@@ -536,7 +585,7 @@ diagnosis <- diagnose_design(thedesign_plus_est,
   sims = 1000, bootstrap_sims = 0,
   diagnosands = thediagnosands
 )
-save(diagnosis, file = "day14diag.rda")
+save(diagnosis, file = "day13diag.rda")
 plan(sequential)
 ```
 
@@ -552,12 +601,15 @@ reshape_diagnosis(diagnosis, digits = 4)[, -c(1:2, 4)]
 ## Testing Approach: By Hand
 
 ```{r}
-
+## Define a function to repeat the blocked design
+## As if completely randomized within block/strata/set
 newexp <- function(trt, b) {
   newtrt <- unsplit(lapply(split(trt, b), sample), b)
   return(newtrt)
 }
 
+## Define functions to calculate a weighted test statistic
+## Block size weights: could have also used coef(difference_in_means())
 mdwt1 <- function(y, trt, b) {
   datB <- data.frame(y, trt, b) %>%
     group_by(b) %>%
@@ -566,6 +618,7 @@ mdwt1 <- function(y, trt, b) {
   return(ate_nbwt)
 }
 
+## Precision weights: could have also used coef(lm_robust())
 mdwt2 <- function(y, trt, b) {
   datB <- data.frame(y, trt, b) %>%
     group_by(b) %>%
@@ -576,8 +629,7 @@ mdwt2 <- function(y, trt, b) {
       nCb = sum(1 - trt),
       pb = mean(trt),
       pbwt = pb * (1 - pb),
-      hbwt1 = pbwt * nb,
-      hbwt3 = (2 * (nCb * nTb) / (nTb + nCb)), .groups = "keep"
+      hbwt1 = pbwt * nb, .groups = "keep"
     )
   ate_hbwt <- with(datB, sum(ateb * hbwt1 / sum(hbwt1)))
   return(ate_hbwt)
@@ -585,6 +637,8 @@ mdwt2 <- function(y, trt, b) {
 ```
 
 ## Testing by hand
+
+Calculate observed values for the test statistics:
 
 ```{r}
 wdat <- meddat %>% filter(!is.na(meddat$fm0))
@@ -598,6 +652,8 @@ all.equal(origtab, testtab)
 ```
 
 ## Testing by hand
+
+Generate the probability distribution representing the null hypothesis (here, the nullis of no effects at all):
 
 ```{r}
 
@@ -664,11 +720,21 @@ abline(v = statistic(rankTestAsym))
 See also `RItest` (in development) and the `ri2` and `ri` packages for R.
 
 
-
-
 ## Summary and Questions:
 
 What do you think? What questions arise?
+
+ - The amount of information in a stratified research design available for a
+   given estimator depends on (1) the number of units, (2) the number of
+   strata, (3) the ratio of treated to control units within strata (or, say,
+   the numbers of treated and control units within each strata), (4) the
+   variability in the outcome, (5) the size of the effect to be detected. (This
+   is all familiar from power analysis --- except the part about possibly
+   unequal numbers in treated and control groups in different sized blocks).
+ - While full-matching tries not to exclude observations, it can produce very
+   funky collections of sets. We can estimate average causal effects and test
+   hypotheses about effects just fine under the "as-if randomized" model. But
+   we will have more statistical power if we have more homogeneous sets.
 
 
 

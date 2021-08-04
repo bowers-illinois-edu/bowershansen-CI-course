@@ -402,6 +402,7 @@ dist2 <- psdist + exactMatch(nhTrt ~ classLowHi, data = meddat)
 ## or mhdist <- match_on(balfmla,within=exactMatch(nhTrt~classLowHi,data=meddat),data=meddat,method="rank_mahalanobis")
 ## or fmEx1 <- fullmatch(update(balfmla,.~.+strata(classLowHi)),data=meddat,method="rank_mahalanobis")
 fmEx1 <- fullmatch(dist2, data = meddat, tol = .00001)
+fmEx1 <- fullmatch(dist2, data = meddat, tol = .00001, min.controls=c("hi"=1,"lo"=.5))
 summary(fmEx1, min.controls = 0, max.controls = Inf, propensity.model = theglm)
 print(fmEx1, grouped = T)
 meddat$fmEx1 <- fmEx1
