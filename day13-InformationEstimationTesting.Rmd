@@ -464,7 +464,7 @@ thedesign <- thepop + theassign + thepo + thereveal
 oneexp <- draw_data(thedesign)
 ## Test
 origtab <- with(wdat, table(trt = nhTrt, b = fm0))
-all.equal(origtab, with(oneexp, table(trt = Z, b = fm0)))
+stopifnot(all.equal(origtab, with(oneexp, table(trt = Z, b = fm0))))
 ```
 
 ```{r}
@@ -648,7 +648,7 @@ obsmd2 <- with(wdat, mdwt2(y = HomRate08, trt = nhTrt, b = fm0))
 
 origtab <- with(wdat, table(trt = nhTrt, b = fm0))
 testtab <- with(wdat, table(trt = newexp(trt = nhTrt, b = fm0), b = fm0))
-all.equal(origtab, testtab)
+stopifnot(all.equal(origtab, testtab))
 ```
 
 ## Testing by hand
@@ -670,8 +670,9 @@ var(nulldist2)
 ```
 
 ```{r}
-plot(density(nulldist1))
-lines(density(nulldist2), lty = 2)
+plot(density(nulldist1),col="orange")
+lines(density(nulldist2))
+abline(v=c(obsmd1,obsmd2),col=c("orange","black"))
 ```
 
 
@@ -681,6 +682,7 @@ lines(density(nulldist2), lty = 2)
 These are faster because they use the Central Limit Theorem --- under the belief that our current data are large enough (informative enough) that our reference distribution would be well approximated by a Normal distribution.
 
 ```{r}
+## Uses the precision weighting approach
 xbTest1 <- xBalance(nhTrt ~ HomRate08, strata = list(fm0 = ~fm0), data = wdat, report = "all")
 xbTest1$results[, , "fm0"]
 ```
@@ -690,10 +692,11 @@ xbTest1$results[, , "fm0"]
 The `coin` package does something similar --- it also allows for permutation based distributions using the `approximate()` function.
 
 ```{r}
+## These also use precision weights
 wdat$nhTrtF <- factor(wdat$nhTrt)
 meanTestAsym <- oneway_test(HomRate08 ~ nhTrtF | fm0, data = wdat, distribution = "asymptotic")
 set.seed(12345)
-meanTestPerm <- oneway_test(HomRate08 ~ nhTrtF | fm0, data = wdat, distribution = approximate(nresample = 1000))
+meanTestPerm <- oneway_test(HomRate08 ~ nhTrtF | fm0, data = wdat, distribution = approximate(nresample = 10000))
 
 pvalue(meanTestAsym)
 pvalue(meanTestPerm)

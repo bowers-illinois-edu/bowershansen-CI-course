@@ -80,7 +80,9 @@ library(rstanarm)
    relationship? (Alternative to the explanation that we are
    exploring/assessing))
  - **Before looking at outcomes** we explain our designs to ourselves by
-   comparing the design to an equivalently design randomized experiment.
+   comparing the design to an equivalently designed randomized experiment.
+ - We estimate (average) effects and test hypotheses about effects **as if the
+   research design was randomized**.
  - **After estimating effects/testing hypotheses** we again engage with
    alternative explanations by modeling how *unobserved covariates* might
    confound the relationship (Sensivity Analysis).
