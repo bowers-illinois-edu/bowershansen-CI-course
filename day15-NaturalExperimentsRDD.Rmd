@@ -37,6 +37,7 @@ output:
 ```{r setup1_env, echo=FALSE, include=FALSE}
 library(here)
 source(here::here("rmd_setup.R"))
+opts_chunk$set(echo = TRUE, digits = 4)
 ```
 
 ```{r setup2_loadlibs, echo=FALSE, include=FALSE}
@@ -62,21 +63,31 @@ library(rdd)
  1. Agenda: Natural experiments and discontinuities (with and without regression).
  3. Questions arising from the reading or assignments or life?
 
-# But first, review
+## So far:
 
-# Regression Discontinuity Design
+- Q: How can we argue that the relationship between $Z$ and $Y$ is $Z
+  \rightarrow Y$? 
+- A: By excluding alternative explanations for this relationship.
+- Q: How do we exclude alternative explanations?
+- A: Many approaches
+  1. Randomize $Z$;
+  2. Randomize an instrument for $Z$;
+  3. Remove specific $X \rightarrow Z$ relationships via stratification and/or weighting.
+  4. (Today:) use a discontinuity as a kind of instrument for $Z$.
+
+# Discontinuity Designs
 
 ## General Introduction and Setup
 
 Today we are going to use the data on close US House of Representatives races
-1942--2008 used in  \citet{caugheysekhon2011}.^[The full replication data is
+1942--2008 used in  @caugheysekhon2011.^[The full replication data is
 available for download
 \href{http://sekhon.berkeley.edu/rep/RDReplication.zip}{here}. But we read it
-directly below.] \citet{caugheysekhon2011} engage in a debate whose
+directly below.] @caugheysekhon2011 engage in a debate whose
 participants seek to identify the causal effect of the so-called "incumbency
 advantage." That is, what effect does a candidate's status as an incumbent
 have on whether or not that candidate wins an election? Obviously, whether or
-not a candidate is an incumbent is \textit{not} randomly assigned.
+not a candidate is an incumbent is *not* randomly assigned.
 
 Let's first load the data:
 
@@ -109,41 +120,24 @@ treatment <- matrix(c("DemWin", "Democrat Wins Election"),
   ncol = 2,
   byrow = TRUE
 )
-
 dimnames(treatment) <- list(1, c("Treatment", "Description"))
-
 kable(treatment)
 ```
 
 Now let's quickly look at the empirical distribution of the treatment variable:
 
 ```{r}
-
 table(rdd_data$DemWin)
 ```
 
-\begin{table}[ht]
-	\centering
-	\begin{tabular}{rr}
-		\hline
-		& Democrat Wins Election \\
-		\hline
-		0 & 4507 \\
-		1 & 5677 \\
-		\hline
-	\end{tabular}
-	\caption{The Treatment Variable}
-\end{table}
+## Outcome Variables
 
-## {Outcome Variables}
-
-In \citet{caugheysekhon2011}, the primary outcome variables of interest are as
+In @caugheysekhon2011, the primary outcome variables of interest are as
 follows: whether a democrat wins the next election, the proportion voting for
 a democrat in the next election, and the democratic vote margin in the next
 election.
 
-```{r}
-
+```{r echo=FALSE}
 dvs <- matrix(c(
   "DWinNxt", "Dem Win t + 1",
   "DPctNxt", "Dem % t + 1",
@@ -165,11 +159,22 @@ dimnames(dvs) <- list(
 kable(dvs)
 ```
 
-## {Baseline Covariates}
+## Outcomes and Running Variables
+
+Effect of a democrat winning on democrat votes in next election? Alternative explanations? Reasonable comparisons?
+
+```{r echo=FALSE, out.width=".7\\textwidth", warnings=FALSE}
+g <- ggplot(rdd_data,aes(x=DifDPct, y=DPctNxt,color=DemWin)) +
+    geom_point()
+print(g)
+```
+
+
+## Baseline Covariates
 
 The relevant baseline covariates (all measured prior to the realization of the running variable) are:
 
-```{r}
+```{r echo=FALSE}
 covs <- matrix(c(
   "DWinPrv", "Dem Win t - 1",
   "DPctPrv", "Dem % t - 1",
@@ -221,14 +226,25 @@ Z_i \equiv \mathbbm{I}\left[R_i > 0 \right],
 \end{align*}
 where $\mathbbm{I}\left[\cdot\right]$ is an indicator function that is $1$ if the argument to the function is true and $0$ if false. In this particular study, if the margin of victory is greater than $0$, then candidate $i$ is treated ($Z_i = 1$), and if not, then candidate $i$ is assigned to control ($Z_i = 0$).
 
+\medskip
+
 Let $W_0 = [\underline{r}, \overline{r}]$, where $\underline{r} < r_0 < \overline{r}$, denote the window around the cutpoint (or threshold value), $r_0$, that sorts units into treatment or control.
 
+\medskip
 
-## Optimal Bandwidth Selection
+How to choose the window?
 
-We know from \citet{hansensales2015, rosenbaum2008, berger1988} that "if a researcher pre-specifies a sequence of hypotheses and corresponding level-$\alpha$ tests, tests those hypotheses in order, and stops testing after the first non-rejected hypothesis, then the probability of incorrectly rejecting at least one correct hypothesis is at most $\alpha$" \citep[p. 185]{hansensales2015}.
+## Optimal Bandwidth Selection {.allowframebreaks}
+
+We know from @hansensales2015, @rosenbaum2008, @berger1988 that "if a researcher
+pre-specifies a sequence of hypotheses and corresponding level-$\alpha$ tests,
+tests those hypotheses in order, and stops testing after the first non-rejected
+hypothesis, then the probability of incorrectly rejecting at least one correct
+hypothesis is at most $\alpha$" \citep[p. 185]{hansensales2015}.
+\smallskip
 
 As applied to bandwidth selection in the RDD context, the SIUP implies that one should start with a set of candidate bandwidths and sequentially test for covariate balance (beginning from either the largest candidate bandwidth or the smallest candidate bandwidth).
+\smallskip
 
 Let's specify a set of candidate bandwidths and then sequentially test covariate balance. Before actually testing, though, we want to specify a balance criterion and then maximize effective sample size subject to that criterion.
 
@@ -246,7 +262,6 @@ candidate_bands <- seq(
 Now let's first filter our dataset and check for balance in the largest candidate bandwidth spanning from $-5$ to $5$.
 
 ```{r}
-
 lower_bound <- seq(from = -5, to = -0.1, by = 0.1)
 
 upper_bound <- seq(from = 0.1, to = 5, by = 0.1) %>%
@@ -270,15 +285,9 @@ xBalance(
 )
 ```
 
-
-\textbf{Question for Students:}
-\vspace{-5mm}
-\begin{itemize}\itemsep1pt
-\item What can we infer from the results of the Chi-Squared balance test above?
-\end{itemize}
-
-
-Now let's write a function to perform this same procedure over all candidate bandwidth sizes beginning with the largerst candidate bandwidth and subsequently testing smaller and smaller bandwidths in order.
+Now let's write a function to perform this same procedure over all candidate
+bandwidth sizes beginning with the largerst candidate bandwidth and
+subsequently testing smaller and smaller bandwidths in order.
 
 ```{r}
 
@@ -323,7 +332,11 @@ is <- seq(
   )),
   by = 1
 )
+```
 
+Now use the function:
+
+```{r}
 cl <- makeCluster(parallel::detectCores())
 
 band_df <- data.frame(t(parSapply(cl, is,
@@ -342,67 +355,104 @@ parallel::stopCluster(cl)
 kable(band_df)
 ```
 
-\vspace{5mm}
-\textbf{Questions for Students:}
-\vspace{-5mm}
-\begin{itemize}\itemsep1pt
-\item There's something interesting going on as we make the window around the cut point smaller and smaller. What is it?
-\item And what are its implications, which are also mentioned by \citet{caugheysekhon2011}?
-\end{itemize}
-
-## Local Random Assignment Does *Not* Imply Exclusion Restriction
-
-Now let's assume that within a certain bandwidth around the cutpoint, $W_0$, the assumption of a local randomized experiment obtains. In other words, probabilties are uniformly distributed on $R_i \in W_0$ for all $i$. Yet even if this assumption obtains, the running variable, $R$, might still relate to potential outcomes through a mechanism other than $Z \given R \in W_0$.
-
-The exclusion restriction is a strong assumption in the RDD context since $Z$ is a deterministic function of the running variable, $R$, which implies that treatment and control groups, by construction, will be imbalanced on the running variable. Thus, if $R$ relates to $(y_{c}, y_{t})$, through a mechanism other than $Z \given R \in W_0$, then the exlcusion restriction is violated.
-
-If we think the exclusion restriction holds, then we can simply perform outcome analysis within a window around the cutpoint where local randomization presumably holds:
+And look at the results
 
 ```{r}
 
-rdd_data %<>% filter(DifDPct > lower_bound[47] & DifDPct < upper_bound[47])
-
-rdd_data %>% nrow()
-
-coef(lm(formula = DPctNxt ~ DemWin, data = rdd_data))[["DemWin"]]
-source("http://jakebowers.org/ICPSR/confintHC.R")
-confint.HC(lm(formula = DPctNxt ~ DemWin, data = rdd_data),
-  parm = "DemWin",
-  thevcov = vcovHC(lm(formula = DPctNxt ~ DemWin, data = rdd_data),
-    type = "HC2"
-  )
-)
+band_df$limits <- paste(round(band_df$X3,1),round(band_df$X4,1),sep=",")
+g2 <- ggplot(band_df,aes(x=p_value,y=ess,label=limits))+
+    geom_point() +
+    geom_label()
+print(g2)
 ```
 
-We coud also perform permutation inference within the window around the cutpoint under the assumption that local randomization holds:
+```{r}
+band_df[47,c("ess","p_value","X3","X4")]
+```
+
+
+
+## Outcome Analysis and the Exclusion Restriction {.allowframebreaks}
+
+Using the discontinuity as an instrument brings us back to instrumental variables.
+
+\medskip
+
+Let's assume that within a certain bandwidth around the cutpoint, $W_0$,
+the assumption of a local randomized experiment obtains. In other words,
+probabilties are uniformly distributed on $R_i \in W_0$ for all $i$. Yet even
+if this assumption obtains, the running variable, $R$, might still relate to
+potential outcomes through a mechanism other than $Z \given R \in W_0$.
+
+\medskip
+
+The exclusion restriction is a strong assumption in the RDD context since $Z$
+is a deterministic function of the running variable, $R$, which implies that
+treatment and control groups, by construction, will be imbalanced on the
+running variable. Thus, if $R$ relates to $(y_{c}, y_{t})$, through a mechanism
+other than $Z \given R \in W_0$, then the exlcusion restriction is violated.
+
+\medskip
+
+If we think the exclusion restriction holds, then we can simply perform outcome
+analysis within a window around the cutpoint where local randomization
+presumably holds:
+
+```{r}
+
+rdd_data47 <-  rdd_data %>% filter(DifDPct > lower_bound[47] & DifDPct < upper_bound[47])
+
+rdd_data47 %>% nrow()
+
+lm_robust(formula = DPctNxt ~ DemWin, data = rdd_data47)
+```
+
+We coud also perform permutation inference within the window around the cutpoint under the assumption that local randomization holds (useful especially if the window contains relatively few observations, skewed outcomes, etc..):
 
 ```{r}
 
 set.seed(1:5)
 sharp_null_dist <- replicate(
   n = 10^3,
-  expr = coef(lm(formula = DPctNxt ~ sample(DemWin), data = rdd_data))[[2]]
+  expr = coef(lm(formula = DPctNxt ~ sample(DemWin), data = rdd_data47))[[2]]
 )
 
-upper_p_val <- mean(sharp_null_dist >= coef(lm(formula = DPctNxt ~ DemWin, data = rdd_data))[["DemWin"]])
-lower_p_val <- mean(sharp_null_dist <= coef(lm(formula = DPctNxt ~ DemWin, data = rdd_data))[["DemWin"]])
+obsstat <- coef(lm(formula = DPctNxt ~ DemWin, data = rdd_data47))[["DemWin"]]
+
+upper_p_val <- mean(sharp_null_dist >= obsstat)
+lower_p_val <- mean(sharp_null_dist <= obsstat)
 two_sided_p_val <- min(1, 2 * min(upper_p_val, lower_p_val))
+
+two_sided_p_val
+
+rdd_data47$DemWinF <- factor(rdd_data47$DemWin)
+
+## Alternatively
+wctest <- wilcox_test(DPctNxt~DemWinF,data=rdd_data47,distribution=approximate(nresample=1000))
+ttest <- oneway_test(DPctNxt~DemWinF,data=rdd_data47,distribution=approximate(nresample=1000))
+pvalue(wctest)
+pvalue(ttest)
 ```
 
-What can we do if the exclusion restriction is violated? Or worse, if the running variable, $R$, confounds the relationship between $Z$ and $Y$? One approach is to model potential outcomes as a function of the running variable, and then to "de-trend" (or "transform'') the outcome variable and to subsequently make the claim of "residual ignorability.''
+## Outcome Analysis and the Exclusion Restriction {.allowframebreaks}
 
-For example, we could do the folloiwng:
+What can we do if the exclusion restriction is violated? Or worse, if the
+running variable, $R$, confounds the relationship between $Z$ and $Y$? One
+approach is to model potential outcomes as a function of the running variable,
+and then to "de-trend" (or "transform'') the outcome variable and to
+subsequently make the claim of "residual ignorability."
+
+For example, we could do the following:
 ```{r}
+tmp_lm <- lm(DPctNxt ~ DifDPct, data = rdd_data47)
 
-tmp_lm <- lm(DPctNxt ~ DifDPct, data = rdd_data)
-
-rdd_data %<>% mutate(resid_DPctNxt = resid(tmp_lm))
+rdd_data47 %<>% mutate(resid_DPctNxt = resid(tmp_lm))
 ```
 
 ```{r}
 ## An influential point robust loess smoother.
 ggplot(
-  data = rdd_data,
+  data = rdd_data47,
   mapping = aes(x = DifDPct, y = DPctNxt)
 ) +
   geom_point() +
@@ -423,20 +473,26 @@ ggplot(
 We can now perform outcome analysis on the detrended outcome variable:
 
 ```{r}
-lm_robust(formula = resid_DPctNxt ~ DemWin, data = rdd_data)
+lm_robust(formula = resid_DPctNxt ~ DemWin, data = rdd_data47)
 ```
 
-\citet{saleshansen2020}, however, propose robust regression, which is less sensitive to violations of the regression model's assumptions.
+@saleshansen2020, however, propose robust regression, which is less sensitive to violations of the regression model's assumptions --- still removing linear trend here.
 
 ```{r}
-tmp_rlm <- rlm(DPctNxt ~ DifDPct, data = rdd_data)
-rdd_data %<>% mutate(rlm_resid_DPctNxt = resid(tmp_rlm))
-lm_robust(formula = rlm_resid_DPctNxt ~ DemWin, data = rdd_data)
+tmp_rlm <- rlm(DPctNxt ~ DifDPct, data = rdd_data47)
+rdd_data47 %<>% mutate(rlm_resid_DPctNxt = resid(tmp_rlm))
+lm_robust(formula = rlm_resid_DPctNxt ~ DemWin, data = rdd_data47)
+
+wctest2 <- wilcox_test(rlm_resid_DPctNxt~DemWinF,data=rdd_data47,distribution=approximate(nresample=1000))
+ttest2<- oneway_test(rlm_resid_DPctNxt~DemWinF,data=rdd_data47,distribution=approximate(nresample=1000))
+pvalue(wctest2)
+pvalue(ttest2)
+
 ```
 
-## Continuity in Potential Outcomes Framework
+## Continuity in Potential Outcomes Framework {.allowframebreaks}
 
-An alternative approach to regression discontinuity is common in the econometrics literature \citep[see, e.g.,][]{imbenslemieux2008,lee2008,calonicoetal2014,hahnetal2001,leelemieux2010,mccrary2008}. As \citet{hahnetal2001} and \citet{imbenslemieux2008} state, the estimand (i.e., the quantity we seek to estimate) is:
+An alternative approach to regression discontinuity is common in the econometrics literature \citep[see, e.g.,][]{imbenslemieux2008,lee2008,calonicoetal2014,hahnetal2001,leelemieux2010,mccrary2008}. As @hahnetal2001 and @imbenslemieux2008 state, the estimand (i.e., the quantity we seek to estimate) is:
 \begin{align*}
 \lim \limits_{r \downarrow 0}\E\left[Y \given R = r > 0\right] - \lim \limits_{r \uparrow 0}\E\left[Y \given R = r < 0 \right] &  \\
 & = \E\left[Y_t \given R = 0\right] - \E\left[Y_c \given R = 0 \right]  \\
@@ -445,25 +501,25 @@ An alternative approach to regression discontinuity is common in the econometric
 
 This estimand assumes that the (1) left and right limits of $\E\left[Y \given R \right]$ exist as $R$ approaches the cutpoint $r = 0$ and (2) conditional expectation of the outcome given the running variable is left-continuous and right-continuous at the cutpoint $r = 0$, where in general a function $f$ is continuous from the right at $a$ if $\lim \limits_{x \downarrow a} f(x) = f(a)$ and is continuous from the left if $\lim \limits_{x \uparrow a} f(x) = f(a)$.
 
-\vspace{5mm}
-\textbf{Question for Students:}
-\vspace{-5mm}
-\begin{itemize}\itemsep1pt
-\item How do we interpret the expected value operator, $\E\left[\cdot\right]$, above? Sometimes the continuity in potential outcomes is stated as $\mu_t, \mu_c$ are continuous at $r = 0$. How does this relate the the estimand defined above?
-\end{itemize}
 
-We don't actually need to know the true form of $\E[\left[Y \given R = r\right]$. Instead, we can use methods, such as local regression, to approximate the function of $\E[\left[Y \given R = r\right]$ at values of $R$ below and above the cutpoint.
+## Continuity in Potential Outcomes Framework {.allowframebreaks}
+
+We don't actually need to know the true form of $\E[\left[Y \given R =
+r\right]$. Instead, we can use methods, such as local regression, to
+approximate the function of $\E[\left[Y \given R = r\right]$ at values of $R$
+below and above the cutpoint.
 
 
 ```{r}
-
 rdd_data %<>% arrange(DifDPct)
 
 rdd_data_cp <- dplyr::select(.data = rdd_data, DifDPct, DPctNxt, DemWin) %>%
   mutate(cp = ifelse(test = DifDPct < 0, yes = "Below Cutpoint",
     no = "Above Cutpoint"
   ))
+```
 
+```{r echo=FALSE}
 ggplot(
   data = rdd_data_cp,
   mapping = aes(
@@ -489,7 +545,10 @@ ggplot(
   )
 ```
 
-Let's first use a simple linear model to estimate the relationship on both sides of the cutpoint:
+## Continuity in Potential Outcomes Framework {.allowframebreaks}
+
+
+Let's first use a simple linear model to estimate the relationship on both sides of the cutpoint. Here we are not using a window.
 
 ```{r}
 
@@ -506,7 +565,8 @@ lm_predict_above <- predict(
 lm_predict_above - lm_predict_below
 ```
 
-\newpage
+## Continuity in Potential Outcomes Framework {.allowframebreaks}
+
 We could also do the same thing with LOESS regression:
 
 ```{r}
@@ -557,6 +617,48 @@ lm_poly_predict_above <- predict(
 lm_poly_predict_above - lm_poly_predict_below
 ```
 
-\citet[647]{cattaneotitiunikvazquez-bare2017} state that potential outcomes are viewed as a random sample from an infinite superpopulation. How does this fit with this course's emphasis on finite population, design-based causal inference?
+This next calculates a bandwidth and then does what we just did above (all in one step):
+
+```{r}
+
+rdest1 <- RDestimate(DPctNxt~DifDPct,data=rdd_data, se.type="HC3")
+summary(rdest1)
+
+plot(rdest1)
+```
+
+
+```{r}
+library(rdrobust)
+
+rdrest1 <- rdrobust(y=rdd_data$DPctNxt,x=rdd_data$DifDPct)
+summary(rdrest1)
+
+
+rdplot(y=rdd_data$DPctNxt,x=rdd_data$DifDPct)
+
+```
+
+
+\citet[647]{cattaneotitiunikvazquez-bare2017} view the potential outcomes as a random sample from an infinite superpopulation. How does this fit with this course's emphasis on finite population, design-based causal inference?
+
+
+## Summary
+
+ - A discontinuity can be an instrument --- creating a "natural experiment" (We
+   recommend @dunning2012 for more on natural experiments.)
+ - Notice that we could have matched observations pre-vs-post within a window,
+   to strengthen the argument for the "as randomized" assumption.
+ - One can use a model to help the argument that the pre- and post-observations
+   are comparable (for example, removing trends).  
+ - "Regression discontinuity" tends to imply use of a discontinity plus a
+   continuity assumption for estimation --- estimation of a difference in
+   curves at the cut-point.
+ - So, there are two major approaches to the use of discontinuities for causal
+   inference: 
+   1. It is a  "natural experiment" that allows a kind of instrumental
+      variables estimation plus or minus stratification or trend adjustment;
+   2. It is like an instrument in the middle of a continuous and smooth process
+      that we aim to approximate via flexible data models.
 
 ## References
