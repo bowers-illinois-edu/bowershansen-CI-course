@@ -1,0 +1,356 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+% PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass[table, xcolor={dvipsnames}, 9pt]{beamer}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\mode<presentation> {
+
+% The Beamer class comes with a number of default slide themes
+% which change the colors and layouts of slides. Below this is a list
+% of all the themes, uncomment each in turn to see what they look like.
+
+%\usetheme{default}
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Dresden}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+% \usetheme{Madrid}
+\usetheme{metropolis}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+% As well as themes, the Beamer class has a number of color themes
+% for any slide theme. Uncomment each of these in turn to see how it
+% changes the colors of your current slide theme.
+
+%\usecolortheme{albatross}
+%\usecolortheme{beaver}
+%\usecolortheme{beetle}
+%\usecolortheme{crane}
+%\usecolortheme{dolphin}
+%\usecolortheme{dove}
+%\usecolortheme{fly}
+%\usecolortheme{lily}
+%\usecolortheme{orchid}
+%\usecolortheme{rose}
+%\usecolortheme{seagull}
+%\usecolortheme{seahorse}
+%\usecolortheme{whale}
+%\usecolortheme{wolverine}
+
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+\setbeamertemplate{footline}{}
+\addtobeamertemplate{footnote}{}{\vspace{24pt}}
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{multirow}
+\usepackage{natbib}
+\usepackage[]{hyperref}
+\usepackage{diagbox}
+\usepackage{makecell}
+\usepackage{subfig}
+\usepackage{amsmath}
+\usepackage{amsfonts,amsthm,amsmath,amssymb}    
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{empheq}
+\makeatletter
+\let\save@measuring@true\measuring@true
+\def\measuring@true{%
+  \save@measuring@true
+  \def\beamer@sortzero##1{\beamer@ifnextcharospec{\beamer@sortzeroread{##1}}{}}%
+  \def\beamer@sortzeroread##1<##2>{}%
+  \def\beamer@finalnospec{}%
+}
+\makeatother
+\hypersetup{unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1}}
+\usepackage{xcolor}
+\newcommand\myheading[1]{%
+  \par\bigskip
+  {\Large\bfseries#1}\par\smallskip}
+\newcommand\given[1][]{\:#1\vert\:}
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newtheorem{defin}{Definition}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathrm{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\e}{\rm{e}}
+\DeclareMathOperator{\logit}{\rm{logit}}
+\DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
+%\DeclareMathOperator{\Pr}{\rm{Pr}}
+\newenvironment{Column}[1][.5\linewidth]{\begin{column}{#1}}{\end{column}}
+%----------------------------------------------------------------------------------------
+% TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[]{Sensitivity analysis} % The short title appears at the bottom of every slide, the full title is only on the title page
+
+\author{Thomas Leavitt} % Your name
+\institute[] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+% Your institution for the title page
+\medskip
+\textit{} % Your email address
+}
+\date{\today} % Date, can be changed to a custom date
+
+\begin{document}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+%\begin{frame}
+%\frametitle{Overview} % Table of contents slide, comment this block out to remove it
+%\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+%\end{frame}
+
+%------------------------------------------------------------------------
+% PRESENTATION SLIDES
+%------------------------------------------------------------------------
+\section{Na\"{i}ve matching model}
+\begin{frame}{Na\"{i}ve matching model}
+\vfill
+\begin{itemize} \vfill
+\item In observational study, units individually assigned to treatment or control by $n$ \textit{independent}, but not necessarily \textit{identically distributed}, coin tosses: \pause \vfill
+\begin{itemize} \vfill
+\item $Z_i \sim \pi_i^{z_i} \left(1 - \pi_i\right)^{1 - z_i}, i = 1, \dots n$, where $\pi_i \in (0, 1)$ for all $i$ \vfill
+\end{itemize} \vfill
+\item \pause Consider the following model for the distribution of treatment assignments: \pause \vfill
+\begin{align*} 
+\Pr\left(\mathbf{Z} = \mathbf{z}\right) & = \prod \limits_{i = 1}^n \lambda\left(\mathbf{x}_i\right)^{z_i} \left(1 - \lambda\left(\mathbf{x}_i\right)\right)^{1 - z_i}, \\
+\text{where } \pi_i = \lambda\left(\mathbf{x}_i \right) & = \cfrac{\exp\left(\bm{x}_i\bm{\beta}\right)}{1 + \exp\left(\bm{x}_i\bm{\beta} \right)}.
+\end{align*} \vfill
+\item \pause If units $i$ and $j \neq i$ have $\bm{x}_i = \bm{x}_j$, then $\lambda\left(\mathbf{x}_i \right) = \lambda\left(\mathbf{x}_j \right)$ \vfill
+\item \pause So we analyze matched design \textit{as if} it is block randomized experiment \vfill
+\item But what if $i$ and $j$ are imbalanced on unobserved confounder $\bm{u}$? \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\section{A model for sensitivity to hidden bias}
+\begin{frame}{Sensitivity analysis model}
+\vfill
+\begin{itemize}
+\item In addition to observed covariates, consider single unobserved covariate $\bm{u} \in [0, 1]$ \pause \vfill
+\item Write model for the distribution of treatment assignments as \pause \vfill
+\begin{align*} 
+\Pr\left(\mathbf{Z} = \mathbf{z}\right) & = \prod \limits_{i = 1}^n \lambda\left(\mathbf{x}_i, u_i\right)^{z_i} \left(1 - \lambda\left(\mathbf{x}_i, u_i\right)\right)^{1 - z_i}, \\
+\text{where } \pi_i = \lambda\left(\mathbf{x}_i, u_i\right) & = \cfrac{\exp\left(\bm{x}_i\bm{\beta} + \gamma u_i\right)}{1 + \exp\left(\bm{x}_i\bm{\beta} + \gamma u_i\right)}.
+\end{align*} \vfill
+\item \pause Note that taking log implies $\Gamma = \log(\gamma)$ is \vfill
+\begin{align*}
+\dfrac{1}{\Gamma} \leq \dfrac{\pi_i / (1 - \pi_i)}{\pi_j / (1 - \pi_j)} \leq \Gamma \text{ for any } i \text{ and } j
+\end{align*} \vfill
+\item \pause How can we assess sensitivity to $\bm{u}$ for given value of $\Gamma$? \vfill
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Sensitivity analysis model}
+\vfill
+\begin{itemize} \vfill
+\item The sensitivity analysis model is \vfill
+\begin{align*} 
+\Pr\left(\mathbf{Z} = \mathbf{z}\right) & = \prod \limits_{i = 1}^n \lambda\left(\mathbf{x}_i, u_i\right)^{z_i} \left(1 - \lambda\left(\mathbf{x}_i, u_i\right)\right)^{1 - z_i}, \\
+\text{where } \pi_i = \lambda\left(\mathbf{x}_i, u_i\right) & = \cfrac{\exp\left(\bm{x}_i\bm{\beta} + \gamma u_i\right)}{1 + \exp\left(\bm{x}_i\bm{\beta} + \gamma u_i\right)}.
+\end{align*} \vfill
+\item \pause If we assume no imbalances on observed covariates, $\bm{x}_i = \bm{x}_j$ for all $i$ and $j$, then we can use \pause \vfill
+\begin{align} 
+\Pr\left(\mathbf{Z} = \mathbf{z}\right) & = \prod \limits_{i = 1}^n \lambda\left(u_i\right)^{z_i} \left(1 - \lambda\left(u_i\right)\right)^{1 - z_i}, \\
+\pi_i = \lambda\left(u_i\right) & = \cfrac{\exp\left(\gamma u_i\right)}{1 + \exp\left(\gamma u_i\right)}. \label{eq: sens probs}
+\end{align} \vfill
+\item \pause Equation \eqref{eq: sens probs} implies that \vfill
+\begin{equation}
+\Pr\left(\bm{Z} = \bm{z} \given n_T\right) = \dfrac{\exp\left(\gamma \bm{z}^{\top} \bm{u}\right)}{\sum \limits_{\bm{z} \in \Omega} (\gamma \bm{z}^{\top} \bm{u})}
+\end{equation} \vfill
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Sensitivity analysis model: example}
+\vfill
+\begin{itemize} \vfill
+\item Consider matched set with $6$ units and exact balance on $\bm{x}$: \vfill
+\begin{table}[H]
+\centering{}
+    \begin{tabular}{l|l|l}
+   $\bm{z}$ & $\bm{x}$ & $\bm{y}$ \\ \hline
+   $1$ & $1$ & $22$ \\
+  $0$ & $1$ & $8$ \\
+  $0$ & $1$ & $11$ \\
+  $1$ & $1$ & $15$ \\
+  $1$ & $1$ & $18$ \\
+  $0$ & $1$ & $1$ \\
+    \end{tabular}
+\caption{Matched set with exact within-set balance}
+\end{table} \vfill
+\item Condition on observed number of treated units, $n_T = 3$, and assume we have mini-randomized experiment in this matched set \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Sensitivity analysis model: example}
+\vfill
+\begin{itemize} \vfill
+\item Assuming that $\Pr(\bm{Z}) = \bm{z}$ for all $\bm{z} \in \Omega$ such that $n_T = 3$, the distribution under sharp null is \vfill
+\begin{figure}
+\includegraphics[width = 0.9\linewidth]{null_dist_z_8_plot.pdf}
+\end{figure} \vfill
+\end{itemize}\vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Sensitivity analysis model: example}
+\vfill
+\begin{itemize}
+\item How would our $p$-value change if there were unobserved $\bm{u}$? \vfill 
+\item Depends on $\gamma \geq 0$ and the true, but unknown values of $\bm{u}$. \vfill
+\item E.g., for any value of $\gamma \geq 0$, we would not worry about $\bm{u}$ if it were \vfill
+\begin{align*}
+\bm{u} & = \begin{bmatrix} 1 & 1 & 1 & 1 & 1 & 1 \end{bmatrix} \text{ or } \\
+\bm{u} & = \begin{bmatrix} 0 & 0 & 0 & 0 & 0 & 0 \end{bmatrix}
+\end{align*} \vfill
+\item If $\bm{u}$ is same for every unit, our $p$-value does not change for any $\gamma \geq 0$ \vfill
+\item For some $\gamma \geq 0$, some $\bm{u}$ in which $p$-value becomes even smaller \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Sensitivity analysis model: example}
+\vfill
+\begin{itemize} \vfill
+\item E.g., if $\bm{u} = \begin{bmatrix} 0 & 1 & 1 & 0 & 1 & 1 \end{bmatrix}$, then \vfill
+\begin{figure}
+\includegraphics[width = 0.9\linewidth]{anti_con_sens_null_dist_z_8.pdf}
+\end{figure} \vfill
+\item We want to be maximally conservative, so find $\bm{u}$ that, for fixed $\gamma \geq 0$, yields largest $p$-value \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\section{Conservative sensitivity analysis}
+\begin{frame}{Conservative sensitivity analysis}
+\vfill
+\begin{itemize} \vfill
+\item For a fixed $\gamma \geq 0$, find $\mathbf{u}$ that maximizes the p-value  \vfill
+\begin{itemize} \vfill
+\item \pause I.e., find $\max \limits_{\mathbf{u} \in \mathcal{U}} \Pr\left(t\left(\mathbf{Z}, \mathbf{y}\right) \geq t^{\text{obs}} \right)$, where $t^{\text{obs}}$ is our observed test-statistic \vfill
+\end{itemize}	\vfill
+\item \pause For large class of test statistics, \citet{rosenbaumkrieger1990} show following result \vfill
+\begin{itemize} \vfill
+\item First, renumber the subjects such that $y_1 \geq y_2 \geq \ldots \geq y_n$ \pause \vfill
+\item The $\mathbf{u} \in \mathcal{U}$ that maximizes the p-value is some $\mathbf{u} \in \mathcal{U}^+ \subset \mathcal{U} = \left[0, 1\right]^n$, where \pause \vfill
+\begin{align*}
+\mathcal{U}^+ & = \left\{
+\begin{bmatrix} 1 \\ 0 \\ 0 \\ \vdots \\ 0 \end{bmatrix},
+\begin{bmatrix} 1 \\ 1 \\ 0 \\ \vdots \\ 0 \end{bmatrix},
+\ldots , 
+\begin{bmatrix} 1 \\ 1 \\ \vdots \\ 1 \\ 0 \end{bmatrix}
+\right\}
+\end{align*} \vfill
+\end{itemize} \vfill
+\item \pause All $\mathbf{u} \in \mathcal{U}^+$ have at least one $1$ and one $0$ and the $1$s all appear for units with largest outcomes \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Conservative sensitivity analysis}
+\vfill
+\begin{itemize} \vfill
+\item With one matched set, we can \vfill
+\begin{enumerate} \vfill
+\item Enumerate entire set of $\mathcal{U}^+$; \vfill
+\item for fixed $\gamma \geq 0$, calculate $p$-value for every $\bm{u} \in \mathcal{U}^+$; \vfill
+\item then choose $\bm{u} \in \mathcal{U}^+$ that maximizes $p$-value for this $\gamma \geq 0$; \vfill
+\item Do this for increasing values of $\gamma$ and stop when unable to reject sharp null \vfill
+\end{enumerate} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Conservative sensitivity analysis}
+\vfill
+\begin{itemize} \vfill
+\item For matched set with $6$ units and $\Gamma = \log(\gamma) = 2$, the $p$-value under ``worst-case'' $\bm{u}$ yields
+\end{itemize} \vfill
+\begin{figure}[H]
+\includegraphics[width=0.9\linewidth]{sens_null_dist_z_8.pdf}
+\end{figure} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\section{Conservative sensitivity analysis with many strata}
+\begin{frame}{Conservative sensitivity analysis in stratified studies}
+\vfill
+\begin{itemize} \vfill
+\item Let the index $s \in \left\{1, \ldots, S\right\}$ runs over the $S$ strata \vfill
+\item \pause Then order the $n$ units lexically by stratum and then in decreasing order within strata by the value of the outcome $y_{is}$.
+\begin{itemize} \vfill
+\item \pause E.g., in \texttt{R}: \texttt{data <- dplyr::arrange(.data = data, strata, desc(y))} \vfill
+\end{itemize}	 \vfill
+\item \pause The worst-case $\mathbf{u} \in \mathcal{U}^+$ cannot be found by finding $\mathbf{u}_s \in \mathcal{U}_s^+$ in each stratum one at a time \vfill
+\item \pause All $n$ coordinates of $\mathbf{u} \in \mathcal{U}^+$ must be found simultaneously \vfill
+\item \pause Hence, there are $\prod \limits_{s = 1}^S \left(n_s - 1\right)$ candidate values to consider \vfill
+\begin{itemize}
+\item \pause Usually computationally intractable, even in relatively small studies \pause \vfill
+\end{itemize} \vfill
+\item So we use asymptotic approximation \citep{gastwirthetal2000} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[allowframebreaks]
+\frametitle{References} 
+\scriptsize
+\bibliographystyle{chicago}
+\bibliography{Master_Bibliography}   % name your BibTeX data base
+\end{frame}
+%------------------------------------------------------------------------
+\end{document}
