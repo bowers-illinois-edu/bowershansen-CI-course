@@ -45,7 +45,7 @@ $for(fontfamilies)$
   \newfontfamily{$fontfamilies.name$}[$fontfamilies.options$]{$fontfamilies.font$}
 $endfor$
 %\usepackage{fontspec,xltxtra,xunicode}
-\defaultfontfeatures{Mapping=tex-text,Scale=MatchLowercase}
+\defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
 %\setmainfont{Lato}
 %\setmonofont[Scale=MatchLowercase]{Source Code Pro Light}
 %\let\sfdefault\rmdefault

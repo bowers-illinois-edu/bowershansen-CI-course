@@ -1,12 +1,15 @@
 ---
-title: Open Discussion of Various Topics
+title: |
+ | Open Discussion of Various Topics
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-author: ICPSR 2021 Session 2
+author: |
+  | ICPSR 2021 Session 2
+  | Jake Bowers, Ben Hansen, Tom Leavitt
 bibliography:
- - refs.bib
- - BIB/master.bib
- - BIB/misc.bib
- - BIB/causalinference.bib
+ - 'BIB/MasterBibliography.bib'
+ - 'BIB/master.bib'
+ - 'BIB/misc.bib'
+ - 'BIB/refs.bib'
 fontsize: 10pt
 geometry: margin=1in
 graphics: yes
@@ -24,66 +27,141 @@ output:
     includes:
         in_header:
            - defs-all.sty
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
 ---
-
-TSCS/Longtudinal
-Interference
-Covariance adjustment after matching
-Regression sensitivity analysis.
 
 ## Today
 
 
-  1. Agenda: Talk about the topics you mentioned last time and/or any topics
-     that you came to class wanting to discuss
+  1. Agenda: Talk about a few topics you mentioned last time and/or any topics
+     that you came to class wanting to discuss: TSCS/Longtudinal, Interference,
+     Covariance adjustment after matching, Regression-based sensitivity analysis.
   2. Questions arising from the reading or assignments or life?
 
 # But first, review
 
-## What have we done so far this week?
+## What have we done so far recently? {.fragile}
 
- 1. Using discontinuities as natural experiments or cut-points in
-    deterministic processes that create mini-experiments.
- 2. Creating matched designs or used instruments or discontinuities (or
-    randomization itself) to create interpretable comparisons and justifiable
-    statistical inferences about causal effects.
- 3. Assessed the sensitivity of a design which adjusted well for
-    $\bm{x}$ but which could not adjust directly for unmeasured confounders, $\bm{u}$
-    1. Rosenbaum's approach focusing on $\Gamma$ (assuming strong relationship with $Y$).
-    2. The $H^3$ approach focusing on $\teeW$ and $\pcor$ (noticing that even
-    high $\teeW$ might not cause trouble if $\pcor$ is very low).
+ 1. Assessed the sensitivity of a design which adjusted well for $\mathbf{x}$ but
+    which could not adjust directly for unmeasured confounders, $\mathbf{u}$
+    1. Rosenbaum's approach focusing on $\Gamma$ (assuming strong relationship
+       with $Y$). (And briefly mentioning how $\Gamma$ can be decomposed into
+       $\delta$ (increase in odds of a positive pair difference --- i.e. effect
+       on outcomes), and $\lambda$ (increase in odds of a treatment difference
+       --- i.e. effect on treatment/causal driver) to aid interpretation.
+    2. Fogarty's approach also using $\Gamma$ but in the context of testing
+       hypotheses about no average effect.
 
 \begin{center}
-\includegraphics[width=.6\textwidth]{xyzudiagram.pdf}
+\begin{tikzcd}[column sep=large, row sep=large]
+  \mathbf{x}=\{x_1,x_2,\ldots\} \arrow[from=1-1,to=2-1, "\text{0 by adjustment}" description] \arrow[from=1-1,to=2-4, "?" description]  & & &\\
+  Z  \arrow[from=2-1,to=2-4, "\tau" description] &    &                           & Y \\
+  \mathbf{u} \arrow[from=3-1,to=2-1, "\Gamma \text{ or } \lambda" description] \arrow[from=3-1,to=2-4, "\delta" description]
+\end{tikzcd}
 \end{center}
 
-# Topics from last time.
+## What have we done so far recently?
 
-## Topics:
+ 2. Introduced the ideas behind Differences in Differences Designs (like
+    interrupted time-series but with a control group) and their focus on the
+    estimand of the $ATT_{\text{Population}}$.
+    1. Addresses problems with the simple interrupted time series approach
+    2. Using own unit as counterfactual makes sense (but raises question about
+       history/trend other $\mathbf{u}$ that could be intervening in between
+       measurements)
+    3. Adding the non-intervention or control unit(s) helps under some
+       assumptions (or pre-sumptions) about using this group to impute
+       potential outcomes for the focal/treatment group.
 
- - Multiple imputation and matching (recall that missing data on covariates is
-   different from missing data on outcomes; also could do MH matching on
-   multiple PS scores created from multiply imputed data so that you have only
-   one single matched set.)
- - Meta-analyses in combination with one-study testing and estimation.
- - General principles for the design of randomized experiments (for example,
-   power)
- - Multilevel designs (like cluster randomized experiments, or test items
-   within students, etc..)
- - Longitudinal designs (what is the outcome? what is, a priori, a good
-   counterfactual?)
- - Experiments on networks
- - Bayesian predictive models
- - Bayesian posteriors with randomization based likelihoods
- - Academic styles and trends (How to respond to "I don't like X" where X can
-   be any existing approach to research. What might "I don't like that causal
-   inference stuff" actually mean?)
-   - More than more way to conceptualize causal relationships.
-   - More than one way to use what we observe to reflect on social science
-     theory. 
+# Longitudinal Data
+
+## Two simple questions
+
+ 1. What is the impact of an event on a trajectory?
+ 2. How do trajectories differ between types? ("treated types" and "control
+   types" or any types).
+
+We can learn about #2 using existing tools: multiple observations can be
+collapsed into a trajectory and we can work to clarify comparisons between
+units. For example:
+
+```{r}
+## Trajectories Y_i_t for three units
+times <- c(1,2,3,4,5,6,7)
+Y_1_t <- c(1,0,1,1,0,0,1)
+Y_2_t <- c(0,0,0,0,0,0,1)
+Y_3_t <- c(0,1,1,1,1,1,1)
+
+## No smoothing. Just simple collapsing
+Y_1 <- paste(Y_1_t,collapse="")
+Y_2 <- paste(Y_2_t,collapse="")
+Y_3 <- paste(Y_3_t,collapse="")
+
+## Now we have a categorical outcome and a binary intervention or treatment
+somedat <- data.frame(Y=c(Y_1,Y_2,Y_3),Z=c(1,0,0))
+
+```
+
+## What is the impact of an event on a trajectory?
+
+What if we have an event occurring in the middle of a trajectory? What is the causal effect of this event?
+
+```{r}
 
 
-## Summary
+```
+
+
+
+
+
+## Where to go from here
+
+See Chapter 13, "Risk Set Matching", of @rosenbaum2010 and associated references.
+
+Promising work. I haven't read it.
+ - Maybe promising review: @thomas2020matching
+ - @blackwell2018telescopematching
+ - @imai2019matching (Also Kim and Imai and colleagues have a series of papers
+   on "Fixed effects" models that addresses the same design tops ---
+   obervational studies with multiple observations per unit, and a desire to
+   estimate average causal effects.)
+
+# Interference
+
+## Overview
+
+Just to demonstrate what is behind the presumption of "no interference" and to
+show just one very simple approach (that you already know).
+
+
+## Where to to go from here
+
+ - Neyman: Estimating some average causal effects @aronowsamii2017 weighting by
+   probability of exposure to the treatment via the network (see associated
+   @toulis2013estimation).
+   - Lots of work here now. Estimating average effects when agnostic to
+     networks, for example. Etc. Check out work by Hudgens
+     <http://www.bios.unc.edu/~mhudgens/>, Ogburn <https://www.eogburn.com>,
+     Basse <https://gwbasse.com>, Eckles <https://www.deaneckles.com>, Toulis
+     <https://www.ptoulis.com/working-papers>, Volfovsky
+     <https://volfovsky.github.io>.
+ - Fisher: Testing causal theories that generate hypotheses about effects (as
+   it propagates across a network) @bowers2013sutva, @bowers2016research,
+   @bowers2018models.
+
+
+# Sensitivity Analysis for Regression Models
+
+## An example using of the @cinellihazlett2020 approach
+
+
+# Futher Topics and Discussion?
+
+## Questions, Thoughts?
+
+
 
 
 ## References
