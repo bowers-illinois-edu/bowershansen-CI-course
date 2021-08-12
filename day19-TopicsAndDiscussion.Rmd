@@ -31,6 +31,26 @@ output:
     pandoc_args: [ "--csl", "chicago-author-date.csl" ]
 ---
 
+
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
+
+## Print code by default
+opts_chunk$set(echo = TRUE)
+```
+
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+## Load all of the libraries that we will use when we compile this file
+## We are using the renv system. So these will all be loaded from a local library directory
+library(dplyr)
+library(ggplot2)
+library(coin)
+library(RItools)
+library(optmatch)
+```
+
+
 ## Today
 
 
@@ -83,44 +103,215 @@ output:
    types" or any types).
 
 We can learn about #2 using existing tools: multiple observations can be
-collapsed into a trajectory and we can work to clarify comparisons between
-units. For example:
+collapsed into a trajectory and we can work to clarify comparisons in a
+categorical outcome between units. For example:
 
 ```{r}
 ## Trajectories Y_i_t for three units
-times <- c(1,2,3,4,5,6,7)
-Y_1_t <- c(1,0,1,1,0,0,1)
-Y_2_t <- c(0,0,0,0,0,0,1)
-Y_3_t <- c(0,1,1,1,1,1,1)
 
-## No smoothing. Just simple collapsing
-Y_1 <- paste(Y_1_t,collapse="")
-Y_2 <- paste(Y_2_t,collapse="")
-Y_3 <- paste(Y_3_t,collapse="")
+time_length <- 7
+times <- seq_len(time_length)
+Y_1_t <- c(1, 0, 1, 1, 0, 0, 1)
+Y_2_t <- c(0, 0, 0, 0, 0, 0, 1)
+Y_3_t <- c(0, 1, 1, 1, 1, 1, 1)
 
-## Now we have a categorical outcome and a binary intervention or treatment
-somedat <- data.frame(Y=c(Y_1,Y_2,Y_3),Z=c(1,0,0))
+longdat1 <- data.frame(
+  id = c(rep(1, time_length), rep(2, time_length), rep(3, time_length)),
+  Y = c(Y_1_t, Y_2_t, Y_3_t),
+  times = rep(times, 3),
+  type = c(rep(1, time_length), rep(0, time_length), rep(1, time_length))
+)
 
+longdat1
+
+widedat1 <- longdat1 %>%
+  group_by(id) %>%
+  summarize(
+    Trajectory = paste(Y, collapse = ""),
+    Type = unique(type)
+  )
+
+widedat1
 ```
+
+ - One could further classify trajectories as "Rising" versus "Falling" versus "Stable" and simplify the analysis.
+ - One could add "time of switching to type=1" as another variable if you observe this and it matters
 
 ## What is the impact of an event on a trajectory?
 
-What if we have an event occurring in the middle of a trajectory? What is the causal effect of this event?
+```{r echo=FALSE}
+load("/Users/jwbowers/Documents/PROJECTS/jakebowers.org/ICPSR/ps4wl.rda")
+```
+
+What if we have an event occurring in the middle of a trajectory? What is the
+causal effect of this event? Here the question is about the effect of having a
+child on political participation (see larger literature on gender and political
+participation). This structure could be the same as effect of "treaty signing" etc..
+
+```{r}
+## One person:
+ps4wl %>%
+  filter(id65 == 8) %>%
+  select(one_of(c(
+    "id65", "year", "female", "allacts", "cumallacts",
+    "futureacts", "kidbornN", "kage1", "kage2", "maxdegP"
+  )))
+```
+
+What would be a good comparison person (or persons) for person 8 if we could find that person?
+
+## Basics of matching for event data:
+
+Here, I select only rows where people have a child or rows before people have a child (or rows where no child was born):
 
 ```{r}
 
+wrk.df <- ps4wl %>%
+  filter((ps4wl$k1born == 1) | (ps4wl$k1born == 0 & (ps4wl$k1year < 0 | is.na(ps4wl$k1year)))) %>%
+  select(one_of(c(
+    "id65", "year", "maxdegP", "pmdeg65", "female", "allacts", "cumallacts",
+    "futureacts", "k1year", "kage1",
+    "statehs", "havekids", "hsact65", "civics65", "churP", "pintP", "ybyear", "k1born", "kid1"
+  )))
 
+## For the purposes of design, we do not want years after birth of first child.
+wrk.df %>% filter(id65 == 8)
 ```
 
+Let's look for people who have not yet had a child but who have had a similar previous trajectory of political participation:
+
+```{r}
+## But we want allacts and cumallacts for the year before the kid was born in the treatment group.
+wrk.df$baselineacts <- wrk.df$allacts
+wrk.df$baselineacts[wrk.df$k1born == 1] <- wrk.df$allacts[which(wrk.df$k1born == 1) - 1]
+wrk.df$baselinecumacts <- wrk.df$cumallacts
+wrk.df$baselinecumacts[wrk.df$k1born == 1] <- wrk.df$cumallacts[which(wrk.df$k1born == 1) - 1]
+
+## fix this for thos people who had a kid in 1965 (i.e. don't use someone else's 1997 data for them).
+wrk.df$baselineacts[wrk.df$k1born == 1 & wrk.df$year == 65] <- wrk.df$allacts[wrk.df$k1born == 1 & wrk.df$year == 65]
+wrk.df$baselinecumacts[wrk.df$k1born == 1 & wrk.df$year == 65] <- wrk.df$cumallacts[wrk.df$k1born == 1 & wrk.df$year == 65]
 
 
+actsDist <- match_on(k1born ~ baselineacts + baselinecumacts,
+  data = wrk.df,
+  within = exactMatch(k1born ~ female, wrk.df)
+)
+```
 
+Want to match people closer in year:
+
+```{r}
+## Make a distance matrix by hand
+yearDist <- with(wrk.df, outer(year[k1born == 1], year[k1born == 0], "-"))
+dimnames(yearDist) <- list(
+  rownames(wrk.df[wrk.df$k1born == 1, ]),
+  rownames(wrk.df[wrk.df$k1born == 0, ])
+)
+```
+
+Don't match same person to self for purposes of design (maybe use own pre-baby
+participation as a change score after matching) (Why or why not woudl we try
+Difference-In-Differences here with or without matching?)
+
+```{r}
+id65Dist <- with(wrk.df, outer(id65[k1born == 1], id65[k1born == 0], function(x, y) {
+  as.numeric(x == y)
+}))
+dimnames(id65Dist) <- list(
+  rownames(wrk.df[wrk.df$k1born == 1, ]),
+  rownames(wrk.df[wrk.df$k1born == 0, ])
+)
+```
+
+A mahalanobis distance:
+
+
+```{r}
+## Make a version of the dataset with no missing data
+wrk.df.noNAs <- fill.NAs(wrk.df)
+
+## Make a mh distance matrix
+mhDist <- match_on(k1born ~ baselineacts + baselinecumacts + maxdegP + pmdeg65 +
+  pmdeg65.NA + hsact65 + civics65 + churP + churP.NA,
+data = wrk.df.noNAs,
+within = exactMatch(k1born ~ female, data = wrk.df.noNAs)
+)
+summary(mhDist)
+```
+
+Also a propensity score:
+
+```{r}
+## A propensity to have kids year score
+## Look at cov scaling
+## afmla <- k1born~baselineacts+baselinecumacts+maxdegP+pmdeg65+
+## 	       pmdeg65.NA+hsact65+civics65+churP+churP.NA
+## summary(wrk.df.noNAs[,all.vars(afmla)])
+
+library(lme4)
+
+pscore_glm <- glmer(k1born ~ female + I(scale(baselineacts)) + I(scale(baselinecumacts)) + maxdegP + pmdeg65 +
+  hsact65 + civics65 + churP + churP.NA + (1 | id65),
+family = binomial(link = "logit"), data = wrk.df.noNAs
+)
+
+## res <- allFit(pscore_glm)
+
+wrk.df.noNAs$psscore <- predict(pscore_glm)
+psDist <- match_on(k1born ~ psscore,
+  data = wrk.df.noNAs,
+  within = exactMatch(k1born ~ female, data = wrk.df.noNAs)
+)
+summary(psDist)
+```
+
+Now create the overall distance matrix reflecting these decision:
+
+```{r}
+## make self-matches infinite
+baselineactsDist.pen1 <- actsDist + caliper(id65Dist, width = 0)
+sometrtnms <- rownames(actsDist)[1:10]
+as.matrix(id65Dist)[sometrtnms, grep("^8\\.", colnames(id65Dist), value = TRUE)]
+as.matrix(baselineactsDist.pen1)[sometrtnms, grep("^8\\.", colnames(baselineactsDist.pen1), value = TRUE)]
+
+## Don't match to controls in the future:
+baselineactsDist.pen2 <- baselineactsDist.pen1 + caliper(yearDist, width = 0, compare = `>`)
+
+## Require matches close in year
+baselineactsDist.pen3 <- baselineactsDist.pen2 + caliper(yearDist, width = 3)
+
+## And not too distant in mhDist or psDist
+baselineactsDist.pen4 <- baselineactsDist.pen3 + caliper(mhDist, quantile(as.vector(mhDist), .9)) + caliper(psDist, quantile(as.vector(psDist), .9))
+```
+
+We have 85 moments where a child is born and we want to find moments where
+children are not born for people like those who decided to have a child, near
+the same moments in their lives and also the same moments in history.
+
+```{r}
+## How many "treated" observations?
+table(wrk.df$k1born)
+
+pm1 <- pairmatch(baselineactsDist.pen4,
+  data = wrk.df.noNAs,
+  remove.unmatchables = TRUE
+)
+summary(pm1)
+
+wrk.df.noNAs$pm1 <- pm1
+
+wrk.df.noNAs %>% filter(pm1 == 1.1)
+```
 
 ## Where to go from here
 
 See Chapter 13, "Risk Set Matching", of @rosenbaum2010 and associated references.
 
+Consider Mahalanobis distance on all past outcomes? (See Nielson on "Matching
+with Time-Series Cross-Sectional Data")
+
 Promising work. I haven't read it.
+
  - Maybe promising review: @thomas2020matching
  - @blackwell2018telescopematching
  - @imai2019matching (Also Kim and Imai and colleagues have a series of papers
@@ -136,25 +327,113 @@ Just to demonstrate what is behind the presumption of "no interference" and to
 show just one very simple approach (that you already know).
 
 
+## Statistical inference with interference?
+
+\includegraphics[width=.3\textwidth]{images/complete-graph.pdf}
+
+\includegraphics[width=.95\textwidth]{images/interference-example.pdf}
+
+On estimation see (Sobel, Aronow, Basse, Eckles, Feller, Samii, Hudgens,
+Ogburn, VanderWeele, Toulis, Kao, Coppock, Sicar, Raudenbush, Hong, Volfovsky).
+The key question for that work: What is the function of potential outcomes that
+we can estimate using observed data?
+
+## Statistical inference with interference?
+
+
+```{r}
+ knitr::include_graphics(here("images", "interference-example-2.pdf"))
+```
+
+Introducing the \textbf{uniformity trial} $\equiv \by_{i,0000}$ (Rosenbaum,
+2007).
+
+
+## Imagine an experiment on a network:
+
+\includegraphics[width=.95\textwidth]{images/fishersutvaNetwork.pdf}
+
+## Imagine an experiment on a network: With a model of propagation
+
+ - The direct effect of treatment is $\beta$ (it is a multiplicative effect).
+ - Treatment effects flows from treated to control units, increasing with
+   number of treated neighbors, with rate of growth of effect $\tau$.
+
+\includegraphics[width=.95\textwidth]{images/fishersutvaModel.pdf}
+
+## Learning about a causal model from an experiment on a network
+
+\includegraphics[width=.6\textwidth]{images/ssr2d.pdf}
+
+Plot shows the proportion of $p$-values less than .05 for randomization tests of
+joint hypotheses about $\tau$ and $\beta$. Darker values mean less rejection.
+Truth is at $\tau = .5$, $\beta= 2$. All tests reject the truth no more than 5% of the
+time at $\alpha = .05$. All simulations using permutation-based reference distributions.
+
+## An Agent-Based Causal Model Example
+
+A causal model relates potential outcomes to each other and a research design
+relates potential outcomes to observed data (and to sources of uncertainty). For examples:
+
+ -  For no effects at all: $y_{i,0} = \HH(Y_i,Z_i,\tau_i) = Y_{i}$.
+ -  For constant, additive effects: $y_{i,0} = \HH(Y_i,Z_i,\tau_i) = Y_{i} - Z_i \tau$.
+ - For vector valued outcomes in a network with nonlinear propagation of causal effects:
+\begin{equation}
+\yu = \HH(\by_{\bz}, \bzero, \beta, \tau) = ( \beta + (1 - z_i) (1 - \beta) \exp( - \tau^2 \bz^{T} \bS ) )^{-1} \by \bz
+\end{equation}
+
+
+In fact *any function* that produces vectors of $\yu$ could be used to represent these kinds of causal models.
+
+So: why not an agent-based model?
+
+
+## A General Testing-Based Causal Inference Algorithm
+
+ 1. Write a model converting uniformity trial potential outcomes (like $\yu$ or
+    simply $y_{i,0}$) into observed data (like $\by_{\bz}$ or simply $Y_i$):
+    What is the mechanism by which the treatment changes the outcomes of the
+    units? (This is a structural model of potential outcomes. It could be an
+    agent-based model.)
+ 2. Solve for $\yu$. What adjustment of the observed data does this model
+    imply? $\HH(\by_{\bz}, \bzero, \theta_0) = \yu$ like $y_{i,0} = Y_i + Z
+    \tau$ for the simple constant, additive effects model.
+ 3. Select a test statistic that is effect-increasing in all relevant
+    dimensions (like the sum of squared residuals test statistic or the KS-test
+    statistic for certain models, or, I conjecture, an energy-statistic).
+ 4. Compute $p$-values for substantively meaningful range of $\theta$.  Or
+    calculate boundaries of regions. (Perhaps collapse or aggregate the
+    rejection regions to aid interpretation.)
+
+
 ## Where to to go from here
 
- - Neyman: Estimating some average causal effects @aronowsamii2017 weighting by
+**Neyman:** Estimating some average causal effects @aronowsamii2017 weighting by
    probability of exposure to the treatment via the network (see associated
    @toulis2013estimation).
-   - Lots of work here now. Estimating average effects when agnostic to
+
+   \medskip
+Lots of work here now. Estimating average effects when agnostic to
      networks, for example. Etc. Check out work by Hudgens
      <http://www.bios.unc.edu/~mhudgens/>, Ogburn <https://www.eogburn.com>,
      Basse <https://gwbasse.com>, Eckles <https://www.deaneckles.com>, Toulis
      <https://www.ptoulis.com/working-papers>, Volfovsky
      <https://volfovsky.github.io>.
- - Fisher: Testing causal theories that generate hypotheses about effects (as
+
+\medskip
+
+**Fisher:** Testing causal theories that generate hypotheses about effects (as
    it propagates across a network) @bowers2013sutva, @bowers2016research,
    @bowers2018models.
 
 
 # Sensitivity Analysis for Regression Models
 
-## An example using of the @cinellihazlett2020 approach
+## A pointer:
+
+Read  @cinellihazlett2020 and @hosman2010 and @chaudoinetal2018.
+@cinellihazlett2020 is current state of the art (see their easy to use R
+package, youtube videos, etc).
 
 
 # Futher Topics and Discussion?
