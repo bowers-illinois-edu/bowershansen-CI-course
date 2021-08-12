@@ -56,7 +56,7 @@ library(optmatch)
 
   1. Agenda: Talk about a few topics you mentioned last time and/or any topics
      that you came to class wanting to discuss: TSCS/Longtudinal, Interference,
-     Covariance adjustment after matching, Regression-based sensitivity analysis.
+     Pointer to Regression-based sensitivity analysis.
   2. Questions arising from the reading or assignments or life?
 
 # But first, review
@@ -74,7 +74,7 @@ library(optmatch)
        hypotheses about no average effect.
 
 \begin{center}
-\begin{tikzcd}[column sep=large, row sep=large]
+\begin{tikzcd}[column sep=large, row sep=large,every arrow/.append style=-latex]
   \mathbf{x}=\{x_1,x_2,\ldots\} \arrow[from=1-1,to=2-1, "\text{0 by adjustment}" description] \arrow[from=1-1,to=2-4, "?" description]  & & &\\
   Z  \arrow[from=2-1,to=2-4, "\tau" description] &    &                           & Y \\
   \mathbf{u} \arrow[from=3-1,to=2-1, "\Gamma \text{ or } \lambda" description] \arrow[from=3-1,to=2-4, "\delta" description]
@@ -85,7 +85,9 @@ library(optmatch)
 
  2. Introduced the ideas behind Differences in Differences Designs (like
     interrupted time-series but with a control group) and their focus on the
-    estimand of the $ATT_{\text{Population}}$.
+    estimand of the $ATT_{\text{Population}}$ (pointers to other estimators.
+    Difference-in-Differences Estimators refer to this kind of design and focus
+    on this estimand.)
     1. Addresses problems with the simple interrupted time series approach
     2. Using own unit as counterfactual makes sense (but raises question about
        history/trend other $\mathbf{u}$ that could be intervening in between
@@ -93,6 +95,8 @@ library(optmatch)
     3. Adding the non-intervention or control unit(s) helps under some
        assumptions (or pre-sumptions) about using this group to impute
        potential outcomes for the focal/treatment group.
+    4. Teaser about estimating the trends rather than assuming them (see
+       Leavitt's work and citations therein).
 
 # Longitudinal Data
 
@@ -102,9 +106,13 @@ library(optmatch)
  2. How do trajectories differ between types? ("treated types" and "control
    types" or any types).
 
+## Trajectories as Types
+
 We can learn about #2 using existing tools: multiple observations can be
 collapsed into a trajectory and we can work to clarify comparisons in a
-categorical outcome between units. For example:
+categorical outcome between units. Here we create "types" directly. One could
+imagine doing some latent class or cluster analysis etc.. to categorize types
+of trajectories.
 
 ```{r}
 ## Trajectories Y_i_t for three units
@@ -307,17 +315,18 @@ wrk.df.noNAs %>% filter(pm1 == 1.1)
 
 See Chapter 13, "Risk Set Matching", of @rosenbaum2010 and associated references.
 
-Consider Mahalanobis distance on all past outcomes? (See Nielson on "Matching
-with Time-Series Cross-Sectional Data")
-
 Promising work. I haven't read it.
 
  - Maybe promising review: @thomas2020matching
  - @blackwell2018telescopematching
  - @imai2019matching (Also Kim and Imai and colleagues have a series of papers
-   on "Fixed effects" models that addresses the same design tops ---
+   on "Fixed effects" models that addresses the same design topic ---
    obervational studies with multiple observations per unit, and a desire to
-   estimate average causal effects.)
+   estimate average causal effects using stratification but **not** using
+   future observations (say) to estimate effects of past events.)
+ - Consider Mahalanobis distance on all past outcomes? (See Nielson on
+   "Matching with Time-Series Cross-Sectional Data")
+
 
 # Interference
 
@@ -340,37 +349,36 @@ we can estimate using observed data?
 
 ## Statistical inference with interference?
 
+\includegraphics[width=.3\textwidth]{images/complete-graph.pdf}
 
-```{r}
- knitr::include_graphics(here("images", "interference-example-2.pdf"))
-```
+\includegraphics[width=.95\textwidth]{images/interference-example-2.pdf}
 
-Introducing the \textbf{uniformity trial} $\equiv \by_{i,0000}$ (Rosenbaum,
-2007).
+Introducing the potential outcome when no treatment has been applied to any
+node aka \textbf{the uniformity trial} $\equiv \by_{i,0000}$ (Rosenbaum, 2007).
 
 
 ## Imagine an experiment on a network:
 
 \includegraphics[width=.95\textwidth]{images/fishersutvaNetwork.pdf}
 
-## Imagine an experiment on a network: With a model of propagation
+## A model of propagation
 
  - The direct effect of treatment is $\beta$ (it is a multiplicative effect).
  - Treatment effects flows from treated to control units, increasing with
    number of treated neighbors, with rate of growth of effect $\tau$.
 
-\includegraphics[width=.95\textwidth]{images/fishersutvaModel.pdf}
+\includegraphics[width=.7\textwidth]{images/fishersutvaModel.pdf}
 
-## Learning about a causal model from an experiment on a network
+## Evidence about the parameters
 
-\includegraphics[width=.6\textwidth]{images/ssr2d.pdf}
+\includegraphics[width=.5\textwidth]{images/ssr2d.pdf}
 
 Plot shows the proportion of $p$-values less than .05 for randomization tests of
 joint hypotheses about $\tau$ and $\beta$. Darker values mean less rejection.
 Truth is at $\tau = .5$, $\beta= 2$. All tests reject the truth no more than 5% of the
 time at $\alpha = .05$. All simulations using permutation-based reference distributions.
 
-## An Agent-Based Causal Model Example
+## Summary of Hypotheses as Causal Models
 
 A causal model relates potential outcomes to each other and a research design
 relates potential outcomes to observed data (and to sources of uncertainty). For examples:
@@ -383,9 +391,10 @@ relates potential outcomes to observed data (and to sources of uncertainty). For
 \end{equation}
 
 
-In fact *any function* that produces vectors of $\yu$ could be used to represent these kinds of causal models.
-
-So: why not an agent-based model?
+In fact *any function* that produces vectors of $\yu$ could be used to
+represent these kinds of causal models (including agent based models ---
+imagining agents revealing potential outcomes depending on network, treatment,
+and covariates).
 
 
 ## A General Testing-Based Causal Inference Algorithm
@@ -405,7 +414,6 @@ So: why not an agent-based model?
     calculate boundaries of regions. (Perhaps collapse or aggregate the
     rejection regions to aid interpretation.)
 
-
 ## Where to to go from here
 
 **Neyman:** Estimating some average causal effects @aronowsamii2017 weighting by
@@ -420,6 +428,10 @@ Lots of work here now. Estimating average effects when agnostic to
      <https://www.ptoulis.com/working-papers>, Volfovsky
      <https://volfovsky.github.io>.
 
+Check out: 
+ - <https://cran.r-project.org/web/packages/inferference/index.html>
+ - <https://github.com/szonszein/interference> (See for example <https://rdrr.io/github/szonszein/interference/man/estimates.html>)
+
 \medskip
 
 **Fisher:** Testing causal theories that generate hypotheses about effects (as
@@ -429,12 +441,11 @@ Lots of work here now. Estimating average effects when agnostic to
 
 # Sensitivity Analysis for Regression Models
 
-## A pointer:
+## Sensitivity Analysis for Regression Models: A pointer
 
 Read  @cinellihazlett2020 and @hosman2010 and @chaudoinetal2018.
 @cinellihazlett2020 is current state of the art (see their easy to use R
 package, youtube videos, etc).
-
 
 # Futher Topics and Discussion?
 
