@@ -144,6 +144,7 @@ widedat1
 
  - One could further classify trajectories as "Rising" versus "Falling" versus "Stable" and simplify the analysis.
  - One could add "time of switching to type=1" as another variable if you observe this and it matters
+ - Transition probabilities.
 
 ## What is the impact of an event on a trajectory?
 
@@ -298,13 +299,18 @@ the same moments in their lives and also the same moments in history.
 
 ```{r}
 ## How many "treated" observations?
-table(wrk.df$k1born)
+table(wrk.df.noNAs$k1born,exclude=c())
 
 pm1 <- pairmatch(baselineactsDist.pen4,
   data = wrk.df.noNAs,
   remove.unmatchables = TRUE
 )
 summary(pm1)
+
+fm1 <- fullmatch(baselineactsDist.pen4,
+  data = wrk.df.noNAs,min.controls=1
+)
+summary(fm1,min.controls=0,max.controls=Inf)
 
 wrk.df.noNAs$pm1 <- pm1
 
