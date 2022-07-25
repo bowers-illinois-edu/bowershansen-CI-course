@@ -1,4 +1,4 @@
 \beamer@sectionintoc {1}{Recap}{2}{0}{1}
 \beamer@sectionintoc {2}{Hypothesis testing}{4}{0}{2}
-\beamer@sectionintoc {3}{Test of Sharp Null of No Effects}{7}{0}{3}
+\beamer@sectionintoc {3}{Test of sharp Null of No Effects}{7}{0}{3}
 \beamer@sectionintoc {4}{Tests of general sharp null hypotheses}{10}{0}{4}
