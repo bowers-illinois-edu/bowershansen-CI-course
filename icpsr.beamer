@@ -20,7 +20,7 @@ $endif$
 \usepackage{presentation}
 \usepackage{notation}
 \usepackage{caption}
-\usepackage{amsfonts,amsthm,amssymb,amsmath,bbm} %,bm} % not sure if we should be using bm or unicode-math
+\usepackage{amsfonts,amsthm,amssymb,amsmath,bbm,bm} % not sure if we should be using bm or unicode-math
 \usepackage{unicode-math} % for symbf among other stuff
 \usepackage{tikz}
 \usepackage{tikz-cd}

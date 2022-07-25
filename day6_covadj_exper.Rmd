@@ -4,8 +4,8 @@ title: |
   | Linear Regression in Experiments and Observational Studies
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2020 Session 2
-  | Jake Bowers, Ben Hansen, Tom Leavitt
+  | ICPSR 2022 Session 2
+  | Jake Bowers \& Tom Leavitt
 bibliography:
  - BIB/MasterBibliography.bib
 fontsize: 10pt
@@ -47,9 +47,12 @@ library(DeclareDesign)
 
 ## Today
 
- 1. Agenda: Introductions, Overview and context for where we are in the
-course, Statistical Inference and Causal Inference, Linear regresssion for estimation in randomized experiments, Linear regression for covariance adjustment in randomized experiments, Linear regression for covariance adjustment in observational studies ("controlling for")a
- 2. Random break-out rooms to work on the code for the day and/or the assignments.
+ 1. Agenda: Overview and context for where we are in the course,
+    Statistical Inference and Causal Inference, Linear regresssion for
+    estimation in randomized experiments, Linear regression for covariance
+    adjustment in randomized experiments, Linear regression for covariance
+    adjustment in observational studies ("controlling for")
+ 2. Maybe open time for work on exercise with TAs and me around.
  3. Questions arising from the reading or assignments or life.
 
 # An overview of approaches to statistical inference for causal quantities
@@ -214,7 +217,14 @@ obs_md_taux <- with(smdat,tz_mean_diff_effects(z=Z,y=Y,tauvec=c(0,2,3,10)))
 mean(rand_dist_md_taux >= obs_md_taux)
 ```
 
-Questions about this first approach to using statistical inference to help with counterfactual causal inference?
+So: We can learn about claims about unobserved potential outcomes by gauging the
+consistency our observed results with the distributions implied by the
+claims+test statistics+research design (including sample size and randomization
+scheme).
+
+\bigskip
+
+Questions about this first approach to using statistical inference to do counterfactual causal inference?
 
 ## Design Based 2: Estimate Averages of Potential Outcomes
 
@@ -231,6 +241,7 @@ Questions about this first approach to using statistical inference to help with 
   \includegraphics[width=.95\textwidth]{images/cartoonNeyman.pdf}
 
 
+
 ## Design Based 2: Estimate Averages of Potential Outcomes
 
 Here using Neyman's standard errors (same as HC2 SEs) and Central Limit Theorem based $p$-values and 95% confidence intervals:
@@ -241,6 +252,114 @@ Here using Neyman's standard errors (same as HC2 SEs) and Central Limit Theorem 
 est1 <- difference_in_means(Y~Z,data=smdat)
 est1
 ```
+
+\end{document}
+
+## Design Based 2: Test hypotheses about averages.
+
+A focus on the difference of average potential outcomes, on an
+average causal effect, also allows for testing hypotheses about these average
+causal efffects. This is called a test of the "weak null" hypothesis.
+
+The challenge:
+
+\medskip
+
+A hypothesis like $H_0: \bar{\tau}=\tau_0$ is compatible with many different sharp
+   null hypotheses: for example, $\tau=\{-5,0,0,5\}$ and $\tau=\{0,0,0,0\}$
+   are both compatible with $\bar{\tau}=0$.
+
+\medskip
+
+   And a hypothesis test requires that we compare what we observe with what the
+   hypothesis implies that we would observe. But a hypothesis about an average
+   implies many different probability distributions: one for each sharp
+   hypothesis.
+
+## Hypothesis tests of the weak null
+
+\begin{itemize}
+\item The finite population CLT tells us that
+ \begin{align*}
+ \cfrac{\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right) - \E\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right]}{\sqrt{\Var\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right]}} & \overset{d}{\to} \mathcal{N}\left(0, 1\right)
+ \end{align*}
+\item Diff-in-Means is unbiased, so write
+\begin{align*}
+\cfrac{\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right) - \tau}{\sqrt{\Var\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right]}} & \overset{d}{\to} \mathcal{N}\left(0, 1\right)
+\end{align*}
+\item The CLT is an asymptotic results as $N \to \infty$
+\item But we can bound error of Normal approximation for fixed $N$
+\item Thus, with experiments of at least moderate size and outcomes that aren't too skewed or have extreme outliers,
+\begin{align*}
+\cfrac{\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right) - \tau}{\sqrt{\Var\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right]}} & \overset{\text{approx.}}{\sim} \mathcal{N}\left(0, 1\right)
+\end{align*}
+\item This justifies use of standard Normal distribution for hypothesis tests
+\end{itemize}
+
+## Hypothesis tests of the weak null
+\begin{itemize}
+\item ``Village heads'' example:
+\begin{figure}[H]
+%\includegraphics[width=\linewidth]{asymp_stand_ests_plot.pdf}
+\end{figure}
+\end{itemize}
+
+## Hypothesis tests of the weak null
+\begin{itemize}
+\item To test null hypothesis relative to alternative
+\begin{align*}
+H_0: & \tau = \tau_0 \text{ versus either } \\
+H_A: & \tau > \tau_0, \, H_A: \tau < \tau_0 \text{ or } H_A: \left\lvert \tau \right\rvert > \left\lvert \tau_0 \right \rvert
+\end{align*}
+\item Calculate upper(u), lower(l) or two-sided(t) p-value as
+\begin{align*}
+p_u & =  1 - \Phi\left(\frac{\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right) - \tau_0}{\sqrt{\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right]}}\right) \\
+p_l & =  \Phi\left(\frac{\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right) - \tau_0}{\sqrt{\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right]}}\right) \\
+p_t & = 2\left(1 - \Phi\left(\frac{\left\lvert\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right) - \tau_0\right\rvert}{\sqrt{\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right]}}\right)\right)
+\end{align*}
+\item If p-value is less than size $\alpha$-level of test, reject. Otherwise, don't
+\item Note that, since we don't know $\Var\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right]$, \\ we have used its conservative estimator instead, $\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right]$
+\end{itemize}
+
+## Hypothesis tests of the weak null
+\bh{Hypothesis tests susceptible to two errors}:
+\begin{itemize}
+\item Type I error: Rejecting null hypothesis when it is true
+\item Type II error: \textit{Failing} to reject null hypothesis when it is false
+\end{itemize}
+\bh{A good test} controls these errors:
+\begin{enumerate}
+\item Type I error probability is less than or equal to size ($\alpha$-level) of test
+\item Power (1 - type II error probability) is at least as great as $\alpha$-level
+\item Power tends to $1$ as $N \to \infty$
+\end{enumerate}
+
+## Hypothesis tests of the weak null}
+\begin{itemize}
+\item We can prove that tests of weak null satisfy (1) -- (3) as $N \to \infty$ \vfill
+\item Thus, when experiments are large, we can often safely use such tests \vfill
+\item But (1) -- (3) may not always be satisfied when experiments are small, have skewed outcome distributions or extreme outliers \vfill
+\end{itemize}
+
+## Confidence intervals}
+\begin{itemize}
+\item Equivalence between hypothesis testing and confidence intervals
+\item Confidence interval is set of null hypotheses we fail to reject
+\end{itemize}
+Consider two-sided confidence interval, $\mathcal{C}_t$:
+\footnotesize
+\begin{equation*}
+\begin{split}
+\mathcal{C}_t & = \left\{\tau_0 : \left\lvert \cfrac{\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)- \tau_0}{\sqrt{\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right]}} \right\rvert \leq z_{1 - \alpha/2}\right\} \\
+& = \left\{\tau_0 : - z_{1 - \alpha/2} \leq \cfrac{\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)- \tau_0}{\sqrt{\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right]}} \leq z_{1 - \alpha/2} \right\} \\
+& = \left\{\tau_0 : - z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right] }\leq \hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)- \tau_0 \leq z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right] }\right\} \\
+& = \left\{\tau_0 : -\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)- z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right] }\leq - \tau_0 \leq - \hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)+ z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right] }\right\} \\
+& = \left\{\tau_0 : \hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)+ z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right] }\geq \tau_0 \geq  \hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)- z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right] }\right\} \\
+& = \left\{\tau_0 : \hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)- z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right] }\leq \tau_0 \leq \hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)+ z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\mathbf{Z}, \mathbf{Y}\right)\right] }\right\}
+\end{split}
+\end{equation*}
+\normalsize
+
 
 ## Model Based 1: Predict Distributions of Potential Outcomes
 

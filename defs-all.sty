@@ -4,7 +4,7 @@
 \usepackage{ulem}
 \usepackage{textcomp}
 \usepackage{versions}
-%% amsthm-type theorem environment specifications -- 
+%% amsthm-type theorem environment specifications --
 %% see amsthdoc.pdf in amscls documentation
 \theoremstyle{plain}
 \newtheorem{prop}{Proposition}[section]
@@ -39,6 +39,7 @@
 \newcommand{\PPqt}{\ensuremath{\mathbf{Pr}_{Q[t]}}}
 \DeclareMathOperator{\E}{\mathbb{E}}
 \DeclareMathOperator{\Var}{\rm{Var}}
+% \DeclareMathOperator{\btau}{\bm{\tau}}
 \newcommand{\var}{\ensuremath{\mathbf{V}}}
 \newcommand{\varp}{\ensuremath{\mathbf{V}_{P}}}
 \newcommand{\varpn}{\ensuremath{\mathbf{V}_{P_{n}}}}
@@ -70,7 +71,7 @@
 %%% NEWBLOCK UNDEFINED BUG
 \def\newblock{\hskip .11em plus .33em minus .07em}
 
-%%% tightlist undefined control sequence bug 
+%%% tightlist undefined control sequence bug
 %%% http://tex.stackexchange.com/questions/257418/error-tightlist-converting-md-file-into-pdf-using-pandoc
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
@@ -114,6 +115,41 @@
 \newcommand{\teeW}{\ensuremath{t_{W}}}
 \newcommand{\pcor}{\ensuremath{\rho_{y \cdot w|z\mathbf{x}}}}
 
+% \newcommand{\bh}[1]{{\color{blue}{#1}}}
+\newcommand\mybox[2][]{\tikz[overlay]\node[fill=lightgray,inner sep=2pt, anchor=text, rectangle, rounded corners=1mm,#1] {#2};\phantom{#2}}
+
+\newcommand\myheading[1]{%
+  \par\bigskip
+  {\Large\bfseries#1}\par\smallskip}
 
 %\newcommand\given[1][]{\:#1\vert\:}
-
+\theoremstyle{plain}
+%\newtheorem{thm}{Theorem}
+% \newtheorem{prop}{Proposition\thisthmnumber}
+% \newtheorem{lem}{Lemma\thisthmnumber}
+% \newtheorem{cor}{Corollary}
+% \newtheorem{defin}{Definition}
+% \newtheorem{algo}{Algorithm}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand{\bh}[1]{{\color{blue}{#1}}}
+\newcommand{\mh}[1]{{\color{magenta}{#1}}}
+\newcommand{\thisthmnumber}{}
+\newcommand{\tikzmark}[1]{\tikz[baseline,remember picture] \coordinate (#1) {};}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+%\DeclareMathOperator{\E}{\rm{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\N}{\mathbb{N}}
+%\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\Supp}{\rm{Supp}}
+\DeclareMathOperator{\e}{\rm{e}}
+\DeclareMathOperator{\F}{\mathcal{F}}
+\DeclareMathOperator{\Z}{\mathcal{Z}}
+\DeclareMathOperator{\logit}{\rm{logit}}
+\DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+%\DeclareMathOperator{\Pr}{\rm{Pr}}
