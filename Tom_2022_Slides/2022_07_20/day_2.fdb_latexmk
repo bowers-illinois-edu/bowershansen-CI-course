@@ -1,16 +1,16 @@
 # Fdb version 3
-["bibtex day_2"] 1658288987 "day_2.aux" "day_2.bbl" "day_2" 1658342712
+["bibtex day_2"] 1658762132 "day_2.aux" "day_2.bbl" "day_2" 1658762136
   "/Users/thomasleavitt/Library/TinyTeX/texmf-dist/bibtex/bst/chicago/chicago.bst" 1198629289 37416 2ae04276c51f11eda70770f4081293b7 ""
-  "Master_Bibliography.bib" 1658107823 1047723 b26656ddbe38dca4fb076f01572877aa ""
-  "day_2.aux" 1658342711 5782 4846870ee159ec8db4010978ba1b0828 "xelatex"
+  "ICPSR_Bibliography.bib" 0 -1 0 ""
+  "day_2.aux" 1658762135 5779 1d1fb9e2ce7ad1157dbeed713a5ad12d "xelatex"
   (generated)
   "day_2.bbl"
   "day_2.blg"
-["xdvipdfmx"] 1658342712 "day_2.xdv" "day_2.pdf" "day_2" 1658342712
-  "day_2.xdv" 1658342711 90768 c788afd623a15891d302c8a23e94f1af "xelatex"
+["xdvipdfmx"] 1658762135 "day_2.xdv" "day_2.pdf" "day_2" 1658762136
+  "day_2.xdv" 1658762135 89112 634c899a5643846687deebff364d28f8 "xelatex"
   (generated)
   "day_2.pdf"
-["xelatex"] 1658342708 "day_2.tex" "day_2.xdv" "day_2" 1658342712
+["xelatex"] 1658762132 "day_2.tex" "day_2.xdv" "day_2" 1658762136
   "/Users/thomasleavitt/Library/TinyTeX/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/Users/thomasleavitt/Library/TinyTeX/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136768653 1528 f853c4d1b4e0550255e02831fdc8496f ""
   "/Users/thomasleavitt/Library/TinyTeX/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmbsy5.tfm" 1246382020 1120 1e8878807317373affa7f7bba4cf2f6a ""
@@ -322,15 +322,15 @@
   "/Users/thomasleavitt/Library/TinyTeX/texmf-dist/web2c/texmf.cnf" 1646502317 40171 cdab547de63d26590bebb3baff566530 ""
   "/Users/thomasleavitt/Library/TinyTeX/texmf-var/web2c/xetex/xelatex.fmt" 1655699292 5459669 5c6646b3aa949cac00b1713f75bb4401 ""
   "/Users/thomasleavitt/Library/TinyTeX/texmf.cnf" 1655695143 708 85fd07691b6294ba94c59dbc62380410 ""
-  "day_2.aux" 1658342711 5782 4846870ee159ec8db4010978ba1b0828 "xelatex"
-  "day_2.bbl" 1658288987 954 c098918e270c75814de4dbcb7ae08c01 "bibtex day_2"
-  "day_2.nav" 1658342711 2836 44e302c56fd7e81ec11fa4fd841a3e59 "xelatex"
-  "day_2.out" 1658342711 771 bbae86f6850794632e1b668802861c92 "xelatex"
-  "day_2.tex" 1658342706 15236 3e3909a7c1ae4a30bb882d4075d4c9c6 ""
-  "null_dist_no_effect_plot.pdf" 1658286741 4861 4d86456c76ce7890b8e96c205b01a408 ""
-  "null_dist_plot.pdf" 1658250133 4972 47558fa7a641677a32fe142e1769bf8f ""
-  "null_unif_plot.pdf" 1658286743 4926 7f4564452b4b976dcf27682c1d6a49f7 ""
-  "perfect_discrim_test_stat_plot.pdf" 1658251084 5649 94e5c68dadd8afa97be2a89e7386ed1f ""
+  "day_2.aux" 1658762135 5779 1d1fb9e2ce7ad1157dbeed713a5ad12d "xelatex"
+  "day_2.bbl" 1658753877 954 c098918e270c75814de4dbcb7ae08c01 "bibtex day_2"
+  "day_2.nav" 1658762135 2836 20d0d33e77c2f52ea047f7802c8ffb62 "xelatex"
+  "day_2.out" 1658762135 771 9794c2df0170446aef2509b093e5b0d3 "xelatex"
+  "day_2.tex" 1658762020 15197 fe921175e9c2ac3f508c1b95a928da65 ""
+  "null_dist_no_effect_plot.pdf" 1658753877 4861 4d86456c76ce7890b8e96c205b01a408 ""
+  "null_dist_plot.pdf" 1658753877 4972 47558fa7a641677a32fe142e1769bf8f ""
+  "null_unif_plot.pdf" 1658753877 4926 7f4564452b4b976dcf27682c1d6a49f7 ""
+  "perfect_discrim_test_stat_plot.pdf" 1658753877 5649 94e5c68dadd8afa97be2a89e7386ed1f ""
   (generated)
   "day_2.aux"
   "day_2.log"

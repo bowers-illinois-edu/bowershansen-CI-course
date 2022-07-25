@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999994 (TeX Live 2022) (preloaded format=xelatex 2022.6.20)  20 JUL 2022 14:45
+This is XeTeX, Version 3.141592653-2.6-0.999994 (TeX Live 2022) (preloaded format=xelatex 2022.6.20)  25 JUL 2022 11:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1060,11 +1060,11 @@ Overfull \vbox (36.43242pt too high) detected at line 166
 [1
 
 ]
-LaTeX Font Info:    Trying to load font information for U+msa on input line 172.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 176.
  (/Users/thomasleavitt/Library/TinyTeX/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 172.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 176.
  (/Users/thomasleavitt/Library/TinyTeX/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) [2
@@ -1082,11 +1082,21 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ]
 File: null_dist_plot.pdf Graphic file (type pdf)
 <use null_dist_plot.pdf>
-LaTeX Font Info:    Trying to load font information for U+bbm on input line 230.
- (/Users/thomasleavitt/Library/TinyTeX/texmf-dist/tex/latex/bbm-macros/ubbm.fd
+
+Overfull \hbox (18.0pt too wide) in paragraph at lines 236--236
+[][]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 236--236
+
+ []
+
+LaTeX Font Info:    Trying to load font information for U+bbm on input line 236.
+(/Users/thomasleavitt/Library/TinyTeX/texmf-dist/tex/latex/bbm-macros/ubbm.fd
 File: ubbm.fd 1999/03/15 V 1.2 Font definition for bbm font - TH
 )
-Overfull \vbox (20.3718pt too high) detected at line 230
+Overfull \vbox (20.73996pt too high) detected at line 236
  []
 
 [8
@@ -1095,7 +1105,17 @@ Overfull \vbox (20.3718pt too high) detected at line 230
 File: perfect_discrim_test_stat_plot.pdf Graphic file (type pdf)
 <use perfect_discrim_test_stat_plot.pdf>
 
-Overfull \vbox (1.03218pt too high) detected at line 241
+Overfull \hbox (18.0pt too wide) in paragraph at lines 248--248
+[][]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 248--248
+
+ []
+
+
+Overfull \vbox (12.81557pt too high) detected at line 248
  []
 
 [9
@@ -1104,7 +1124,7 @@ Overfull \vbox (1.03218pt too high) detected at line 241
 
 ]
 
-Package fontspec Warning: \addfontfeature(s) ignored on line 267; it cannot be
+Package fontspec Warning: \addfontfeature(s) ignored on line 273; it cannot be
 (fontspec)                used with a font that wasn't selected by a fontspec
 (fontspec)                command.
 (fontspec)                 
@@ -1118,13 +1138,24 @@ Package fontspec Warning: \addfontfeature(s) ignored on line 267; it cannot be
 ]
 File: null_dist_no_effect_plot.pdf Graphic file (type pdf)
 <use null_dist_no_effect_plot.pdf>
- [13
 
-] [14
+Overfull \vbox (2.5454pt too high) detected at line 298
+ []
+
+[13
 
 ]
 
-Package fontspec Warning: \addfontfeature(s) ignored on line 327; it cannot be
+Package natbib Warning: Citation `rosenbaum2002' on page 14 undefined on input line 310.
+
+
+Package natbib Warning: Citation `rosenbaum2017' on page 14 undefined on input line 310.
+
+[14
+
+]
+
+Package fontspec Warning: \addfontfeature(s) ignored on line 332; it cannot be
 (fontspec)                used with a font that wasn't selected by a fontspec
 (fontspec)                command.
 (fontspec)                 
@@ -1135,7 +1166,7 @@ Package fontspec Warning: \addfontfeature(s) ignored on line 327; it cannot be
 
 ]
 
-Package fontspec Warning: \addfontfeature(s) ignored on line 353; it cannot be
+Package fontspec Warning: \addfontfeature(s) ignored on line 358; it cannot be
 (fontspec)                used with a font that wasn't selected by a fontspec
 (fontspec)                command.
 (fontspec)                 
@@ -1147,11 +1178,7 @@ Package fontspec Warning: \addfontfeature(s) ignored on line 353; it cannot be
 ]
 File: null_unif_plot.pdf Graphic file (type pdf)
 <use null_unif_plot.pdf>
-
-Overfull \vbox (2.5454pt too high) detected at line 360
- []
-
-[17
+ [17
 
 ] [18
 
@@ -1172,17 +1199,21 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 \tf@snm=\write8
 \openout8 = `day_2.snm'.
 
- (./day_2.aux)
+
+
+Package natbib Warning: There were undefined citations.
+
+(./day_2.aux)
 Package rerunfilecheck Info: File `day_2.out' has not changed.
-(rerunfilecheck)             Checksum: BBAE86F6850794632E1B668802861C92;771.
+(rerunfilecheck)             Checksum: 9794C2DF0170446AEF2509B093E5B0D3;771.
  ) 
 Here is how much of TeX's memory you used:
- 45031 strings out of 475883
- 1121348 string characters out of 5796782
+ 45033 strings out of 475883
+ 1121525 string characters out of 5796782
  1697568 words of memory out of 5000000
- 65209 multiletter control sequences out of 15000+600000
- 479243 words of font info for 81 fonts, out of 8000000 for 9000
+ 65217 multiletter control sequences out of 15000+600000
+ 479219 words of font info for 78 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 128i,14n,128p,1852b,835s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 128i,14n,128p,1852b,850s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on day_2.xdv (19 pages, 90768 bytes).
+Output written on day_2.xdv (19 pages, 89112 bytes).
