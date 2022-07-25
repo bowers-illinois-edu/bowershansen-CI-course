@@ -160,7 +160,10 @@ set.seed(12345)
 ##  Design Based 1: Compare Models of Potential Outcomes to Data
 \framesubtitle{Testing Models of No-Effects.}
 
+Here we **approximate the randomization distribution**:
+
 ```{r repexp, echo=TRUE, cache=TRUE}
+set.seed(12345)
 rand_dist_md <- with(smdat,replicate(1000,tz_mean_diff(z=newexp(Z),y=Y)))
 rand_dist_rank_md <- with(smdat,replicate(1000,tz_mean_rank_diff(z=newexp(Z),y=Y)))
 obs_md <- with(smdat,tz_mean_diff(z=Z,y=Y))
@@ -171,7 +174,14 @@ table(rand_dist_rank_md)/1000
 p_md <- mean(rand_dist_md >= obs_md) ## P-Values
 p_rank_md <- mean(rand_dist_rank_md >= obs_rank_md)
 c(mean_diff_p=p_md, mean_rank_diff_p=p_rank_md)
+## Now using R directly
+library(coin)
+coin_test1 <- oneway_test(Y~zF,data=smdat,distribution=approximate(nresample=1000),alternative="less")
+coin_test2 <- oneway_test(rY~zF,data=smdat,distribution=approximate(nresample=1000),alternative="less")
+pvalue(coin_test1)
+pvalue(coin_test2)
 ```
+
 
 ##  Design Based 1: Compare Models of Potential Outcomes to Data
 \framesubtitle{Testing Models of Effects.}
@@ -244,16 +254,25 @@ Questions about this first approach to using statistical inference to do counter
 
 ## Design Based 2: Estimate Averages of Potential Outcomes
 
-Here using Neyman's standard errors (same as HC2 SEs) and Central Limit Theorem based $p$-values and 95% confidence intervals:
+Here using Neyman's standard errors (same as HC2 SEs) and Central Limit Theorem
+based $p$-values and 95% confidence intervals.
+
+Notice that OLS/Linear Regression is just a difference of means calculator here.
 
 \smallskip
 
 ```{r dim, echo=TRUE}
+with(smdat,mean(Y[Z==1]) - mean(Y[Z==0]))
+est_se_est_ate <- with(smdat,sqrt( var(Y[Z==1])/sum(Z) + var(Y[Z==0])/(sum(1-Z)) ))
+est_se_est_ate
 est1 <- difference_in_means(Y~Z,data=smdat)
-est1
+tidy(est1)
+lm1 <- lm_robust(Y~Z,data=smdat)
+tidy(lm1)
 ```
 
-\end{document}
+Those $p$-values raise the next question: Where does the randomization
+distribution for these tests come from?
 
 ## Design Based 2: Test hypotheses about averages.
 
@@ -296,13 +315,138 @@ A hypothesis like $H_0: \bar{\tau}=\tau_0$ is compatible with many different sha
 \item This justifies use of standard Normal distribution for hypothesis tests
 \end{itemize}
 
+```{r}
+
+y_C <- c(10, 15, 20, 20, 10, 15, 15)
+y_T <- c(15, 15, 30, 15, 20, 15, 30)
+tau <- y_T - y_C
+ATE <- mean(tau)
+## Imagine one Z:
+Z <- c(1,1,0,0,0,0,0)
+Y <- Z*y_T + (1-Z) * y_C
+est_ATE <- mean(Y[Z==1]) - mean(Y[Z==0])
+
+asymp_ests_exact <- function(.y_C,
+                             .y_T,
+                             .prop_T,
+                             .h){
+  y_C = c(.y_C, rep(x = .y_C, times = .h - 1))
+  y_T = c(.y_T, rep(x = .y_T, times = .h - 1))
+  Omega = apply(X = combn(x = length(y_C),
+                          m = length(y_C) * .prop_T,
+                          simplify = TRUE),
+                MARGIN = 2,
+                FUN = function(x) as.integer(1:(length(y_C)) %in% x))
+  obs_pot_outs = sapply(X = 1:ncol(Omega),
+                        FUN = function(x) { y_T * Omega[,x] + y_C * (1 - Omega[,x]) })
+  diff_means_ests = sapply(X = 1:ncol(Omega),
+                           FUN = function(x) { mean(obs_pot_outs[,x][Omega[,x] == 1]) -
+                               mean(obs_pot_outs[,x][Omega[,x] == 0]) })
+  return(diff_means_ests)
+
+}
+
+
+## Show asymptotic properties
+asymp_ests_approx <- function(.y_C,
+                              .y_T,
+                              .prop_T,
+                              .h){
+  y_C = c(.y_C, rep(x = .y_C, times = .h - 1))
+  y_T = c(.y_T, rep(x = .y_T, times = .h - 1))
+  true_EV_diff_means_est = mean(y_T) - mean(y_C)
+  true_var_diff_means_est = diff_means_var(.n = length(y_C),
+                                           .n_t = length(y_C) * .prop_T,
+                                           .y_C = y_C,
+                                           .y_T = y_T)
+  return(rnorm(n = 10^3,
+               mean = true_EV_diff_means_est,
+               sd = sqrt(true_var_diff_means_est)))
+
+}
+
+
+diff_means_var <- function(.n,
+                           .n_t,
+                           .y_C,
+                           .y_T) {
+  var_y_C = mean((.y_C - mean(.y_C))^2)
+  var_y_T = mean((.y_T - mean(.y_T))^2)
+  cov_y_C_y_T = mean((.y_C - mean(.y_C)) * (.y_T - mean(.y_T)))
+  var = (1/(.n - 1)) * ((.n_t * var_y_C) / (.n - .n_t) +
+                          (((.n - .n_t) * var_y_T) / .n_t) +
+                          (2 * cov_y_C_y_T))
+  return(var)
+}
+
+
+
+diff_means_var_est <- function(.n,
+                               .n_1,
+                               .z,
+                               .y) {
+  obs_y_C = .y[which(.z == 0)]
+  obs_y_T = .y[which(.z == 1)]
+  est_mean_y_C = mean(obs_y_C)
+  est_mean_y_T = mean(obs_y_T)
+  est_var_y_C = ((.n - 1)/(.n * ((.n - .n_1) - 1))) * sum((obs_y_C - est_mean_y_C)^2)
+  est_var_y_T = ((.n - 1)/(.n * (.n_1 - 1))) * sum((obs_y_T - est_mean_y_T)^2)
+  return((.n/(.n - 1)) * ( (est_var_y_C/(.n - .n_1)) + (est_var_y_T/.n_1)))
+}
+
+
+stand_ests_plot_data <- data.frame(est = c( (asymp_ests_exact(.y_C=y_C,.y_T=y_T,.prop_T=2/7,.h=1) - 5 )/sqrt(21.19048),
+       # (ests_cra - 5) / sqrt(21.19048),
+                                     (asymp_ests_exact(.y_C = y_C, .y_T = y_T, .prop_T = (2/7), .h = 3) - 5) / sqrt(6.357143),
+                                     (asymp_ests_approx(.y_C = y_C, .y_T = y_T, .prop_T = (2/7), .h = 15) - 5) / sqrt(0.4049136),
+                                     (asymp_ests_approx(.y_C = y_C, .y_T = y_T, .prop_T = (2/7), .h = 150) - 5) / sqrt(0.002690911)),
+                             N = c(rep(x = "N = 7", times = 21 ),
+                                   rep(x = "N = 21", times = choose(21, 6)),
+                                   rep(x = "N = 100", times = 10^3),
+                                   rep(x = "N = 1000", times = 10^3)))
+
+stand_ests_plot_data$N <- factor(x = stand_ests_plot_data$N, levels = c("N = 7", "N = 21", "N = 100", "N = 1000"))
+
+devtools::install_github("teunbrand/ggh4x")
+library(ggh4x)
+
+asymp_stand_ests_plot <- ggplot(data = stand_ests_plot_data,
+                          mapping = aes(x = est)) +
+  geom_histogram(aes(y =..density..)) +
+  stat_theodensity(colour = "red") +
+  xlab(label = "Standardized Diff-in-Means estimates") +
+  ylab(label = "Probability") +
+  theme_bw() +
+  facet_wrap(facets = .~ N,
+             nrow = 1,
+             ncol = 4,
+             scales = "free") +
+  scale_x_continuous(labels = 0, breaks = 1) +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank())
+
+ggsave(plot = asymp_stand_ests_plot,
+       file = "asymp_stand_ests_plot.pdf",
+       width = 6,
+       height = 4,
+       units = "in",
+       dpi = 600)
+
+```
+
+
+
 ## Hypothesis tests of the weak null
 \begin{itemize}
-\item ``Village heads'' example:
+\item ``Village heads'' example we calculate an estimate for each of the
+possible ways to randomize and subtract off the expected value (here "5") such
+that the distribution is now centered at 0 (a hypothesized value).
 \begin{figure}[H]
-%\includegraphics[width=\linewidth]{asymp_stand_ests_plot.pdf}
+\includegraphics[width=\linewidth]{asymp_stand_ests_plot.pdf}
 \end{figure}
 \end{itemize}
+
+
 
 ## Hypothesis tests of the weak null
 \begin{itemize}
@@ -359,6 +503,50 @@ Consider two-sided confidence interval, $\mathcal{C}_t$:
 \end{split}
 \end{equation*}
 \normalsize
+
+
+## Confidence intervals
+
+Here is an example showing how a confidence interval is a collection of
+not-rejected hypotheses (here using the weak null hypothesis)
+
+```{r, echo=TRUE}
+vh_dat <- data.frame(Y=Y,Z=Z,y_C=y_C,y_T=y_T)
+
+p_val_fun <- function(h,thealpha=.05,return_p=FALSE){
+    ## Return a p-value for each weak null hypothesis
+    test_res <- tidy(lm_robust(I(Y - h*Z)~Z,data=vh_dat))
+    the_p <- test_res %>% filter(term=="Z") %>% select(p.value)
+    if(return_p){
+        return(the_p[[1]])
+    } else {
+    return(thealpha - the_p[[1]])
+    }
+}
+
+## First just test many hypotheses in a row. This is a "grid-search"
+the_hyps <- seq(-20,20,.1)
+res <- sapply(the_hyps,function(h){
+    p_val_fun(h=h,return_p=TRUE)
+       })
+hyp_res <- data.frame(h=the_hyps,p=res)
+## Keep the largest and smallest hypotheses for which p>=.05
+hyp_res %>% filter(abs(p)>=.05) %>% summarize(range(h))
+
+## Second directly search for the hypotheses where alpha-p = 0.
+upper_lim <- uniroot(p_val_fun,interval=c(0,20),extendInt="no",trace=2)
+lower_lim <- uniroot(p_val_fun,interval=c(-20,0),extendInt="no",trace=2)
+ci2 <- c(lower_lim$root,upper_lim$root)
+
+## Third, use the analytic formula with standard errors etc.
+lm2 <- lm_robust(Y~Z,data=vh_dat)
+lm2_df <- tidy(lm2)
+lm2_df %>% mutate(ll=estimate-qt(p=.975,df=5) * std.error,
+    ul=estimate+qt(p=.975,df=5) * std.error)
+
+confint(lm2,parm="Z")
+```
+
 
 
 ## Model Based 1: Predict Distributions of Potential Outcomes
@@ -441,9 +629,21 @@ summary(mean_tau)
 
 We can infer about unobserved counterfactuals by:
 
-  1. assessing claims or models or hypotheses about relationships between unobserved potential outcomes (Fisher's testing approach via Rosenbaum)
-  2. estimating averages (or other summaries) of unobserved potential outcomes (Neyman's estimation approach)
-  3. predicting individual level outcomes based on probability models of outcomes, interventions, etc. (Bayes's predictive approach via Rubin)
+  1. assessing claims or models or hypotheses about relationships between
+     unobserved potential outcomes (Fisher's sharp null testing approach via
+     Rosenbaum) (this includes testing hypotheses of "no effects at all", "same
+     effect for all", or different effects for each unit, or anything in
+     between).
+  2. estimating averages (or other summaries) of unobserved potential outcomes
+     (Neyman's estimation approach) (Unbiased estimators of effects,
+     conservative variance estimators and the Central Limit
+     Theorem allow us to use Normal Approximations to use the difference of
+     means as a test statistic to test weak null hypotheses, too).
+  3. predicting individual level outcomes based on probability models of
+     outcomes, interventions, etc. (Bayes's predictive approach via Rubin)
+
+We can go from tests to intervals (even to quite narrow intervals) because a
+confidence interval is a collection of not-rejected hypothesis tests.
 
 ## Summary: Modes of Statistical Inference for Causal Effects
 
@@ -676,7 +876,8 @@ apply(dist_ests,1,function(x){ trueATE_estimand - mean(x)})
 
 ## How would we know whether the bias is too big?
 
-Different may not mean worse. Let's see how these estimators work:
+Different may not mean worse. Let's see how these estimators work (black line is
+true ATE):
 
 ```{r out.width=".9\\textwidth"}
 estdat <- data.frame(tauhat = c(dist_ests[1,],dist_ests[2,],dist_ests[3,],dist_ests[4,],dist_ests[5,],dist_ests[6,]),
