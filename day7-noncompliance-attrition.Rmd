@@ -4,8 +4,8 @@ title: |
  |  Noncompliance and Missing Data"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2021 Session 2
-  | Jake Bowers, Ben Hansen, Tom Leavitt
+  | ICPSR 2022 Session 2
+  | Jake Bowers \& Tom Leavitt
 bibliography:
  - "BIB/MasterBibliography.bib"
 fontsize: 10pt
@@ -153,8 +153,12 @@ And $\bar{y}_{0}$ is also split into pieces:
 ##  Defining causal effects VII
 
 So, the ITT itself is a combination of the effects of $Z$ on $Y$ within these
-different groups. But, we can still estimate it because we have unbiased
-estimators of $\bar{y}_1$ and $\bar{y}_0$ within each type.
+different groups. People who are compliers tend to be different types of people
+than people who are always takers: comparisons across types would raise
+questions about how to interpret the results --- interpretations that would
+focus more on differences in types than in differences caused by $Z$. But, we
+can still estimate it because we have unbiased estimators of $\bar{y}_1$ and
+$\bar{y}_0$ within each type.
 
 ## Learning about the ITT I
 
@@ -220,13 +224,14 @@ ITT =  ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C  = ( CACE ) p_C.
 
 ## The complier average causal effect I
 
-We would also like to learn about the causal effect of answering the door and
-having the conversation, the theoretically interesting effect.
+If we want to can learn about the the causal effect of answering the door and
+having the conversation why not just compare people who answer the door to
+people who do not?
 
-
-But this comparison is confounded by $x$: a simple $\bar{Y}|D=1 - \bar{Y}|D=0$
-comparison tells us about differences in the outcome due to $x$ in addition to
-the difference caused by $D$. (Numbers below from some simulated data)
+The problem with this "as-treated" or "per-protocol" comparison is that this
+comparison is confounded by $x$: a simple $\bar{Y}|D=1 - \bar{Y}|D=0$ comparison
+tells us about differences in the outcome due to $x$ in addition to the
+difference caused by $D$. (Numbers below from some simulated data)
 
 \begin{center}
 \begin{tikzcd}[ampersand replacement=\&]
@@ -246,9 +251,13 @@ with(dat, cor(d, x)) ## can be any number
 with(dat, cor(Z, x)) ## should be near 0
 ```
 
-But we just saw that, in this design, and with these assumptions (including a
-SUTVA assumption) that
-$ITT =  ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C  = (CACE) p_C$, so we can define $CACE=ITT/p_C$.
+And we just saw that, in this design, and with these assumptions (including a
+SUTVA assumption) that $ITT =  ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C  =
+(CACE) p_C$, so we can define $CACE=ITT/p_C$. That is, we can learn about the
+effect of answering the door without worrying about the bias from $x$ (or any
+set of $x$'s).
+
+\medskip
 
 **VERY COOL** You can learn about the causal effect of a non-random intervention (deciding to open the door) without "controlling for" $x_1,x_2,\ldots$ in this case.
 
@@ -257,9 +266,10 @@ $ITT =  ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C  = (CACE) p_C$, so we can defin
 ```{r simivdesign, echo=FALSE}
 prob_comply <- .8
 tau <- .5
+N <- 100
 
 the_pop <- declare_population(
-  N = 100,
+  N = N,
   X = sample(1:4, N, replace = TRUE),
   u = rnorm(N),
   type = sample(c("Always-Taker", "Never-Taker", "Complier", "Defier"), N,
@@ -268,7 +278,7 @@ the_pop <- declare_population(
   )
 )
 
-##  The unobserved potential outcomes,  Y(Z=1) and Y(Z=0) relate to the observed outcome, Y, via treatment assignment and a const  ant additive effect of tau.
+##  The unobserved potential outcomes,  Y(Z=1) and Y(Z=0) relate to the observed outcome, Y, via treatment assignment and a constant additive effect of tau.
 ## D refers to getting a dose of feedback
 d_po <- declare_potential_outcomes(
   D ~ case_when(
@@ -279,31 +289,28 @@ d_po <- declare_potential_outcomes(
   )
 )
 
-y_po <- declare_potential_outcomes(
-  Y ~ tau * sd(u) * D + u,
-  assignment_variables = c("D", "Z")
+y_po_d <- declare_potential_outcomes(
+  Y ~ tau * sd(u) * D + u, assignment_variables = "D" # c("D", "Z")
 )
 
+y_po_z <-
+    declare_potential_outcomes(Y~(tau/2)*sd(u)*Z+u,assignment_variables="Z")
+
 ## Treatment  assignment for  any given city is a simple fixed  proportion. It should be complete  or  urn-drawing assignment, no  t  simple or  coin-flipping assignment.
-## theassign <- declare_assignment(m=m)
-the_assign <- declare_assignment(assignment_variable = "Z")
+the_assign <- declare_assignment(Z=conduct_ra(N=N,m=N/2))
+## the_assign <- declare_assignment(assignment_variable = "Z")
 
 ## declare_reveal is basically the same as declare_potential_outcomes. I  think they  have this  here  to deal with situations of   missing data or non-compliance.
 # thereveal <- declare_reveal(Y, Z)
-d_reveal <- declare_reveal(D, assignment_variable = "Z")
-y_reveal <- declare_reveal(Y, assignment_variables = c("D", "Z"))
+#d_reveal <- declare_reveal(D, assignment_variable = "Z")
+#y_reveal <- declare_reveal(Y, assignment_variables = c("D", "Z"))
 
-base_design <- the_pop + the_assign + d_po + y_po + d_reveal + y_reveal
+d_reveal <- declare_measurement(D=reveal_outcomes(D~Z))
+y_reveal <- declare_measurement(Y=reveal_outcomes(Y~D))
+
+base_design <- the_pop + d_po + y_po_d + y_po_z + the_assign +  d_reveal + y_reveal
 
 dat0 <- draw_data(base_design)
-
-estimand_cace <- declare_inquiry(
-  CACE = mean((Y_D_1_Z_1 + Y_D_1_Z_0) / 2 -
-    (Y_D_0_Z_1 + Y_D_0_Z_0) / 2),
-  subset = type == "Complier"
-)
-estimand_ate <- declare_inquiry(ATE = mean((Y_D_1_Z_1 + Y_D_1_Z_0) / 2 -
-  (Y_D_0_Z_1 + Y_D_0_Z_0) / 2))
 ```
 
 Some example data (where we know all potential outcomes):
@@ -349,6 +356,49 @@ coef(itt_y)[["Z"]] / coef(itt_d)[["Z"]]
 \item  Bloom (1984) proposed treating $\widehat{\text{ITT}}_D$ as fixed
 \item  Others use Delta method (Taylor series approximation), e.g., in \texttt{AER} or \texttt{estimatr} package in \texttt{R}
 \end{itemize}
+
+
+## How do our estimators perform?
+
+
+```{r}
+
+estimands <- declare_inquiry(
+    CACE =     mean(Y_D_1[type=="Complier"] - Y_D_0[type=="Complier"]),
+    ITT_y =    mean(Y_Z_1 - Y_Z_0),
+    ITT_d= mean(D_Z_1) - mean(D_Z_0))
+
+estimator_cace <- declare_estimator(Y ~ D | Z, .method=iv_robust,inquiry="CACE", label="iv_robust")
+estimator_itt_y <- declare_estimator(Y ~ Z, inquiry = "ITT_y", .method = lm_robust, label =  "diff means ITT")
+estimator_pp <- declare_estimator(Y ~ D, inquiry = c("ITT_y","CACE"), .method = lm_robust, label =  "per-protocol")
+estimator_itt_d <- declare_estimator(D ~ Z, inquiry = "ITT_d", .method = lm_robust, label =  "diff means ITT_D")
+
+
+full_design <- base_design + estimands+
+    estimator_cace + estimator_itt_y + estimator_itt_d + estimator_pp
+
+draw_estimands(full_design)
+draw_estimates(full_design)
+
+```
+
+
+```{r diagnoses, cache=TRUE}
+full_designs_by_size <- redesign(full_design,N=c(20,100,200))
+
+library(future)
+library(future.apply)
+plan(strategy="multicore") ## won't work on Windows
+results <- diagnose_design(full_designs_by_size,sims=1000,bootstrap_sims=0)
+plan("sequential")
+```
+
+```{r show_results}
+res_df <- tidy(results)
+
+res_df %>% filter(diagnosand %in% c("bias","coverage")) %>% arrange(diagnosand)
+```
+
 
 
 ## Summary of Encouragement/Complier/Dose oriented designs:

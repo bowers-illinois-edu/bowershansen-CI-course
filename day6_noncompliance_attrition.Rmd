@@ -1,0 +1,695 @@
+---
+title: |
+ | "Challenges to Randomization:
+ |  Noncompliance and Missing Data"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: |
+  | ICPSR 2022 Session 2
+  | Jake Bowers \& Tom Leavitt
+bibliography:
+ - "BIB/MasterBibliography.bib"
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: icpsr.beamer
+    incremental: true
+    includes:
+        in_header:
+           - defs-all.sty
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
+---
+
+<!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
+
+
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
+```
+
+
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+## Load all of the libraries that we will use when we compile this file
+## We are using the renv system. So these will all be loaded from a local library directory
+library(dplyr)
+library(ggplot2)
+library(coin)
+library(RItools)
+library(DeclareDesign)
+```
+
+## Today
+
+1. Agenda: One step away from easy to interpret experiments: non-random
+   doses/compliance [@gerbergreen2012] Chapter 5, non-random missing data
+   [@gerbergreen2012] Chapter 7.
+2. Recap: We use statistics to **infer** about unobservable counterfactual
+   quantities (functions of potential outcomes); we can estimate unobservable
+   averages; we can test unobservable hypotheses; we can test unobservable
+   hypotheses about averages.
+3. Questions arising from the reading or assignments or life?
+
+# Causal effects when we do not control the dose
+
+## Defining causal effects I
+
+Imagine a door-to-door communication experiment where some houses are randomly assigned to receive a visit.  Note that we now use $Z$ and $d$ instead of $T$.
+
+ - $Z_i$ is random assignment to a visit ($Z_i=1$) or not ($Z_i=0$).
+ - $d_{i,Z_i=1}=1$ means that person $i$ would open the door to have a conversation when assigned a visit.
+ - $d_{i,Z_i=1}=0$ means that person $i$ would not open the door to have a conversation when assigned a visit.
+ - Opening the door is an outcome of the treatment.
+
+\begin{center}
+\begin{tikzcd}[ampersand replacement=\&]
+Z  \arrow[from=1-1,to=1-2, "\ne 0"] \arrow[from=1-1, to=1-4, bend left, "\text{0 (exclusion)}"] \& d  \arrow[from=1-2,to=1-4] \& \& y \\
+(x_1 \ldots x_p) \arrow[from=2-1,to=1-1, "\text{0 (as if randomized)}"]  \arrow[from=2-1,to=1-2] \arrow[from=2-1,to=1-4]
+\end{tikzcd}
+\end{center}
+
+<!--
+## Defining causal effects II
+ - $y_{i,Z_i = 1, d_{i,Z_i=1}=1}$ is the potential outcome for people who were assigned a visit and who opened the door. ("Compliers" or "Always-takers")
+
+ - $y_{i,1, d_{i,Z_i=1}=0}$ is the potential outcome for people who were assigned a visit and who did not open the door. ("Never-takers" or "Defiers")
+
+ - $y_{i,0, d_{i,0}=1}$ is the potential outcome for people who were not assigned a visit and who opened the door. ("Defiers" or "Always-takers")
+
+ - $y_{i,0, d_{i,0}=0}$ is the potential outcome for people who were not assigned a visit and who would not have opened the door. ("Compliers" or "Never-takers")
+
+## Defining causal effects III
+ We could also write $y_{i,Z_i = 0, d_{i,Z_i=1}=1}$ for people who were not assigned a visit but who would have opened the door had they been assigned a visit etc.
+
+In this case we can simplify our potential outcomes:
+
+  - $y_{i,0, d_{i,1}=1} = y_{i,0, d_{i,1}=0} = y_{i,0, d_{i,0}=0}$ because your outcome is the same regardless of how you don't open the door.
+
+-->
+
+## Defining causal effects IV
+
+We can simplify the ways in which people get a dose of the treatment like so
+(where $d$ is lower case reflecting the idea that whether you open the door
+when visited or not is a fixed attribute like a potential outcome).
+
+ - $Y$ : outcome ($y_{i,Z}$ or $y_{i,Z_i=1}$ for potential outcome to
+   treatment for person $i$, fixed)
+ - $X$ : covariate/baseline variable
+ - $Z$ : treatment assignment ($Z_i=1$ if assigned to a visit, $Z_i=0$ if not
+   assigned to a visit)
+ -  $D$ : treatment received ($D_i=1$ if answered door, $D_i=0$ if person $i$
+   did not answer the door) (using $D$ here because $D_i = d_{i,1} Z_{i} + d_{i,0} (1-Z_i)$)
+
+## Defining causal effects V
+
+We have two causal effects of $Z$: $Z \rightarrow Y$ (known as $\delta$, ITT, ITT$_Y$), and $Z \rightarrow D$ (known as ITT$_D$, $p_c$).
+
+And different types of people can react differently to the attempt to move the
+dose with the instrument.
+
+\centering
+\begin{tabular}{llcc}
+                       &        & \multicolumn{2}{c}{$Z=1$} \\
+		       &       & $D=0$ & $D=1$ \\
+		       \midrule
+\multirow{2}{*}{$Z=0$} & $D=0$ & Never taker & Complier \\
+                       & $D=1$ & Defier     & Always taker \\
+		       \bottomrule
+\end{tabular}
+
+
+##  Defining causal effects VI
+
+
+The $ITT=ITT_Y=\delta= \bar{y}_{Z=1} - \bar{y}_{Z=0}$.
+
+\medskip
+
+But, in this design, $\bar{y}_{Z=1}=\bar{y}_{1}$ is split into pieces: the
+outcome of those who answered the door (Compliers and Always-takers and
+Defiers). Write $p_C$ for the proportion of compliers in the study, $p_A$ for
+proportion always-takers, etc... The proportions have to sum to 1. So, we have weighted averages:
+
+\begin{equation}
+\bar{y}_{1}=(\bar{y}_{1}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_1|N)p_N + (\bar{y}_1|D)p_D.
+\end{equation}
+
+And $\bar{y}_{0}$ is also split into pieces:
+
+\begin{equation}
+\bar{y}_{0}=(\bar{y}_{0}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_{0}|N)p_N + (\bar{y}_0|D)p_D.
+\end{equation}
+
+##  Defining causal effects VII
+
+So, the ITT itself is a combination of the effects of $Z$ on $Y$ within these
+different groups. People who are compliers tend to be different types of people
+than people who are always takers: comparisons across types would raise
+questions about how to interpret the results --- interpretations that would
+focus more on differences in types than in differences caused by $Z$. But, we
+can still estimate it because we have unbiased estimators of $\bar{y}_1$ and
+$\bar{y}_0$ within each type.
+
+## Learning about the ITT I
+
+First, let's learn about the effect of the policy itself. To write down the
+ITT, we do not need to consider all of the types above.  We have no defiers
+($p_D=0$) and we know the ITT for both Always-takers and Never-takers is 0.
+
+\begin{equation}
+\bar{y}_{1}=(\bar{y}_{1}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_1|N)p_N
+\end{equation}
+
+\begin{equation}
+\bar{y}_{0}=(\bar{y}_{0}|C)p_C + (\bar{y}_{0}|A)p_A + (\bar{y}_{0}|N)p_N
+\end{equation}
+
+
+## Learning about the ITT II
+
+First, let's learn about the effect of the policy itself. To write down the
+ITT, we do not need to consider all of the types above.  We have no defiers
+($p_D=0$) and we know the ITT for both Always-takers and Never-takers is 0.
+
+
+\begin{align}
+ITT    = & \bar{y}_{1} - \bar{y}_{0} \\
+        = & ( (\bar{y}_{1}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_1|N)p_N ) - \\
+       & ( (\bar{y}_{0}|C)p_C + (\bar{y}_{0}|A)p_A + (\bar{y}_{0}|N)p_N )  \\
+       \intertext{collecting each type together --- to have an ITT for each type}
+       = & ( (\bar{y}_{1}|C)p_C -  (\bar{y}_{0}|C)p_C )  +   ( (\bar{y}_{1}|A)p_A - (\bar{y}_{0}|A)p_A ) + \\
+       & ( (\bar{y}_1|N)p_N  - (\bar{y}_{0}|N)p_N ) \\
+       = & \left( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C) \right)p_C   +  \\
+       & \left( (\bar{y}_{1}|A)- (\bar{y}_{0}|A) \right)p_A  +  \left( (\bar{y}_1|N) - (\bar{y}_{0}|N) \right)p_N
+\end{align}
+
+## Learning about the ITT III
+
+\begin{align}
+ITT     = &   \bar{y}_{1} - \bar{y}_{0} \\
+        = &  ( (\bar{y}_{1}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_1|N)p_N ) - \\
+       & ( (\bar{y}_{0}|C)p_C + (\bar{y}_{0}|A)p_A + (\bar{y}_{0}|N)p_N )  \\
+        = &   ( (\bar{y}_{1}|C)p_C -  (\bar{y}_{0}|C)p_C )  +   ( (\bar{y}_{1}|A)p_A - (\bar{y}_{0}|A)p_A ) + \\
+       & ( (\bar{y}_1|N)p_N  - (\bar{y}_{0}|N)p_N ) \\
+        = &   ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C   +   ( (\bar{y}_{1}|A)- (\bar{y}_{0}|A))p_A  + \\
+       & ( (\bar{y}_1|N) - (\bar{y}_{0}|N) )p_N \\
+       = & (\text{ITT among compliers})(\text{proportion of compliers}) + (\text{ITT among always takers})(\text{proportion of always takers}) + \ldots
+\end{align}
+
+
+## Learning about the ITT IV
+
+And, if the effect of the dose can only occur for those who open the door, and you can only open the door when assigned to do so then:
+
+\begin{equation}
+( (\bar{y}_{1}|A)- (\bar{y}_{0}|A))p_A = 0  \text{ and } ( (\bar{y}_1|N) - (\bar{y}_{0}|N) )p_N = 0
+\end{equation}
+
+And
+
+\begin{equation}
+ITT =  ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C  = ( CACE ) p_C.
+\end{equation}
+
+
+## The complier average causal effect I
+
+If we want to can learn about the the causal effect of answering the door and
+having the conversation why not just compare people who answer the door to
+people who do not?
+
+The problem with this "as-treated" or "per-protocol" comparison is that this
+comparison is confounded by $x$: a simple $\bar{Y}|D=1 - \bar{Y}|D=0$ comparison
+tells us about differences in the outcome due to $x$ in addition to the
+difference caused by $D$. (Numbers below from some simulated data)
+
+\begin{center}
+\begin{tikzcd}[ampersand replacement=\&]
+Z  \arrow[from=1-1,to=1-2] \arrow[from=1-1, to=1-4, bend left, "\text{0 (exclusion)}"] \& D  \arrow[from=1-2,to=1-4] \& \& y \\
+(x_1 \ldots x_p) \arrow[from=2-1,to=1-1, "\text{-.006 (as if randomized)}"]  \arrow[from=2-1,to=1-2, ".06"] \arrow[from=2-1,to=1-4, ".48"]
+\end{tikzcd}
+\end{center}
+
+
+## The complier average causal effect II
+
+In actual data:
+
+```{r cors, eval=FALSE, echo=TRUE, results="hide"}
+with(dat, cor(Y, x)) ## can be any number
+with(dat, cor(d, x)) ## can be any number
+with(dat, cor(Z, x)) ## should be near 0
+```
+
+And we just saw that, in this design, and with these assumptions (including a
+SUTVA assumption) that $ITT =  ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C  =
+(CACE) p_C$, so we can define $CACE=ITT/p_C$. That is, we can learn about the
+effect of answering the door without worrying about the bias from $x$ (or any
+set of $x$'s).
+
+\medskip
+
+**VERY COOL** You can learn about the causal effect of a non-random intervention (deciding to open the door) without "controlling for" $x_1,x_2,\ldots$ in this case.
+
+## How to calculate the ITT and CACE/LATE I
+
+```{r simivdesign, echo=FALSE}
+prob_comply <- .8
+tau <- .5
+N <- 100
+
+the_pop <- declare_population(
+  N = N,
+  X = sample(1:4, N, replace = TRUE),
+  u = rnorm(N),
+  type = sample(c("Always-Taker", "Never-Taker", "Complier", "Defier"), N,
+    replace = TRUE,
+    prob = c(.1, 1 - unique(prob_comply), unique(prob_comply), 0)
+  )
+)
+
+##  The unobserved potential outcomes,  Y(Z=1) and Y(Z=0) relate to the observed outcome, Y, via treatment assignment and a constant additive effect of tau.
+## D refers to getting a dose of feedback
+d_po <- declare_potential_outcomes(
+  D ~ case_when(
+    Z == 0 & type %in% c("Never-Taker", "Complier") ~ 0,
+    Z == 1 & type %in% c("Never-Taker", "Defier") ~ 0,
+    Z == 0 & type %in% c("Always-Taker", "Defier") ~ 1,
+    Z == 1 & type %in% c("Always-Taker", "Complier") ~ 1
+  )
+)
+
+y_po_d <- declare_potential_outcomes(
+  Y ~ tau * sd(u) * D + u, assignment_variables = "D" # c("D", "Z")
+)
+
+y_po_z <-
+    declare_potential_outcomes(Y~(tau/2)*sd(u)*Z+u,assignment_variables="Z")
+
+## Treatment  assignment for  any given city is a simple fixed  proportion. It should be complete  or  urn-drawing assignment, no  t  simple or  coin-flipping assignment.
+the_assign <- declare_assignment(Z=conduct_ra(N=N,m=N/2))
+## the_assign <- declare_assignment(assignment_variable = "Z")
+
+## declare_reveal is basically the same as declare_potential_outcomes. I  think they  have this  here  to deal with situations of   missing data or non-compliance.
+# thereveal <- declare_reveal(Y, Z)
+#d_reveal <- declare_reveal(D, assignment_variable = "Z")
+#y_reveal <- declare_reveal(Y, assignment_variables = c("D", "Z"))
+
+d_reveal <- declare_measurement(D=reveal_outcomes(D~Z))
+y_reveal <- declare_measurement(Y=reveal_outcomes(Y~D))
+
+base_design <- the_pop + d_po + y_po_d + y_po_z + the_assign +  d_reveal + y_reveal
+
+dat0 <- draw_data(base_design)
+```
+
+Some example data (where we know all potential outcomes):
+
+```{r showdat0}
+tempdat <- dat0[1:2, -1]
+names(tempdat)[5] <- "pZ"
+names(tempdat) <- gsub("_", "", names(tempdat))
+set.seed(123455)
+sample_n(dat0,15)
+#tempdat
+#kableExtra::kable(tempdat, digits = 2)
+```
+
+## How to calculate the ITT and CACE/LATE II
+
+The ITT and CACE (the parts)
+
+```{r echo=TRUE}
+itt_y <- difference_in_means(Y ~ Z, data = dat0)
+itt_y
+itt_d <- difference_in_means(D ~ Z, data = dat0)
+itt_d
+```
+
+## How to calculate the ITT and CACE/LATE III
+
+All together:^[works when $Z \rightarrow D$ is not weak see @imbensrosenbaum2005 for a cautionary tale]
+
+```{r echo=TRUE}
+cace_est <- iv_robust(Y ~ D | Z, data = dat0)
+cace_est
+## Notice same as below:
+coef(itt_y)[["Z"]] / coef(itt_d)[["Z"]]
+```
+
+## Variance of IV estimator
+\begin{itemize}
+\item Recall that there exist analytic expressions for $\Var\left[\widehat{\text{ITT}}_Y\right]$ and $\Var\left[\widehat{\text{ITT}}_D\right]$
+\item  We can conservatively estimate $\Var\left[\widehat{\text{ITT}}_Y\right]$ and $\Var\left[\widehat{\text{ITT}}_D\right]$ via $\widehat{\Var}\left[\widehat{\text{ITT}}_Y\right]$ and $\widehat{\Var}\left[\widehat{\text{ITT}}_D\right]$
+\item  However, in general, there is no closed-form analytic expression for the variance of a random ratio
+\item  We do not have an estimator for $\Var\left[\cfrac{\widehat{\text{ITT}}_Y}{\widehat{\text{ITT}}_D}\right]$ that is known to be unbiased, consistent or conservative
+\item  Bloom (1984) proposed treating $\widehat{\text{ITT}}_D$ as fixed
+\item  Others use Delta method (Taylor series approximation), e.g., in \texttt{AER} or \texttt{estimatr} package in \texttt{R}
+\end{itemize}
+
+
+## How do our estimators perform?
+
+
+```{r}
+
+estimands <- declare_inquiry(
+    CACE =     mean(Y_D_1[type=="Complier"] - Y_D_0[type=="Complier"]),
+    ITT_y =    mean(Y_Z_1 - Y_Z_0),
+    ITT_d= mean(D_Z_1) - mean(D_Z_0))
+
+estimator_cace <- declare_estimator(Y ~ D | Z, .method=iv_robust,inquiry="CACE", label="iv_robust")
+estimator_itt_y <- declare_estimator(Y ~ Z, inquiry = "ITT_y", .method = lm_robust, label =  "diff means ITT")
+estimator_pp <- declare_estimator(Y ~ D, inquiry = c("ITT_y","CACE"), .method = lm_robust, label =  "per-protocol")
+estimator_itt_d <- declare_estimator(D ~ Z, inquiry = "ITT_d", .method = lm_robust, label =  "diff means ITT_D")
+
+
+full_design <- base_design + estimands+
+    estimator_cace + estimator_itt_y + estimator_itt_d + estimator_pp
+
+draw_estimands(full_design)
+draw_estimates(full_design)
+
+```
+
+
+```{r diagnoses, cache=TRUE}
+full_designs_by_size <- redesign(full_design,N=c(20,100,200))
+
+library(future)
+library(future.apply)
+plan(strategy="multicore") ## won't work on Windows
+results <- diagnose_design(full_designs_by_size,sims=1000,bootstrap_sims=0)
+plan("sequential")
+```
+
+```{r show_results}
+res_df <- tidy(results)
+
+res_df %>% filter(diagnosand %in% c("bias","coverage")) %>% arrange(diagnosand)
+```
+
+
+
+## Summary of Encouragement/Complier/Dose oriented designs:
+
+ - Analyze as you randomized, even when you don't control the dose you can
+   learn something.
+ - The danger of per-protocol analysis: you give up the benefits of the
+   research design (i.e. randomization)
+ - Variance calculations approximate (and can be untrustworth in small samples,
+   with weak instruments, and in other cases where we would worry about
+   consistency).
+
+
+# Hypothesis Tests about Complier causal effects
+
+## Hypothesis Tests about Complier causal effects
+
+\begin{itemize}
+\item We can test the sharp null hypothesis no effect among all units
+\item  We know by random assignment that
+\begin{enumerate}
+\item  this test will have a type I error probability at least as small as $\alpha$
+\item  Will have power greater than $\alpha$ for a class of alternative hypotheses
+\end{enumerate}
+\item  Under what conditions is a test of the sharp null of no effect among all units equivalent to a test of the sharp null of no effect among Compliers?
+\begin{enumerate}
+\item  Exclusion restriction
+\item  No Defiers
+\item  Non-zero proportion of Compliers
+\item Non-interference
+\end{enumerate}
+\end{itemize}
+
+## Sharp null hypothesis testing example
+
+Imagine that our observed data is as follows:
+\begin{table}[H]
+\centering
+    \begin{tabular}{l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ \\ \hline
+    1 & 14 & ? & 14 & 0 & ? & 0 \\
+    0 & 22 & 22 & ? & 0 & 0 & ? \\
+    1 & 21 & ? & 21 & 1 & ? & 1 \\
+    1 & 36 & ? & 36 & 1 & ? & 1 \\
+    0 & 23 & 23 & ? & 0 & 0 & ? \\
+    0 & 12 & 12 & ? & 1 & 1 & ? \\
+    0 & 25 & 25 & ? & 1 & 1 & ? \\
+    1 & 27 & ?  & 27 & 0 & ? & 0\\
+    \end{tabular}
+    \caption{Observed experimental data}
+\end{table}
+The observed Difference-in-Means test statistic, $\hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{Y}\right)$, is $16.75$.
+
+## Sharp null hypothesis testing example
+
+We can represent the sharp null hypothesis of no effect for all units without
+hypothesizing about non-random compliance (this is like the ITT$_Y$ in that
+both can be assessed safely in a randomized experiment).
+
+\begin{table}[H]
+\centering
+    \begin{tabular}{l|l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ & Principal stratum\\ \hline
+    1 & 14 & 14 & 14 & 0 & ? & 0 & Never Taker or Defier\\
+    0 & 22 & 22 & 22 & 0 & 0 & ? & Complier or Never Taker\\
+    1 & 21 & 21 & 21 & 1 & ? & 1 & Complier or Always Taker \\
+    1 & 36 & 36 & 36 & 1 & ? & 1 & Complier or Always Taker \\
+    0 & 23 & 23 & 23 & 0 & 0 & ? & Complier or Never Taker \\
+    0 & 12 & 12 & 12 & 1 & 1 & ? & Always Taker or Defier \\
+    0 & 25 & 25 & 25 & 1 & 1 & ? & Always Taker or Defier\\
+    1 & 27 & 27  & 27 & 0 & ? & 0 & Never Taker or Defier \\
+    \end{tabular}
+    \caption{Sharp null of no effect for all units}
+\end{table}
+
+## Sharp null hypothesis testing example
+
+
+The null hypothesis of no effect among compliers under excludability (meaning
+only a complier in the treatment group can have a causal effect), no Defiers
+and nonzero proportion of Compliers assumptions:
+
+\begin{table}[H]
+\centering
+    \begin{tabular}{l|l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ & \text{Principal stratum}\\ \hline
+    1 & 14 & 14 & 14 & 0 & 0 & 0 & Never Taker\\
+    0 & 22 & 22 & 22 & 0 & 0 & ? & Complier or Never Taker \\
+    1 & 21 & 21 & 21 & 1 & ? & 1 & Complier or Always Taker \\
+    1 & 36 & 36 & 36 & 1 & ? & 1 & Complier or Always Taker \\
+    0 & 23 & 23 & 23 & 0 & 0 & ? & Complier or Never Taker\\
+    0 & 12 & 12 & 12 & 1 & 1 & 1 & Always Taker \\
+    0 & 25 & 25 & 25 & 1 & 1 & 1 & Always Taker \\
+    1 & 27 & 27  & 27 & 0 & 0 & 0 & Never Taker \\
+    \end{tabular}
+    \caption{Sharp null of no effect among Compliers}
+    \label{tab: pot outs under null}
+\end{table}
+
+We don't need to know which of units 2  -- 5 are Compliers, only that at least one of these $4$ units is a Complier.
+
+Excludability means that the effect must be 0 for all units who are not compliers (i.e. implying the sharp null).
+
+```{r codeforabove, echo=FALSE, results="hide"}
+n <- 8
+n_1 <- 4
+
+set.seed(1:5)
+d_c <- rbinom(n = n, size = 1, prob = 0.3)
+d_t <- rep(x = NA, times = length(d_c))
+## HERE WE SATISFY THE AT LEAST ONE COMPLIER (NON-WEAK INSTRUMENT) ASSUMPTION
+d_t[which(d_c != 1)] <- rbinom(n = length(which(d_c != 1)), size = 1, prob = 0.6)
+## HERE WE SATISFY THE NO DEFIERS (MONOTONICITY) ASSUMPTION
+d_t[which(d_c == 1)] <- rep(x = 1, times = length(which(d_c == 1)))
+cbind(d_c, d_t)
+prop_comp <- length(which(d_c == 0 & d_t == 1)) / n
+prop_def <- length(which(d_c == 1 & d_t == 0)) / n
+prop_at <- length(which(d_c == 1 & d_t == 1)) / n
+prop_nt <- length(which(d_c == 0 & d_t == 0)) / n
+
+## HERE WE SATISFY THE EXCLUSION RESTRICTION ASSUMPTION BY LETTING y_c = y_t FOR ALL ALWAYS-TAKERS AND NEVER-TAKERS AND
+## WE ALSO SATISFY THE SUTVA ASSUMPTION BY LETTING ALL UNITS HAVE ONLY TWO POT OUTS
+set.seed(1:5)
+y_c <- round(x = rnorm(n = 8, mean = 20, sd = 10), digits = 0)
+y_t_null_false <- rep(x = NA, times = n)
+y_t_null_false[which(d_c == 0 & d_t == 1)] <- y_c[which(d_c == 0 & d_t == 1)] +
+  round(x = rnorm(n = length(which(d_c == 0 & d_t == 1)),
+                  mean = 10,
+                  sd = 4),
+        digits = 0)
+y_t_null_false[!(d_c == 0 & d_t == 1)] <- y_c[!(d_c == 0 & d_t == 1)]
+cbind(y_c, y_t_null_false)
+
+true_data <- data.frame(y_t = y_t_null_false,
+                        y_c = y_c,
+                        d_t = d_t,
+                        d_c = d_c,
+                        tau = y_t_null_false - y_c)
+
+true_data <- true_data %>% mutate(type = NA,
+                      type = ifelse(test = d_c == 0 & d_t == 0, yes = "never_taker", no = type),
+                      type = ifelse(test = d_c == 0 & d_t == 1, yes = "complier", no = type),
+                      type = ifelse(test = d_c == 1 & d_t == 0, yes = "defier", no = type),
+                      type = ifelse(test = d_c == 1 & d_t == 1, yes = "always_taker", no = type))
+kable(true_data)
+
+Omega <- apply(X = combn(x = 1:n,
+                         m = n_1),
+               MARGIN = 2,
+               FUN = function(x) { as.integer(1:n %in% x) })
+
+assign_vec_probs <- rep(x = (1/70), times = ncol(Omega))
+
+set.seed(1:5)
+obs_z <- Omega[,sample(x = 1:ncol(Omega), size = 1)]
+
+#obs_ys <- apply(X = Omega, MARGIN = 2, FUN = function(x) { x * y_t_null_false + (1 - x) * y_c })
+
+#obs_ds <- apply(X = Omega, MARGIN = 2, FUN = function(x) { x * d_t + (1 - x) * d_c })
+
+obs_y <- obs_z * true_data$y_t + (1 - obs_z) * true_data$y_c
+obs_d <- obs_z * true_data$d_t + (1 - obs_z) * true_data$d_c
+
+cbind(obs_z, obs_d, obs_y)
+
+tau <- 0
+
+null_y_c <- obs_y - obs_d * tau
+null_y_t <- obs_y + (1 - obs_d) * tau
+
+obs_diff_means <- as.numeric((t(obs_z) %*% obs_y) / (t(obs_z) %*% obs_z) -
+                               (t(1 - obs_z) %*% obs_y) / (t(1 - obs_z) %*% (1 - obs_z)))
+
+coef(lm(formula = obs_y ~ obs_z))[["obs_z"]]
+
+obs_null_pot_outs <- sapply(X = 1:ncol(Omega),
+                            FUN = function(x) { Omega[,x] * null_y_t + (1 - Omega[,x]) * null_y_c })
+
+null_test_stat_dist <- sapply(X = 1:ncol(Omega),
+                              FUN = function(x) { mean(obs_null_pot_outs[,x][which(Omega[,x] == 1)]) -
+                                  mean(obs_null_pot_outs[,x][which(Omega[,x] == 0)])})
+
+null_test_stats_data <- data.frame(null_test_stat = null_test_stat_dist,
+                                   prob = assign_vec_probs)
+library(ggplot2)
+null_dist_plot <- ggplot(data = null_test_stats_data,
+                         mapping = aes(x = null_test_stat,
+                                       y = prob)) +
+  geom_bar(stat = "identity") +
+  geom_vline(xintercept = obs_diff_means,
+             color = "red",
+             linetype = "dashed") +
+  xlab(label = "Null Test Statistics") +
+  ylab(label = "Probability")
+
+ggsave(plot = null_dist_plot,
+       file = here("images","null_dist_plot.pdf"),
+       width = 6,
+       height = 4,
+       units = "in",
+       dpi = 600)
+
+```
+
+<!--
+## Sharp null hypothesis testing example
+
+\begin{figure}[H]
+\includegraphics[width = \linewidth]{null_dist_plot.pdf}
+\caption{Distribution of the Difference-in-Means test statistic under the sharp null of no effect}
+\end{figure}
+-->
+
+## Summary
+
+ - The sharp null of no effects is meaningful and can be tested in a randomized
+   experiment using assignment to treatment and ignoring compliance.
+ - The assumptions of excludability, no defiers, and at least one complier mean
+   that we can interpret the test of the sharp null of no effects as a test of
+   the sharp null of no effects on compliers.
+
+# Learning about causal effects when data are missing
+
+## Review of core assumptions from randomized experiments
+
+  1. Excludability: Potential outcomes depend only on assigned treatment (and not other factors)
+
+  2. Non-interference
+
+  3. Random assignment of subjects treatment
+
+## Attrition (missing data on outcomes)
+
+- Some units may have missing data on outcomes (= units attrit) when:
+
+  - some respondents can't be found or refuse to participate in endline data collection.
+
+  - some records are lost.
+
+- This is a problem when treatment affects missingness.
+
+  - For example, units in control may be less willing to answer survey questions.
+  - For example, treatment may have caused units to migrate and cannot be reached
+
+- If we analyze the data by dropping units with missing outcomes, then we are no longer comparing similar treatment and control groups. (We have trouble analyzing as we randomized!)
+
+- Dropping the missing observations brings us closer to per-protocol analysis.
+
+## What can we do?
+
+- Check whether attrition rates are similar in treatment and control groups.
+
+- Check whether treatment and control groups have similar covariate profiles.
+
+- Do not drop observations that are missing outcome data from your analysis.
+
+- When outcome data are missing we can sometimes **bound** our estimates of treatment effects.
+
+## What can we do?
+
+- But the best approach is to try to anticipate and prevent attrition.
+
+   - Blind people to their treatment status.
+
+   - Promise to deliver the treatment to the control group after the research is completed.
+
+   - Plan ex ante to reach all subjects at endline.
+
+   - Budget for intensive follow-up with a random sample of attriters.
+
+## Missing data on covariates is not as problematic
+
+- Missing **background covariates** (i.e.,variables for which values do not change as a result of treatment) for some observations is less problematic.
+
+  - We can still learn about the causal effect of an experiment without those covariates.
+
+  - We can also use the background covariate as planned by imputing for the missing values.
+
+  - We can also condition on that missingness directly: we could assess causal effects for the subgroup of those missing on income and compare it to the subgroup of those not missing on income.
+
+
+## Summary about Missing data and Experiments.
+
+ - Missing outcomes or missing treatment assignment (or missing blocking
+   information) are all big problems. How might those with missing outcomes
+   have behaved in treatment versus control? We don't know.
+
+ - Missing covariate information is not a problem: it is fixed, same proportion
+   should be missing covariate information in both treatment and control
+   conditions
+
+
+## References
+

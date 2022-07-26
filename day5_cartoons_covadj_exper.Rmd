@@ -767,7 +767,7 @@ abline(lm_resid_Z_x1)
 
 ## What does linear regression do in an experiment?
 
-Linear regression "adjusts" the $Z \rightarrow Y$ relationship for a background covariate $x$  by removing linear relationships: For example, here we how it works after removing the linear relationships between `x1` and `Z` and between `x1` and `Y`):
+Linear regression "adjusts" the $Z \rightarrow Y$ relationship for a background covariate $x$  by removing linear relationships: For example, here we show how it works after removing the linear relationships between `x1` and `Z` and between `x1` and `Y`):
 
 ```{r residlm, echo=TRUE}
 coef(adj_est)[2]
@@ -778,7 +778,7 @@ stopifnot(all.equal(coef(adj_est)[[2]],coef(adj_est2)[[2]]))
 
 ## What does linear regression do in an experiment?
 
-Linear regression "adjusts" the $Z \rightarrow Y$ relationship for a background covariate $x$  by removing linear relationships: For example, here we how it works after removing the linear relationships between `x1` and `Z` and between `x1` and `Y`):
+Linear regression "adjusts" the $Z \rightarrow Y$ relationship for a background covariate $x$  by removing linear relationships: For example, here we show how it works after removing the linear relationships between `x1` and `Z` and between `x1` and `Y`):
 
 ```{r plot2, out.width=".8\\textwidth"}
 dat$ZF <- factor(dat$Z)
@@ -791,21 +791,22 @@ with(preddat[preddat$Z==1,],lines(x1,fit,col="blue",lwd=2))
 
 ## What does linear regression do in an experiment?
 
-Why might we adjust in an experiment? The idea is to increase precision. Notice the smaller standard errors:
+Why might we adjust in an experiment? The idea is to increase precision. Notice the smaller standard errors arising from the fact that we've removed noise independent of treatment from the outcome (recall that background covariates are indepedent of treatment assignment).
 
 ```{r expadj, echo=TRUE}
 unadj_est$std.error["Z"]
 adj_est$std.error["Z"]
 ```
 
-But what about bias? The point estimates differ here:
+But what about bias? The point estimates differ here (because in finite samples,
+independence doesn't guarantee lack of correlation!)
 
 ```{r bias1, echo=TRUE}
 coef(unadj_est)[["Z"]]
 coef(adj_est)[["Z"]]
 ```
 
-## How would we know whether the bias is too big?
+## How would we know whether the bias is too big? {.allowframebreaks}
 
 Different may not mean worse. Let's see how these (and some other) estimators work. First, just specify a bunch of different estimators:
 
@@ -863,6 +864,11 @@ compare_ests <- function(Z,y1,y0,x){
              est4=est4_coef,est5=est5_coef,est6=est6_coef))
 }
 ```
+
+## How would we know whether the bias is too big? {.allowframebreaks}
+
+Different may not mean worse. Let's see how these (and some other) estimators work. First, just specify a bunch of different estimators:
+
 
 ```{r dobiassims, echo=TRUE, cache=TRUE}
 set.seed(1235)
