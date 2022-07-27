@@ -407,7 +407,7 @@ stand_ests_plot_data <- data.frame(est = c( (asymp_ests_exact(.y_C=y_C,.y_T=y_T,
 
 stand_ests_plot_data$N <- factor(x = stand_ests_plot_data$N, levels = c("N = 7", "N = 21", "N = 100", "N = 1000"))
 
-devtools::install_github("teunbrand/ggh4x")
+##devtools::install_github("teunbrand/ggh4x")
 library(ggh4x)
 
 asymp_stand_ests_plot <- ggplot(data = stand_ests_plot_data,
@@ -876,7 +876,8 @@ nsims <- 5000
 dist_ests <- with(dat,
     replicate(nsims,compare_ests(Z=Z,y1=y1,y0=y0,x=x1)))
 apply(dist_ests,1,summary)
-apply(dist_ests,1,function(x){ trueATE_estimand - mean(x)})
+rbind(apply(dist_ests,1,sd),
+apply(dist_ests,1,function(x){ trueATE_estimand - mean(x)}))
 ```
 
 
