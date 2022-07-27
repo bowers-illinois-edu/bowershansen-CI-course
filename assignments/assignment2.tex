@@ -3,7 +3,7 @@
 \usepackage{wrapfig}
 \title{Assignment 2}
 \input{courseedition}
-\author{Due Thursday 8/05}
+\author{Due Wed August 3}
 
 \usepackage{../icpsr-classwork}
 
@@ -21,23 +21,29 @@ The table at right comes from Albertson and Lawrence's (2009, \textit{Amer. Pol.
 \begin{itemize}
 \item Random assignment: $\mathrm{Pr}(Z_{i}=1) = $ constant over study population;  and $\mathrm{Z} $ is determined by coin tosses, card shuffles or equivalent methods
 \item Excludability (for all $z$, $d$, $y_{Z=z, D=d} \equiv y_{D=d}$)
-\item $p_{c} = \mathrm{Pr}(\mathrm{Complier}) > 0$ 
-\item No interference 
-\item Monotonicity (no defiers) 
+\item $p_{c} = \mathrm{Pr}(\mathrm{Complier}) > 0$
+\item No interference
+\item Monotonicity (no defiers)
 \end{itemize}
-  
+
 \end{minipage}
 \vspace{4ex}
 
 \begin{enumerate}
-\item \label{item:1}Assuming (for this question) that the IV assumptions are valid as applied to the Round 2 respondents of each experiment, estimate the ACE of encouragement to view the program on program viewing.
-\item For one of the experiments, describe a hypothetical outcome variable that you would have collected had you written the study questionnaire. Posit a hypothetical value for your estimated ACE of encouragement on this outcome; combine this and your answer to (\ref{item:1}) to furnish a (hypothetical) Bloom-type estimate of the complier average causal effect (CACE).  
-\item Response rates for the Round 1 RDD sample recruitment effort are not reported in the table. Would you need to know these response rates in order to evaluate the IV assumptions as applied to a ``study population'' of Round 1 respondents?  As applied to a study population of Round 2 respondents? 
+\item \label{item:1}Assuming (for this question) that the IV assumptions are
+     valid as applied to the Round 2 respondents of each experiment, estimate
+     the ACE (Average Causal Effect) of encouragement to view the program on program viewing.
+\item For one of the experiments, describe a hypothetical outcome variable that
+     you would have collected had you written the study questionnaire. Posit a
+     hypothetical value for your estimated ACE of encouragement on this outcome;
+     combine this and your answer to (\ref{item:1}) to furnish a (hypothetical)
+     Bloom-type estimate (estimated ITT/estimated proportion compliers) of the complier average causal effect (CACE).
+\item Response rates for the Round 1 RDD sample recruitment effort are not reported in the table. Would you need to know these response rates in order to evaluate the IV assumptions as applied to a ``study population'' of Round 1 respondents?  As applied to a study population of Round 2 respondents?
 \item Whether a subject responds at round 2, $R$, can be considered as a (secondary) outcome. Let $r_{Ti}$ be an indicator of whether subject $i$ would respond at round 2 if assigned to the encouragement condition, with $r_{Ci}$ denoting $i$'s corresponding potential response if assigned to control.
   \begin{enumerate}
   \item Despite proper use of random assignment procedures during Round 1, the possibility that, for many individuals, $r_{T}=1$ while $r_{C}=0$ poses a threat to inference among \textit{Round 2} respondents. Explain why.
-  \item Conversely, explain how for a study population of Round 2 respondents, random Assignment at round 1 plus the additional assumption that $r_{Ti} \equiv r_{Ci}$, all $i$, alleviates this threat to inference. 
-  % \item What pieces of information that are necessary to appraise the plausibility of Albertson and Lawrence's (2009) random assignment assumption are missing from the table? 
+  \item Conversely, explain how for a study population of Round 2 respondents, random assignment at round 1 plus the additional assumption that $r_{Ti} \equiv r_{Ci}$, all $i$, alleviates this threat to inference.
+  % \item What pieces of information that are necessary to appraise the plausibility of Albertson and Lawrence's (2009) random assignment assumption are missing from the table?
   \end{enumerate}
 \item Which study's instrument is weakest, the Arceneaux 2005 (Acorn) study, Albertson and Lawrence's (2009) Study 1 (PBS program) or A. \& L.'s (2009) Study 2 (Fox News program)? Briefly justify your answer.
 \end{enumerate}
