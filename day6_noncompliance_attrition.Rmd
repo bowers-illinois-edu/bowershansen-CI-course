@@ -264,14 +264,14 @@ set of $x$'s).
 ## How to calculate the ITT and CACE/LATE I
 
 ```{r simivdesign, echo=FALSE}
-prob_comply <- .8
+prob_comply <- .5
 tau <- .5
 N <- 100
 
 the_pop <- declare_population(
   N = N,
-  X = sample(1:4, N, replace = TRUE),
-  u = rnorm(N),
+  u0 = rnorm(N),
+  u = ifelse(u0<=0,0,u0), ## truncated Normal
   type = sample(c("Always-Taker", "Never-Taker", "Complier", "Defier"), N,
     replace = TRUE,
     prob = c(.1, 1 - unique(prob_comply), unique(prob_comply), 0)
@@ -293,20 +293,19 @@ y_po_d <- declare_potential_outcomes(
   Y ~ tau * sd(u) * D + u, assignment_variables = "D" # c("D", "Z")
 )
 
-y_po_z <-
-    declare_potential_outcomes(Y~(tau/2)*sd(u)*Z+u,assignment_variables="Z")
+y_po_z <- declare_potential_outcomes(Y~(tau/2)*sd(u)*Z+u,assignment_variables=c("D","Z"))
+
 
 ## Treatment  assignment for  any given city is a simple fixed  proportion. It should be complete  or  urn-drawing assignment, no  t  simple or  coin-flipping assignment.
 the_assign <- declare_assignment(Z=conduct_ra(N=N,m=N/2))
 ## the_assign <- declare_assignment(assignment_variable = "Z")
 
-## declare_reveal is basically the same as declare_potential_outcomes. I  think they  have this  here  to deal with situations of   missing data or non-compliance.
 # thereveal <- declare_reveal(Y, Z)
 #d_reveal <- declare_reveal(D, assignment_variable = "Z")
 #y_reveal <- declare_reveal(Y, assignment_variables = c("D", "Z"))
 
 d_reveal <- declare_measurement(D=reveal_outcomes(D~Z))
-y_reveal <- declare_measurement(Y=reveal_outcomes(Y~D))
+y_reveal <- declare_measurement(Y=reveal_outcomes(Y~D+Z))
 
 base_design <- the_pop + d_po + y_po_d + y_po_z + the_assign +  d_reveal + y_reveal
 
@@ -338,7 +337,7 @@ itt_d
 
 ## How to calculate the ITT and CACE/LATE III
 
-All together:^[works when $Z \rightarrow D$ is not weak see @imbensrosenbaum2005 for a cautionary tale]
+All together (the version dividing an unbiased estimator of ITT by an unbiased estimator of Proportion Compliers is often called Bloom's method from Bloom (1984)):^[works when $Z \rightarrow D$ is not weak see @imbensrosenbaum2005 for a cautionary tale]
 
 ```{r echo=TRUE}
 cace_est <- iv_robust(Y ~ D | Z, data = dat0)
@@ -366,12 +365,12 @@ First, setup estimands and estimators:
 
 estimands <- declare_inquiry(
     CACE =     mean(Y_D_1[type=="Complier"] - Y_D_0[type=="Complier"]),
-    ITT_y =    mean(Y_Z_1 - Y_Z_0),
+    ITT_y =    mean(  ( (Y_D_1_Z_1 + Y_D_0_Z_1)/2 )  - ( (Y_D_1_Z_0 + Y_D_0_Z_0)/2 ) ),
     ITT_d= mean(D_Z_1) - mean(D_Z_0))
 
-estimator_cace <- declare_estimator(Y ~ D | Z, .method=iv_robust,inquiry="CACE", label="iv_robust")
+estimator_cace <- declare_estimator(Y ~ D | Z, .method=iv_robust,inquiry=c("CACE"), label="iv_robust")
 estimator_itt_y <- declare_estimator(Y ~ Z, inquiry = "ITT_y", .method = lm_robust, label =  "diff means ITT")
-estimator_pp <- declare_estimator(Y ~ D, inquiry = c("ITT_y","CACE"), .method = lm_robust, label =  "per-protocol")
+estimator_pp <- declare_estimator(Y ~ D, inquiry = "CACE", .method = lm_robust, label =  "per-protocol")
 estimator_itt_d <- declare_estimator(D ~ Z, inquiry = "ITT_d", .method = lm_robust, label =  "diff means ITT_D")
 
 
@@ -389,29 +388,39 @@ draw_estimates(full_design)[,c("estimator","term","estimate","std.error","outcom
 Then repeat the design many times:
 
 ```{r diagnoses, echo=TRUE, cache=TRUE, warning=FALSE}
-full_designs_by_size <- redesign(full_design,N=c(20,100,200))
+full_designs_by_size <-
+    redesign(full_design,N=c(50,100,200,1000),prop_comply=c(.2,.5,.8))
+
+dat_n20 <- draw_data(full_designs_by_size[["design_1"]])
+
+my_diagnosands <-
+    declare_diagnosands(
+        mean_estimand = mean(estimand),
+        mean_estimate = mean(estimate),
+        bias = mean(estimate - estimand),
+        rmse = sqrt(mean((estimate - estimand) ^ 2)),
+        ## power = mean(p.value <= alpha),
+        coverage = mean(estimand <= conf.high & estimand >= conf.low),
+        sd_estimate = sqrt(pop.var(estimate)),
+        mean_se = mean(std.error)
+       )
 
 library(future)
 library(future.apply)
 plan(strategy="multicore") ## won't work on Windows
-results <- diagnose_design(full_designs_by_size,sims=1000,bootstrap_sims=0)
+which_to_sim <- rep(1,length=length(full_design))
+names(which_to_sim) <- names(full_design)
+which_to_sim["the_assign"] <- 1000
+set.seed(12345)
+results <- diagnose_design(full_designs_by_size,bootstrap_sims=0,
+    sims = 1000, #which_to_sim,
+    diagnosands = my_diagnosands)
 plan("sequential")
-```
-
-```{r show_results}
-res_df <- tidy(results) %>% rename(result=estimate)
-
-res_df %>% filter(diagnosand %in% c("bias","coverage")) %>% arrange(diagnosand)
-```
-
-```{r}
-g_bias <- res_df %>% filter(diagnosand=="bias") %>% ggplot(aes(y=result,x=N,group=estimator,color=estimator))+
-    geom_line()
-
-g_bias
+reshape_diagnosis(results) %>% select(N,Inquiry,Estimator,Outcome,Term,Bias,"SD Estimate","Mean Se",Coverage)
+## Focus on the 2SLS estimator
+## reshape_diagnosis(results) %>% filter(Estimator=="iv_robust") %>% select(N,prop_comply,Inquiry,Estimator,Outcome,Term,Bias,"SD Estimate","Mean Se",Coverage)
 
 ```
-
 
 
 ## Summary of Encouragement/Complier/Dose oriented designs:
@@ -485,7 +494,30 @@ Imagine that our observed data is as follows:
     \end{tabular}
     \caption{Observed experimental data}
 \end{table}
-The observed Difference-in-Means test statistic, $\hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{Y}\right)$, is $16.75$.
+
+The observed Difference-in-Means test statistic, $\hat{\bar{\tau}}\left(\mathbf{Z}, \mathbf{Y}\right)$, is $16.75$. What is the distribution of that test statistic under the null hypothesis of no effects for any complier?
+
+## Sharp null hypothesis testing example
+
+We can represent the sharp null hypothesis of no effect for all units without
+hypothesizing about non-random compliance (this is like the ITT$_Y$ in that
+both can be assessed safely in a randomized experiment).
+
+\begin{table}[H]
+\centering
+    \begin{tabular}{l|l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ & Principal stratum\\ \hline
+    1 & 14 & ? & 14 & 0 & ? & 0 & Never Taker or Defier\\
+    0 & 22 & 22 & ? & 0 & 0 & ? & Complier or Never Taker\\
+    1 & 21 & ? & 21 & 1 & ? & 1 & Complier or Always Taker \\
+    1 & 36 & ? & 36 & 1 & ? & 1 & Complier or Always Taker \\
+    0 & 23 & 23 & ? & 0 & 0 & ? & Complier or Never Taker \\
+    0 & 12 & 12 & ? & 1 & 1 & ? & Always Taker or Defier \\
+    0 & 25 & 25 & ? & 1 & 1 & ? & Always Taker or Defier\\
+    1 & 27 & ?  & 27 & 0 & ? & 0 & Never Taker or Defier \\
+    \end{tabular}
+    \caption{Sharp null of no effect for all units}
+\end{table}
 
 ## Sharp null hypothesis testing example
 
@@ -512,22 +544,21 @@ both can be assessed safely in a randomized experiment).
 ## Sharp null hypothesis testing example
 
 
-The null hypothesis of no effect among compliers under excludability (meaning
-only a complier in the treatment group can have a causal effect), no Defiers
-and nonzero proportion of Compliers assumptions:
+The null hypothesis of no effect among compliers under excludability (only a complier in the treatment group can have a causal effect), no defiers
+and nonzero proportion of compliers assumptions:
 
 \begin{table}[H]
 \centering
     \begin{tabular}{l|l|l|l|l|l|l|l}
     $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ & \text{Principal stratum}\\ \hline
-    1 & 14 & 14 & 14 & 0 & 0 & 0 & Never Taker\\
+    1 & 14 & 14 & 14 & 0 & 0 & 0 & Never Taker \sout{or Defier}\\
     0 & 22 & 22 & 22 & 0 & 0 & ? & Complier or Never Taker \\
     1 & 21 & 21 & 21 & 1 & ? & 1 & Complier or Always Taker \\
     1 & 36 & 36 & 36 & 1 & ? & 1 & Complier or Always Taker \\
     0 & 23 & 23 & 23 & 0 & 0 & ? & Complier or Never Taker\\
-    0 & 12 & 12 & 12 & 1 & 1 & 1 & Always Taker \\
-    0 & 25 & 25 & 25 & 1 & 1 & 1 & Always Taker \\
-    1 & 27 & 27  & 27 & 0 & 0 & 0 & Never Taker \\
+    0 & 12 & 12 & 12 & 1 & 1 & 1 & Always Taker \sout{or Defier} \\
+    0 & 25 & 25 & 25 & 1 & 1 & 1 & Always Taker \sout{or Defier} \\
+    1 & 27 & 27  & 27 & 0 & 0 & 0 & Never Taker \sout{or Defier} \\
     \end{tabular}
     \caption{Sharp null of no effect among Compliers}
     \label{tab: pot outs under null}
@@ -536,6 +567,36 @@ and nonzero proportion of Compliers assumptions:
 We don't need to know which of units 2  -- 5 are Compliers, only that at least one of these $4$ units is a Complier.
 
 Excludability means that the effect must be 0 for all units who are not compliers (i.e. implying the sharp null).
+
+
+## Sharp null hypothesis testing example
+
+
+The null hypothesis of no effect among compliers under excludability (meaning
+that only a complier in the treatment group can have a causal effect), no defiers
+and nonzero proportion of Compliers assumptions:
+
+\begin{table}[H]
+\centering
+    \begin{tabular}{l|l|l|l|l|l|l|l}
+    $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ & $\mathbf{d}$ & $\mathbf{d_c}$ & $\mathbf{d_t}$ & \text{Principal stratum}\\ \hline
+    1 & 14 & 14 & 14 & 0 & 0 & 0 & Never Taker \sout{or Defier}\\
+    0 & 22 & 22 & 22 & 0 & 0 & ? & Complier or Never Taker \\
+    1 & 21 & 21 & 21 & 1 & ? & 1 & Complier or Always Taker \\
+    1 & 36 & 36 & 36 & 1 & ? & 1 & Complier or Always Taker \\
+    0 & 23 & 23 & 23 & 0 & 0 & ? & Complier or Never Taker\\
+    0 & 12 & 12 & 12 & 1 & 1 & 1 & Always Taker \sout{or Defier} \\
+    0 & 25 & 25 & 25 & 1 & 1 & 1 & Always Taker \sout{or Defier} \\
+    1 & 27 & 27  & 27 & 0 & 0 & 0 & Never Taker \sout{or Defier} \\
+    \end{tabular}
+    \caption{Sharp null of no effect among Compliers}
+    \label{tab: pot outs under null}
+\end{table}
+
+
+So: a regular test of the sharp null of no effects **is also a test of the sharp
+null of no effects among compliers** (under the assumptions of no defiers,
+non-zero compliers, exclusion, and no interference).
 
 
 ```{r codeforabove, echo=FALSE, results="hide"}
