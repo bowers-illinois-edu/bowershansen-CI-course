@@ -360,8 +360,9 @@ coef(itt_y)[["Z"]] / coef(itt_d)[["Z"]]
 
 ## How do our estimators perform?
 
+First, setup estimands and estimators:
 
-```{r}
+```{r, echo=TRUE, warning=FALSE}
 
 estimands <- declare_inquiry(
     CACE =     mean(Y_D_1[type=="Complier"] - Y_D_0[type=="Complier"]),
@@ -378,12 +379,16 @@ full_design <- base_design + estimands+
     estimator_cace + estimator_itt_y + estimator_itt_d + estimator_pp
 
 draw_estimands(full_design)
-draw_estimates(full_design)
+draw_estimates(full_design)[,c("estimator","term","estimate","std.error","outcome","inquiry")]
 
 ```
 
 
-```{r diagnoses, cache=TRUE}
+## How do our estimators perform?
+
+Then repeat the design many times:
+
+```{r diagnoses, echo=TRUE, cache=TRUE, warning=FALSE}
 full_designs_by_size <- redesign(full_design,N=c(20,100,200))
 
 library(future)
@@ -394,9 +399,17 @@ plan("sequential")
 ```
 
 ```{r show_results}
-res_df <- tidy(results)
+res_df <- tidy(results) %>% rename(result=estimate)
 
 res_df %>% filter(diagnosand %in% c("bias","coverage")) %>% arrange(diagnosand)
+```
+
+```{r}
+g_bias <- res_df %>% filter(diagnosand=="bias") %>% ggplot(aes(y=result,x=N,group=estimator,color=estimator))+
+    geom_line()
+
+g_bias
+
 ```
 
 
@@ -431,6 +444,28 @@ res_df %>% filter(diagnosand %in% c("bias","coverage")) %>% arrange(diagnosand)
 \item Non-interference
 \end{enumerate}
 \end{itemize}
+
+
+## Sharp null hypothesis testing example
+
+The null hypothesis of no complier causal effect states that the individual causal effect of $\mathbf{Z}$ on $\mathbf{Y}$ is $0$ among units who are Compliers.
+
+Along with the exclusion restriction (i.e., that the individual causal effect is $0$ for Always Takers and Never Takers) and the assumption of no Defiers, we can "fill in" missing potential outcomes according to the null hypothesis of no complier causal effect as follows:
+\begin{align*}
+Y_{c,0,i} & =
+\begin{cases}
+Y_i - D_i \tau_i & \text{if } D_i = 1 \\
+Y_i + \left(1 - D_i\right) \tau_i & \text{if } D_i = 0
+\end{cases} \\
+Y_{t,0,i} & =
+\begin{cases}
+Y_i - D_i \tau_i & \text{if } D_i = 1 \\
+Y_i + \left(1 - D_i\right) \tau_i & \text{if } D_i = 0,
+\end{cases}
+\end{align*}
+where $\tau_i = 0$ for all $i$.
+
+
 
 ## Sharp null hypothesis testing example
 
@@ -501,6 +536,7 @@ and nonzero proportion of Compliers assumptions:
 We don't need to know which of units 2  -- 5 are Compliers, only that at least one of these $4$ units is a Complier.
 
 Excludability means that the effect must be 0 for all units who are not compliers (i.e. implying the sharp null).
+
 
 ```{r codeforabove, echo=FALSE, results="hide"}
 n <- 8
