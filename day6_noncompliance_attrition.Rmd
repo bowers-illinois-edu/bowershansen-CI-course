@@ -418,8 +418,9 @@ results <- diagnose_design(full_designs_by_size,bootstrap_sims=0,
 plan("sequential")
 reshape_diagnosis(results) %>% select(N,Inquiry,Estimator,Outcome,Term,Bias,"SD Estimate","Mean Se",Coverage)
 ## Focus on the 2SLS estimator
-## reshape_diagnosis(results) %>% filter(Estimator=="iv_robust") %>% select(N,prop_comply,Inquiry,Estimator,Outcome,Term,Bias,"SD Estimate","Mean Se",Coverage)
+reshape_diagnosis(results) %>% filter(Estimator=="iv_robust") %>% select(N,prop_comply,Inquiry,Estimator,Outcome,Term,Bias,"SD Estimate","Mean Se",Coverage)
 
+reshape_diagnosis(results) %>% filter(Estimator=="diff means ITT") %>% select(N,prop_comply,Inquiry,Estimator,Outcome,Term,Bias,"SD Estimate","Mean Se",Coverage)
 ```
 
 
