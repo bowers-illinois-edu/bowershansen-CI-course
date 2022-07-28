@@ -44,7 +44,7 @@ library(ggplot2)
 library(estimatr)
 library(coin)
 library(DeclareDesign)
-library(kableExtra)
+#library(kableExtra)
 ```
 
 ## Today
@@ -157,7 +157,7 @@ summary(mean_tau)
 
 The `brms` package is a little easier (sometimes). Default priors not the same as the ones we used above.
 
-```{r brms, cache=TRUE, echo=TRUE}
+```{r brms, eval=TRUE, cache=TRUE, echo=TRUE}
 library(brms)
 mod1 <- brm(Y ~ Z, data = smdat, family = gaussian(), cores = 4, iter = 5000, warmup = 2500, chains = 4)
 prior_summary(mod1)
@@ -364,10 +364,10 @@ Today: Let's talk about what "controlling for" means. And then let's ask "How
 would we know whether we did a good job --- did we "control for $x_1$"
 **enough**?"
 
-<!-- - What does "controlling for" mean here? How can we explain it? Exercise for the class: Please explain what this means, as far as you can tell, here <https://www.menti.com/amwgborzsv>.
+What does "controlling for" mean here? How can we explain it? Exercise for the class: Please explain what this means, as far as you can tell, here <https://www.menti.com/amwgborzsv>.
 
  - How would we know whether we did a good job --- did we "control for $x_1$" **enough**?
--- >
+
 
 ## First, recall how linear models control or adjust
 
