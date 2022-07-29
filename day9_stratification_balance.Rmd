@@ -3,8 +3,8 @@ title: |
  | Statistical Adjustment and Assessment of Adjustment in Observational Studies
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2021 Session 2
-  | Jake Bowers, Ben Hansen, Tom Leavitt
+  | ICPSR 2022 Session 2
+  | Jake Bowers \& Tom Leavitt
 bibliography:
  - 'BIB/MasterBibliography.bib'
  - 'BIB/master.bib'
@@ -55,15 +55,26 @@ library(optmatch)
   1. Agenda: The problem of covariance adjustment to reduce "bias"/
      confounding. **How can we answer the question about whether we have
      adjusted enough and avoided extrapolation and dependence on functional
-     form?** A simple approach: stratification on one categorical variable
-     followed by a comparison of this stratification with one or more
-     **standards** of unconfounded designs. A more complex approach: find sets
-     that are as similar as possible in terms of a continuous variable
+     form?**
+     a. A simple approach: stratification on one categorical variable (using
+     weighted combinations of within-strata estimates for an overall estimate).
+     Justify this **design** by comparison of this stratification with one or more
+     **standards** of unconfounded designs (like an experiment with treatment
+     randomized within strata).
+     b. A more complex approach: find sets that are as similar as possible in terms of a continuous variable
      (bipartite matching). Balance assessment after stratification.
   2. Review of past concepts and discussions.
+     a. Problems of using linear (or other parametric models) for **adjustment**
+     (as well as statistical inference) include justifying variables, justifying
+     functional forms (of $x_1 \rightarrow Z$ and $x_1 \rightarrow Y$ and $x_1
+     \rightarrow x_2$, and $f(x_1,x_2) \rightarrow Y$ and $f(x_1,x_2)
+     \rightarrow Z$ and $f(x_1,x_2) \rightarrow x_3$, diagnosing extrapolation,
+     diagnosing and confronting overly influential points. And, basically,
+     finding a **standard of adjustment** for such models where we can answer
+     the question "have we adjusted enough"?
   3. Questions arising from the reading or assignments or life?
 
-# Strategies for Causal Inferencr
+# Strategies for Causal Inference
 
 ## Strategies and Workflow for randomized studies
 
@@ -99,7 +110,8 @@ library(optmatch)
  - Direct theoretical modeling / Directed Acyclic Graphs (DAGS) to guide other
    data modeling choices.
 
-# How to assess the randomization process in an experiment.
+# How to assess the randomization process in an experiment (to teach us how to
+assess research designs in observational studies).
 
 ## The Neyman-Rubin Model for (simple) experiments
 
@@ -124,7 +136,7 @@ analysis phases of a project).
 \item Kansas City, November 2003
 \item Completely randomized design: 14 precincts $\rightarrow$ Tx; 14 $\rightarrow $ Control.
 \item Substantively large baseline differences (red dots)
-\item Differences not large compared to other possible assignments from same design; compared to other possible experiments with the same design.
+\item<2-> Differences not large compared to other possible assignments from same design; compared to other possible experiments with the same design.
 \item<2-> $\PP(\chi^{2} > x) = .91$ \citep{hansenbowers2008}. (grey lines)
 \end{itemize}
 \end{column}
@@ -139,12 +151,11 @@ analysis phases of a project).
 
 ```{r xb1, echo=TRUE}
 acorn <- read.csv("data/acorn03.csv", row.names = 1)
-xb1 <- xBalance(z ~ v_p2003 + v_m2003 + v_g2002 + v_p2002 + v_m2002 + v_s2001 +
+xb1 <- balanceTest(z ~ v_p2003 + v_m2003 + v_g2002 + v_p2002 + v_m2002 + v_s2001 +
   v_g2000 + v_p2000 + v_m2000 + v_s1999 + v_m1999 + v_g1998 +
   v_m1998 + v_s1998 + v_m1997 + v_s1997 + v_g1996 + v_p1996 +
-  v_m1996 + v_s1996 + size,
-data = acorn,
-report = "all"
+  v_m1996 + v_s1996 + size, p.adjust.method = "none",
+data = acorn
 )
 
 xb1$results
@@ -157,12 +168,26 @@ xb1$overall
 ```
 
 
-```{r, out.width=".7\\textwidth"}
-plot(xb1)
+```{r, out.width=".7\\textwidth", warning=FALSE}
+balplot0 <- plot(xb1,statistic="adj.diff",xlab="Differences in Proportion")
+balplot0_dat <- balplot0$data
+xb1_df <- as_tibble(xb1$results)
+names(xb1_df) <- dimnames(xb1$results)$stat
+xb1_df$rowname <- dimnames(xb1$results)$vars
+
+balplot_dat <- left_join(balplot0_dat,xb1_df,by="rowname")
+
+balplot1 <- ggplot(data=balplot_dat,aes(x=adj.diff*100,y=rowname)) +
+    geom_point()+
+    geom_linerange(aes(xmin=-pooled.sd*100,xmax=pooled.sd*100)) +
+    xlim(c(-.1,.1)*100) +
+    theme(legend.position = "none")
+
+print(balplot1)
 ```
 
 
-## DeMystifying xBalance
+## DeMystifying balanceTest
 
 ```{r d1, echo=TRUE}
 d_stat <- function(zz, mm, ss) {
@@ -225,7 +250,9 @@ dstats2[1:5]
 xb1$results[,"adj.diff",]
 
 stopifnot(all.equal(dstats1, dstats2[1, ]))
+```
 
+```{r, eval=FALSE,echo=FALSE,results=FALSE}
 ## Curious whether one function is faster than the other
 library(microbenchmark)
 microbenchmark(d_stat(zz = acorn$z, mm = acorn[, acorncovs], ss = rep(1, nrow(acorn))),
@@ -291,11 +318,7 @@ xb1$overall
 ```
 
 
-## Reference distribution of the $d^2$ stat
-
-The distribution of the $d^2$ statistic arises from the distribution of the d statistics --- for each draw from the set of treatment assignments we can collapse the $d$-statistics into one $d^2$. And so we can calculate the $p$-value for the $d^2$.
-
-```{r, out.width=".7\\textwidth"}
+```{r, eval=FALSE, echo=FALSE, results=FALSE, out.width=".7\\textwidth"}
 plot(density(d2_dist))
 rug(d2_dist)
 abline(v = obs.d2)
@@ -307,8 +330,8 @@ abline(v = obs.d2)
 I suspect that $N=28$ is too small. `xBalance` uses an asymptotic
 approximation to the randomization distribution.
 
-```{r echo=FALSE, out.width=".7\\textwidth", cache=FALSE}
-par(mfrow = c(1, 2),pty="m",oma=rep(0,4),mgp=c(1.5,.5,0),mar=c(2,2,0,0))
+```{r echo=FALSE, out.width=".8\\textwidth", cache=FALSE}
+par(mfrow = c(1, 2),pty="m",oma=rep(0,4),mgp=c(1.5,.5,0),mar=c(3,3,0,0))
 qqplot(rchisq(10000, df = 21), d2_dist)
 abline(0, 1)
 plot(density(d2_dist),main="",xlim=c(2,60))
@@ -407,7 +430,7 @@ difference_in_means(HomRate08 ~ nhTrt, meddat)
 Another approach, test the null of no effects:
 
 ```{r initialtest, echo=TRUE}
-xBalance(nhTrt ~ HomRate08, report = "all", data = meddat)
+balanceTest(nhTrt ~ HomRate08, data = meddat)
 meddat$nhTrtF <- factor(meddat$nhTrt)
 test2 <- oneway_test(HomRate08 ~ nhTrtF, data = meddat, distribution = asymptotic())
 test3 <- oneway_test(HomRate08 ~ nhTrtF, data = meddat, distribution = approximate(nresample = 1000))
@@ -416,14 +439,6 @@ pvalue(test2)
 pvalue(test3)
 pvalue(test4)
 ```
-
-
-## What are alternative explanations for this effect?
-
-We claim that the policy intervention had some effect. What are alternative explanations?
-
-<https://www.menti.com/cxvdb8ecmj>
-
 
 ## Do we have any concerns about confounding?
 
@@ -435,7 +450,7 @@ with more than a high school education in the neighborhood in 2003 or so and
 use of `xBalance` in terms of randomization above.)
 
 ```{r xbmed, echo=TRUE}
-xbMed1 <- xBalance(nhTrt ~ nhAboveHS, data = meddat, report = "all")
+xbMed1 <- balanceTest(nhTrt ~ nhAboveHS, data = meddat)
 xbMed1$overall
 xbMed1$results
 ```
@@ -524,9 +539,8 @@ How should we interpret this adjustment? How should we judge the improvement tha
 thecovs <- unique(c(names(meddat)[c(5:7, 9:24)], "HomRate03"))
 balfmla <- reformulate(thecovs, response = "nhTrt")
 
-xbMed <- xBalance(balfmla,
+xbMed <- balanceTest(balfmla,
   data = meddat,
-  report = c("all"),
   p.adjust.method = "none"
 )
 xbMed$overall
@@ -587,9 +601,9 @@ coef(lm1d)["nhTrt"]
 
 One-step stratified testing
 
-```{r}
-xbate1 <- xBalance(nhTrt ~ HomRate08, strata = list(hs = ~ I(nhAboveHS >= .1)), data = meddat, report = "all")
-xbate1$results[, c("nhTrt=1", "nhTrt=0", "adj.diff","p"), ]
+```{r echo=TRUE}
+xbate1 <- balanceTest(nhTrt ~ HomRate08+ strata(I(nhAboveHS >= .1)), data = meddat)
+xbate1$results[, c("Treatment","Control", "adj.diff","p"), ]
 xbate1$overall
 
 hstest2 <- independence_test(HomRate08~nhTrt|factor(nhAboveHS >= .1),data=meddat)
@@ -612,9 +626,9 @@ pvalue(hstest5)
 Did we adjust enough? What would *enough* mean? Use the testing approach but now focus only on the covariate(s) that you are trying to adjust.
 
 ```{r xbHS1, echo=TRUE}
-xbHS1 <- xBalance(nhTrt ~ nhAboveHS, strata = list(hs = ~ I(nhAboveHS >= .1)), data = meddat, report = "all")
+xbHS1 <- balanceTest(nhTrt ~ nhAboveHS+strata(I(nhAboveHS >= .1)), data = meddat)
 xbHS1$overall
-xbHS1$results[1, c("nhTrt=1", "nhTrt=0", "adj.diff", "std.diff", "z", "p"), ] ## the covariate specific z-test
+xbHS1$results[1, c("Treatment", "Control", "adj.diff", "std.diff", "z", "p"), ] ## the covariate specific z-test
 ```
 
 ## Disadvantages and Advantages of Simple Stratification
@@ -654,14 +668,14 @@ scatter3d(HomRate08 ~ nhAboveHS + nhPopD,
 )
 ```
 
-## The Problem of Using  the Linear Model for  Adjustment 
+## The Problem of Using  the Linear Model for  Adjustment
 
  - Problem of Interepretability: "Controlling for" is  "removing (additive) linear relationships" it is  not "holding constant"
  - Problem of Diagnosis and Assessment: What is the  standard against which we can compare a given linear covariance adjustment specification?
  - Problem of extrapolation and interpolation: Often known as "common support", too.
  - Problems of overly influential points and curse of  dimensionality: As dimensions increase, odds of influential  point increase (ex. bell curve in one dimension, one very influential point in 2 dimensions); also real limits on number of covariates (roughly $\sqrt{n}$ for OLS).
- 
-## The Problem of Using  the Linear Model for  Adjustment 
+
+## The Problem of Using  the Linear Model for  Adjustment
 
  - Problems of  bias even in randomized experiments:
 
@@ -812,13 +826,7 @@ The within-set differences look different from those that would be expected
 from a randomized experiment.
 
 ```{r xbhs2, echo=TRUE}
-xbfm1 <- xBalance(nhTrt ~ nhAboveHS,
-  strata = list(
-    nostrat = NULL,
-    hsmatch = ~fm1
-  ),
-  data = meddat, report = "all"
-)
+xbfm1 <- balanceTest(nhTrt ~ nhAboveHS+strata(fm1), data = meddat)
 xbfm1$results
 xbfm1$overall
 ```
@@ -851,7 +859,7 @@ with(setmeanDiffs, sum(diffAboveHS * nTb / sum(nTb)))
 ## The mean diff used as the observed value in the testing
 with(setmeanDiffs, sum(diffAboveHS * hwt / sum(hwt)))
 ## Compare to xBalance output
-xbfm1$results[, , "hsmatch"]
+xbfm1$results[, , "fm1"]
 ```
 
 ## Summary of the Day
