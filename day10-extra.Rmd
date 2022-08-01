@@ -1,0 +1,265 @@
+
+## Covariate balance in experiments: What does it look like?
+
+\begin{columns}
+\begin{column}{.4\linewidth}
+\begin{itemize}
+\item \cite{arceneaux:2005}
+\item Kansas City, November 2003
+\item Completely randomized design: 14 precincts $\rightarrow$ Tx; 14 $\rightarrow $ Control.
+\item Substantively large baseline differences (red dots)
+\item Differences not large compared to other possible assignments from same design; compared to other possible experiments with the same design.
+\item<2-> $\PP(\chi^{2} > x) = .91$ \citep{hansenbowers2008}. (grey lines)
+\end{itemize}
+\end{column}
+\begin{column}{.6\linewidth}
+\only<1>{\igrphx{KC-baseline}}
+\only<2>{\igrphx{KC-bal+SDs}}
+\end{column}
+\end{columns}
+
+
+## How did we do this?
+
+```{r xb1, echo=TRUE}
+acorn <- read.csv("data/acorn03.csv", row.names=1)
+xb1 <- balanceTest(z ~ v_p2003 + v_m2003 + v_g2002 + v_p2002 + v_m2002 + v_s2001 +
+         v_g2000 + v_p2000 + v_m2000 + v_s1999 + v_m1999 + v_g1998 +
+         v_m1998 + v_s1998 + v_m1997 + v_s1997 + v_g1996 + v_p1996 +
+         v_m1996 + v_s1996 + size, data=acorn, p.adjust.method = "none")
+
+xb1$results
+```
+
+## How did we do this?
+
+```{r xb1overall, echo=TRUE}
+xb1$overall
+```
+
+
+```{r, out.width=".7\\textwidth"}
+plot(xb1)
+```
+
+
+## DeMystifying balanceTest
+
+```{r d1, echo=TRUE}
+d.stat<-function(zz, mm, ss){
+  ## this is the d statistic (harmonic mean weighted diff of means statistic)
+  ## from Hansen and Bowers 2008 almost directly from balanceTest.Engine
+  h.fn<-function(n, m){(m*(n-m))/n}
+  myssn<-apply(mm, 2, function(x){sum((zz-unsplit(tapply(zz, ss, mean), ss))*x)})
+  hs<-tapply(zz, ss, function(z){h.fn(m=sum(z), n=length(z))})
+  mywtsum<-sum(hs)
+  myadjdiff<-myssn/mywtsum
+  return(myadjdiff)
+}
+```
+
+## DeMystifying balanceTest
+
+Recall our discussion of estimation "holding constant" within strata?
+
+```{r d1v2, echo=TRUE}
+## This is another version that might be more clear in regards what is going on.
+dstatv2 <- function(zz,mm,ss){
+    ## mm is a data.frame
+    dat <- cbind(mm,z=zz,s=ss)
+    datb <- dat %>% group_by(s) %>% summarize(across(.cols=all_of(names(mm)),function(x){ mean(x[z==1]) - mean(x[z==0])}),
+        nb=n(),
+        pib=mean(z),
+        nbwt=nb/nrow(dat),
+        hbwt0= pib * (1-pib) * nbwt)
+    datb$hbwt <- datb$hbwt0/sum(datb$hbwt0)
+    datb[,15:27]
+    adjmns <- datb %>% summarize(across(.cols=all_of(names(mm)),function(x){ sum(x*hbwt) }))
+    adjmnsmat <- as.matrix(adjmns)
+    return(adjmnsmat)
+}
+
+```
+
+## DeMystifying balanceTest
+
+```{r nullddistsetup, echo=TRUE}
+acorncovs<-c("v_p2003","v_m2003","v_g2002","v_p2002","v_m2002","v_s2001","v_g2000","v_p2000","v_m2000","v_s1999","v_m1999","v_g1998","v_m1998","v_s1998","v_m1997","v_s1997","v_g1996","v_p1996","v_m1996","v_s1996","size")
+
+dstats1  <-d.stat(zz=acorn$z,mm=acorn[,acorncovs],ss=rep(1,nrow(acorn)))
+dstats2  <-dstatv2(zz=acorn$z,mm=acorn[,acorncovs],ss=rep(1,nrow(acorn)))
+
+dstats1[1:5]
+dstats2[1:5]
+```
+
+## Calculate the reference distribution of the d-stat and the $d^2$ stat
+
+For all vectors $z \in \Omega$ get `adj.diffs`. This is the distribution of the $d$ statistic for one-by-one balance assessment. Next question is about the distribution of the $d^2$ statistic: does it follow a $\chi^2$ distribution in this case?
+
+```{r nulldist, cache=TRUE}
+d.dist<-replicate(10000, d.stat(sample(acorn$z), acorn[,acorncovs], ss=rep(1,nrow(acorn))))
+```
+
+Get the randomization-based $p$-values:
+
+```{r echo=TRUE}
+xb1ds <- xb1$results[,"adj.diff",]
+xb1ps <- xb1$results[,"p",]
+obs.d<-d.stat(acorn$z, acorn[, acorncovs], rep(1,nrow(acorn)))
+dps <- matrix(NA,nrow=length(obs.d),ncol=1)
+for(i in 1:length(obs.d)){
+  dps[i,] <- 2*min( mean(d.dist[i,] >= obs.d[i]),mean(d.dist[i,] <= obs.d[i]))
+}
+## You can compare this to the results from balanceTest
+round(cbind(randinfps=dps[,1],xbps=xb1ps,obsdstats=obs.d,xbdstats=xb1ds),3)
+```
+
+## Calculate the reference distribution of the d-stat and the $d^2$ stat
+
+The $d^2$ statistic is a linear function of the $d$-statistics that accounts
+for the covariance between those statistics (across the possible assignments
+under the null hypothesis of no effects).
+
+```{r d2stat, echo=TRUE}
+d2.stat <- function(dstats,ddist=NULL,theinvcov=NULL){
+  ## d is the vector of d statistics
+  ## ddist is the matrix of the null reference distributions of the d statistics
+  if(is.null(theinvcov) & !is.null(ddist)){
+    as.numeric( t(dstats) %*% solve(cov(t(ddist))) %*% dstats)
+  } else {
+    as.numeric( t(dstats) %*% theinvcov %*% dstats)
+  }
+}
+```
+
+## Calculate the reference distribution of the d-stat and the $d^2$ stat
+
+The distribution of the $d^2$ statistic arises from the distribution of the d statistics --- for each draw from the set of treatment assignments we can collapse the $d$-statistics into one $d^2$. And so we can calculate the $p$-value for the $d^2$.
+
+```{r d22, echo=TRUE}
+## Here we have the inverse of the covariance/variance matrix of the d statistics
+invCovDDist <- solve(cov(t(d.dist)))
+obs.d2<- d2.stat(obs.d,d.dist,invCovDDist)
+
+d2.dist<-apply(d.dist, 2, function(thed){
+                 d2.stat(thed,theinvcov=invCovDDist)
+         })
+## The chi-squared reference distribution only uses a one-sided p-value going in the positive direction
+d2p<-mean(d2.dist>=obs.d2)
+cbind(obs.d2,d2p)
+xb1$overall
+```
+
+
+
+## Why differences between balanceTest and d2?
+
+I suspect that $N=28$ is too small. `balanceTest` uses an asymptotic
+approximation to the randomization distribution.
+
+```{r echo=FALSE, out.width=".8\\textwidth"}
+## Notice that the distribution of d2.dist is not that close to the
+## chi-squared distribution in this case with N=28
+par(mfrow=c(1,2))
+qqplot(rchisq(10000,df=21),d2.dist)
+abline(0,1)
+
+plot(density(d2.dist))
+rug(d2.dist)
+curve(dchisq(x,df=21),from=0,to=40,add=TRUE,col="grey")
+```
+
+## Does balanceTest have a controlled false positive rate here?
+
+```{r xberror, echo=TRUE, cache=TRUE}
+xbfn <- function(){
+	acorn$newz <- sample(acorn$z)
+	xb1 <- balanceTest(newz ~ v_p2003 + v_m2003 + v_g2002 + v_p2002 + v_m2002 + v_s2001 +
+			v_g2000 + v_p2000 + v_m2000 + v_s1999 + v_m1999 + v_g1998 +
+			v_m1998 + v_s1998 + v_m1997 + v_s1997 + v_g1996 + v_p1996 +
+			v_m1996 + v_s1996 + size, data=acorn)
+	return(xb1$overall[["p.value"]])
+}
+
+res <- replicate(1000,xbfn())
+```
+
+```{r resout, echo=TRUE}
+summary(res)
+mean(res <= .05)
+mean(res <= .2)
+```
+
+## Does balanceTest have a controlled false positive rate here?
+
+Ex. are fewer than 5% of the p-values less than .05?
+
+```{r}
+plot(ecdf(res))
+abline(0,1)
+abline(v=c(.01,.05,.1))
+```
+
+
+## Does the simulation based approach have a controlled false positive rate here?
+
+
+```{r resdirecterror, cache=TRUE}
+d2pfn <- function(z,X){
+	newz <- sample(z)
+
+	d.dist<-replicate(1000, d.stat(sample(newz), X, ss=rep(1,nrow(X))))
+
+	obs.d<-d.stat(newz, X, rep(1,nrow(X)))
+
+	dps <- matrix(NA,nrow=length(obs.d),ncol=1)
+	for(i in 1:length(obs.d)){
+		dps[i,] <- 2*min( mean(d.dist[i,] >= obs.d[i]),mean(d.dist[i,] <= obs.d[i]))
+	}
+
+	invCovDDist <- solve(cov(t(d.dist)))
+	obs.d2<- d2.stat(obs.d,d.dist,invCovDDist)
+
+	d2.dist<-apply(d.dist, 2, function(thed){
+			       d2.stat(thed,theinvcov=invCovDDist)
+		})
+
+	d2p<-mean(d2.dist>=obs.d2)
+
+	return(d2p)
+}
+```
+
+```{r doresdirect, eval=FALSE, cache=TRUE}
+resdirect <- replicate(1000,d2pfn(z=acorn$z,X=acorn[,acorncovs]))
+```
+
+```{r doresdirectparallel, eval=TRUE, cache=TRUE}
+library(parallel)
+resdirectlst <- mclapply(1:1000,function(i){ d2pfn(z=acorn$z,X=acorn[,acorncovs]) },mc.cores=detectCores())
+resdirect <- unlist(resdirectlst)
+save(resdirect,file="day9-resdirect.rda")
+```
+
+## Does the simulation based approach have a controlled false positive rate here?
+
+It looks like it is a bit too high. Hmm... Maybe the simulation needs to be fixed.
+
+```{r lazyload, echo=TRUE}
+##lazyLoad("day9-AdjustmentBalance_cache/beamer/doresdirectparallel_5ec4fa8cdcbcf586138e928bc0f9fc0b")
+##load("day9-resdirect.rda")
+summary(resdirect)
+mean(resdirect <= .05)
+mean(resdirect <= .2)
+```
+
+## Does balanceTest have a controlled false positive rate here?
+
+
+```{r}
+plot(ecdf(resdirect))
+abline(0,1)
+abline(v=c(.01,.05,.1))
+```
+
