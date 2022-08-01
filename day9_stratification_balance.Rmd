@@ -578,6 +578,21 @@ n_strat <- table(meddat$nhAboveHS >= .1)
 n_strat
 stopifnot(sum(n_strat) == nrow(meddat)) ## A test of code
 sum(res_strat * rev(n_strat) / 45) ## What is happening here?
+## Putting this together
+outcome_analysis_strat <- meddat %>% group_by(nhAboveHS>=.1) %>%
+    summarize(nb=n(),nT=sum(nhTrt),nC=nb-nT,pr_trt=mean(nhTrt),bar_y_t=mean(HomRate08[nhTrt==1]),
+        bar_y_c=mean(HomRate08[nhTrt==0]),ate_b=bar_y_t - bar_y_c)
+
+outcome_analysis_strat <- outcome_analysis_strat %>% mutate(nbwt=nb/sum(nb),
+    prec_wt0 = nbwt * pr_trt * (1-pr_trt))
+outcome_analysis_strat$prec_wt <-
+    with(outcome_analysis_strat,prec_wt0/sum(prec_wt0))
+
+outcome_analysis_strat
+
+outcome_analysis_strat %>% summarize(ate_block_size= sum(ate_b * nbwt),
+    ate_prec_wt = sum(ate_b * prec_wt/sum(prec_wt)))
+
 ```
 
 *But, standard errors? p-values? confidence intervals?*
@@ -597,22 +612,31 @@ lm1d <- lm(HomRate08 ~ nhTrt + I(nhAboveHS >= .1), data = meddat)
 coef(lm1d)["nhTrt"]
 ```
 
-## Stratified adjustment V 2.0
+## Stratified adjustment V 2.0 {.allowframebreaks}
 
 One-step stratified testing
 
 ```{r echo=TRUE}
 xbate1 <- balanceTest(nhTrt ~ HomRate08+ strata(I(nhAboveHS >= .1)), data = meddat)
-xbate1$results[, c("Treatment","Control", "adj.diff","p"), ]
+xbate1$results[, c("adj.diff","p"), ]
 xbate1$overall
 
+## Effect of the treatment on the treated weights
+outcome_analysis_strat$nTwt <- with(outcome_analysis_strat,nT/sum(nT))
+with(outcome_analysis_strat,sum(ate_b*nTwt))
+
+## Approximating the as-if-randomized null distribution with a Normal
+## approximation
 hstest2 <- independence_test(HomRate08~nhTrt|factor(nhAboveHS >= .1),data=meddat)
+
+## Now using the "as-if-randomized" distribution directly
 set.seed(12345)
 hstest2_perm <- independence_test(HomRate08~nhTrt|factor(nhAboveHS >= .1),data=meddat,distribution=approximate(nresample=10000))
 
 pvalue(hstest2)
 pvalue(hstest2_perm)
 
+## Now trying different test statistics
 hstest4 <- independence_test(HomRate08~nhTrt|factor(nhAboveHS >= .1),data=meddat,ytrafo=rank_trafo)
 pvalue(hstest4)
 
