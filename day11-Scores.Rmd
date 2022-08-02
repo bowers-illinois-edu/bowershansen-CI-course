@@ -659,6 +659,29 @@ lag_dv <- lm_robust(HomRate08~nhTrt+HomRate03,data=meddat)
 lag_dv
 ```
 
+## Another pre-post-design
+
+```{r}
+## Make std diffs on baseline
+baseline_dist <- match_on(nhTrt~HomRate03,data=meddat)
+
+quantile(baseline_dist,seq(0,1,.1))
+pm_hr03 <- pairmatch(baseline_dist + caliper(baseline_dist,.4),data=meddat,remove.unmatchables = TRUE)
+stratumStructure(pm_hr03)
+summary(unlist(matched.distances(pm_hr03,baseline_dist)))
+meddat$pm_hr03 <- pm_hr03
+baltest_hr03 <- balanceTest(nhTrt~HomRate03+strata(pm_hr03),data=meddat,subset=!is.na(pm_hr03))
+baltest_hr03$overall
+
+## Within set very homogeneous on baseline homocide rates:
+est1<- lm_robust(HomRate08~nhTrt,fixed_effects = ~pm_hr03,data=meddat,subset=!is.na(pm_hr03))
+est1
+## Look only at the difference
+est2<- lm_robust(I(HomRate08-HomRate03)~nhTrt,fixed_effects = ~pm_hr03,data=meddat,subset=!is.na(pm_hr03))
+est2
+
+```
+
 ## Questions to answer with a pre-vs-post design for these data
 
 Some questions to answer:
