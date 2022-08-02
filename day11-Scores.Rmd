@@ -6,7 +6,7 @@ title: |
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
   | ICPSR 2022 Session 2
-  | Jake Bowers, Ben Hansen, Tom Leavitt
+  | Jake Bowers \& Tom Leavitt
 bibliography:
  - 'BIB/MasterBibliography.bib'
 fontsize: 10pt
@@ -15,6 +15,8 @@ graphics: yes
 biblio-style: authoryear-comp
 biblatexoptions:
   - natbib=true
+urlcolor: orange
+linkcolor: orange
 output:
   beamer_presentation:
     slide_level: 2
@@ -55,74 +57,17 @@ library(optmatch)
   1. Agenda:  Continue to think about an adjustment strategy to enhance
      counterfactual causal interpretations in non-randomized studies:
       - Workflow:
-         a) choose basis or covariates that need adjusting $\rightarrow$
-         b) create a stratification of the data / a stratified research design (ex. `fullmatch`) $\rightarrow$
-         c) choose one or more approaches to evaluate the stratification (ex. `xBalance`) $\rightarrow$
-         d) (probably) improve the stratified design / iterate 
+         a. choose basis or covariates that need adjusting $\rightarrow$
+         b. create a stratification of the data / a stratified research design (ex. `fullmatch`) $\rightarrow$
+         c. choose one or more approaches to evaluate the stratification (ex. `balanceTest`) $\rightarrow$
+         d. (probably) improve the stratified design / iterate 
       - How to do this with one variable?
       - How to do this with  more than one variable?
- 2. We are now moving into the "Observational Studies" or Matching part of the course (see the reading there).
- 3. Questions arising from the reading or assignments or life?
+      - How to create strata to clarify comparison along continuous or multi-valued
+        "treatment" variables ("non-bipartite" matching) Feel free to read
+        ahead.
+ 2. Questions arising from the reading or assignments or life?
 
-# But first, review after the weekend:
-
-## Review of Instrumental Variables
-
-Say you think you have an instrument: "rainfall", "economic liberalization as
-a result of NAFTA", "a housing/school lottery". You then need to convince
-yourself about:
-
- - SUTVA
- - "As if randomized"/Ignorability
- - That the instrument detectibly changes the dose / The instrument is not
-   weak.
- - That the instrument influences the outcome **only** via the dose
-   (Excludable)
- - (for *estimation* of CACE/LATE) That there are no defiers / the instrument
-   changes the dose in one direction and the dose changes the outcome in one
-   direction.
-
-## Review of randomization assessment in a randomized experiment
-
-How, in principle, might one do this? Notice that a wide variety of "imbalance" is consistent with a well randomized experiment:
-
-```{r bal1, echo=TRUE}
-library(MASS)
-library(randomizr)
-N <- 100
-set.seed(1235)
-xmat <- mvrnorm(n=N,mu=rep(0,N/2),Sigma=diag(N/2))
-summary(as.vector(cor(xmat)))
-dat <- data.frame(xmat)
-dat$Z <- complete_ra(N=100,m=50)
-xbFake <- xBalance(Z~.,data=dat,report="all")
-xbFake$overall
-xbFake_dat <- as.data.frame(xbFake$results)
-xbFake_dat$varnm <- row.names(xbFake_dat)
-xbFake_dat$varnmN <- 1:nrow(xbFake_dat)
-```
-
-## Review of randomization assessment in a randomized experiment
-
-How, in principle, might one do this? Notice that a wide variety of "imbalance" is consistent with a well randomized experiment: (Line at 0=expected difference under randomization, lines are $\pm$ 2 sds of the randomization distribution of the null hypothesis of no difference.
-
-```{r bal2, echo=FALSE, out.width=".7\\textwidth"}
-g <- ggplot(data=xbFake_dat,aes(x=std.diff.unstrat,y=varnmN))+
-    geom_point()+
-    geom_segment(aes(x=-2*adj.diff.null.sd.unstrat,xend=2*adj.diff.null.sd.unstrat,y=varnmN,yend=varnmN)) +
-    geom_vline(xintercept=0) +
-xlab(label="Standardized Mean Difference") +
-ylab(label="Covariate")
-
-print(g)
-```
-
-
-
-## Review of linear model "control for"
-
-Did the Metrocable intervention decrease
-violence in those neighborhoods? We have Homicides per 1000 people in 2008 (`HomRate08`) as a function of Metrocable.
 
 ```{r echo=FALSE, cache=TRUE}
 load(url("http://jakebowers.org/Data/meddat.rda"))
@@ -133,119 +78,21 @@ meddat <- mutate(meddat,
 row.names(meddat) <- meddat$nh
 ```
 
-```{r lmraw, echo=TRUE}
-lmRaw <- lm(HomRate08 ~ nhTrt, data = meddat)
-coef(lmRaw)[["nhTrt"]]
-```
-
-What do we need to believe or know in order to imagine that we have done a good job adjusting for Proportion with more than HS Education below? (concerns about extrapolation, interpolation, linearity, influential points, parallel slopes, biased estimation of the average causal effect)
-
-```{r lmadj1, echo=TRUE}
-lmAdj1 <- lm(HomRate08 ~ nhTrt + nhAboveHS, data = meddat)
-coef(lmAdj1)["nhTrt"]
-```
-
-What about when we try to adjust for more than one variable? (all of the other questions+the curse of
-dimensionality)
-
-```{r lmadj2, echo=TRUE}
-lmAdj2 <- lm(HomRate08 ~ nhTrt + nhAboveHS + nhRent, data = meddat)
-coef(lmAdj2)["nhTrt"]
-```
-
-## The Problem of Using  the Linear Model for  Adjustment
-
- - *Problem of Interepretability:* "Controlling for" is  "removing (additive) linear relationships" it is  not "holding constant"
- - *Problem of Diagnosis and Assessment:* What is the  standard against which we can compare a given linear covariance adjustment specification?
- - *Problem of extrapolation and interpolation:* Often known as "common support" plus "functional form dependence".
- - *Problems of overly influential points and curse of  dimensionality*: As dimensions increase, odds of influential  point increase (ex. bell curve in one dimension, one very influential point in 2 dimensions); also real limits on number of covariates (roughly $\sqrt{n}$ for OLS).
- - *Problems of  bias and assessing bias*:
-
-\begin{equation}
-Y_i = \beta_0 + \beta_1 Z_i + e_i
-\end{equation}
-
-This is a common practice because, we know that the formula to estimate $\beta_1$ in equation \ref{eq:olsbiv} is the same as the difference of means in $Y$ between treatment and control groups:
-
-\begin{equation}
-\hat{\beta}_1 = \overline{Y|Z=1} - \overline{Y|Z=0} = \frac{cov(Y,Z)}{var(Z)}. \label{eq:olsbiv}
-\end{equation}
-
-\begin{equation}
-Y_i = \beta_0 + \beta_1 Z_i + \beta_2 X_i + e_i
-\end{equation}
-
-What is $\beta_1$ in this case? We know the matrix representation here $(\bX^{T}\bX)^{-1}\bX^{T}\by$, but here is the scalar formula for this particular case in \ref{eq:olsbiv}:
-
-\begin{equation}
-\hat{\beta}_1 = \frac{\var(X)\cov(Z,Y) - \cov(X,Z)\cov(X,Y)}{\var(Z)\var(X) - \cov(Z,X)^2}
-\end{equation}
-
-## The Problem of Using  the Linear Model for  Adjustment
-
- - Problems of  bias:
-
-\begin{equation}
-Y_i = \beta_0 + \beta_1 Z_i + e_i (\#eq:olsbiv)
-\end{equation}
-
-This is a common practice because, we know that the formula to estimate $\beta_1$ in equation \@ref(eq:olsbiv) is the same as the difference of means in $Y$ between treatment and control groups:
-
-\begin{equation}
-\hat{\beta}_1 = \overline{Y|Z=1} - \overline{Y|Z=0} = \frac{cov(Y,Z)}{var(Z)}.
-\end{equation}
-
-\begin{equation}
-Y_i = \beta_0 + \beta_1 Z_i + \beta_2 X_i + e_i
-\end{equation}
-
-What is $\beta_1$ in this case? We know the matrix representation here $(\bX^{T}\bX)^{-1}\bX^{T}\by$, but here is the scalar formula for this particular case in \@ref{eq:olsbiv}:
-
-\begin{equation}
-\hat{\beta}_1 = \frac{\var(X)\cov(Z,Y) - \cov(X,Z)\cov(X,Y)}{\var(Z)\var(X) - \cov(Z,X)^2}
-\end{equation}
-
-
-
-# Matching on one variable to create strata
-
-## Can we improve stratified adjustment?
-
-Rather than two strata, why not three?
-
-```{r lm1cut3, echo=TRUE}
-meddat$nhAboveHScut3 <- cut(meddat$nhAboveHS,3)
-lm1cut3 <- lm(HomRate08~nhTrt+nhAboveHScut3,data=meddat)
-coef(lm1cut3)["nhTrt"]
-```
-
-Compare this stratification to a standard (the dist. we'd see if we had randomized `nhTrt` within each of those strata):
-
-```{r lm1cut3ab, echo=TRUE}
-xbcut3 <- xBalance(nhTrt~nhAboveHS,strata=list(unstrt=NULL,cut3=~nhAboveHScut3),data=meddat,report="all")
-xbcut3$results
-```
-
-But why those cuts? And why not 4? Why not...?
-
-\medskip
-
-One idea: collect observations into strata such that the sum of the
-differences in means of nhAboveHS within strata is smallest? This is the idea
-behind `optmatch` and other matching approaches.
-
 ## The optmatch workflow: The distance matrix
 
-*Introduction to `optmatch` workflow.* To minimize overall differences `optmatch` requires a matrix
+To minimize overall differences `optmatch` requires a matrix
 of those differences (in general terms, a matrix of distances between the
 treated and control units)
 
 ```{r optm1, echo=TRUE}
 tmp <- meddat$nhAboveHS
 names(tmp) <- rownames(meddat)
-absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
-absdist[1:3,1:3]
-abs(meddat$nhAboveHS[meddat$nhTrt==1][1] - meddat$nhAboveHS[meddat$nhTrt==0][1] )
+absdist <- match_on(tmp, z = meddat$nhTrt, data = meddat)
+absdist[1:3, 1:3]
+meddat %>%
+  group_by(nhTrt) %>%
+  summarize(nhAboveHS[1])
+abs(meddat$nhAboveHS[meddat$nhTrt == 1][1] - meddat$nhAboveHS[meddat$nhTrt == 0][1])
 ```
 
 ## Created a Stratified Research Design
@@ -253,21 +100,21 @@ abs(meddat$nhAboveHS[meddat$nhTrt==1][1] - meddat$nhAboveHS[meddat$nhTrt==0][1] 
 `fullmatch` and `pairmatch` use a distance matrix to produce strata.
 
 ```{r fm1, echo=TRUE}
-fm1 <- fullmatch(absdist,data=meddat)
-summary(fm1, min.controls=0, max.controls=Inf )
-table(meddat$nhTrt,fm1)
-pm1 <- pairmatch(absdist,data=meddat)
-summary(pm1, min.controls=0, max.controls=Inf )
-table(meddat$nhTrt,pm1,exclude=c())
-
-fm2 <- fullmatch(absdist,data=meddat,min.controls=.5)
-
+fm1 <- fullmatch(absdist, data = meddat)
+summary(fm1, min.controls = 0, max.controls = Inf)
+table(meddat$nhTrt, fm1)
+pm1 <- pairmatch(absdist, data = meddat)
+summary(pm1, min.controls = 0, max.controls = Inf)
+table(meddat$nhTrt, pm1, exclude = c())
+fm2 <- fullmatch(absdist + caliper(absdist,.06), data = meddat, min.controls = .5)
+stratumStructure(fm2)
 ```
 
 
 ## Evaluate the design: Within set differences
 
 ```{r echo=FALSE}
+meddat$fm2 <- fm2
 meddat$fm1 <- fm1
 meddat$pm1 <- pm1
 ```
@@ -276,106 +123,130 @@ Differences within sets versus raw differences.
 
 ```{r echo=FALSE, out.width=".9\\textwidth"}
 library(gridExtra)
-bpfm1 <- ggplot(meddat,aes(x=fm1,y=nhAboveHS)) +
-	geom_boxplot() +
-	 stat_summary(fun=mean, geom="point", shape=20, size=3, color="red", fill="red")
-meddat$nostrata <- rep(1,45)
-bporig <- ggplot(meddat,aes(x=nostrata,y=nhAboveHS))+
-	 geom_boxplot()+
-	 stat_summary(fun=mean, geom="point",
-		      shape=20, size=3, color="red", fill="red")
+bpfm1 <- ggplot(meddat, aes(x = fm1, y = nhAboveHS)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "red", fill = "red")
+meddat$nostrata <- rep(1, 45)
+bporig <- ggplot(meddat, aes(x = nostrata, y = nhAboveHS)) +
+  geom_boxplot() +
+  stat_summary(
+    fun = mean, geom = "point",
+    shape = 20, size = 3, color = "red", fill = "red"
+  )
 
-grid.arrange(bpfm1,bporig,ncol=2,layout_matrix=matrix(c(1,1,1,1,2),nrow=1))
+grid.arrange(bpfm1, bporig, ncol = 2, layout_matrix = matrix(c(1, 1, 1, 1, 2), nrow = 1))
 ```
 
 ## Evaluate the design: Within-set differences
 Differences within sets versus raw differences.
 
 ```{r echo=FALSE, out.width=".9\\textwidth"}
-bppm1 <- ggplot(meddat,aes(x=pm1,y=nhAboveHS)) +
-	geom_boxplot() +
-	 stat_summary(fun=mean, geom="point", shape=20, size=3, color="red", fill="red")
+bpfm2 <- ggplot(meddat, aes(x = fm2, y = nhAboveHS)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "red", fill = "red")
 
-grid.arrange(bppm1,bporig,ncol=2,layout_matrix=matrix(c(1,1,1,1,2),nrow=1))
+grid.arrange(bpfm2, bporig, ncol = 2, layout_matrix = matrix(c(1, 1, 1, 1, 2), nrow = 1))
+```
+
+
+
+## Evaluate the design: Within-set differences
+Differences within sets versus raw differences.
+
+```{r echo=FALSE, out.width=".9\\textwidth"}
+bppm1 <- ggplot(meddat, aes(x = pm1, y = nhAboveHS)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "red", fill = "red")
+
+grid.arrange(bppm1, bporig, ncol = 2, layout_matrix = matrix(c(1, 1, 1, 1, 2), nrow = 1))
 ```
 
 ## Evaluate the design: Inspect within-set differences
 
-Use what we know about Medellin, about Metrocable, about neighborhoods there to assess the research design:
+Use what we know about Medellin neighborhoods, about Metrocable, to assess the research design:
 
 ```{r sdiffs, echo=FALSE}
-rawmndiffs <- with(meddat, mean(nhAboveHS[nhTrt==1]) - mean(nhAboveHS[nhTrt==0]))
-setdiffsfm1 <- meddat %>% group_by(fm1) %>% summarize(mneddiffs =
-						   mean(nhAboveHS[nhTrt==1]) -
-						   mean(nhAboveHS[nhTrt==0]),
-					   mnAboveHS = mean(nhAboveHS),
-					   minAboveHS = min(nhAboveHS),
-					   maxAboveHS = max(nhAboveHS))
+rawmndiffs <- with(meddat, mean(nhAboveHS[nhTrt == 1]) - mean(nhAboveHS[nhTrt == 0]))
+setdiffsfm1 <- meddat %>%
+  group_by(fm1) %>%
+  summarize(
+    mneddiffs =
+      mean(nhAboveHS[nhTrt == 1]) -
+        mean(nhAboveHS[nhTrt == 0]),
+    mnAboveHS = mean(nhAboveHS),
+    minAboveHS = min(nhAboveHS),
+    maxAboveHS = max(nhAboveHS)
+  )
 
 setdiffsfm1 %>% arrange(desc(abs(mneddiffs)))
-#summary(setdiffs$mneddiffs)
-#quantile(setdiffs$mneddiffs, seq(0,1,.1))
+# summary(setdiffs$mneddiffs)
+# quantile(setdiffs$mneddiffs, seq(0,1,.1))
 ```
 
 
 
 ## Evaluate the design: Inspect within set differences
 
-Use what we know about Medellin, about Metrocable, about neighborhoods there to assess the research design:
+Use what we know about Medellin neighborhoods, about Metrocable, to assess the research design:
 
 ```{r echo=FALSE, warnings=FALSE}
-setdiffspm1 <- meddat %>% group_by(pm1) %>% summarize(mneddiffs =
-						   mean(nhAboveHS[nhTrt==1]) -
-						   mean(nhAboveHS[nhTrt==0]),
-					   mnAboveHS = mean(nhAboveHS),
-					   minAboveHS = min(nhAboveHS),
-					   maxAboveHS = max(nhAboveHS))
+setdiffspm1 <- meddat %>%
+  group_by(pm1) %>%
+  summarize(
+    mneddiffs =
+      mean(nhAboveHS[nhTrt == 1]) -
+        mean(nhAboveHS[nhTrt == 0]),
+    mnAboveHS = mean(nhAboveHS),
+    minAboveHS = min(nhAboveHS),
+    maxAboveHS = max(nhAboveHS)
+  )
 
 setdiffspm1 %>% arrange(desc(abs(mneddiffs)))
 ```
 
 
-## Evaluate the design: Compare to a randomized experiment.
+## Evaluate the design: Compare to a randomized experiment. {.allowframebreaks}
 
-The within-set differences look different from those that would be expected
-from a randomized experiment.
+The observed within-set differences differ from those that would be expected
+from a randomized experiment. Here, we compare 3 designs that keep all
+observations, just organized into sets differently.
 
 ```{r xbhs2, echo=TRUE}
-xbfm1 <- xBalance(nhTrt~nhAboveHS,
-                  strata=list(nostrat=NULL,
-                              hsmatch=~fm1),
-                  data=meddat,report="all")
-xbfm1$results
+xbfm1 <- balanceTest(nhTrt ~ nhAboveHS + strata(fm1) + strata(fm2) + strata(pm1),
+  data = meddat
+)
+xbfm1$results[,,]
 xbfm1$overall
 ```
 
 
-
-## What is xBalance doing?
+## What is balanceTest doing?
 
 ```{r xbagain, echo=TRUE}
-setmeanDiffs <- meddat %>% group_by(fm1) %>%
-  summarise(diffAboveHS=mean(nhAboveHS[nhTrt==1])-mean(nhAboveHS[nhTrt==0]),
-            nb=n(),
-            nTb = sum(nhTrt),
-            nCb = sum(1-nhTrt),
-            hwt = ( 2*( nCb * nTb ) / (nTb + nCb))
-            )
-setmeanDiffs %>% arrange(desc(abs(diffAboveHS)))
+setmeanDiffs_fm1 <- meddat %>%
+  group_by(fm1) %>%
+  summarise(
+    diffAboveHS = mean(nhAboveHS[nhTrt == 1]) - mean(nhAboveHS[nhTrt == 0]),
+    nb = n(),
+    nTb = sum(nhTrt),
+    nCb = sum(1 - nhTrt),
+    hwt = (2 * (nCb * nTb) / (nTb + nCb))
+  )
+setmeanDiffs_fm1 %>% arrange(desc(abs(diffAboveHS)))
 ```
 
-## What is xBalance doing with multiple sets/blocks?
+## What is balanceTest doing with multiple sets/blocks?
 
 The test statistic is a weighted average of the set-specific differences (same
 approach as we would use to test the null in a block-randomized experiment)
 
 ```{r wtmns, echo=TRUE}
 ## The descriptive mean difference using block-size weights
-## with(setmeanDiffs, sum(diffAboveHS*nTb/sum(nTb)))
+with(setmeanDiffs_fm1, sum(diffAboveHS*nTb/sum(nTb)))
 ## The mean diff used as the observed value in the testing
-with(setmeanDiffs, sum(diffAboveHS*hwt/sum(hwt)))
-## Compare to xBalance output
-xbfm1$results[,,"hsmatch"]
+with(setmeanDiffs_fm1, sum(diffAboveHS * hwt / sum(hwt)))
+## Compare to balanceTest output
+xbfm1$results[, , "fm1"]
 ```
 
 ## What do we mean by "compare to a randomized experiment"?
@@ -384,16 +255,20 @@ Recall that $p$-values require distributions, and distributions require processe
 
 ```{r d1v2, echo=TRUE}
 ## This is another version that might be more clear in regards what is going on.
-dstatv3 <- function(zz,mm,ss){
-    dat <- data.frame(mm=mm,z=zz,s=ss)
-    datb <- dat %>% group_by(s) %>% summarize(mndiff=mean(mm[z==1]) - mean(mm[z==0]),
-        nb=n(),
-        pib=mean(z),
-        nbwt=nb/nrow(dat),
-        hbwt0= pib * (1-pib) * nbwt)
-    datb$hbwt <- datb$hbwt0/sum(datb$hbwt0)
-    adjmn <- with(datb, sum(mndiff*hbwt))
-    return(adjmn)
+dstatv3 <- function(zz, mm, ss) {
+  dat <- data.frame(mm = mm, z = zz, s = ss)
+  datb <- dat %>%
+    group_by(s) %>%
+    summarize(
+      mndiff = mean(mm[z == 1]) - mean(mm[z == 0]),
+      nb = n(),
+      pib = mean(z),
+      nbwt = nb / nrow(dat),
+      hbwt0 = pib * (1 - pib) * nbwt
+    )
+  datb$hbwt <- datb$hbwt0 / sum(datb$hbwt0)
+  adjmn <- with(datb, sum(mndiff * hbwt))
+  return(adjmn)
 }
 ```
 
@@ -403,17 +278,20 @@ Recall that $p$-values require distributions, and distributions require processe
 
 
 ```{r xbdist, messages=FALSE, warning=FALSE}
-newexp <- function(zz,ss){
-    ## newz <- unlist(lapply(split(zz,ss),sample),ss)
-    newzdat <- data.frame(zz=zz,ss=ss) %>% group_by(ss) %>% mutate(newz=sample(zz))
-    return(newzdat$newz)
+newexp <- function(zz, ss) {
+  ## newz <- unlist(lapply(split(zz,ss),sample),ss)
+  newzdat <- data.frame(zz = zz, ss = ss) %>%
+    group_by(ss) %>%
+    mutate(newz = sample(zz))
+  return(newzdat$newz)
 }
 
 set.seed(123455)
-nulldist <- replicate(1000,with(meddat,dstatv3(zz=newexp(zz=nhTrt,ss=fm1),mm=nhAboveHS,ss=fm1)))
-obsdstat <- with(meddat,dstatv3(zz=nhTrt,mm=nhAboveHS,ss=fm1))
-2*min(mean(nulldist >=obsdstat), mean(nulldist <=obsdstat))
-xbfm1$results
+nulldist <- replicate(1000, with(meddat, dstatv3(zz = newexp(zz = nhTrt, ss = fm1), mm = nhAboveHS, ss = fm1)))
+obsdstat <- with(meddat, dstatv3(zz = nhTrt, mm = nhAboveHS, ss = fm1))
+perm_p_value <- 2 * min(mean(nulldist >= obsdstat), mean(nulldist <= obsdstat))
+perm_p_value
+xbfm1$results[,,"fm1"]
 ```
 
 
@@ -423,8 +301,9 @@ Recall that $p$-values require distributions, and distributions require processe
 
 ```{r plotxbnulldist, out.width=".7\\textwidth"}
 plot(density(nulldist))
+curve(dnorm(x,sd=sd(nulldist)),from=min(nulldist),to=max(nulldist),col="blue",add=TRUE)
 rug(nulldist)
-abline(v=obsdstat)
+abline(v = obsdstat)
 ```
 
 #  Matching on Many Covariates: Using Mahalnobis Distance
@@ -434,7 +313,7 @@ abline(v=obsdstat)
 The general idea: dimension reduction. When we convert many columns into one column we reduce the dimensions of the dataset (to one column). If using distance matrices and optimal matching allows us to side-step the problem of choosing cut-points for stratification, we can use the idea of **multivariate distance** to produce distance matrices to minimize **multivariate distances**.
 
 
-```{r}
+```{r out.width=".7\\textwidth"}
 X <- meddat[, c("nhAboveHS", "nhPopD")]
 plot(meddat$nhAboveHS, meddat$nhPopD, xlim = c(-.3, .6), ylim = c(50, 700))
 ```
@@ -449,6 +328,8 @@ plot(meddat$nhAboveHS, meddat$nhPopD, xlim = c(-.3, .6), ylim = c(50, 700))
 points(mean(X[, 1]), mean(X[, 2]), pch = 19, cex = 1)
 arrows(mean(X[, 1]), mean(X[, 2]), X["407", 1], X["407", 2])
 text(.4, 200, label = round(dist(rbind(colMeans(X), X["407", ])), 2))
+text(.3,100, label="Distance from the mean of both dimensions")
+text(.3,75,bquote("(" * bar(x) * " = " * .(mean(X[,1])) * ", " *  bar(y) * " = " * .(mean(X[,2])) * ")"))
 ```
 
 ## Dimension reduction using the Mahalanobis Distance
@@ -463,7 +344,7 @@ arrows(mean(X[, 1]), mean(X[, 2]), X["407", 1], X["407", 2])
 text(.4, 200, label = round(dist(rbind(colMeans(X), X["407", ])), 2))
 ```
 
-Distance between point 0,0 and unit "407".
+Distance between point in middle of the plot and unit "407".
 
 ```{r}
 tmp <- rbind(colMeans(X), X["407", ])
@@ -477,10 +358,12 @@ Problem: overweights variables with bigger scales (Population Density dominates)
 
 Now the Euclidean distance (on a standardized scale) so neither variable is overly dominant.
 
-```{r echo=FALSE,out.width=".6\\textwidth"}
+```{r echo=TRUE}
 Xsd <- scale(X)
-apply(Xsd, 2, sd)
+apply(Xsd, 2, sd) ## should be 1
 apply(Xsd, 2, mean)
+```
+```{r echo=FALSE,out.width=".6\\textwidth"}
 plot(Xsd[, 1], Xsd[, 2], xlab = "nhAboveHS/sd", ylab = "nhPopD/sd")
 points(mean(Xsd[, 1]), mean(Xsd[, 2]), pch = 19, cex = 1)
 arrows(mean(Xsd[, 1]), mean(Xsd[, 2]), Xsd["407", 1], Xsd["407", 2])
@@ -493,7 +376,9 @@ text(2, -1.2, label = round(dist(rbind(colMeans(Xsd), Xsd["407", ])), 2))
 The mahalanobis distance avoids the scale problem in the euclidean distance.^[For more [see here](https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance)] Here each circle are points of the same MH distance.
 
 ```{r mhfig, echo=FALSE,out.width=".6\\textwidth"}
-library(chemometrics)
+library(chemometrics) ## for drawMahal
+library(mvtnorm)
+
 par(mgp = c(1.5, .5, 0), oma = rep(0, 4), mar = c(3, 3, 0, 0))
 mh <- mahalanobis(X, center = colMeans(X), cov = cov(X))
 drawMahal(X,
@@ -516,6 +401,7 @@ edist
 
 ## Dimension reduction using the Mahalanobis Distance
 
+The standardized data
 
 ```{r}
 plot(Xsd[, 1], Xsd[, 2], xlab = "nhAboveHS/sd", ylab = "nhPopD/sd")
@@ -523,6 +409,8 @@ plot(Xsd[, 1], Xsd[, 2], xlab = "nhAboveHS/sd", ylab = "nhPopD/sd")
 
 ## Dimension reduction using the Mahalanobis Distance
 
+With mahalanobis distance contours calculated on standardized data, but then
+applied to the raw data.
 
 ```{r}
 drawMahal(X, center = colMeans(X), covariance = cov(X), quantile = c(.1, .2))
@@ -537,6 +425,7 @@ newcovX[2, 1] <- 0
 
 ## Dimension reduction using the Mahalanobis Distance
 
+Using a new covariance matrix (assuming no covariance between the variables).
 
 ```{r}
 drawMahal(X, center = colMeans(X), covariance = newcovX, quantile = c(.1, .2))
@@ -546,7 +435,7 @@ drawMahal(X, center = colMeans(X), covariance = newcovX, quantile = c(.1, .2))
 
 Here using the rank based Mahalanobis distance following DOS Chap. 8 (but comparing to the ordinary version).
 
-```{r}
+```{r echo=TRUE}
 mhdist <- match_on(nhTrt ~ nhPopD + nhAboveHS, data = meddat, method = "rank_mahalanobis")
 mhdist[1:3, 1:3]
 mhdist2 <- match_on(nhTrt ~ nhPopD + nhAboveHS, data = meddat)
@@ -554,8 +443,11 @@ mhdist2[1:3, 1:3]
 mhdist2[, "407"]
 ```
 
+## Matching on the Mahalanobis Distance
 
-```{r}
+Here using the rank based Mahalanobis distance following DOS Chap. 8 (but comparing to the ordinary version).
+
+```{r out.width=".5\\textwidth"}
 par(mgp = c(1.5, .5, 0), oma = rep(0, 4), mar = c(3, 3, 0, 0))
 drawMahal(X,
   center = colMeans(X), covariance = cov(X),
@@ -566,13 +458,88 @@ cpts <- c("401", "407", "411")
 tpts <- c("101", "102", "202")
 arrows(X[tpts, 1], X[tpts, 2], rep(X["407", 1]), rep(X["407", 2]))
 text(X[tpts, 1], X[tpts, 2], labels = round(mhdist2[tpts, "407"], 2), pos = 1)
+```
+
+```{r echo=TRUE}
 mhdist2[tpts, "407"]
+```
+
+## More on the Mahalanobis distance
+
+To Review: The Mahalanobis distance \citep{mahalanobis1930test}, avoids the scale and correlation problem in the euclidean distance.^[For more see <https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance>] $dist_M =  \sqrt{ (\mathbf{x} - \mathbf{\bar{x}})^T \mathbf{M}^{-1} (\mathbf{y} - \mathbf{\bar{y}}) }$ where $\mathbf{M}=\begin{bmatrix} \var(x) & \cov(x,y)  \\ \cov(x,y) & \var(y) \end{bmatrix}$
+
+
+Here, using simulated data: The contour lines show points with the same
+Mahalanobis distance and the numbers are Euclidean distance.
+
+```{r}
+set.seed(12345)
+newX <- rmvnorm(n=45,mean=colMeans(X),sigma=matrix(c(.03,-7,-7,14375),2,2))
+row.names(newX) <- row.names(X)
+#plot(newX)
+cor(newX)
+```
+
+```{r echo=FALSE, out.width=".4\\textwidth"}
+mhnew <- mahalanobis(newX,center=colMeans(newX),cov=cov(newX))
+drawMahal(newX,center=colMeans(newX),covariance=cov(newX),
+          quantile = c(0.975, 0.75, 0.5, 0.25))
+abline(v=mean(newX[,1]),h=mean(newX[,2]),col="gray")
+points(mean(newX[,1]),mean(newX[,2]),pch=19,cex=1)
+newpts <- c(3,16,17,20,22,30,42)
+row.names(newX[newpts,])
+arrows(mean(newX[,1]),mean(newX[,2]),newX[newpts,1],newX[newpts,2],length=.1)
+edist <- as.matrix(dist(rbind(centers=colMeans(newX),newX[newpts,])))
+text(newX[newpts,1]-.02,newX[newpts,2]-10,
+     label=round(edist[-1,"centers"],2),font=2)
+```
+
+## Dimension reduction using the Mahalanobis distance
+
+The contour lines show points with the same
+Mahalanobis distance, the numbers are Euclidean distance. Notice that the point with Euclidean distance of 161 is farther from the center than 250 in Mahalanobis terms.
+
+```{r echo=FALSE, results="hide", out.width=".75\\textwidth"}
+mhnew <- mahalanobis(newX,center=colMeans(newX),cov=cov(newX))
+drawMahal(newX,center=colMeans(newX),covariance=cov(newX),
+          quantile = c(0.975, 0.75, 0.5, 0.25))
+abline(v=mean(newX[,1]),h=mean(newX[,2]),col="gray")
+points(mean(newX[,1]),mean(newX[,2]),pch=19,cex=1)
+newpts <- c(3,16,17,20,22,30,42)
+row.names(newX[newpts,])
+arrows(mean(newX[,1]),mean(newX[,2]),newX[newpts,1],newX[newpts,2],length=.1)
+edist <- as.matrix(dist(rbind(centers=colMeans(newX),newX[newpts,])))
+text(newX[newpts,1]-.02,newX[newpts,2]-10,
+     label=round(edist[-1,"centers"],2),font=2)
+```
+
+
+## Dimension reduction using the Mahalanobis distance
+
+The contour lines show points with the same
+Mahalanobis distance and the numbers are Euclidean distance (on the
+standardized variables). (notice that 1.63 is farther from the center in
+Mahalanobis terms than 2.11, but 2.11 is farther in Eucliean terms.)
+
+
+```{r echo=FALSE}
+newXsd <- scale(newX)
+drawMahal(newXsd,center=colMeans(newXsd),covariance=cov(newXsd),
+          quantile = c(0.975, 0.75, 0.5, 0.25))
+abline(v=mean(newXsd[,1]),h=mean(newXsd[,2]),col="gray")
+points(mean(newXsd[,1]),mean(newXsd[,2]),pch=19,cex=1)
+arrows(mean(newXsd[,1]),mean(newXsd[,2]),newXsd[newpts,1],newXsd[newpts,2],length=.1)
+edistSd <- as.matrix(dist(rbind(centers=colMeans(newXsd),newXsd[newpts,])))
+text(newXsd[newpts,1]-.1,newXsd[newpts,2]-.1,
+     label=round(edistSd[-1,"centers"],2),font=2)
 ```
 
 
 ## Matching on the Mahalanobis Distance
 
-```{r}
+```{r echo=TRUE}
+mhdist <- match_on(nhTrt ~ nhPopD + nhAboveHS, data = meddat, method = "rank_mahalanobis")
+
 fmMh <- fullmatch(mhdist, data = meddat)
 summary(fmMh, min.controls = 0, max.controls = Inf)
 
@@ -580,10 +547,11 @@ fmMh1 <- fullmatch(mhdist, data = meddat, min.controls = 1)
 summary(fmMh1, min.controls = 0, max.controls = Inf)
 ```
 
-```{r}
+```{r echo=TRUE}
 
-xbMh <- xBalance(nhTrt ~ nhAboveHS + nhPopD, strata = list(unstrat = NULL, fmMh = ~fmMh, fmMh1 = ~fmMh1), report = "all", data = meddat)
-xbMh
+xbMh <- balanceTest(nhTrt ~ nhAboveHS + nhPopD+strata(fmMh)+strata(fmMh1),  data = meddat)
+xbMh$results[,,]
+xbMh$overall
 ```
 
 
@@ -595,11 +563,11 @@ xbMh
 future because of logit separation problems when the number of covariates
 increases.]
 
-```{r}
+```{r echo=TRUE}
 theglm <- glm(nhTrt ~ nhPopD + nhAboveHS + HomRate03, data = meddat, family = binomial(link = "logit"))
 thepscore <- theglm$linear.predictor
 thepscore01 <- predict(theglm, type = "response")
-````
+```
 
 We tend to match on the linear predictor rather than the version required to
 range only between 0 and 1.
@@ -615,7 +583,7 @@ stripchart(split(thepscore01, meddat$nhTrt), add = TRUE, vertical = TRUE)
 
 ## Matching on the propensity score
 
-```{r}
+```{r echo=TRUE}
 psdist <- match_on(theglm, data = meddat)
 psdist[1:4, 1:4]
 fmPs <- fullmatch(psdist, data = meddat)
@@ -628,23 +596,13 @@ summary(fmPs, min.controls = 0, max.controls = Inf)
 covariates using either or both of the propensity score or mahalanobis distance
 (rank- or not-rank based). So far we have:
 
-```{r}
+```{r echo=TRUE}
 thecovs <- unique(c(names(meddat)[c(5:7, 9:24)], "HomRate03"))
-balfmla <- reformulate(thecovs, response = "nhTrt")
-xb5 <- xBalance(balfmla,
-  strata = list(fmMh = ~fmMh, fmPs = ~fmPs),
-  data = meddat, report = "all"
-)
+balfmla0 <- reformulate(thecovs, response = "nhTrt")
+balfmla <- update(balfmla0,.~.+strata(fmMh)+strata(fmPs))
+xb5 <- balanceTest(balfmla, data = meddat)
 xb5$overall
 ```
-
-```{r}
-
-newexp <- function(z, block) {
-
-}
-```
-
 
 ## Can you do better?
 
@@ -653,6 +611,69 @@ Challenge: Improve the matched design. So far we have:
 ```{r}
 plot(xb5)
 ```
+
+# A pre-vs-post design?
+
+## Why not use a pre-vs-post design for these data?  {.allowframebreaks}
+
+We have homocide rates in 2003, indicator of Metrocable station completion in
+2004, and homocide rates in 2008. Why not use a difference-in-differences design
+here? Or a lagged dependent variable approach (Ding and Li 2019, Blackwell and
+Glynn 2018).
+
+```{r echo=TRUE}
+library(estimatr)
+library(tidyverse)
+
+## Reshape the data to "long" form
+meddat_long <- meddat %>% dplyr::select(one_of("nh","nhTrt","HomRate08","HomRate03")) %>% pivot_longer(cols=c("HomRate08","HomRate03"),names_to="year",names_prefix="HomRate0",values_to="HomRate")
+head(meddat_long)
+meddat_long$year <- as.numeric(meddat_long$year) + 2000
+head(meddat_long)
+
+## Calc by hand
+the_means <- meddat_long %>% group_by(nhTrt,year) %>% summarize(bary=mean(HomRate)) %>% ungroup()
+the_means
+the_diffs <- the_means %>% summarize(trt_diff=bary[nhTrt==1&year==2008] - bary[nhTrt==1&year==2003],
+ctrl_diff=bary[nhTrt==0&year==2008] - bary[nhTrt==0&year==2003])
+the_diffs
+did0 <- with(the_diffs, trt_diff - ctrl_diff)
+did0
+
+## Calc with OLS
+did2 <- lm_robust(HomRate~nhTrt*I(year==2008),meddat_long,cluster=nh)
+did2
+
+## Using the wide format data
+the_diffs2 <- meddat %>% summarize(trt_diff=mean(HomRate08[nhTrt==1]) - mean(HomRate03[nhTrt==1]),
+ctrl_diff = mean(HomRate08[nhTrt==0]) - mean(HomRate03[nhTrt==0]))
+the_diffs2 
+did0_wide <- with(the_diffs2, trt_diff - ctrl_diff)
+did0_wide
+
+did3 <- lm_robust(I(HomRate08-HomRate03)~nhTrt,data=meddat)
+did3
+
+## Following Ding and Li 2019 to "bracket" the ATT using the DID and Lag DV
+lag_dv <- lm_robust(HomRate08~nhTrt+HomRate03,data=meddat)
+lag_dv
+```
+
+## Questions to answer with a pre-vs-post design for these data
+
+Some questions to answer:
+
+ - What justifies claims about unbiasedness or at least consistency of the
+estimator of the Average effect of treatment on the treated  (the ATT or Effect
+of Treatment on the Treated (ETT))?
+
+ - What justifies use of a Normal (or t-distribution) as a description of the
+hypothesize of no average effects? (It is **not** an approximation to an
+as-if-randomized distribution. Is this a random sample from a population? Do we
+believe that homocide rates arise from an IID Normal DGP?)
+
+ - What if we wanted to test another hypothesis or use a different test statistic?
+Say, the sharp null of no effects using a rank based test?
 
 ## Summary:
 
@@ -672,10 +693,11 @@ What do you think?
    concerned about the effective sample size.)
   - Next: We will get more into the
    differences between full matching, optimal matching, greedy matching,
-   matching with and without replacement, etc.. next week. (Also: handling
+   matching with and without replacement, etc.. (Also: handling
    missing data, calipers and other methods of improving design).
   - Next: How to estimate causal effects and test causal hypotheses with a
-    matched design.
+    matched design (preview: treat the matched design as a stratified randomized
+    experiment aka an experiment with randomization within blocks.)
 
 
 

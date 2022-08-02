@@ -206,7 +206,7 @@ meddat$nhTrtF <- factor(meddat$nhTrt)
 test2 <- oneway_test(HomRate08~nhTrtF,data=meddat,distribution=asymptotic())
 ## This next uses a permutation approach to approximate the as-if-randomized
 ## randomization distribution.
-test3 <- oneway_test(HomRate08~nhTrtF,data=meddat,distribution=approximate(nresample=1000))
+test3 <- oneway_test(HomRate08~nhTrtF,data=meddat,distribution=approximate(nresample=10000))
 pvalue(test2)
 pvalue(test3)
 ```
@@ -590,6 +590,7 @@ have more than 2 treated neighborhoods.
 ```{r}
 ## Look at the kinds of differences between units that are possible.
 quantile(as.vector(absdist),seq(0,1,.1))
+
 absdist_cal <- match_on(absdist+caliper(absdist,.08),data=meddat)
 fm2 <- fullmatch(absdist_cal,data=meddat,min.controls=.5)
 summary(fm2, min.controls=0, max.controls=Inf )
@@ -599,6 +600,8 @@ stratumStructure(fm2)
 matched.distances(distance=absdist_cal,matchobj=fm2)
 summary(unlist(matched.distances(distance=absdist_cal,matchobj=fm2)))
 summary(unlist(matched.distances(distance=absdist,matchobj=fm1)))
+
+meddat %>% group_by(fm1) %>% summarize(mean(nhAboveHS),n_b=n(), ate_b=mean(HomRate08[nhTrt==1])-mean(HomRate08[nhTrt==0]))
 ```
 
 ## Can we improve the design?
