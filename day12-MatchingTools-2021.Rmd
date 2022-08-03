@@ -4,8 +4,8 @@ title: |
  | Matched Stratification for Multiple Variables, Matching Modes, Tools.
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2022 Session 2
-  | Jake Bowers \& Tom Leavitt
+  | ICPSR 2021 Session 2
+  | Jake Bowers, Ben Hansen, Tom Leavitt
 bibliography:
  - 'BIB/MasterBibliography.bib'
 fontsize: 10pt
@@ -90,12 +90,12 @@ How can we argue that we have adequate adjustment for background covariates in o
   - The propensity score to compare units on $\hat{Z} \leftarrow \bx$ --- to
     downweight covariates not relevant for confounding.
   - Assessing stratifications using the block-randomized design as a standard
-    of comparison. (What does this mean in practice? What does  `balanceTest` do?
-    How does `balanceTest` adjust differences of means for the stratifications?)
+    of comparison. (What does this mean in practice? What does  `xBalance` do?
+    How does `xBalance` adjust differences of means for the stratifications?)
 
 ## Matching on the Mahalanobis Distance: Setup
 
-Here using the ordinary Mahalanobis distance.
+Here using the rank based Mahalanobis distance following DOS Chap. 8 (but comparing to the ordinary version).
 
 ```{r mhmatch, echo=TRUE}
 mhdist <- match_on(nhTrt ~ nhPopD + nhAboveHS + HomRate03, data = meddat)
@@ -134,8 +134,9 @@ grid.arrange(bpfm1, bporig, ncol = 2, layout_matrix = matrix(c(1, 1, 1, 1, 2), n
 
 
 ```{r xbmh, echo=TRUE}
-xbMh <- balanceTest(nhTrt ~ nhAboveHS + nhPopD + HomRate03+strata(fmMh),
-   data = meddat
+xbMh <- xBalance(nhTrt ~ nhAboveHS + nhPopD + HomRate03,
+  strata = list(unstrat = NULL, fmMh = ~fmMh),
+  report = "all", data = meddat
 )
 xbMh$overall
 xbMh$results[, "std.diff", ]
@@ -144,7 +145,7 @@ xbMh$results[, "adj.diff", ]
 
 ## Why a propensity score? {.fragile}
 
-1. The Mahanobis distance weights all covariates equally (and the rank based version especially tries to do this). But, maybe not all covariates matter equally for $Z$. Or maybe we care most about covariates that drive the selection or other process by which units get $Z=1$ versus $Z=0$.
+1. The Mahanobis distance weights all covariates equally (and the rank based version especially tries to do this). Maybe not all covariates matter equally for $Z$.
 
 
 \begin{center}
@@ -169,13 +170,12 @@ roughly, the pooled median absolute deviation of the covariate (or here, the
 propensity score). So, the distance matrix entries are like standard deviations
 --- standardized scores.
 
-
 ```{r glm1, echo=TRUE}
 meddat <- as.data.frame(meddat)
 row.names(meddat) <- meddat$nh
 theglm <- glm(nhTrt ~ nhPopD + nhAboveHS + HomRate03, data = meddat, family = binomial(link = "logit"))
 thepscore <- theglm$linear.predictor
-```
+````
 
 ```{r echo=TRUE}
 ## Create a distance matrix using the propensity scores
@@ -326,18 +326,11 @@ The optmatch package allows calipers (which forbids certain pairs from being mat
 ```{r echo=TRUE}
 ## First inspect the distance matrix itself: how are the distances distributed?
 quantile(as.vector(psdist), seq(0, 1, .1))
-```
-
-## Calipers {.shrink}
-
-
-```{r echo=TRUE}
 ## Next, apply a caliper (setting entries to Infinite)
 psdistCal <- psdist + caliper(psdist, 2)
 as.matrix(psdist)[5:10, 5:10]
 as.matrix(psdistCal)[5:10, 5:10]
 ```
-
 ## Calipers
 
 The optmatch package allows calipers (which forbid certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we forbid comparisons which differ by more than 2 standard deviations on the propensity score. (Notice that we also use the `propensity.model` option to `summary` here to get a quick look at the balance test:)
@@ -355,10 +348,12 @@ Another example: We may want to match on propensity distance but disallow any pa
 
 
 ```{r echo=TRUE}
-## Create an R formula object from vectors of variable names
+## Create an R formulate object from vectors of variable names
 balfmla <- reformulate(c("nhPopD", "nhAboveHS"), response = "nhTrt")
+
 ## Create a mahalanobis distance matrix (of rank transformed data)
 mhdist <- match_on(balfmla, data = meddat, method = "rank_mahalanobis")
+
 ## Now make a matrix recording absolute differences between neighborhoods in
 ## terms of baseline homicide rate
 tmpHom03 <- meddat$HomRate03
@@ -367,13 +362,6 @@ absdist <- match_on(tmpHom03, z = meddat$nhTrt, data = meddat)
 absdist[1:3, 1:3]
 quantile(as.vector(absdist), seq(0, 1, .1))
 quantile(as.vector(mhdist), seq(0, 1, .1))
-```
-
-## Calipers
-
-Another example: We may want to match on propensity distance but disallow any pairs with extreme mahalnobis distance and/or extreme differences in baseline homicide rates (here using many covariates all together).
-
-```{r echo=TRUE}
 ## Now create a new distance matrix using two calipers:
 distCal <- psdist + caliper(mhdist, 9) + caliper(absdist, 2)
 as.matrix(distCal)[5:10, 5:10]
@@ -409,7 +397,7 @@ We often have covariates that are categorical/nominal and for which we really ca
 meddat$classLowHi <- ifelse(meddat$nhClass %in% c(2, 3), "hi", "lo")
 ```
 
-```{r echo=TRUE}
+```{r}
 dist2 <- psdist + exactMatch(nhTrt ~ classLowHi, data = meddat)
 ## or mhdist <- match_on(balfmla,within=exactMatch(nhTrt~classLowHi,data=meddat),data=meddat,method="rank_mahalanobis")
 ## or fmEx1 <- fullmatch(update(balfmla,.~.+strata(classLowHi)),data=meddat,method="rank_mahalanobis")
@@ -419,13 +407,9 @@ summary(fmEx1, min.controls = 0, max.controls = Inf, propensity.model = theglm)
 print(fmEx1, grouped = T)
 meddat$fmEx1 <- fmEx1
 ```
-
 ## Exact Matching
 
-Showing treatment and control by matched set (including the variable defining
-exactly matched sets)
-
-```{r echo=TRUE}
+```{r}
 ftable(Class = meddat$classLowHi, Trt = meddat$nhTrt, fmEx1, col.vars = c("Class", "Trt"))
 ```
 
@@ -437,7 +421,7 @@ What if `nhPopD` had some missing data?
 set.seed(12345)
 meddat$nhPopD[sample(1:45, 10)] <- NA
 summary(meddat$nhPopD)
-xb0 <- balanceTest(nhTrt ~ nhPopD + nhAboveHS, data = meddat)
+xb0 <- xBalance(nhTrt ~ nhPopD + nhAboveHS, data = meddat, report = "all")
 ```
 
 We would want to compare units who are equally likely to have `nhPopD` missing. So, we create a new variable:
@@ -446,14 +430,6 @@ We would want to compare units who are equally likely to have `nhPopD` missing. 
 newdat <- fill.NAs(meddat[, c("nhAboveHS", "nhPopD")])
 head(newdat)
 stopifnot(all.equal(row.names(newdat), row.names(meddat)))
-```
-
-## Missing data and matching
-
-What if `nhPopD` had some missing data?
-We would want to compare units who are equally likely to have `nhPopD` missing. So, we create a new variable:
-
-```{r echo=TRUE}
 newdat <- cbind(newdat, meddat[, c("nhTrt", "HomRate08", "HomRate03")])
 head(newdat)
 ```
@@ -471,9 +447,9 @@ fm0 <- fullmatch(psdist + caliper(psdist, 2), data = newdat)
 summary(fm0, min.controls = 0, max.controls = Inf, propensity.model = theglm)
 summary(unlist(matched.distances(fm0, psdist)))
 newdat$fm0 <- fm0
-xb0 <- balanceTest(update(balfmla,.~.+strata(fm0)), data = newdat)
+xb0 <- xBalance(balfmla, strata = list(fm0 = ~fm0), data = newdat, report = "all")
 xb0$overall
-xb0$results[,,]
+xb0$results
 ```
 
 ## Missing Data and Matching
@@ -483,26 +459,22 @@ So:
  1. Missing data on covariates is not a big problem --- such data reveals
     information to us about the units pre-treatment, so we just stratify on it.
     We treat missing data as just another covariate.
- 2. Missing data on treatment assignment or the outcome is a bigger problem: we
-    will tend to use bounds to report on the range of possible answers in such
-    cases.
-
-
+ 2. Missing data  the outcome (let alone $Z$ ("treatment", "intervention",
+    "driver") is a bigger problem: we will tend to use bounds to report on the
+    range of possible answers in such cases.
 
 ## Summary and Questions:
 
-What do you think? What questions arise?
 
  - We can build a stratified research design allowing an algorithm to do some
    work, and bringing in our substantive expertise and rhetorical strategies
-   for other work (choosing the covariates, deciding which covariates should be
-   closely matched-on and which not so closely).
+   for other work.
  - We can restrict certain matches --- using calipers or exact-matching, using
    different distance matrices.
  - We can match on missing values on covariates.
  - Some choices of score creation / dimension reduction raise other questions
    and problems (ex. Mahalanobis versus Rank-Based Mahalanobis distances;
-   Propensity Score creation without overfitting.)
+   Propensity Score creation without overfitting.) 
 
 
 ## References
