@@ -161,7 +161,7 @@
 %   arn_n/.style = {treenode, rectangle, black, fill=white, text width=6em},
 %   arn_r/.style = {treenode, circle, red, draw=red, text width=1.5em, thick}
 % }
-
+\usepackage{hyperref}
 \usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
 \usepackage[small,bf]{caption}  % Captions
 
@@ -243,7 +243,7 @@
 
 \title{Assignment 1 Answer Key}
 \author{\href{mailto:tl2624@columbia.edu}{Thomas Leavitt}}
-\date{25 July 2022}
+\date{03 August 2022}
 
 \begin{document}
 \maketitle
@@ -261,19 +261,20 @@ under the sharp null hypothesis of no effect:
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{acorn\_data }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"acorn03.csv"}\NormalTok{)}
-  
+
 \NormalTok{acorn\_data }\OtherTok{\textless{}{-}}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}\AttributeTok{.data =}\NormalTok{ acorn\_data, unit, size, z, vote03)}
 
-\NormalTok{treat\_group\_mean }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(.Z,}
-\NormalTok{                             .y)\{}
-  
-\NormalTok{  n\_1 }\OtherTok{=} \FunctionTok{sum}\NormalTok{(.Z }\SpecialCharTok{==} \DecValTok{1}\NormalTok{)}
-  
-\NormalTok{  test\_stat }\OtherTok{=} \FunctionTok{as.numeric}\NormalTok{(n\_1}\SpecialCharTok{\^{}}\NormalTok{\{}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{\} }\SpecialCharTok{*} \FunctionTok{t}\NormalTok{(.Z) }\SpecialCharTok{\%*\%}\NormalTok{ .y)}
-  
-  \FunctionTok{return}\NormalTok{(test\_stat)}
-  
-\NormalTok{  \}}
+\NormalTok{treat\_group\_mean }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(.Z, .y) \{}
+
+\NormalTok{    n\_1 }\OtherTok{=} \FunctionTok{sum}\NormalTok{(.Z }\SpecialCharTok{==} \DecValTok{1}\NormalTok{)}
+
+\NormalTok{    test\_stat }\OtherTok{=} \FunctionTok{as.numeric}\NormalTok{(n\_1}\SpecialCharTok{\^{}}\NormalTok{\{}
+        \SpecialCharTok{{-}}\DecValTok{1}
+\NormalTok{    \} }\SpecialCharTok{*} \FunctionTok{t}\NormalTok{(.Z) }\SpecialCharTok{\%*\%}\NormalTok{ .y)}
+
+    \FunctionTok{return}\NormalTok{(test\_stat)}
+
+\NormalTok{\}}
 \end{Highlighting}
 \end{Shaded}
 
@@ -283,8 +284,7 @@ Calculate the observed test statistic as follows: \scriptsize
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{obs\_test\_stat }\OtherTok{\textless{}{-}} \FunctionTok{treat\_group\_mean}\NormalTok{(}\AttributeTok{.Z =}\NormalTok{ acorn\_data}\SpecialCharTok{$}\NormalTok{z,}
-                                  \AttributeTok{.y =}\NormalTok{ acorn\_data}\SpecialCharTok{$}\NormalTok{vote03)}
+\NormalTok{obs\_test\_stat }\OtherTok{\textless{}{-}} \FunctionTok{treat\_group\_mean}\NormalTok{(}\AttributeTok{.Z =}\NormalTok{ acorn\_data}\SpecialCharTok{$}\NormalTok{z, }\AttributeTok{.y =}\NormalTok{ acorn\_data}\SpecialCharTok{$}\NormalTok{vote03)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -302,9 +302,8 @@ statistic under all possible assignments.
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\DecValTok{5}\NormalTok{)}
-\NormalTok{null\_test\_stats }\OtherTok{\textless{}{-}} \FunctionTok{replicate}\NormalTok{(}\AttributeTok{n =} \DecValTok{10}\SpecialCharTok{\^{}}\DecValTok{5}\NormalTok{,}
-                             \AttributeTok{expr =} \FunctionTok{treat\_group\_mean}\NormalTok{(}\AttributeTok{.Z =} \FunctionTok{sample}\NormalTok{(acorn\_data}\SpecialCharTok{$}\NormalTok{z),}
-                                                     \AttributeTok{.y =}\NormalTok{ acorn\_data}\SpecialCharTok{$}\NormalTok{vote03))}
+\NormalTok{null\_test\_stats }\OtherTok{\textless{}{-}} \FunctionTok{replicate}\NormalTok{(}\AttributeTok{n =} \DecValTok{10}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{, }\AttributeTok{expr =} \FunctionTok{treat\_group\_mean}\NormalTok{(}\AttributeTok{.Z =} \FunctionTok{sample}\NormalTok{(acorn\_data}\SpecialCharTok{$}\NormalTok{z),}
+    \AttributeTok{.y =}\NormalTok{ acorn\_data}\SpecialCharTok{$}\NormalTok{vote03))}
 
 \NormalTok{null\_test\_stat\_dist }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{null\_test\_stat =}\NormalTok{ null\_test\_stats)}
 \end{Highlighting}
@@ -317,17 +316,12 @@ statistic under all possible assignments.
 \begin{Shaded}
 \begin{Highlighting}[]
 \DocumentationTok{\#\# Use Freedman{-}Diaconis rule for bin width}
-\NormalTok{bw }\OtherTok{\textless{}{-}} \DecValTok{2} \SpecialCharTok{*} \FunctionTok{IQR}\NormalTok{(null\_test\_stats) }\SpecialCharTok{/} \FunctionTok{length}\NormalTok{(null\_test\_stats)}\SpecialCharTok{\^{}}\NormalTok{(}\DecValTok{1}\SpecialCharTok{/}\DecValTok{3}\NormalTok{)}
+\NormalTok{bw }\OtherTok{\textless{}{-}} \DecValTok{2} \SpecialCharTok{*} \FunctionTok{IQR}\NormalTok{(null\_test\_stats)}\SpecialCharTok{/}\FunctionTok{length}\NormalTok{(null\_test\_stats)}\SpecialCharTok{\^{}}\NormalTok{(}\DecValTok{1}\SpecialCharTok{/}\DecValTok{3}\NormalTok{)}
 
 \FunctionTok{library}\NormalTok{(ggplot2)}
-\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ null\_test\_stat\_dist,}
-       \AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ null\_test\_stat, }\AttributeTok{y =}\NormalTok{ (..count..)}\SpecialCharTok{/}\FunctionTok{sum}\NormalTok{(..count..))) }\SpecialCharTok{+}
-  \FunctionTok{geom\_histogram}\NormalTok{(}\AttributeTok{binwidth =}\NormalTok{ bw) }\SpecialCharTok{+}
-  \FunctionTok{geom\_vline}\NormalTok{(}\AttributeTok{xintercept =}\NormalTok{ obs\_test\_stat,}
-             \AttributeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{xlab}\NormalTok{(}\AttributeTok{label =} \StringTok{"Null test statistic"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{ylab}\NormalTok{(}\AttributeTok{label =} \StringTok{"Probability"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{theme\_bw}\NormalTok{()}
+\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ null\_test\_stat\_dist, }\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ null\_test\_stat, }\AttributeTok{y =}\NormalTok{ (..count..)}\SpecialCharTok{/}\FunctionTok{sum}\NormalTok{(..count..))) }\SpecialCharTok{+}
+    \FunctionTok{geom\_histogram}\NormalTok{(}\AttributeTok{binwidth =}\NormalTok{ bw) }\SpecialCharTok{+} \FunctionTok{geom\_vline}\NormalTok{(}\AttributeTok{xintercept =}\NormalTok{ obs\_test\_stat, }\AttributeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\SpecialCharTok{+}
+    \FunctionTok{xlab}\NormalTok{(}\AttributeTok{label =} \StringTok{"Null test statistic"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{ylab}\NormalTok{(}\AttributeTok{label =} \StringTok{"Probability"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{theme\_bw}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
 
@@ -458,8 +452,7 @@ We can calculate this value in \texttt{R} as follows: \scriptsize
 \begin{Shaded}
 \begin{Highlighting}[]
 \DocumentationTok{\#\# t() is to transpose a matrix; \%*\% is the matrix multiplication operator}
-\NormalTok{(}\DecValTok{1}\SpecialCharTok{/}\FunctionTok{sum}\NormalTok{(acorn\_data}\SpecialCharTok{$}\NormalTok{z)) }\SpecialCharTok{*}
-  \FunctionTok{t}\NormalTok{(acorn\_data}\SpecialCharTok{$}\NormalTok{z) }\SpecialCharTok{\%*\%}\NormalTok{ acorn\_data}\SpecialCharTok{$}\NormalTok{vote03}
+\NormalTok{(}\DecValTok{1}\SpecialCharTok{/}\FunctionTok{sum}\NormalTok{(acorn\_data}\SpecialCharTok{$}\NormalTok{z)) }\SpecialCharTok{*} \FunctionTok{t}\NormalTok{(acorn\_data}\SpecialCharTok{$}\NormalTok{z) }\SpecialCharTok{\%*\%}\NormalTok{ acorn\_data}\SpecialCharTok{$}\NormalTok{vote03}
 \end{Highlighting}
 \end{Shaded}
 
@@ -501,11 +494,9 @@ hypothesis of no effect are \(\mu_{y} \approx 0.3071\) and
 \begin{Highlighting}[]
 \NormalTok{pop\_mean }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(acorn\_data}\SpecialCharTok{$}\NormalTok{vote03)}
 
-\NormalTok{pop\_var }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{((acorn\_data}\SpecialCharTok{$}\NormalTok{vote03 }\SpecialCharTok{{-}}
-                   \FunctionTok{mean}\NormalTok{(acorn\_data}\SpecialCharTok{$}\NormalTok{vote03))}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+\NormalTok{pop\_var }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{((acorn\_data}\SpecialCharTok{$}\NormalTok{vote03 }\SpecialCharTok{{-}} \FunctionTok{mean}\NormalTok{(acorn\_data}\SpecialCharTok{$}\NormalTok{vote03))}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
 
-\FunctionTok{cbind}\NormalTok{(pop\_mean,}
-\NormalTok{      pop\_var)}
+\FunctionTok{cbind}\NormalTok{(pop\_mean, pop\_var)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -532,16 +523,14 @@ effect.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{fpc\_var\_sample\_mean }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(.y,}
-\NormalTok{                                .n\_1) \{}
-  
-\NormalTok{  (.n\_1}\SpecialCharTok{\^{}}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{)) }\SpecialCharTok{*}\NormalTok{ ((}\FunctionTok{length}\NormalTok{(.y) }\SpecialCharTok{{-}}\NormalTok{ .n\_1)}\SpecialCharTok{/}\FunctionTok{length}\NormalTok{(.y)) }\SpecialCharTok{*}
-\NormalTok{    (}\FunctionTok{sum}\NormalTok{((.y }\SpecialCharTok{{-}} \FunctionTok{mean}\NormalTok{(.y))}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{))}\SpecialCharTok{/}\NormalTok{(}\FunctionTok{length}\NormalTok{(.y) }\SpecialCharTok{{-}} \DecValTok{1}\NormalTok{)}
-  
+\NormalTok{fpc\_var\_sample\_mean }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(.y, .n\_1) \{}
+
+\NormalTok{    (.n\_1}\SpecialCharTok{\^{}}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{)) }\SpecialCharTok{*}\NormalTok{ ((}\FunctionTok{length}\NormalTok{(.y) }\SpecialCharTok{{-}}\NormalTok{ .n\_1)}\SpecialCharTok{/}\FunctionTok{length}\NormalTok{(.y)) }\SpecialCharTok{*}\NormalTok{ (}\FunctionTok{sum}\NormalTok{((.y }\SpecialCharTok{{-}} \FunctionTok{mean}\NormalTok{(.y))}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{))}\SpecialCharTok{/}\NormalTok{(}\FunctionTok{length}\NormalTok{(.y) }\SpecialCharTok{{-}}
+        \DecValTok{1}\NormalTok{)}
+
 \NormalTok{\}}
 
-\NormalTok{fpc\_var }\OtherTok{\textless{}{-}} \FunctionTok{fpc\_var\_sample\_mean}\NormalTok{(}\AttributeTok{.y =}\NormalTok{ acorn\_data}\SpecialCharTok{$}\NormalTok{vote03,}
-                               \AttributeTok{.n\_1 =} \FunctionTok{sum}\NormalTok{(acorn\_data}\SpecialCharTok{$}\NormalTok{z))}
+\NormalTok{fpc\_var }\OtherTok{\textless{}{-}} \FunctionTok{fpc\_var\_sample\_mean}\NormalTok{(}\AttributeTok{.y =}\NormalTok{ acorn\_data}\SpecialCharTok{$}\NormalTok{vote03, }\AttributeTok{.n\_1 =} \FunctionTok{sum}\NormalTok{(acorn\_data}\SpecialCharTok{$}\NormalTok{z))}
 
 \NormalTok{fpc\_var}
 \end{Highlighting}
@@ -553,7 +542,8 @@ effect.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{(}\FunctionTok{abs}\NormalTok{(null\_dist\_sim\_var }\SpecialCharTok{{-}}\NormalTok{ fpc\_var)}\SpecialCharTok{/}\NormalTok{fpc\_var) }\SpecialCharTok{*} \DecValTok{100}
+\NormalTok{sim\_error }\OtherTok{\textless{}{-}}\NormalTok{ (}\FunctionTok{abs}\NormalTok{(null\_dist\_sim\_var }\SpecialCharTok{{-}}\NormalTok{ fpc\_var)}\SpecialCharTok{/}\NormalTok{fpc\_var) }\SpecialCharTok{*} \DecValTok{100}
+\NormalTok{sim\_error}
 \end{Highlighting}
 \end{Shaded}
 
@@ -567,7 +557,7 @@ The error of the simulation based approximation, expressed as a
 percentage of
 \(\mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]\) is:
 \begin{align*}
-\left(\frac{\left|\mathrm{Var}_{sim}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right] - \mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]\right|}{\mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]}\right) 100 = 0.5318 \%.
+\left(\frac{\left|\mathrm{Var}_{sim}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right] - \mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]\right|}{\mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]}\right) 100 \approx 0.085 \%.
 \end{align*}
 
 \section*{Question 5}
@@ -582,7 +572,7 @@ follows: \begin{align*}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{z\_score }\OtherTok{\textless{}{-}}\NormalTok{ (obs\_test\_stat }\SpecialCharTok{{-}}\NormalTok{ pop\_mean) }\SpecialCharTok{/} \FunctionTok{sqrt}\NormalTok{(fpc\_var)}
+\NormalTok{z\_score }\OtherTok{\textless{}{-}}\NormalTok{ (obs\_test\_stat }\SpecialCharTok{{-}}\NormalTok{ pop\_mean)}\SpecialCharTok{/}\FunctionTok{sqrt}\NormalTok{(fpc\_var)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -595,8 +585,7 @@ p-value as follows:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{pnorm}\NormalTok{(}\AttributeTok{q =}\NormalTok{ z\_score,}
-      \AttributeTok{lower.tail =} \ConstantTok{FALSE}\NormalTok{)}
+\FunctionTok{pnorm}\NormalTok{(}\AttributeTok{q =}\NormalTok{ z\_score, }\AttributeTok{lower.tail =} \ConstantTok{FALSE}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -664,7 +653,7 @@ Under method \(I\) the set of possible assignments, \(\Omega_I\) is
 
 Under method \(C\), the set of assignments, \(\Omega_C\), is
 \begin{align*}
-\Omega_{C} & = \left\{ \mathbf{z}: \sum \limits_{i = 1}^n z_i = n_1 \right\} = \left\{ \ \begin{bmatrix} 1 \\ 1 \\ 0 \\ 1 \\ 0 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}, \ \cdots , \ \begin{bmatrix} 0 \\ 0 \\ 1 \\ 0 \\ 1 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 0 \\ 1 \\ 1 \\ 1  \end{bmatrix} \ \right\}.
+\Omega_{C} & = \left\{ \mathbf{z}: \sum \limits_{i = 1}^n z_i = n_1 \right\} = \left\{ \ \begin{bmatrix} 1 \\ 1 \\ 1 \\ 0 \\ 0 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 1 \\ 0 \\ 1 \\ 0 \\ 0 \end{bmatrix}, \ \cdots , \ \begin{bmatrix} 0 \\ 0 \\ 1 \\ 0 \\ 1 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 0 \\ 1 \\ 1 \\ 1  \end{bmatrix} \ \right\}.
 \end{align*}
 
 Finally, under method \(P\), the set of assignments, \(\Omega_P\), is
@@ -713,23 +702,16 @@ as follows:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{n\_1\_sra }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(.n,}
-\NormalTok{                    .k,}
-\NormalTok{                    .p) \{}
-  
-  \FunctionTok{return}\NormalTok{(}\FunctionTok{choose}\NormalTok{(}\AttributeTok{n =}\NormalTok{ .n, }\AttributeTok{k =}\NormalTok{ .k) }\SpecialCharTok{*}\NormalTok{ .p}\SpecialCharTok{\^{}}\NormalTok{(.k)}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ .p)}\SpecialCharTok{\^{}}\NormalTok{(.n }\SpecialCharTok{{-}}\NormalTok{ .k))}
-  
-\NormalTok{  \}}
+\NormalTok{n\_1\_sra }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(.n, .k, .p) \{}
 
-\NormalTok{probs }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(}\AttributeTok{X =} \FunctionTok{seq}\NormalTok{(}\AttributeTok{from =} \DecValTok{0}\NormalTok{,}
-                        \AttributeTok{to =} \DecValTok{6}\NormalTok{,}
-                        \AttributeTok{by =} \DecValTok{1}\NormalTok{),}
-                \AttributeTok{FUN =}\NormalTok{ n\_1\_sra,}
-                \AttributeTok{.n =} \DecValTok{6}\NormalTok{,}
-                \AttributeTok{.p =} \FloatTok{0.5}\NormalTok{)}
+    \FunctionTok{return}\NormalTok{(}\FunctionTok{choose}\NormalTok{(}\AttributeTok{n =}\NormalTok{ .n, }\AttributeTok{k =}\NormalTok{ .k) }\SpecialCharTok{*}\NormalTok{ .p}\SpecialCharTok{\^{}}\NormalTok{(.k) }\SpecialCharTok{*}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ .p)}\SpecialCharTok{\^{}}\NormalTok{(.n }\SpecialCharTok{{-}}\NormalTok{ .k))}
+
+\NormalTok{\}}
+
+\NormalTok{probs }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(}\AttributeTok{X =} \FunctionTok{seq}\NormalTok{(}\AttributeTok{from =} \DecValTok{0}\NormalTok{, }\AttributeTok{to =} \DecValTok{6}\NormalTok{, }\AttributeTok{by =} \DecValTok{1}\NormalTok{), }\AttributeTok{FUN =}\NormalTok{ n\_1\_sra, }\AttributeTok{.n =} \DecValTok{6}\NormalTok{, }\AttributeTok{.p =} \FloatTok{0.5}\NormalTok{)}
 
 
-\NormalTok{events }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\AttributeTok{from =} \DecValTok{0}\NormalTok{ , }\AttributeTok{to =} \DecValTok{6}\NormalTok{, }\AttributeTok{by =} \DecValTok{1}\NormalTok{)}
+\NormalTok{events }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\AttributeTok{from =} \DecValTok{0}\NormalTok{, }\AttributeTok{to =} \DecValTok{6}\NormalTok{, }\AttributeTok{by =} \DecValTok{1}\NormalTok{)}
 
 \FunctionTok{sum}\NormalTok{(events }\SpecialCharTok{*}\NormalTok{ probs)}
 \end{Highlighting}

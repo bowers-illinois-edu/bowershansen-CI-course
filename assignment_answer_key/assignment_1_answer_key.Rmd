@@ -87,7 +87,7 @@ In this example there are $\binom{28}{14} = 40,116,600$ possible ways in which $
 ```{r, results = "hide", message = FALSE}
 
 set.seed(1:5)
-null_test_stats <- replicate(n = 10^5,
+null_test_stats <- replicate(n = 10^3,
                              expr = treat_group_mean(.Z = sample(acorn_data$z),
                                                      .y = acorn_data$vote03))
 
@@ -261,14 +261,14 @@ fpc_var <- fpc_var_sample_mean(.y = acorn_data$vote03,
 
 fpc_var
 
-(abs(null_dist_sim_var - fpc_var)/fpc_var) * 100
-
+sim_error <- (abs(null_dist_sim_var - fpc_var)/fpc_var) * 100
+sim_error
 ```
 \normalsize
 
 The error of the simulation based approximation, expressed as a percentage of $\mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]$ is:
 \begin{align*}
-\left(\frac{\left|\mathrm{Var}_{sim}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right] - \mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]\right|}{\mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]}\right) 100 = 0.5318 \%.
+\left(\frac{\left|\mathrm{Var}_{sim}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right] - \mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]\right|}{\mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]}\right) 100 \approx `r round(x = sim_error, digits = 4)` \%.
 \end{align*}
 
 \section*{Question 5}
@@ -321,7 +321,7 @@ Let's first consider the set of possible assignments under each method. Under me
 
 Under method $C$, the set of assignments, $\Omega_C$, is
 \begin{align*}
-\Omega_{C} & = \left\{ \mathbf{z}: \sum \limits_{i = 1}^n z_i = n_1 \right\} = \left\{ \ \begin{bmatrix} 1 \\ 1 \\ 0 \\ 1 \\ 0 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}, \ \cdots , \ \begin{bmatrix} 0 \\ 0 \\ 1 \\ 0 \\ 1 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 0 \\ 1 \\ 1 \\ 1  \end{bmatrix} \ \right\}.
+\Omega_{C} & = \left\{ \mathbf{z}: \sum \limits_{i = 1}^n z_i = n_1 \right\} = \left\{ \ \begin{bmatrix} 1 \\ 1 \\ 1 \\ 0 \\ 0 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 1 \\ 0 \\ 1 \\ 0 \\ 0 \end{bmatrix}, \ \cdots , \ \begin{bmatrix} 0 \\ 0 \\ 1 \\ 0 \\ 1 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 0 \\ 1 \\ 1 \\ 1  \end{bmatrix} \ \right\}.
 \end{align*}
 
 Finally, under method $P$, the set of assignments, $\Omega_P$, is 
