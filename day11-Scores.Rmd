@@ -108,6 +108,10 @@ summary(pm1, min.controls = 0, max.controls = Inf)
 table(meddat$nhTrt, pm1, exclude = c())
 fm2 <- fullmatch(absdist + caliper(absdist,.06), data = meddat, min.controls = .5)
 stratumStructure(fm2)
+
+summary(unlist(matched.distances(fm1,absdist)))
+
+summary(unlist(matched.distances(fm2,absdist)))
 ```
 
 
@@ -361,7 +365,7 @@ Now the Euclidean distance (on a standardized scale) so neither variable is over
 ```{r echo=TRUE}
 Xsd <- scale(X)
 apply(Xsd, 2, sd) ## should be 1
-apply(Xsd, 2, mean)
+round(apply(Xsd, 2, mean),8)
 ```
 ```{r echo=FALSE,out.width=".6\\textwidth"}
 plot(Xsd[, 1], Xsd[, 2], xlab = "nhAboveHS/sd", ylab = "nhPopD/sd")
@@ -542,9 +546,13 @@ mhdist <- match_on(nhTrt ~ nhPopD + nhAboveHS, data = meddat, method = "rank_mah
 
 fmMh <- fullmatch(mhdist, data = meddat)
 summary(fmMh, min.controls = 0, max.controls = Inf)
+summary(unlist(matched.distances(fmMh,mhdist)))
 
-fmMh1 <- fullmatch(mhdist, data = meddat, min.controls = 1)
+quantile(as.vector(mhdist),seq(0,1,.1))
+fmMh1 <- fullmatch(mhdist + caliper(mhdist,1) , data = meddat) #, min.controls = 1)
 summary(fmMh1, min.controls = 0, max.controls = Inf)
+summary(unlist(matched.distances(fmMh1,mhdist)))
+
 ```
 
 ```{r echo=TRUE}
@@ -672,6 +680,11 @@ summary(unlist(matched.distances(pm_hr03,baseline_dist)))
 meddat$pm_hr03 <- pm_hr03
 baltest_hr03 <- balanceTest(nhTrt~HomRate03+strata(pm_hr03),data=meddat,subset=!is.na(pm_hr03))
 baltest_hr03$overall
+
+grpdat <- meddat %>% filter(!is.na(pm_hr03)) %>% 
+  group_by(pm_hr03) %>% 
+  summarize(diffHR03=mean(HomRate03[nhTrt==1]) - mean(HomRate03[nhTrt==0])) %>% 
+  arrange(diffHR03)
 
 ## Within set very homogeneous on baseline homocide rates:
 est1<- lm_robust(HomRate08~nhTrt,fixed_effects = ~pm_hr03,data=meddat,subset=!is.na(pm_hr03))
