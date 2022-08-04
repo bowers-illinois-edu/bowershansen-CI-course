@@ -437,7 +437,7 @@ What if `nhPopD` had some missing data?
 set.seed(12345)
 meddat$nhPopD[sample(1:45, 10)] <- NA
 summary(meddat$nhPopD)
-xb0 <- balanceTest(nhTrt ~ nhPopD + nhAboveHS, data = meddat)
+xb0 <- balanceTest(nhTrt ~ nhPopD + nhAboveHS + HomRate03, data = meddat)
 ```
 
 We would want to compare units who are equally likely to have `nhPopD` missing. So, we create a new variable:
