@@ -167,11 +167,15 @@ setmeanDiffs <- meddat %>% filter(!is.na(fm1)) %>% group_by(fm1) %>%
             nb=n(),
             nTb = sum(nhTrt),
             nCb = sum(1-nhTrt),
+            prob_trt = mean(nhTrt),
 	    baselinediffs = mean(HomRate03[nhTrt==1])-mean(HomRate03[nhTrt==0]),
 	    minbaselines = min(HomRate03),
 	    maxbaseline = max(HomRate03)
             ) %>% arrange(abs(baselinediffs))
-setmeanDiffs
+setmeanDiffs <- setmeanDiffs %>% mutate(nbwt = nb/sum(nb), hbwt0 = nbwt * prob_trt * ( 1- prob_trt))
+setmeanDiffs$hbwt <- with(setmeanDiffs, hbwt0/sum(hbwt0))
+
+setmeanDiffs %>% dplyr::select(fm1,ateb,nbwt,hbwt)
 ```
 
 ## An Adjustment Strategy to Address Alternative Explanations
@@ -197,9 +201,21 @@ meddat <-  meddat %>%  filter(!is.na(fm1)) %>% group_by(fm1) %>%
 estate <-  lm_robust(HomRate08~nhTrt,data=meddat,weights=nbwt,subset=!is.na(fm1))
 estate
 with(setmeanDiffs,sum(ateb*nb/sum(nb)))
+with(setmeanDiffs,sum(ateb*nbwt))
+
+with(setmeanDiffs,sum(ateb*hbwt))
+
+estate_fe <- lm_robust(HomRate08~nhTrt,fixed_effects = ~fm1, data=meddat,subset=!is.na(fm1))
+estate_fe
+
+estate_fe2 <- lm_robust(HomRate08~nhTrt+fm1, data=meddat,subset=!is.na(fm1))
+coef(estate_fe2)["nhTrt"]
+
+
 ranktest1  <-  wilcox_test(HomRate08~nhTrtF|fm1,data=meddat,
 		       distribution=approximate(nresample=10000))
 pvalue(ranktest1)
+
 ```
 
 ## An Adjustment Strategy to Address Alternative Explanations
@@ -684,13 +700,17 @@ align.by.block<-function (x, block, fn = mean, thenames=NULL) { ## By default, t
 ```{r}
 wrkdat$scMD <- with(wrkdat, align.by.block(social.capital01, nbp2))
 wrkdat$vmcn2MD <- with(wrkdat, align.by.block(vm.community.norm2, nbp2))
-wrkdat[order(wrkdat$nbp1),c("social.capital01","scMD","vm.community.norm2","vmcn2MD","nbp1")][1:4,]
+wrkdat[order(wrkdat$nbp2),c("social.capital01","scMD","vm.community.norm2","vmcn2MD","nbp2")][1:4,]
 ## notice that aligning or pair-mean-centering the data preserves the within
 ## set relationships
 ## summary(tapply(wrkdat$scMD,wrkdat$nbp1,function(x){ abs(diff(x)) }))
 ## summary(tapply(wrkdat$social.capital01,wrkdat$nbp1,function(x){ abs(diff(x)) }))
 lm1 <- lm_robust(scMD ~ vmcn2MD, data = wrkdat[!is.na(wrkdat$nbp2), ])
 lm1
+lm1_fe <- lm_robust(social.capital01~vm.community.norm2,fixed_effects=~nbp2,data=wrkdat[!is.na(wrkdat$nbp2), ])
+lm1_fe
+library(fixest)
+
 ```
 ## Summarize mean differences within pairs
 
