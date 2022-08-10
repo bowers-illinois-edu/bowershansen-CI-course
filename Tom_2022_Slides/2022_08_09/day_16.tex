@@ -192,8 +192,9 @@
 \end{itemize} \vfill
 \item  Consider the following model for the distribution of treatment assignments:  \vfill
 \begin{align*} 
-\Pr\left(\mathbf{Z} = \mathbf{z}\right) & = \prod \limits_{i = 1}^n \lambda\left(\mathbf{x}_i\right)^{z_i} \left(1 - \lambda\left(\mathbf{x}_i\right)\right)^{1 - z_i}.
-\end{align*} \vfill
+\Pr\left(\mathbf{Z} = \mathbf{z}\right) & = \prod \limits_{i = 1}^n \lambda\left(\mathbf{x}_i\right)^{z_i} \left(1 - \lambda\left(\mathbf{x}_i\right)\right)^{1 - z_i},
+\end{align*}
+where $\lambda: \R^K \mapsto (0, 1)$ and $K$ is the number of covariates \vfill
 \item  If units $i$ and $j \neq i$ have $\bm{x}_i = \bm{x}_j$, then $\lambda\left(\mathbf{x}_i \right) = \lambda\left(\mathbf{x}_j \right)$ \vfill
 \item  So we analyze matched design \textit{as-if} it is block randomized experiment \vfill
 \item But what if $i$ and $j$ are imbalanced on unobserved confounder $\bm{u}$? \vfill
@@ -205,7 +206,7 @@
 \vfill
 \begin{itemize}
 \item WLOG, suppose perfect matching on observed covariates
-\item Also WLOG, suppose single unobserved covariate $\bm{u} \in [0, 1]^n$ \\ \citep[][p. 300, footnote 33]{rosenbaum2017a}  \vfill
+\item Also WLOG, suppose single unobserved covariate $\bm{u} \in [0, 1]^n$ \\ \citep[][p. 300, footnote 33]{rosenbaum2017}  \vfill
 \item Write model for the distribution of treatment assignments as  \vfill
 \begin{align} 
 \Pr\left(\mathbf{Z} = \mathbf{z}\right) & = \prod \limits_{i = 1}^n \lambda\left(u_i\right)^{z_i} \left(1 - \lambda\left(u_i\right)\right)^{1 - z_i}, \\
@@ -213,8 +214,9 @@
 \end{align} \vfill
 \item  Equation \eqref{eq: sens probs} implies that \vfill
 \begin{equation}
-\Pr\left(\bm{Z} = \bm{z} \given n_T\right) = \dfrac{\exp\left(\gamma \bm{z}^{\top} \bm{u}\right)}{\sum \limits_{\bm{z} \in \Omega} (\gamma \bm{z}^{\top} \bm{u})}
+\Pr\left(\bm{Z} = \bm{z} \given n_T\right) = \dfrac{\exp\left(\gamma \bm{z}^{\top} \bm{u}\right)}{\sum \limits_{\bm{z} \in \Omega} (\gamma \bm{z}^{\top} \bm{u})},
 \end{equation} \vfill
+where $\Omega = \left\{\bm{z}: \sum \limits_{i = 1}^n z_i = n_T\right\}$
 \end{itemize}
 \end{frame}
 %----------------------------------------------------------------
@@ -225,7 +227,7 @@
 \begin{align*}
 \dfrac{1}{\Gamma} \leq \dfrac{\pi_i / (1 - \pi_i)}{\pi_j / (1 - \pi_j)} \leq \Gamma \text{ for any } i \text{ and } j,
 \end{align*} \vfill
-where $\Gamma = \exp(\gamma)$ \citep[see][]{rosenbaum1995a} \vfill
+where $\Gamma = \exp(\gamma)$ \citep[see][]{rosenbaum1995} \vfill
 \item \textbf{Intuition}: $\Gamma$ is maximum treatment odds ratio between any two units \vfill
 \end{itemize}
 \end{frame}
@@ -397,7 +399,7 @@ The ``worst-case'' $p$-value over increasing values of $\Gamma$ is
 \frametitle{References} 
 \scriptsize
 \bibliographystyle{chicago}
-\bibliography{Master_Bibliography}   % name your BibTeX data base
+\bibliography{sensitivity_analysis}   % name your BibTeX data base
 \end{frame}
 %----------------------------------------------------------------
 \end{document}
