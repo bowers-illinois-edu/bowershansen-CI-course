@@ -23,10 +23,7 @@
 \input{courseedition} %misnomer, as of now file only carries date
 
 \author{Jake Bowers \thanks{Political Science and Statistics, University of Illinois @ Urbana-Champaign; \mbox{jwbowers@illinois.edu}} \and
-    Thomas (Tom) Leavitt \thanks{Department of Health Care Policy, Harvard
-     University; \mbox{leavitt@hcp.med.harvard.edu}} \and
- Stephen El-Khatib \thanks{University of California, Riverside, \mbox{stevekhatib@gmail.com}} \and
- Kathryn Overton	\thanks{University of New Mexico, \mbox{koverton@unm.edu}}
+    Thomas (Tom) Leavitt \thanks{Marxe School of Public and International Affairs at Baruch College, City University of New York (CUNY); \mbox{thomas.leavitt@baruch.cuny.edu}}
 }
 
 
@@ -34,12 +31,10 @@
 
 \maketitle
 \begin{abstract}
-\noindent This course introduces methods and concepts used to infer causal effects from comparisons of intervention and control groups.  We'll use the potential outcomes framework of causality to analyze both randomized and observational studies, distinguishing different forms of random assignment and separating observational studies that involve instruments, discontinuities and other devices, highlighting the interplay of study design for statistical analysis.  Propensity score matching is treated in depth, with explicit instruction in the use of ``optmatch'' and related packages in R; other areas of methodological focus include assessment of covariate balance by specification tests and other methods; inference methods that are a robust to small sample sizes, weak instruments, spillover and interaction effects, heterogeneous treatment effects, and/or misspecification of response surfaces; and omitted variable sensitivity analysis.  %The content is geared specifically toward students and researchers in the social sciences, with examples are drawn from economics, political science, public health, and sociology, among other fields.
+\noindent This course introduces methods and concepts used to infer causal effects from comparisons of intervention and control groups. We'll use the potential outcomes framework of causality to show how a study's research design provides a foundation for estimation and testing. We focus, first, on properties of estimators and tests in randomized experiments, e.g., unbiasedness, consistency, controlled error rates. We then turn to research designs that are either partially controlled (e.g., experiments with noncompliance and/or attrition) or uncontrolled (e.g., observational studies). For observational studies, we focus primarily on matching methods implemented via \texttt{optmatch} and related packages in \texttt{R}. Finally, we turn to sensitivity analysis --- namely, how to assess how inferences would change should certain assumptions about the research design be false. Examples throughout the course are drawn from economics, political science, public health, and sociology.
 
-The course presupposes knowledge of multiple regression at the level
-of the ICPSR course Regression: II, as well as multiple regression
-with binary dependent variables (as taught in the ICPSR courses
-Regression: III or Maximum Likelihood).  The part of the course presenting matching requires the use of \texttt{R} for computation, but other methods presented in the course are readily implemented either in \texttt{R} or in \texttt{Stata}.
+The course assumes familiarity with linear algebra and strong knowledge of statistical concepts, such as sampling distributions, statistical inference, and hypothesis testing. The course will rely on \texttt{R} for computation.
+
 \end{abstract}
 
 % \section{Meetings}
@@ -55,44 +50,12 @@ Regression: III or Maximum Likelihood).  The part of the course presenting match
 
 We may all warn our freshmen that association is not causation, but inferring causation has always been a central aim both for statisticians and for their collaborators. Until recently, however, inference of causation from statistical evidence depended on murky, scarcely attainable requirements; in practice, the weight of casual arguments was largely determined by the scientific authority of the people making them.
 
-Requirements for causal inference become more clear when they are
-framed in terms of \emph{potential outcomes}.  This was first done by
-Neyman, who in the 1920s used potential outcomes to model agricultural
-experiments.  Fisher independently proposed a related but distinct,
-ultimately more influential, analysis of experiments in 1935, and a
-rich strain of causal analysis developed among his intellectual
-progeny.  It clarified the differing requirements for causal inference
-with experiments and with observational data, isolating the distinct
-contributions required of the statistician and of his disciplinary
-collaborators; generated more satisfying methods with which to address
-potential confounding due to measured variables; qualitatively and
-quantitatively advanced our grasp of unmeasured confounding and its
-potential ramifications; furnished statistical methods with which to
-eke more out of the strongest study designs, under fewer assumptions;
-and articulated principles with which to understand study designs as a
-spectrum, rather than a dichotomy between ``good" experiments and
-``bad" observational studies. Understanding the methods and outlook of
-the school founded by Fisher's student W. G. Cochran will be the
-central task of this course.
+Requirements for causal inference become more clear when they are framed in terms of \emph{potential outcomes}.  This was first done by Neyman, who in the 1920s used potential outcomes to model agricultural experiments.  Fisher independently proposed a related but distinct, ultimately more influential, analysis of experiments in 1935, and a rich strain of causal analysis developed among his intellectual progeny. It clarified the differing requirements for causal inference with experiments and with observational data, isolating the distinct
+contributions required of the statistician and of his disciplinary collaborators; generated more satisfying methods with which to address potential confounding due to measured variables; qualitatively and quantitatively advanced our grasp of unmeasured confounding and its potential ramifications; furnished statistical methods with which to eke more out of the strongest study designs, under fewer assumptions; and articulated principles with which to understand study designs as a spectrum, rather than a dichotomy between ``good" experiments and ``bad" observational studies. Understanding the methods and outlook of the school founded by Fisher's student W. G. Cochran will be the central task of this course.
 
 The course begins by applying the Fisher and Neyman-Rubin approaches to statistical inference for counterfactual causal efffects to randomized experiments, touching on considerations
-specific to clustered treatment assignment, ``small'' sample sizes and
-treatment effect heterogeneity. The next segment addresses conceptual
-and methodogical challenges of applying the same models to analysis of
-non-experimental data. This course segment covers ignorability,
-selection, ``common support,'' covariate balance, paired comparisons,
-optimal matching and propensity scores. A short separate section
-introduces another method aiming to identify experiment-like
-structures in observational data, namely regression discontinuity,
-before a return to experiments.
-
-With these foundations in place, the course's second half adds
-conceptual depth and methodological flexibility.
-Central topics include instrumental variables and local average
-treatment effects, stratified designs with clustering, interference,
-omitted variable sensitivity analysis and adapting workhorse
-techniques such as multiple regression to the demands of causal
-inference.  Over the course of the four weeks the course becomes
+specific to clustered treatment assignment, ``small'' sample sizes and treatment effect heterogeneity. The next segment addresses conceptual and methodogical challenges of applying the same models to analysis of non-experimental data. This course segment covers ignorability, selection, ``common support,'' covariate balance, paired comparisons,
+optimal matching and propensity scores. With these foundations in place, the course then turns to sensitivity analysis --- namely, how to make principled assessments of how inferences would change should crucial assumptions be false. Over the course's three weeks, the course becomes
 progressively less conceptual and more applied with increasing
 emphasis on computing strategies in R.
 
@@ -155,16 +118,8 @@ If you're new to \texttt{R}, we suggest getting a hold of:
 
 \subsection*{Assignments}
 %Computer or pencil and paper exercises will be assigned periodically and collected on Mondays and on Thursdays at the beginning of class.
-Assignments are due each Tuesday, at the beginning of
-class. Parts of the assignment will be given at the beginning of the
-week, but other parts will be given during class, over the course of
-the week.  Many of these daily assignments will be given with the
-expectation that they'll be completed by the next course meeting,
-although they'll only be collected at the end of the week.
-Late homework will not be accepted without cause (or prior arrangement
-with the teaching assistant).
-
-You're welcome to submit a paper at the end of the course, whether or not you're taking the course for credit.  In that case we'll return it with comments within a month or so of the course's completion.  (If you're taking the course for a grade, the paper won't contribute to the grade unless you're on the borderline between two grades.)
+Assignments are due each Friday, at the beginning of
+class. Parts of the assignment will be given at the beginning of the week, but other parts will be given during class, over the course of the week.  Late homework will not be accepted without cause (or prior arrangement with the teaching assistant).
 
 Participation is expected. It can take various forms:
 \begin{enumerate}
@@ -192,29 +147,21 @@ The course schedule is below. In the Course content section, we provide more ext
 \resizebox{9in}{!}{\begin{tabular}{|l|l|l|l|l|}
 \hline
 \textbf{Date} & \textbf{Instructor} & \textbf{Topic} & \textbf{Required readings} & \textbf{Application} \\ \hline
-Tues, July 19 & Tom & Introduction: Randomized experiments and potential outcomes & \begin{tabular}{@{}c@{}} Holland (1986) \\Kinder and Palfrey (1993, Section 1.2) \\ Fisher (1935, Introduction) \\ Rosenbaum (2017, Chapter 2) \end{tabular} & N/A \\ \cline{1-5}
-July 20 & Tom & Randomized experiments: Fisherian Exact tests & \begin{tabular}{@{}c@{}} Rosenbaum (2017, Chapter 3) \end{tabular} & ~ \\ \cline{1-4}
-July 21 & \multirow{2}{*}{Tom} & \multirow{2}{*}{Randomized experiments: Neymanian Estimation and inference} & \begin{tabular}{@{}c@{}} Gerber and Green (2012, Chapter 2) \\ Aronow and Middleton (2013) \\ Middleton and Aronow (2015) \\ Gerber and Green (2012, pp. 51 -- 61) \end{tabular} & \multirow{5}{*}{Arceneaux (2005)} \\ \cline{1-1}
-July 22 &  &  & \begin{tabular}{@{}c@{}} \end{tabular} & ~ \\ \cline{1-4}
-Mon, July 25 & Jake & Randomized Experiments: Covariance adjustment \& regression & \begin{tabular}{@{}c@{}} Gerber and Green (2012, Chapter 4) \\ Rosenbaum (2002) \\ Lin (2013) \end{tabular} & ~ \\ \hline
-July 26 (HW 1 due) & Jake & \multirow{2}{*}{Randomized experiments: Noncompliance and attrition} & \begin{tabular}{@{}c@{}} Gerber and Green (2012, Chapters 5 -- 6) \end{tabular} & \multirow{2}{*}{Albertson and Lawrence (2009)} \\ \cline{1-2}
-July 27 & Jake &  & \begin{tabular}{@{}c@{}} Rosenbaum (1996) \\ Rosenbaum (2010, Section 5.3) \end{tabular} & ~ \\ \hline
-July 28 & Jake & Observational studies: Introduction & \begin{tabular}{@{}c@{}} Bind and Rubin (2019) \\ Gelman and Hill (2006, Sections 9.0 -- 9.2) \\ Berk (2010) \end{tabular} & \multirow{6}{*}{Cerd\'{a} et al (2012)} \\ \cline{1-4}
-July 29 & Jake & Introduction to matching & \begin{tabular}{@{}c@{}} Rosenbaum (2017, pp. 65 -- 90) \end{tabular} & ~ \\ \cline{1-4}
-Mon, August 1 & Jake & Nuts \& bolts of matching & \begin{tabular}{@{}c@{}} Rosenbaum (2010, Chapters 7 -- 8) \\ Rosenbaum (2017, Chapter 11) \end{tabular} & ~ \\ \cline{1-4}
-August 2 (HW 2 due) & Jake & Propensity score methods & \begin{tabular}{@{}c@{}} Rosenbaum (2017, pp. 90 -- 96) \\ Hansen (2011) \end{tabular} & ~ \\ \cline{1-4}
-August 3 & Jake & Assessments of covariate balance & \multirow{2}{*}{\begin{tabular}{@{}c@{}} Hansen and Bowers (2008) \\ Gerber and Green (2021, pp. 71 -- 79) \end{tabular}} & ~ \\ \cline{1-3}
-August 4 & Jake & Outcome analysis after matching & & ~ \\ \hline
-August 5 & Jake & Nonbipartite matching & \begin{tabular}{@{}c@{}} Rosenbaum (2010, Chapter 11) \end{tabular} & Wong et al (2012, 2020) \\ \hline
-Mon, August 8 & Tom & Regression discontinuity designs and ``natural experiments'' & \begin{tabular}{@{}c@{}}
-Cattaneo, Titiunik, and Vazquez-Bare (2020) \\ Keele, Titiunik and Zubizarreta (2015) \\ Sales and Hansen (2020) \end{tabular} & Caughey and Sekon (2011) \\ \hline
-August 9 (HW 3 due) & Tom & Fisherian sensitivity analysis & \begin{tabular}{@{}c@{}}
-Rosenbaum (2017, Chapter 9) \end{tabular} & \multirow{2}{*}{Cerd\'{a} et al (2012)} \\ \cline{1-4}
-August 10 & Tom & Neymanian sensitivity analysis & \begin{tabular}{@{}c@{}}
-Fogarty (2020) \end{tabular} & ~ \\ \hline
-August 11 & Tom & Special topics & TBD & TBD \\ \hline
-August 12 & Tom & Special topics & TBD & TBD \\\hline
-\hline
+Tues, June 20 & Tom & Introduction: Randomized experiments and potential outcomes & \begin{tabular}{@{}c@{}} Holland (1986) \\Kinder and Palfrey (1993, Section 1.2) \\ Fisher (1935, Introduction) \\ Rosenbaum (2017, Chapter 2) \end{tabular} & N/A \\ \cline{1-5}
+June 21 & Tom & Randomized experiments: Fisherian exact tests & \begin{tabular}{@{}c@{}} Rosenbaum (2017, Chapter 3) \end{tabular} & ~ \\ \cline{1-4}
+June 22 & \multirow{2}{*}{Tom} & \multirow{2}{*}{Randomized experiments: Neymanian estimation and inference} & \begin{tabular}{@{}c@{}} Gerber and Green (2012, Chapter 2) \\ Aronow and Middleton (2013) \\ Middleton and Aronow (2015) \\ Gerber and Green (2012, pp. 51 -- 61) \end{tabular} & \multirow{5}{*}{Arceneaux (2005)} \\ \cline{1-4}
+June 23 (HW 1 due) & Tom & Randomized experiments: Covariance adjustment \& regression & \begin{tabular}{@{}c@{}} Gerber and Green (2012, Chapter 4) \\ Rosenbaum (2002) \\ Lin (2013) \end{tabular} & ~ \\ \hline
+June 26 & Jake & \multirow{2}{*}{Randomized experiments: Noncompliance and attrition} & \begin{tabular}{@{}c@{}} Gerber and Green (2012, Chapters 5 -- 6) \\ Rosenbaum (1996) \\ Rosenbaum (2010, Section 5.3)\end{tabular} & \multirow{2}{*}{Albertson and Lawrence (2009)} \\ \cline{1-5}
+June 27 & Jake & Observational studies: Introduction & \begin{tabular}{@{}c@{}} Bind and Rubin (2019) \\ Gelman and Hill (2006, Sections 9.0 -- 9.2) \\ Berk (2010) \end{tabular} &  \\ \cline{1-4}
+June 28 & Jake & Introduction to matching & \begin{tabular}{@{}c@{}} Rosenbaum (2017, pp. 65 -- 90) \end{tabular} & ~ \\ \cline{1-4}
+June 29  & Jake & Nuts \& bolts of matching & \begin{tabular}{@{}c@{}} Rosenbaum (2010, Chapters 7 -- 8) \\ Rosenbaum (2017, Chapter 11) \end{tabular} & \multirow{6}{*}{Cerd\'{a} et al (2012)} \\ \cline{1-4}
+June 30 (HW 2 due) & Jake & Propensity score methods & \begin{tabular}{@{}c@{}} Rosenbaum (2017, pp. 90 -- 96) \\ Hansen (2011) \end{tabular} & ~ \\ \cline{1-4}
+July 3 & Jake & Assessments of covariate balance & \multirow{2}{*}{\begin{tabular}{@{}c@{}} Hansen and Bowers (2008) \\ Gerber and Green (2021, pp. 71 -- 79) \end{tabular}} & ~ \\ \cline{1-4}
+July 4 & Jake & Outcome analysis after matching & & ~ \\ \cline{1-4}
+July 5 & Jake & Fisherian sensitivity analysis & \begin{tabular}{@{}c@{}}
+Rosenbaum (2017, Chapter 9) \\ Gastwirth et al (2000) \\ Rosenbaum (2015) \\ Rosenbaum (2018) \end{tabular} & ~ \\ \cline{1-4}
+July 6 & Jake & Neymanian sensitivity analysis & \begin{tabular}{@{}c@{}} Fogarty (2023) \end{tabular} & ~ \\ \cline{1-4}
+July 7 (HW 3 due) & Jake & Design sensitivity & \begin{tabular}{@{}c@{}} Rosenbaum (2004) \\ Rosenbaum (2017, Chapter 10) \end{tabular} & ~ \\ \hline
 \end{tabular}}
 %}
 \end{table}
@@ -498,66 +445,6 @@ August 12 & Tom & Special topics & TBD & TBD \\\hline
   \bibentry{imaietal2008}
 \end{verse}
 
-\subsection{Nonbipartite matching}
-
-\subsection*{Applications}
-
-\begin{verse} \bibentry{wongetal2012b} \end{verse}
-
-\begin{verse} \bibentry{wongetal2020} \end{verse}
-
-\paragraph*{Required}
-
-\begin{verse} Chapter 11 of \bibentry{rosenbaum2010} \end{verse}
-
-\paragraph*{Recommended}
-
-\begin{verse} \bibentry{luetal2001} \end{verse}
-
-\begin{verse} Chapter 11 of \bibentry{rosenbaum2010} \end{verse}
-
-\begin{verse} \bibentry{luetal2011} \end{verse}
-
-\begin{verse} \bibentry{lu2005} \end{verse}
-
-\begin{verse} \bibentry{baiocchietal2010} \end{verse}
-
-\begin{verse} \bibentry{zubizarretaetal2013} \end{verse}
-
-\subsection{Regression discontinuity designs and ``natural experiments''}
-
-\subsection*{Application}
-
-\begin{verse} \bibentry{caugheysekhon2011} \end{verse}
-
-\paragraph*{Required}
-
-\begin{verse} \bibentry{cattaneoetal2020} \end{verse}
-
-\begin{verse} \bibentry{saleshansen2020} \end{verse}
-
-\begin{verse} \bibentry{keeletitiunikzubizarreta2015} \end{verse}
-
-\paragraph*{Recommended}
-
-\begin{verse} \bibentry{sekhontitiunik2017} \end{verse}
-
-\begin{verse} \bibentry{sekhontitiunik2016} \end{verse}
-
-\begin{verse} \bibentry{hansensales2015} \end{verse}
-
-\begin{verse} \bibentry{hahnetal2001} \end{verse}
-
-\begin{verse} \bibentry{imbenslemieux2008} \end{verse}
-
-\begin{verse} \bibentry{lee2008} \end{verse}
-
-\begin{verse} \bibentry{gelmanimbens2019} \end{verse}
-
-\begin{verse} \bibentry{mccrary2008} \end{verse}
-
-\begin{verse} Chapter 6 of \bibentry{angristpischke2008} \end{verse}
-
 \section{Sensitivity analysis}
 
 \subsection*{Application}
@@ -588,7 +475,7 @@ August 12 & Tom & Special topics & TBD & TBD \\\hline
 
 \paragraph*{Required}
 
-\begin{verse} \bibentry{fogarty2020a} \end{verse}
+\begin{verse} \bibentry{fogarty2023} \end{verse}
 
 \paragraph*{Recommended}
 
@@ -596,7 +483,59 @@ August 12 & Tom & Special topics & TBD & TBD \\\hline
 
 \begin{verse} \bibentry{fogartyetal2017} \end{verse}
 
+\section{Design sensitivity}
+
+\paragraph*{Required}
+
+\begin{verse} \bibentry{rosenbaum2004} \end{verse}
+
+\begin{verse} Chapter 10 of \bibentry{rosenbaum2017} \end{verse}
+
 \section{Additional topics}
+
+\subsection{Nonbipartite matching}
+
+\begin{verse} Chapter 11 of \bibentry{rosenbaum2010} \end{verse}
+
+\begin{verse} \bibentry{luetal2001} \end{verse}
+
+\begin{verse} Chapter 11 of \bibentry{rosenbaum2010} \end{verse}
+
+\begin{verse} \bibentry{luetal2011} \end{verse}
+
+\begin{verse} \bibentry{lu2005} \end{verse}
+
+\begin{verse} \bibentry{baiocchietal2010} \end{verse}
+
+\begin{verse} \bibentry{zubizarretaetal2013} \end{verse}
+
+\subsection{Regression discontinuity designs and ``natural experiments''}
+
+\begin{verse} \bibentry{caugheysekhon2011} \end{verse}
+
+\begin{verse} \bibentry{cattaneoetal2020} \end{verse}
+
+\begin{verse} \bibentry{saleshansen2020} \end{verse}
+
+\begin{verse} \bibentry{keeletitiunikzubizarreta2015} \end{verse}
+
+\begin{verse} \bibentry{sekhontitiunik2017} \end{verse}
+
+\begin{verse} \bibentry{sekhontitiunik2016} \end{verse}
+
+\begin{verse} \bibentry{hansensales2015} \end{verse}
+
+\begin{verse} \bibentry{hahnetal2001} \end{verse}
+
+\begin{verse} \bibentry{imbenslemieux2008} \end{verse}
+
+\begin{verse} \bibentry{lee2008} \end{verse}
+
+\begin{verse} \bibentry{gelmanimbens2019} \end{verse}
+
+\begin{verse} \bibentry{mccrary2008} \end{verse}
+
+\begin{verse} Chapter 6 of \bibentry{angristpischke2008} \end{verse}
 
 \subsection{Interference}
 
@@ -732,7 +671,7 @@ August 12 & Tom & Special topics & TBD & TBD \\\hline
 %\section{Additional Notes}
 \clearpage
 \bibliographystyle{plain}
-\nobibliography{bib_2022}
+\nobibliography{bib_2023}
 %\nobibliography{master,abbrev_long,causalinference,biomedicalapplications,misc}
 %\nobibliography{../2013/BIB/master,../2013/BIB/abbrev_long,../2013/BIB/causalinference,../2013/BIB/biomedicalapplications,../2013/BIB/misc}
 %"master" is Ryan Moore's file (as of summer 2012).
