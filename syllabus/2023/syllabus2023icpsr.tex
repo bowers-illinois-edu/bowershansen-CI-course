@@ -1,14 +1,22 @@
 \documentclass[12pt]{article}
 
 %\usepackage{epsf,graphicx}
+\usepackage{libertinus}
 \usepackage[T1]{fontenc}
-\usepackage{mathptmx}
+%\usepackage{mathptmx}
 \usepackage[top=1in, bottom=1in, right=1in, left=1in]{geometry}
 \usepackage{graphicx}
 \usepackage{multirow}
-\usepackage{natbib}
-\usepackage{bibentry} %% to do bib in syllabus
-\newcommand{\bibverse}[1]{\begin{verse} \bibentry{#1}. \end{verse}}
+%\usepackage{natbib}
+%\usepackage{fullcite} %% to do bib in syllabus
+%\newcommand{\fullcite}[1]{\begin{verse} \fullcite{#1}. \end{verse}}
+
+% To debug bib error messages
+%\DeclareUnicodeCharacter{0301}{*************************************}
+
+\usepackage[style=authoryear, backend=biber]{biblatex}
+\addbibresource{bib_2023.bib}
+
 \usepackage{hyperref}
 \usepackage{parskip}
 \usepackage{bookmark}
@@ -43,7 +51,7 @@ The course assumes familiarity with linear algebra and strong knowledge of stati
 
 \clearpage
 
-\nobibliography*
+%\nobibliography*
 
 
 \section*{Overview}
@@ -65,19 +73,21 @@ emphasis on computing strategies in R.
 
 The main texts for the course are
 
-\begin{verse} \bibentry{rosenbaum2017} \end{verse}
 
-\begin{verse} \bibentry{rosenbaum2010} \end{verse}
 
-\begin{verse} \bibentry{rosenbaum2002a} \end{verse}
+\begin{verse} \fullcite{rosenbaum2017} \end{verse}
+
+\begin{verse} \fullcite{rosenbaum2010} \end{verse}
+
+\begin{verse} \fullcite{rosenbaum2002a} \end{verse}
 
 These three textbooks are presented in varying difficulty and we will draw from all three. Although we won't follow these books closely, their goals and methods align with the course's, and they will be useful as references and supplements.
 
 Other texts that we draw on include
 
-\begin{verse} \bibentry{gerbergreen2012}  \end{verse}
+\begin{verse} \fullcite{gerbergreen2012}  \end{verse}
 
-\begin{verse} \bibentry{imbensrubin2015} \end{verse}
+\begin{verse} \fullcite{imbensrubin2015} \end{verse}
 
 % If you'll be using experiments, propensity scores, regression
 % discontinuity, or instrumental variables in your work, then each of
@@ -89,19 +99,19 @@ Other texts that we draw on include
 
 %\begin{verse}
 
-%\bibentry{angristpischke2008}
+%\fullcite{angristpischke2008}
 
-%\bibentry{aronowmiller2019}
+%\fullcite{aronowmiller2019}
 
-%\bibentry{berk2004}
+%\fullcite{berk2004}
 
-%\bibentry{gelmanhill2006}
+%\fullcite{gelmanhill2006}
 
-%\bibentry{morganwinship2015}
+%\fullcite{morganwinship2015}
 
-%\bibentry{murnanewillett2010}
+%\fullcite{murnanewillett2010}
 
-%\bibentry{dunning2012}
+%\fullcite{dunning2012}
 
 %\end{verse}
 
@@ -109,9 +119,9 @@ Other readings will be assigned and distributed electronically.
 
 If you're new to \texttt{R}, we suggest getting a hold of:
 
-\begin{verse} \bibentry{fox2016}  \end{verse}
+\begin{verse} \fullcite{fox2016}  \end{verse}
 
-\begin{verse} \bibentry{wickhamgrolemund2017} \end{verse}
+\begin{verse} \fullcite{wickhamgrolemund2017} \end{verse}
 
 \texttt{R} software will be required for several specific segments of the course. With some independent effort, students not familiar with \texttt{R} in advance should be able to learn enough \texttt{R} during the course to complete these assignments. We also recommend some work with \texttt{R} --- for example, via working through some online \texttt{R} courses --- before the course for students who have never used it before.
 
@@ -176,24 +186,24 @@ July 7 (HW 3 due) & Jake & Design sensitivity & \begin{tabular}{@{}c@{}} Rosenba
 
 \paragraph*{Required}
 
-\begin{verse}\bibentry{holland1986}, Sections~1 -- 4. (The article that brought the ``Rubin Causal Model'' to  statisticians' attention.)\end{verse}
+\begin{verse}\fullcite{holland1986}, Sections~1 -- 4. (The article that brought the ``Rubin Causal Model'' to  statisticians' attention.)\end{verse}
 
 \begin{verse} Section~1.2, ``Experimentation defined,''  of
-\bibentry{kinderpalfrey1993}.  (Particularly pp. 5 -- 10.) \end{verse}
+\fullcite{kinderpalfrey1993}.  (Particularly pp. 5 -- 10.) \end{verse}
 
-\begin{verse} \bibentry{rosenbaum2017}, Chapter 2. \end{verse}
+\begin{verse} \fullcite{rosenbaum2017}, Chapter 2. \end{verse}
 
-\begin{verse} Chapter~1, ``Introduction,'' of \bibentry {fisher1935a} and pages 131 -- 135 of \bibentry{box1978} for historical context. \end{verse}
+\begin{verse} Chapter~1, ``Introduction,'' of \fullcite {fisher1935a} and pages 131 -- 135 of \fullcite{box1978} for historical context. \end{verse}
 
 \paragraph*{Recommended}
 
-\begin{verse} \bibentry{bowersleavitt2020} \end{verse}
+\begin{verse} \fullcite{bowersleavitt2020} \end{verse}
 
 \section{Random assignment as a basis for inference}
 
 \subsection*{Application}
 
-\begin{verse} \bibentry{arceneaux2005} \end{verse}
+\begin{verse} \fullcite{arceneaux2005} \end{verse}
 
 \subsection{Inference for causal effects: the Neyman tradition}
 
@@ -201,51 +211,51 @@ July 7 (HW 3 due) & Jake & Design sensitivity & \begin{tabular}{@{}c@{}} Rosenba
 
 \paragraph*{Required}
 
-\begin{verse} Chapter~2 and pp. 51 -- 61 of \bibentry{gerbergreen2012} \end{verse}
-\begin{verse} \bibentry{aronowmiddleton2013} \end{verse}
-\begin{verse} \bibentry{middletonaronow2015} \end{verse}
+\begin{verse} Chapter~2 and pp. 51 -- 61 of \fullcite{gerbergreen2012} \end{verse}
+\begin{verse} \fullcite{aronowmiddleton2013} \end{verse}
+\begin{verse} \fullcite{middletonaronow2015} \end{verse}
 
 \subsubsection{Variance estimation and hypothesis testing}
 
 \paragraph*{Required}
 
 \begin{verse}
-  Chapter~3 of \bibentry{gerbergreen2012}.
+  Chapter~3 of \fullcite{gerbergreen2012}.
 \end{verse}
 
 \begin{verse} Endnote spanning pages A-32 and 33,
-  \bibentry{freedmanpisanipurves1998}.  (This can be read as a pr{\'e}cis
-  of: \bibentry{neyman1990}.)
+  \fullcite{freedmanpisanipurves1998}.  (This can be read as a pr{\'e}cis
+  of: \fullcite{neyman1990}.)
 \end{verse}
 
-\begin{verse} Chapter 6, pp. 87 -- 98 of \bibentry{imbensrubin2015} \end{verse}
+\begin{verse} Chapter 6, pp. 87 -- 98 of \fullcite{imbensrubin2015} \end{verse}
 
 \paragraph*{Recommended}
 
-\begin{verse} Chapter~6 of \bibentry{dunning2012} \end{verse}
+\begin{verse} Chapter~6 of \fullcite{dunning2012} \end{verse}
 
-\begin{verse} \bibentry{liding2017} \end{verse}
+\begin{verse} \fullcite{liding2017} \end{verse}
 
-\begin{verse} \bibentry{ding2017a} \end{verse}
+\begin{verse} \fullcite{ding2017a} \end{verse}
 
-\begin{verse} \bibentry{aronowetal2014} \end{verse}
+\begin{verse} \fullcite{aronowetal2014} \end{verse}
 
 \subsection{Inference for causal effects: the Fisherian tradition}
 
 \paragraph*{Required}
 
 \begin{verse}
-  Chapter 3 of \bibentry{rosenbaum2017}.
+  Chapter 3 of \fullcite{rosenbaum2017}.
 \end{verse}
 
 \paragraph*{Recommended}
 
 \begin{verse}
-  Pages 27 -- 49 of \bibentry{rosenbaum2002a}
+  Pages 27 -- 49 of \fullcite{rosenbaum2002a}
 \end{verse}
 
 \begin{verse}
-  Chapter 2 of \bibentry{rosenbaum2010}.
+  Chapter 2 of \fullcite{rosenbaum2010}.
 \end{verse}
 
 \subsection{Covariance adjustment in randomized experiments}
@@ -253,75 +263,75 @@ July 7 (HW 3 due) & Jake & Design sensitivity & \begin{tabular}{@{}c@{}} Rosenba
 \paragraph*{Required}
 
 \begin{verse}
-  Chapter~4 of \bibentry{gerbergreen2012}.
+  Chapter~4 of \fullcite{gerbergreen2012}.
 \end{verse}
 
 \begin{verse}
-  \bibentry{rosenbaum2002c}.
+  \fullcite{rosenbaum2002c}.
 \end{verse}
 
-\begin{verse} \bibentry{lin2013} \end{verse}
+\begin{verse} \fullcite{lin2013} \end{verse}
 
 \paragraph*{Recommended}
 
-\begin{verse} \bibentry{miratrixetal2013} \end{verse}
+\begin{verse} \fullcite{miratrixetal2013} \end{verse}
 
-\begin{verse} \bibentry{freedman2008a} \end{verse}
+\begin{verse} \fullcite{freedman2008a} \end{verse}
 
-\begin{verse} \bibentry{freedman2008b} \end{verse}
+\begin{verse} \fullcite{freedman2008b} \end{verse}
 
-\begin{verse} \bibentry{freedman2008c} \end{verse}
+\begin{verse} \fullcite{freedman2008c} \end{verse}
 
-\begin{verse} \bibentry{samiiaronow2012} \end{verse}
+\begin{verse} \fullcite{samiiaronow2012} \end{verse}
 
-\begin{verse} \bibentry{aronowsamii2016} \end{verse}
+\begin{verse} \fullcite{aronowsamii2016} \end{verse}
 
-\begin{verse} \bibentry{abadieetal2020} \end{verse}
+\begin{verse} \fullcite{abadieetal2020} \end{verse}
 
 
 \section{Noncompliance and Attrition}
 
 \subsection*{Applications}
 
-\begin{verse} \bibentry{albertsonlawrence2009} \end{verse}
+\begin{verse} \fullcite{albertsonlawrence2009} \end{verse}
 
 \subsection{Noncompliance and instrumental variables}
 
 \paragraph*{Required}
 
-\begin{verse} Chapters 5 and 6 of \bibentry{gerbergreen2012}. \end{verse}
+\begin{verse} Chapters 5 and 6 of \fullcite{gerbergreen2012}. \end{verse}
 
 \begin{verse}
-  Section 5.3, ``Instruments,'' of \bibentry{rosenbaum2010} \end{verse}
+  Section 5.3, ``Instruments,'' of \fullcite{rosenbaum2010} \end{verse}
 
 \begin{verse}
-\bibentry{rosenbaum1996} \end{verse}
+\fullcite{rosenbaum1996} \end{verse}
 
 \paragraph*{Recommended}
 
-\begin{verse} Section 2.3 of \bibentry{rosenbaum2002c} \end{verse}
+\begin{verse} Section 2.3 of \fullcite{rosenbaum2002c} \end{verse}
 
-\begin{verse} \bibentry{angristetal1996} \end{verse}
+\begin{verse} \fullcite{angristetal1996} \end{verse}
 
-\begin{verse} \bibentry{imbensrosenbaum2005} \end{verse}
+\begin{verse} \fullcite{imbensrosenbaum2005} \end{verse}
 
-\begin{verse} \bibentry{kangpeckkeele2018} \end{verse}
+\begin{verse} \fullcite{kangpeckkeele2018} \end{verse}
 
-\begin{verse} \bibentry{hansenbowers2008} \end{verse}
+\begin{verse} \fullcite{hansenbowers2008} \end{verse}
 
 \subsection{Attrition, or missing outcomes}
 
 \paragraph*{Recommended}
 
-\begin{verse} Chapter 7 of \bibentry{gerbergreen2012} \end{verse}
+\begin{verse} Chapter 7 of \fullcite{gerbergreen2012} \end{verse}
 
-\begin{verse} \bibentry{lee2009} \end{verse}
+\begin{verse} \fullcite{lee2009} \end{verse}
 
-\begin{verse} \bibentry{aronowetal2019} \end{verse}
+\begin{verse} \fullcite{aronowetal2019} \end{verse}
 
-\begin{verse} \bibentry{horowitzmanski2000} \end{verse}
+\begin{verse} \fullcite{horowitzmanski2000} \end{verse}
 
-\begin{verse} \bibentry{coppocketal2017} \end{verse}
+\begin{verse} \fullcite{coppocketal2017} \end{verse}
 
 \section{Observational Studies}
 
@@ -329,90 +339,90 @@ July 7 (HW 3 due) & Jake & Design sensitivity & \begin{tabular}{@{}c@{}} Rosenba
 
 \paragraph*{Required}
 
-\begin{verse} \bibentry{bindrubin2019} \end{verse}
+\begin{verse} \fullcite{bindrubin2019} \end{verse}
 
-\begin{verse} Sections 9.0 -- 9.2 (especially discussion of interpolation and extrapolation) of \bibentry{gelmanhill2006} \end{verse}
+\begin{verse} Sections 9.0 -- 9.2 (especially discussion of interpolation and extrapolation) of \fullcite{gelmanhill2006} \end{verse}
 
-\bibverse{berk2010}
+\fullcite{berk2010}
 
 \paragraph*{Recommended}
 
-\begin{verse} Chapter 5 of \bibentry{rosenbaum2017} \end{verse}
+\begin{verse} Chapter 5 of \fullcite{rosenbaum2017} \end{verse}
 
-\begin{verse} \bibentry{cochran1965} \end{verse}
+\begin{verse} \fullcite{cochran1965} \end{verse}
 
-\begin{verse} On the problem of kitchen sink regressions, \bibentry{achen2002} \end{verse}
+\begin{verse} On the problem of kitchen sink regressions, \fullcite{achen2002} \end{verse}
 
-\begin{verse} Chapters 11 and 19 (on overly influential points) of \bibentry{fox2016} \end{verse}
+\begin{verse} Chapters 11 and 19 (on overly influential points) of \fullcite{fox2016} \end{verse}
 
 \subsection{Matching: An introduction}
 
 \subsection*{Application}
 
-\begin{verse} \bibentry{cerdaetal2012} \end{verse}
+\begin{verse} \fullcite{cerdaetal2012} \end{verse}
 
 \paragraph*{Required}
 
 \begin{verse}
-  Pages 65 -- 90 of \bibentry{rosenbaum2017}
+  Pages 65 -- 90 of \fullcite{rosenbaum2017}
 \end{verse}
 
 \begin{verse}
-  \bibentry{rosenbaum2020}
+  \fullcite{rosenbaum2020}
 \end{verse}
 
 \paragraph*{Recommended}
 
 \begin{verse}
-  Chapter 3 of \bibentry{rosenbaum2002a}, specifically Sections 3.1 -- 3.2 and 3.4 -- 3.5.
+  Chapter 3 of \fullcite{rosenbaum2002a}, specifically Sections 3.1 -- 3.2 and 3.4 -- 3.5.
 \end{verse}
 
-\begin{verse} \bibentry{rosenbaum2001d} \end{verse}
+\begin{verse} \fullcite{rosenbaum2001d} \end{verse}
 
-\bibverse{bifulco2012}
+\fullcite{bifulco2012}
 
-\bibverse{arceneauxetal2010}
+\fullcite{arceneauxetal2010}
 
 \subsection{Nuts \& bolts of matching}
 
 \paragraph*{Required}
 
 \begin{verse}
-  Chapters 7 -- 8 of \bibentry{rosenbaum2010}, 
+  Chapters 7 -- 8 of \fullcite{rosenbaum2010}, 
 \end{verse}
 
 \begin{verse}
-  Chapter 11 \bibentry{rosenbaum2017}, 
+  Chapter 11 \fullcite{rosenbaum2017}, 
 \end{verse}
 
 \subsection{Propensity scores methods}
 
 \paragraph*{Required}
 
-\begin{verse} Pages 90 -- 96 of \bibentry{rosenbaum2017} \end{verse}
+\begin{verse} Pages 90 -- 96 of \fullcite{rosenbaum2017} \end{verse}
 
 \begin{verse}
-  \bibentry{hansen2011}
+  \fullcite{hansen2011}
 \end{verse}
 
 \paragraph*{Recommended}
 
 \begin{verse}
-  \bibentry{rubin1979}
+  \fullcite{rubin1979}
 \end{verse}
 
 \begin{verse}
-  \bibentry{robinsetal2000a}
+  \fullcite{robinsetal2000a}
 \end{verse}
 
-\bibverse{hoetal2007}
+\fullcite{hoetal2007}
 
 \begin{verse}
-  Chapters 13 of \bibentry{rosenbaum2010}
+  Chapters 13 of \fullcite{rosenbaum2010}
 \end{verse}
 
 \begin{verse}
-  \bibentry{rosenbaumrubin1985}
+  \fullcite{rosenbaumrubin1985}
 \end{verse}
 
 \subsection{Covariate balance and outcome analysis after matching}
@@ -420,258 +430,259 @@ July 7 (HW 3 due) & Jake & Design sensitivity & \begin{tabular}{@{}c@{}} Rosenba
 \paragraph*{Required}
 
 \begin{verse}
-  \bibentry{hansenbowers2008}
+  \fullcite{hansenbowers2008}
 \end{verse}
 
 \begin{verse}
- Pages 71 -- 79 of \bibentry{gerbergreen2012}
+ Pages 71 -- 79 of \fullcite{gerbergreen2012}
 \end{verse}
 
 \paragraph*{Recommended}
 
 \begin{verse}
-  \bibentry{fogarty2018a}
+  \fullcite{fogarty2018a}
 \end{verse}
 
 \begin{verse}
-  \bibentry{pashleymiratrix2020}
+  \fullcite{pashleymiratrix2020}
 \end{verse}
 
 \begin{verse}
-  \bibentry{imai2008a}
+  \fullcite{imai2008a}
 \end{verse}
 
 \begin{verse}
-  \bibentry{imaietal2008}
+  \fullcite{imaietal2008}
 \end{verse}
 
 \section{Sensitivity analysis}
 
 \subsection*{Application}
 
-\begin{verse} \bibentry{cerdaetal2012} \end{verse}
+\begin{verse} \fullcite{cerdaetal2012} \end{verse}
 
 \subsection{Sensitivity analysis for sharp nulls}
 
 \paragraph*{Required}
 
 \begin{verse}
-  Chapter 11 \bibentry{rosenbaum2017}, 
+  Chapter 11 \fullcite{rosenbaum2017}, 
 \end{verse}
 
 \paragraph*{Recommended}
 
-\begin{verse} Chapter 4 of \bibentry{rosenbaum2002a} \end{verse}
+\begin{verse} Chapter 4 of \fullcite{rosenbaum2002a} \end{verse}
 
-\begin{verse} \bibentry{rosenbaum2018} \end{verse}
+\begin{verse} \fullcite{rosenbaum2018} \end{verse}
 
-\begin{verse} \bibentry{rosenbaumkrieger1990} \end{verse}
+\begin{verse} \fullcite{rosenbaumkrieger1990} \end{verse}
 
-\begin{verse} \bibentry{hansenrosenbaumsmall2014} \end{verse}
+\begin{verse} \fullcite{hansenrosenbaumsmall2014} \end{verse}
 
-\begin{verse} \bibentry{hsusmall2013} \end{verse}
+\begin{verse} \fullcite{hsusmall2013} \end{verse}
 
 \subsection{Sensitivity analysis for weak nulls}
 
 \paragraph*{Required}
 
-\begin{verse} \bibentry{fogarty2023} \end{verse}
+\begin{verse} \fullcite{fogarty2023} \end{verse}
 
 \paragraph*{Recommended}
 
-\begin{verse} \bibentry{fogarty2020b} \end{verse}
+\begin{verse} \fullcite{fogarty2020b} \end{verse}
 
-\begin{verse} \bibentry{fogartyetal2017} \end{verse}
+\begin{verse} \fullcite{fogartyetal2017} \end{verse}
 
 \section{Design sensitivity}
 
 \paragraph*{Required}
 
-\begin{verse} \bibentry{rosenbaum2004} \end{verse}
+\begin{verse} \fullcite{rosenbaum2004} \end{verse}
 
-\begin{verse} Chapter 10 of \bibentry{rosenbaum2017} \end{verse}
+\begin{verse} Chapter 10 of \fullcite{rosenbaum2017} \end{verse}
 
 \section{Additional topics}
 
 \subsection{Nonbipartite matching}
 
-\begin{verse} Chapter 11 of \bibentry{rosenbaum2010} \end{verse}
+\begin{verse} Chapter 11 of \fullcite{rosenbaum2010} \end{verse}
 
-\begin{verse} \bibentry{luetal2001} \end{verse}
+\begin{verse} \fullcite{luetal2001} \end{verse}
 
-\begin{verse} Chapter 11 of \bibentry{rosenbaum2010} \end{verse}
+\begin{verse} Chapter 11 of \fullcite{rosenbaum2010} \end{verse}
 
-\begin{verse} \bibentry{luetal2011} \end{verse}
+\begin{verse} \fullcite{luetal2011} \end{verse}
 
-\begin{verse} \bibentry{lu2005} \end{verse}
+\begin{verse} \fullcite{lu2005} \end{verse}
 
-\begin{verse} \bibentry{baiocchietal2010} \end{verse}
+\begin{verse} \fullcite{baiocchietal2010} \end{verse}
 
-\begin{verse} \bibentry{zubizarretaetal2013} \end{verse}
+\begin{verse} \fullcite{zubizarretaetal2013} \end{verse}
 
 \subsection{Regression discontinuity designs and ``natural experiments''}
 
-\begin{verse} \bibentry{caugheysekhon2011} \end{verse}
+\begin{verse} \fullcite{caugheysekhon2011} \end{verse}
 
-\begin{verse} \bibentry{cattaneoetal2020} \end{verse}
+\begin{verse} \fullcite{cattaneoetal2020} \end{verse}
 
-\begin{verse} \bibentry{saleshansen2020} \end{verse}
+\begin{verse} \fullcite{saleshansen2020} \end{verse}
 
-\begin{verse} \bibentry{keeletitiunikzubizarreta2015} \end{verse}
+\begin{verse} \fullcite{keeletitiunikzubizarreta2015} \end{verse}
 
-\begin{verse} \bibentry{sekhontitiunik2017} \end{verse}
+\begin{verse} \fullcite{sekhontitiunik2017} \end{verse}
 
-\begin{verse} \bibentry{sekhontitiunik2016} \end{verse}
+\begin{verse} \fullcite{sekhontitiunik2016} \end{verse}
 
-\begin{verse} \bibentry{hansensales2015} \end{verse}
+\begin{verse} \fullcite{hansensales2015} \end{verse}
 
-\begin{verse} \bibentry{hahnetal2001} \end{verse}
+\begin{verse} \fullcite{hahnetal2001} \end{verse}
 
-\begin{verse} \bibentry{imbenslemieux2008} \end{verse}
+\begin{verse} \fullcite{imbenslemieux2008} \end{verse}
 
-\begin{verse} \bibentry{lee2008} \end{verse}
+\begin{verse} \fullcite{lee2008} \end{verse}
 
-\begin{verse} \bibentry{gelmanimbens2019} \end{verse}
+\begin{verse} \fullcite{gelmanimbens2019} \end{verse}
 
-\begin{verse} \bibentry{mccrary2008} \end{verse}
+\begin{verse} \fullcite{mccrary2008} \end{verse}
 
-\begin{verse} Chapter 6 of \bibentry{angristpischke2008} \end{verse}
+\begin{verse} Chapter 6 of \fullcite{angristpischke2008} \end{verse}
 
 \subsection{Interference}
 
-\bibverse{rosenbaum2007a}
+\fullcite{rosenbaum2007a}
 
-\bibverse{bowersetal2013}
+\fullcite{bowersetal2013}
 
-\bibverse{aronowsamii2017}
+\fullcite{aronowsamii2017}
 
-\bibverse{manski2013b}
+\fullcite{manski2013b}
 
-\bibverse{atheyetal2018}
+\fullcite{atheyetal2018}
 
 \subsection{Factorial and complex experiments}
 
-\begin{verse} \bibentry{dasguptaetal2015} \end{verse}
+\begin{verse} \fullcite{dasguptaetal2015} \end{verse}
 
-\begin{verse} \bibentry{hainmuelleretal2014} \end{verse}
+\begin{verse} \fullcite{hainmuelleretal2014} \end{verse}
 
-\begin{verse} \bibentry{egamiimai2019} \end{verse}
+\begin{verse} \fullcite{egamiimai2019} \end{verse}
 
-\begin{verse} \bibentry{gerberetal2010} \end{verse}
+\begin{verse} \fullcite{gerberetal2010} \end{verse}
 
 \subsection{Difference-in-Differences}
 
-\begin{verse} Pages 162 -- 167 of \bibentry{rosenbaum2017} \end{verse}
+\begin{verse} Pages 162 -- 167 of \fullcite{rosenbaum2017} \end{verse}
 
-\begin{verse} Section 4.1 of \bibentry{gerbergreen2012} \end{verse}
+\begin{verse} Section 4.1 of \fullcite{gerbergreen2012} \end{verse}
 
-\begin{verse} Chapter 5 of \bibentry{angristpischke2008} \end{verse}
+\begin{verse} Chapter 5 of \fullcite{angristpischke2008} \end{verse}
 
-\begin{verse} \bibentry{lechner2011} \end{verse}
+\begin{verse} \fullcite{lechner2011} \end{verse}
 
-\begin{verse} \bibentry{manskipepper2018} \end{verse}
+\begin{verse} \fullcite{manskipepper2018} \end{verse}
 
-\begin{verse} \bibentry{dingli2019} \end{verse}
+\begin{verse} \fullcite{dingli2019} \end{verse}
 
-\begin{verse} \bibentry{imaikim2021} \end{verse}
+\begin{verse} \fullcite{imaikim2021} \end{verse}
 
 \subsection{Special topics in matching: Multilevel, risk set, cardinality, generalized full matching and fine balance}
 
-\begin{verse} \bibentry{zubizarretakeele2017} \end{verse}
+\begin{verse} \fullcite{zubizarretakeele2017} \end{verse}
 
-\begin{verse} \bibentry{yangetal2016} \end{verse}
+\begin{verse} \fullcite{yangetal2016} \end{verse}
 
-\begin{verse} \bibentry{pimenteletal2018} \end{verse}
+\begin{verse} \fullcite{pimenteletal2018} \end{verse}
 
-\begin{verse} Chapter 12 of \bibentry{rosenbaum2010} \end{verse}
+\begin{verse} Chapter 12 of \fullcite{rosenbaum2010} \end{verse}
 
-\begin{verse} \bibentry{lietal2001} \end{verse}
+\begin{verse} \fullcite{lietal2001} \end{verse}
 
-\begin{verse} Chapter 10 of \bibentry{rosenbaum2010} \end{verse}
+\begin{verse} Chapter 10 of \fullcite{rosenbaum2010} \end{verse}
 
-\begin{verse} \bibentry{kilciogluzubizarreta2016} \end{verse}
+\begin{verse} \fullcite{kilciogluzubizarreta2016} \end{verse}
 
-\begin{verse} \bibentry{savjehigginssekhon2021} \end{verse}
+\begin{verse} \fullcite{savjehigginssekhon2021} \end{verse}
 
 \subsection{Attributable effects and inference of random causal quantities}
 
-\begin{verse} \bibentry{rosenbaum2001a} \end{verse}
+\begin{verse} \fullcite{rosenbaum2001a} \end{verse}
 
-\begin{verse} \bibentry{rosenbaum2003} \end{verse}
+\begin{verse} \fullcite{rosenbaum2003} \end{verse}
 
-\begin{verse} \bibentry{hansenbowers2009} \end{verse}
+\begin{verse} \fullcite{hansenbowers2009} \end{verse}
 
-\begin{verse} \bibentry{sekhonshem-tov2021} \end{verse}
+\begin{verse} \fullcite{sekhonshem-tov2021} \end{verse}
 
-\begin{verse} \bibentry{keeleetal2017} \end{verse}
+\begin{verse} \fullcite{keeleetal2017} \end{verse}
 
-\begin{verse} \bibentry{rosenbaum2007} \end{verse}
+\begin{verse} \fullcite{rosenbaum2007} \end{verse}
 
 \subsection{Regression-based sensitivity analysis}
 
-\bibverse{hosmanetal2010}
+\fullcite{hosmanetal2010}
 
-\bibverse{cinellihazlett2020}
+\fullcite{cinellihazlett2020}
 
-\bibverse{imbens2003}
+\fullcite{imbens2003}
 
-\bibverse{oster2019}
+\fullcite{oster2019}
 
 \subsection{External validity}
 
-\begin{verse} \bibentry{kernetal2016} \end{verse}
+\begin{verse} \fullcite{kernetal2016} \end{verse}
 
-\begin{verse} \bibentry{miratrixetal2018a} \end{verse}
+\begin{verse} \fullcite{miratrixetal2018a} \end{verse}
 
-\begin{verse} \bibentry{bennettetal2020} \end{verse}
+\begin{verse} \fullcite{bennettetal2020} \end{verse}
 
-\begin{verse} \bibentry{silberetal2014} \end{verse}
+\begin{verse} \fullcite{silberetal2014} \end{verse}
 
-\begin{verse} \bibentry{westreichetal2019} \end{verse}
+\begin{verse} \fullcite{westreichetal2019} \end{verse}
 
 \subsection{Weighting methods}
 
-\begin{verse} \bibentry{chattopadhyayetal2020} \end{verse}
+\begin{verse} \fullcite{chattopadhyayetal2020} \end{verse}
 
-\begin{verse} \bibentry{imairatkovic2014} \end{verse}
+\begin{verse} \fullcite{imairatkovic2014} \end{verse}
 
-\begin{verse} \bibentry{zubizarreta2015} \end{verse}
+\begin{verse} \fullcite{zubizarreta2015} \end{verse}
 
-\begin{verse} \bibentry{wongchan2018} \end{verse}
+\begin{verse} \fullcite{wongchan2018} \end{verse}
 
-\begin{verse} \bibentry{tan2020} \end{verse}
+\begin{verse} \fullcite{tan2020} \end{verse}
 
-\begin{verse} \bibentry{wangzubizarreta2020} \end{verse}
+\begin{verse} \fullcite{wangzubizarreta2020} \end{verse}
 
-\begin{verse} \bibentry{hainmueller2012} \end{verse}
+\begin{verse} \fullcite{hainmueller2012} \end{verse}
 
 \subsection{Synthetic control}
 
-\begin{verse} \bibentry{abadieetal2010} \end{verse}
+\begin{verse} \fullcite{abadieetal2010} \end{verse}
 
-\begin{verse} \bibentry{abadieetal2012} \end{verse}
+\begin{verse} \fullcite{abadieetal2012} \end{verse}
 
-\begin{verse} \bibentry{ben-michaeletal2021} \end{verse}
+\begin{verse} \fullcite{ben-michaeletal2021} \end{verse}
 
 \subsection{Bayesian causal inference}
 
-\begin{verse} \bibentry{rubin1978a} \end{verse}
+\begin{verse} \fullcite{rubin1978a} \end{verse}
 
-\begin{verse} Chapter 8 of \bibentry{imbensrubin2015} \end{verse}
+\begin{verse} Chapter 8 of \fullcite{imbensrubin2015} \end{verse}
 
-\begin{verse} \bibentry{imbensrubin1997} \end{verse}
+\begin{verse} \fullcite{imbensrubin1997} \end{verse}
 
-\begin{verse} \bibentry{keelequinn2017} \end{verse}
+\begin{verse} \fullcite{keelequinn2017} \end{verse}
 
-\begin{verse} \bibentry{dingmiratrix2019} \end{verse}
+\begin{verse} \fullcite{dingmiratrix2019} \end{verse}
 
 \clearpage
 
+\printbibliography[title=References]
 
 %\section{Additional Notes}
-\clearpage
-\bibliographystyle{plain}
-\nobibliography{bib_2023}
+%\clearpage
+%\bibliographystyle{plain}
+%\nobibliography{bib_2023}
 %\nobibliography{master,abbrev_long,causalinference,biomedicalapplications,misc}
 %\nobibliography{../2013/BIB/master,../2013/BIB/abbrev_long,../2013/BIB/causalinference,../2013/BIB/biomedicalapplications,../2013/BIB/misc}
 %"master" is Ryan Moore's file (as of summer 2012).
