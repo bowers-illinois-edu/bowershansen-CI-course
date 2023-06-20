@@ -17,11 +17,12 @@ expand.grid(replicate(n = N,
 n_1 <- 4
 n_0 <- N - n_1 ## Remaining N - n_1 cups are tea-first (control) cups
 
-## Use ri package to easily generate set of allowable assignments
-# install.packages("ri")
-library(ri)
-Omega <- genperms(Z = c(rep(x = 0, times = n_0), rep(x = 1, times = n_1)))
-
+## Generate set of allowable assignments
+Omega <- apply(X = combn(x = N,
+                         m = n_1,
+                         simplify = TRUE),
+               MARGIN = 2,
+               FUN = function(x) as.integer(1:N %in% x))
 ## Each assignment has equal probability
 Omega_probs <- rep(x = 1/ncol(Omega),
                    times = ncol(Omega))
