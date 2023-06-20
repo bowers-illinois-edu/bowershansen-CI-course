@@ -50,13 +50,18 @@ test_stats_no_disc <- apply(X = Omega,
                             FUN = function(x) { fisher_test_stat(z = x,
                                                                  y = y) })
 
+space_test_stats_no_disc <- sort(unique(test_stats_no_disc))
+probs_no_disc <- sapply(X = space_test_stats_no_disc,
+                        FUN = function(x) { sum((test_stats_no_disc == x) * Omega_probs) })
+
 ## Plot distribution of null test-stat
 
 ## Use ggplot2 and all tidyverse packages
 # install.packages("tidyverse")
 library(tidyverse)
 
-null_test_stats <- data.frame(null_test_stat = test_stats_no_disc,
+null_test_stats <- data.frame(null_test_stat = space_test_stats_no_disc,
+                              prob = probs_no_disc,
                               null = "No discrimination")
 
 ## Use Freedman-Diaconis rule for binwidth
@@ -64,8 +69,8 @@ null_test_stats <- data.frame(null_test_stat = test_stats_no_disc,
 
 null_dist_no_discrim_plot <- ggplot(data = null_test_stats,
                                     mapping = aes(x = null_test_stat ,
-                                                  y = (..count..)/sum(..count..))) +
-  geom_histogram() +
+                                                  y = prob)) +
+  geom_bar(stat = "identity") +
   geom_vline(xintercept = obs_test_stat,
              linetype = "dashed") +
   theme_bw() +
@@ -85,20 +90,27 @@ test_stats_perf_disc <- apply(X = Omega,
                               FUN = function(x) { fisher_test_stat(z = x,
                                                                    y = x) })
 
-null_test_stats <- data.frame(null_test_stat = c(test_stats_no_disc,
-                                                 test_stats_perf_disc),
+space_test_stats_perf_disc <- sort(unique(test_stats_perf_disc))
+probs_perf_disc <- sapply(X = space_test_stats_perf_disc,
+                          FUN = function(x) { sum((test_stats_perf_disc == x) * Omega_probs) })
+
+
+null_test_stats <- data.frame(null_test_stat = c(space_test_stats_no_disc,
+                                                 space_test_stats_perf_disc),
+                              prob = c(probs_no_disc, probs_perf_disc),
                               null = c(rep(x = "No discrimination",
-                                           times = length(test_stats_no_disc)),
+                                           times = length(space_test_stats_no_disc)),
                                        rep(x = "Perfect discrimination",
-                                           times = length(test_stats_perf_disc))))
+                                           times = length(space_test_stats_perf_disc))))
 
 null_dists_discrim_plot <- ggplot(data = null_test_stats,
                                     mapping = aes(x = null_test_stat ,
-                                                  y = (..count..)/sum(..count..))) +
-  geom_histogram() +
+                                                  y = prob)) +
+  geom_bar(stat = "identity") +
   geom_vline(xintercept = obs_test_stat,
              linetype = "dashed") +
   theme_bw() +
+  scale_y_continuous(limits = c(0, 1)) +
   xlab(label = "Test statistic") +
   ylab(label = "Probability") +
   facet_wrap(facets = . ~ null,
