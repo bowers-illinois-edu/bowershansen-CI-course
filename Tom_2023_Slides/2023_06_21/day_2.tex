@@ -12,15 +12,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %------------------------------------------------------------------------------------------------
-% PACKAGES AND THEMES
+%   PACKAGES AND THEMES
 %------------------------------------------------------------------------------------------------
 
 \documentclass[table, xcolor = {dvipsnames}, 9pt]{beamer}
 \usepackage{tikz}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows,shapes}
+\usetikzlibrary{tikzmark}
 \usetikzlibrary{calc}
-\usetikzlibrary{positioning}
-\usetikzlibrary{arrows.meta}
-\usetikzlibrary{external}
+\usetikzlibrary{colorbrewer}
 \mode<presentation> {
 
 % The Beamer class comes with a number of default slide themes
@@ -83,21 +84,50 @@
 
 \usepackage{graphicx} % Allows including images
 \usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
-\usepackage{tikz}
 \usepackage{multirow}
+\usepackage{xspace}
 \usepackage{natbib}
 \usepackage{hyperref}
 \usepackage{diagbox}
 \usepackage{makecell}
 \usepackage{xparse}
 \usepackage{subfig}
-\usepackage{amsmath}
-\usepackage{amsfonts,amsthm,amsmath,amssymb}    
+\usepackage{amsfonts,amsthm,amsmath,amssymb}
+\usepackage{mathtools, nccmath}
+\usepackage[ruled, vlined, linesnumbered]{algorithm2e}
+\usepackage{wrapfig}
+\usepackage{comment}  
 \usepackage{bbm}
 \usepackage{bm}
 \usepackage{empheq}
 \usepackage{pgfplots}
+\usepgfplotslibrary{colorbrewer}
 \usepackage{animate}
+\usepackage{array}
+\usepackage{ragged2e}
+\newcolumntype{P}[1]{>{\RaggedRight\hspace{0pt}}p{#1}}
+\newcolumntype{X}[1]{>{\RaggedRight\hspace*{0pt}}p{#1}}
+
+% color box
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows,shapes}
+\usetikzlibrary{tikzmark}
+\usetikzlibrary{calc}
+% Commands for Highlighting text -- non tikz method
+\newcommand{\highlight}[2]{\colorbox{#1!17}{$\displaystyle #2$}}
+%\newcommand{\highlight}[2]{\colorbox{#1!17}{$#2$}}
+\newcommand{\highlightdark}[2]{\colorbox{#1!47}{$\displaystyle #2$}}
+
+% my custom colors for shading
+\colorlet{mhpurple}{Plum!80}
+
+
+% Commands for Highlighting text -- non tikz method
+\renewcommand{\highlight}[2]{\colorbox{#1!17}{#2}}
+\renewcommand{\highlightdark}[2]{\colorbox{#1!47}{#2}}
+
 \usepgfplotslibrary{colorbrewer}
 
 \newcommand\mybox[2][]{\tikz[overlay]\node[fill=lightgray,inner sep=2pt, anchor=text, rectangle, rounded corners=1mm,#1] {#2};\phantom{#2}}
@@ -110,6 +140,12 @@
             hypertexnames=false,
             pdfstartview={XYZ null null 1}}
 \usepackage{xcolor}
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
 \newcommand\myheading[1]{%
   \par\bigskip
   {\Large\bfseries#1}\par\smallskip}
@@ -123,21 +159,16 @@
 \newtheorem{algo}{Algorithm}
 \newcommand*\diff{\mathop{}\!\mathrm{d}}
 \newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
-\newcommand{\bh}[1]{{\color{blue}{#1}}}
-\newcommand{\mh}[1]{{\color{magenta}{#1}}}
 \newcommand{\thisthmnumber}{}
-\newcommand{\tikzmark}[1]{\tikz[baseline,remember picture] \coordinate (#1) {};}
 \newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
 \newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\DeclareMathOperator{\N}{\mathbb{N}}
 \DeclareMathOperator{\E}{\rm{E}}
 \DeclareMathOperator{\R}{\mathbb{R}}
-\DeclareMathOperator{\N}{\mathbb{N}}
 \DeclareMathOperator{\Var}{\rm{Var}}
 \DeclareMathOperator{\Cov}{\rm{Cov}}
-\DeclareMathOperator{\Supp}{\rm{Supp}}
 \DeclareMathOperator{\e}{\rm{e}}
-\DeclareMathOperator{\F}{\mathcal{F}}
-\DeclareMathOperator{\Z}{\mathcal{Z}}
 \DeclareMathOperator{\logit}{\rm{logit}}
 \DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
 \DeclareMathOperator{\rank}{rank}
@@ -217,7 +248,7 @@
 \item[] Consistent test: $\text{Power} \to 1$ as size of experiment $\to \infty$
 \end{itemize} \vfill
 \end{frame}
-%----------------------------------------------------------------
+%---------------------------------------------------------------
 \section{Test of sharp Null of No Effects}
 \begin{frame}{``Lady Tasting Tea'' Example}
 \vfill
@@ -228,13 +259,26 @@
 \caption{Distribution of test-stat over assignments under sharp null of no effects}
 \end{figure} \vfill
 \vspace{-2em}
-\item Upper $p$-value is $(1/70) \approx 0.0143$, where upper $p$-value of sharp null given by
-\begin{align*}
-\Pr\left(t(\bm{Z}, \bm{y}) \geq t^{\text{obs}}\right) & = \sum \limits_{\bm{z} \in \Omega} \mathbbm{1}\left\{t(\bm{Z}, \bm{y}) \geq t^{\text{obs}}\right\} \Pr\left(\bm{Z} = \bm{z}\right)
-\end{align*}
+\item Upper $p$-value is $(1/70) \approx 0.0143$
 \end{itemize}  
 \end{frame}
-%----------------------------------------------------------------
+%---------------------------------------------------------------
+\begin{frame}{``Lady Tasting Tea'' Example}
+\vfill
+\begin{itemize} \vfill
+\item Upper, one-sided $p$-value \vfill
+\begin{itemize} \vfill
+\begin{align*}
+\Pr\left(t(\bm{Z}, \bm{y}) \geq t^{\text{obs}}\right) & = \sum \limits_{\bm{z} \in \Omega} \mathbbm{1}\left\{t(\bm{z}, \bm{y}) \geq t^{\text{obs}}\right\} \Pr\left(\bm{Z} = \bm{z}\right)
+\end{align*} \vfill
+\end{itemize} \vfill 
+\item[] \pause
+\begin{align*}
+\Pr\left(t(\bm{Z}, \bm{y}) \geq t^{\text{obs}}\right) & = \overbrace{\sum \limits_{\bm{z} \in \Omega}}^{\substack{\textcolor{magenta}{\text{Sum over all}} \\ \textcolor{magenta}{\text{assignments}}}} \underbrace{\mathbbm{1}\left\{t(\bm{z}, \bm{y}) \geq t^{\text{obs}}\right\}}_{\substack{\textcolor{magenta}{\text{Indicator of whether null test-stat}} \\ \textcolor{magenta}{\text{under assignment } \bm{z} \text{ is } \geq \text{ obs test-stat}}}} \underbrace{\Pr\left(\bm{Z} = \bm{z}\right)}_{\textcolor{magenta}{\text{Prob of assignment } \bm{z}}}
+\end{align*} \vfill
+\end{itemize} \vfill
+\end{frame}
+%---------------------------------------------------------------
 \begin{frame}{``Lady Tasting Tea'' Example}
 \vfill
 \begin{itemize}
@@ -256,7 +300,7 @@
 \begin{table}
   \begin{tabular}{r|rr|rrr}
   \hline
- & GOTV? & vote03(\%)& $\bm{y_C}$ & $\bm{y_T}$ & $\bm{\tau}$\\
+ & GOTV? & vote03(\%)& $\bm{y}(\bm{0})$ & $\bm{y}(\bm{1})$ & $\bm{\tau}$\\
   \hline
 1 & 0 & 38 & 38 & 38 & 0 \\
 $\vdots$& & & & & \\
@@ -281,7 +325,7 @@ $\vdots$& & & & & \\
 \item Then calculate test-stat under each assignment holding outcomes fixed \vfill
 \begin{itemize} \vfill
 \item[] E.g., Diff-in-Means $t\left(\bm{z}, \bm{y}\right) = n_T^{-1} \bm{z}^{\top}\bm{y} - n_C^{-1} \left(1 - \bm{z}\right)^{\top} \bm{y}$ \vfill
-\item[] \mh{Note this test-stat is not same as one in Fisher's ``Lady Tasting Tea''} \vfill
+\item[] \textcolor{magenta}{{Note this test-stat is not same as one in Fisher's ``Lady Tasting Tea'', $\bm{z}^{\top}\bm{y}$}} \vfill
 \end{itemize} \vfill
 \item Finally, calculate p-value \vfill
 \begin{equation*}
@@ -296,14 +340,17 @@ $\vdots$& & & & & \\
 \caption{Distribution of the Difference-in-Means test-stat under the sharp null of no effect}
 \end{figure}
 \end{frame}
-%----------------------------------------------------------------
+%---------------------------------------------------------------
 \begin{frame}{Hypothesis tests in adjusted outcomes}
 \vfill
 \begin{itemize} 
 \item How do we test hypotheses other than no effect for all units? \vfill
-\item \citet{rosenbaum2002,rosenbaum2010,rosenbaum2017}: Write units' true adjusted outcomes as $\tilde{y}_i = y_i - \tau_i z_i$ for $i = 1, \ldots , n$ \vfill
-\item $\tilde{y}_i$ is fixed for every unit regardless if assigned to treatment or control (i.e., $\bm{\tilde{y}}$ satisfies sharp null of no effects) \vfill
-\item So to conduct a test about $\bm{\tau}$, we can compare $t(\bm{z}, \bm{\tilde{y}}_{h})$ to randomization distribution of sharp null of no effects on adjusted outcomes, $t(\bm{Z}, \bm{\tilde{y}}_{h})$, where $\tilde{y}_{hi} = y_i - z_i \tau_{hi}$ for all $i = 1, \ldots , n$ \vfill
+\item \citet{rosenbaum2002a,rosenbaum2010,rosenbaum2017a}: Write units' true adjusted outcomes as $\tilde{y}_i = y_i - \tau_i z_i$ for $i = 1, \ldots , N$, where $\tau_i \coloneqq y_i(1) - y_i(0)$ \vfill
+\item $\tilde{y}_i$ is fixed for every unit regardless if assigned to treatment or control
+\begin{itemize} \vfill
+\item I.e., $\bm{\tilde{y}} = \begin{bmatrix} \tilde{y}_1 & \tilde{y}_2 & \ldots & \tilde{y}_N \end{bmatrix}^{\top}$ satisfies sharp null of no effects \vfill
+\end{itemize}
+\item So to conduct a test about $\bm{\tau}$, we can compare $t(\bm{z}, \bm{\tilde{y}}_{h})$ to randomization distribution of sharp null of no effects on adjusted outcomes, $t(\bm{Z}, \bm{\tilde{y}}_{h})$, where $\tilde{y}_{hi} = y_i - z_i \tau_{hi}$ for all $i = 1, \ldots , N$ \vfill
 \item \mh{Intuition}: Can we make outcomes appear as if there is no effect by removing hypothetical effect from treated units? If so, then this is evidence in favor of that hypothetical effect
 \end{itemize}
 \vfill
@@ -316,7 +363,7 @@ $\vdots$& & & & & \\
 \begin{center}
   \begin{tabular}{r|rr|rrrr}
   \hline
- & GOTV? & vote03(\%)& $\bm{\tilde{y}}_h$ & $\bm{y_C}$ & $\bm{y_T}$ & $\bm{\tau}$\\
+ & GOTV? & vote03(\%)& $\bm{\tilde{y}}_h$ & $\bm{y}(\bm{0})$ & $\bm{y}(\bm{1})$ & $\bm{\tau}$\\
   \hline
 1 & 0 & 38 & 38 & 38 & ? & ?\\
 $\vdots$& & & & & & \\
@@ -338,7 +385,7 @@ $\vdots$& & & & & & \\
 \begin{center}
   \begin{tabular}{r|rr|rrrr}
   \hline
- & GOTV? & vote03(\%)& $\bm{\tilde{y}}_h$ & $\bm{y_C}$ & $\bm{y_T}$ & $\bm{\tau}$\\
+ & GOTV? & vote03(\%)& $\bm{\tilde{y}}_h$ & $\bm{y}(\bm{0})$ & $\bm{y}(\bm{1})$ & $\bm{\tau}$\\
   \hline
 1 & 0 & 38 & 38 & 38 & ? & ?\\
 $\vdots$& & & & & & \\
@@ -378,7 +425,7 @@ $\vdots$& & & & & & \\
 \frametitle{References} 
 \scriptsize
 \bibliographystyle{chicago}
-\bibliography{ICPSR_Bibliography}   % name your BibTeX data base
+\bibliography{Master_Bibliography}   % name your BibTeX data base
 \end{frame}
 %---------------------------------------------------------------
 

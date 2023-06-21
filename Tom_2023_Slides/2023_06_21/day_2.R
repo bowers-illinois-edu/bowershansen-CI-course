@@ -10,20 +10,24 @@ acorn_data <- dplyr::mutate(.data = acorn_data,
                             vote03 = vote03,
                             pre_post = pre_post * 100,
                             vote03 = vote03 * 100)
-
-acorn_Omega <- apply(X = combn(x = 1:nrow(acorn_data),
-                               m = sum(acorn_data$z),
-                               simplify = TRUE) ,
-                     MARGIN = 2,
-                     FUN = function(x) as.integer(1:nrow(acorn_data) %in% x))
+## Generate all assignments; too computationaly intensive, although possible
+#acorn_Omega <- apply(X = combn(x = 1:nrow(acorn_data),
+#                               m = sum(acorn_data$z),
+#                               simplify = TRUE) ,
+#                     MARGIN = 2,
+#                     FUN = function(x) as.integer(1:nrow(acorn_data) %in% x))
 
 #save(acorn_Omega, file = "acorn_Omega.RData")
-load(file = "acorn_Omega.RData")
+#load(file = "acorn_Omega.RData")
+
+## Instead randomly sample from all possible assignments
 set.seed(1:5)
 acorn_Omega <- replicate(n = 10^3, expr = sample(x = acorn_data$z))
 
+## Calculate observed difference-in-means
 obs_test_stat <- mean(acorn_data$vote03[which(acorn_data$z == 1)]) - mean(acorn_data$vote03[which(acorn_data$z == 0)])
 
+## Calculate difference-in-means under sharp null of no effect
 null_diff_means_no_effect <- sapply(X = 1:ncol(acorn_Omega),
                                     FUN = function(x) { mean(acorn_data$vote03[which(acorn_Omega[,x] == 1)]) -
                                         mean(acorn_data$vote03[which(acorn_Omega[,x] == 0)]) })
@@ -60,12 +64,16 @@ null_dist_no_effect_plot <- ggplot(data = null_dist_data_no_effect,
 
 ################################################################################################################################################################################
 
+## sharp null hypothesis for every unit
 tau_h <- .025 * 100
 
+## Adjusted outcomes
 y_c_unif <- acorn_data$vote03 - acorn_data$z * tau_h
 
+## Observed test-stat on adjusted outcomes
 unif_obs_test_stat <- mean(y_c_unif[which(acorn_data$z == 1)]) - mean(y_c_unif[which(acorn_data$z == 0)])
 
+## Diff-in-Means over all assignments holding adjusted outcomes fixed
 null_unif_diff_means <- sapply(X = 1:ncol(acorn_Omega),
                                FUN = function(x) { mean(y_c_unif[which(acorn_Omega[,x] == 1)]) -
                                    mean(y_c_unif[which(acorn_Omega[,x] == 0)]) })
@@ -99,9 +107,10 @@ null_unif_plot <- ggplot(data = null_dist_data,
 #       units = "in",
 #       dpi = 600)
 
-## Generate confidence set
+## Null hypotheses we will test
 nulls <- seq(from = -0.05, to = .15, by = .001) * 100
 
+## Function to calculate p-values (lower and upper) for each null hypothesis
 unif_hyp_tests <- function(.obs_y,
                            .z,
                            .null_hyp,
@@ -123,20 +132,25 @@ unif_hyp_tests <- function(.obs_y,
   
 }
 
+## Upper p-values for each null hypothesis
 upper_p_values <- sapply(X = nulls,
                          FUN = function(x) { unif_hyp_tests(.obs_y = acorn_data$vote03,
                                                             .z = acorn_data$z,
                                                             .null_hyp = x,
                                                             .Omega = acorn_Omega)$upper_p_value })
 
+## Null hypotheses we fail to reject (i.e., null hypotheses with upper p-value above 0.05)
 upper_conf_set <- nulls[which(upper_p_values >= 0.05)]
 
+## Lower p-values for each null hypothesis
 lower_p_values <- sapply(X = nulls,
                          FUN = function(x) { unif_hyp_tests(.obs_y = acorn_data$vote03,
                                                             .z = acorn_data$z,
                                                             .null_hyp = x,
                                                             .Omega = acorn_Omega)$lower_p_value })
 
+## Null hypotheses we fail to reject (i.e., null hypotheses with lower p-value above 0.05)
 lower_conf_set <- nulls[which(lower_p_values >= 0.05)]
 
+## Collection of nulls we fail to reject for lower and upper tests
 two_sided_conf_set <- intersect(lower_conf_set, upper_conf_set)
