@@ -211,15 +211,15 @@
 \begin{itemize}
 \item Neyman (1923) derived expression for variance of Diff-in-Means under complete random assignment
 \begin{equation*}
-\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{1}{N - 1}\left(\frac{n_T \mh{\sigma^2_{y_C}}}{n_C} + \frac{n_C \mh{\sigma^2_{y_T}}}{n_T} + 2\mh{\sigma_{y_C, y_T}}\right)
+\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{1}{N - 1}\left(\frac{n_1 \mh{\sigma^2_{\bm{y}(\bm{0})}}}{n_0} + \frac{n_0 \mh{\sigma^2_{\bm{y}(\bm{1})}}}{n_1} + 2\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}\right)
 \end{equation*}  
 where 
-\item[] $\sigma^2_{y_C} = \frac{1}{N} \sum \limits_{i = 1}^N \left(y_{Ci} - \frac{1}{N} \sum \limits_{i = 1}^N y_{Ci}\right)^2$ is var of control POs
-\item[] $\sigma^2_{y_T} = \frac{1}{N} \sum \limits_{i = 1}^N \left(y_{Ti} - \frac{1}{N} \sum \limits_{i = 1}^N y_{Ti}\right)^2$ is var of treated POs
-\item[] $\sigma_{y_C, y_T} = \frac{1}{N} \sum \limits_{i = 1}^N \left(y_{Ci} - \frac{1}{N} \sum \limits_{i = 1}^N y_{Ci}\right)\left(y_{Ti} - \frac{1}{N} \sum \limits_{i = 1}^N y_{Ti}\right)$ is cov of POs
+\item[] $\sigma^2_{\bm{y}(\bm{0})} = \frac{1}{N} \sum \limits_{i = 1}^N \left(y_i(0) - \frac{1}{N} \sum \limits_{i = 1}^N y_i(0)\right)^2$ is var of control POs
+\item[] $\sigma^2_{\bm{y}(\bm{1})} = \frac{1}{N} \sum \limits_{i = 1}^N \left(y_i(1) - \frac{1}{N} \sum \limits_{i = 1}^N y_i(1)\right)^2$ is var of treated POs
+\item[] $\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})} = \frac{1}{N} \sum \limits_{i = 1}^N \left(y_i(0) - \frac{1}{N} \sum \limits_{i = 1}^N y_i(0)\right)\left(y_i(1) - \frac{1}{N} \sum \limits_{i = 1}^N y_i(1)\right)$ is cov of POs
 \end{itemize} \pause
 \vspace{1em}
-$\star$ Note that $\mh{\sigma^2_{y_C}}$, $\mh{\sigma^2_{y_T}}$ and $\mh{\sigma_{y_C, y_T}}$ depend on unknown potential outcomes
+$\star$ Note that $\mh{\sigma^2_{\bm{y}(\bm{0})}}$, $\mh{\sigma^2_{\bm{y}(\bm{1})}}$ and $\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}$ depend on unknown potential outcomes
 \end{frame}
 %------------------------------------------------------------------------
 \begin{frame}
@@ -227,15 +227,15 @@ $\star$ Note that $\mh{\sigma^2_{y_C}}$, $\mh{\sigma^2_{y_T}}$ and $\mh{\sigma_{
 \begin{itemize}
 \item Sometimes you might see equivalent expression (Imbens and Rubin 2015)
 \begin{equation*}
-\dfrac{\mh{S_{y_C}}}{n_C} + \dfrac{\mh{S_{y_T}}}{n_T} - \dfrac{\mh{S_{\tau}}}{N},
+\dfrac{\mh{S_{\bm{y}(\bm{0})}}}{n_0} + \dfrac{\mh{S_{\bm{y}(\bm{1})}}}{n_1} - \dfrac{\mh{S_{\tau}}}{N},
 \end{equation*}
 where
-\item[] $S_{y_C} = \frac{1}{N - 1} \sum \limits_{i = 1}^N \left(y_{Ci} - \frac{1}{N} \sum \limits_{i = 1}^N y_{Ci}\right)^2$
-\item[] $S_{y_T} = \frac{1}{N - 1} \sum \limits_{i = 1}^N \left(y_{Ti} - \frac{1}{N} \sum \limits_{i = 1}^N y_{Ti}\right)^2$ 
+\item[] $S_{\bm{y}(\bm{0})} = \frac{1}{N - 1} \sum \limits_{i = 1}^N \left(y_i(0) - \frac{1}{N} \sum \limits_{i = 1}^N y_i(0)\right)^2$
+\item[] $S_{\bm{y}(\bm{1})} = \frac{1}{N - 1} \sum \limits_{i = 1}^N \left(y_i(1) - \frac{1}{N} \sum \limits_{i = 1}^N y_i(1)\right)^2$ 
 \item[] $S_{\tau} = \frac{1}{N - 1} \sum \limits_{i = 1}^N \left(\tau_i - \frac{1}{N} \sum \limits_{i = 1}^N \tau_i\right)^2$
 \end{itemize} \pause
 \vspace{1em}
-$\star$ Note that $\mh{S_{y_C}}$, $\mh{S_{y_T}}$ and $\mh{S_{\tau}}$ depend on unknown potential outcomes
+$\star$ Note that $\mh{S_{\bm{y}(\bm{0})}}$, $\mh{S_{\bm{y}(\bm{1})}}$ and $\mh{S_{\tau}}$ depend on unknown potential outcomes
 \end{frame}
 %------------------------------------------------------------------------
 \begin{frame}
@@ -246,7 +246,7 @@ $\star$ Note that $\mh{S_{y_C}}$, $\mh{S_{y_T}}$ and $\mh{S_{\tau}}$ depend on u
 \begin{center}
 \begin{tabular}{l|rrr} \hline
 & \multicolumn{3}{c}{Budget share (\%)} \\
-Village &$\bm{y_C}$& $\bm{y_T}$& $\bm{\tau}$  \\ \hline
+Village &$\bm{\bm{y}(\bm{0})}$& $\bm{\bm{y}(\bm{1})}$& $\bm{\tau}$  \\ \hline
 1& 10 & 15  & 5  \\
 2& 15 & 15  & 0   \\ 
 3& 20 & 30  & 10   \\
@@ -258,9 +258,9 @@ Average & 15 & 20 & 5  \\ \hline
 \end{tabular}
 \end{center} \vspace{0.5em} \pause
 \item With access to true POs, we can directly calculate $\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]$: \vspace{0.5em}
-\item[] $\mh{\sigma^2_{y_C}} \approx 14.29$, $\mh{\sigma^2_{y_T}} \approx 42.86$, $\mh{\sigma_{y_C, y_T}} \approx 7.14$ \vspace{0.5em}
-\item So, $\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{1}{N - 1}\bigg(\frac{n_T \mh{\sigma^2_{y_C}}}{n_C} + \frac{n_C \mh{\sigma^2_{y_T}}}{n_T} + 2\mh{\sigma_{y_C, y_T}}\bigg) \approx 21.19$ \pause \vspace{0.5em}
-\item In practice, $\mh{\sigma^2_{y_C}}$, $\mh{\sigma^2_{y_T}}$ and $\mh{\sigma_{y_C, y_T}}$ unknown, so we estimate $\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]$
+\item[] $\mh{\sigma^2_{\bm{y}(\bm{0})}} \approx 14.29$, $\mh{\sigma^2_{\bm{y}(\bm{1})}} \approx 42.86$, $\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}} \approx 7.14$ \vspace{0.5em}
+\item So, $\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{1}{N - 1}\bigg(\frac{n_1 \mh{\sigma^2_{\bm{y}(\bm{0})}}}{n_0} + \frac{n_0 \mh{\sigma^2_{\bm{y}(\bm{1})}}}{n_1} + 2\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}\bigg) \approx 21.19$ \pause \vspace{0.5em}
+\item In practice, $\mh{\sigma^2_{\bm{y}(\bm{0})}}$, $\mh{\sigma^2_{\bm{y}(\bm{1})}}$ and $\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}$ unknown, so we estimate $\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]$
 \end{itemize}
 \end{frame}
 %------------------------------------------------------------------------
@@ -268,10 +268,10 @@ Average & 15 & 20 & 5  \\ \hline
 \begin{frame}{Variance estimation} 
 We showed that the Diference-in-Means estimator's variance is \vspace{1em}
 \begin{equation*}
-\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{1}{N - 1}\left(\frac{n_T \bh{\sigma^2_{y_C}}}{n_C} + \frac{n_C \bh{\sigma^2_{y_T}}}{n_T} + 2\mh{\sigma_{y_C, y_T}}\right)
+\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{1}{N - 1}\left(\frac{n_1 \bh{\sigma^2_{\bm{y}(\bm{0})}}}{n_0} + \frac{n_0 \bh{\sigma^2_{\bm{y}(\bm{1})}}}{n_1} + 2\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}\right)
 \end{equation*}
 \begin{itemize}
-\item We have unbiased estimators for $\bh{\sigma^2_{y_C}}$ and $\bh{\sigma^2_{y_T}}$, but not $\mh{\sigma_{y_C, y_T}}$
+\item We have unbiased estimators for $\bh{\sigma^2_{\bm{y}(\bm{0})}}$ and $\bh{\sigma^2_{\bm{y}(\bm{1})}}$, but not $\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}$
 \item So what do we do? \pause
 \item We use \textbf{conservative} ``plug-in'' estimator (Neyman 1923)
 \item \textbf{Conservative} means that
@@ -289,21 +289,21 @@ We showed that the Diference-in-Means estimator's variance is \vspace{1em}
 %------------------------------------------------------------------------
 \begin{frame}{Conservative variance estimator} 
 \begin{equation*}
-\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{1}{N - 1}\left(\frac{n_T \bh{\sigma^2_{y_C}}}{n_C} + \frac{n_C \bh{\sigma^2_{y_T}}}{n_T} + 2\mh{\sigma_{y_C, y_T}}\right)
+\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{1}{N - 1}\left(\frac{n_1 \bh{\sigma^2_{\bm{y}(\bm{0})}}}{n_0} + \frac{n_0 \bh{\sigma^2_{\bm{y}(\bm{1})}}}{n_1} + 2\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}\right)
 \end{equation*} \pause
 \begin{itemize}
-\item The maximum possible value of $2\mh{\sigma_{y_C, y_T}}$ is $\bh{\sigma^2_{y_C}} + \bh{\sigma^2_{y_T}}$ 
-\item So substitute $\bh{\sigma^2_{y_C}} + \bh{\sigma^2_{y_T}}$ for $2\mh{\sigma_{y_C, y_T}}$: \pause
+\item The maximum possible value of $2\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}$ is $\bh{\sigma^2_{\bm{y}(\bm{0})}} + \bh{\sigma^2_{\bm{y}(\bm{1})}}$ 
+\item So substitute $\bh{\sigma^2_{\bm{y}(\bm{0})}} + \bh{\sigma^2_{\bm{y}(\bm{1})}}$ for $2\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}$: \pause
 \begin{align*}
-\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] & = \frac{1}{N - 1}\left(\frac{n_T \bh{\sigma^2_{y_C}}}{n_C} + \frac{n_C \bh{\sigma^2_{y_T}}}{n_T} + \left(\bh{\sigma^2_{y_C}} + \bh{\sigma^2_{y_T}}\right)\right) \\
-& = \frac{N}{N - 1}\left(\frac{\bh{\sigma^2_{y_C}}}{n_C} + \frac{\bh{\sigma^2_{y_T}}}{n_T}\right)
+\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] & = \frac{1}{N - 1}\left(\frac{n_1 \bh{\sigma^2_{\bm{y}(\bm{0})}}}{n_0} + \frac{n_0 \bh{\sigma^2_{\bm{y}(\bm{1})}}}{n_1} + \left(\bh{\sigma^2_{\bm{y}(\bm{0})}} + \bh{\sigma^2_{\bm{y}(\bm{1})}}\right)\right) \\
+& = \frac{N}{N - 1}\left(\frac{\bh{\sigma^2_{\bm{y}(\bm{0})}}}{n_0} + \frac{\bh{\sigma^2_{\bm{y}(\bm{1})}}}{n_1}\right)
 \end{align*} \pause
 \item Now all quantities can be estimated! \pause
-\item So, just ``plug-in'' estimators $\hat{\sigma}^2_{y_C}$ and $\hat{\sigma}^2_{y_T}$ for $\bh{\sigma^2_{y_C}}$ and $\bh{\sigma^2_{y_T}}$
+\item So, just ``plug-in'' estimators $\hat{\sigma}^2_{\bm{y}(\bm{0})}$ and $\hat{\sigma}^2_{\bm{y}(\bm{1})}$ for $\bh{\sigma^2_{\bm{y}(\bm{0})}}$ and $\bh{\sigma^2_{\bm{y}(\bm{1})}}$
 \begin{equation}
-\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{N}{N - 1}\left(\frac{\hat{\sigma}^2_{y_C}}{n_C} + \frac{\hat{\sigma}^2_{y_T}}{n_T} \right)
+\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{N}{N - 1}\left(\frac{\hat{\sigma}^2_{\bm{y}(\bm{0})}}{n_0} + \frac{\hat{\sigma}^2_{\bm{y}(\bm{1})}}{n_1} \right)
 \end{equation}
-\item For exact expressions of $\hat{\sigma}^2_{y_C}$ and $\hat{\sigma}^2_{y_T}$, see \hyperlink{Variance estimators}{\beamerbutton{Variance estimators}}
+\item For exact expressions of $\hat{\sigma}^2_{\bm{y}(\bm{0})}$ and $\hat{\sigma}^2_{\bm{y}(\bm{1})}$, see \hyperlink{Variance estimators}{\beamerbutton{Variance estimators}}
 \end{itemize}
 \end{frame}
 %------------------------------------------------------------------------
@@ -467,14 +467,14 @@ Consider two-sided confidence interval, $\mathcal{C}_t$:
 \vfill
 Neyman's conservative estimator of the Difference-in-Means estimator's variance is 
 \begin{equation*}
-\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{N}{N - 1}\left(\frac{\hat{\sigma}^2_{y_C}}{n_C} + \frac{\hat{\sigma}^2_{y_T}}{n_T} \right),
+\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{N}{N - 1}\left(\frac{\hat{\sigma}^2_{\bm{y}(\bm{0})}}{n_0} + \frac{\hat{\sigma}^2_{\bm{y}(\bm{1})}}{n_1} \right),
 \end{equation*}
 where 
 \begin{align*}
-\hat{\sigma}^2_{y_C} & = \left(\frac{N - 1}{n\left(n_C - 1\right)}\right)\sum \limits_{i: Z_i = 0}^N \left(y_{Ci} - \hat{\mu}_{y_C}\right)^2 \\
-\hat{\sigma}^2_{y_T} & = \left(\frac{N - 1}{n\left(n_T - 1\right)}\right)\sum \limits_{i: Z_i = 1}^{n} \left(y_{Ti} - \hat{\mu}_{y_T}\right)^2 \\ 
-\hat{\mu}_{y_C} & = \left(\frac{1}{n_C}\right) \sum \limits_{i = 1}^N \left(1 - Z_i\right)y_{Ci} \\ 
-\hat{\mu}_{y_T} & = \left(\frac{1}{n_T}\right) Z_i y_{Ti}
+\hat{\sigma}^2_{\bm{y}(\bm{0})} & = \left(\frac{N - 1}{N\left(n_0 - 1\right)}\right)\sum \limits_{i: Z_i = 0}^N \left(y_i(0) - \hat{\mu}_{\bm{y}(\bm{0})}\right)^2 \\
+\hat{\sigma}^2_{\bm{y}(\bm{1})} & = \left(\frac{N - 1}{N\left(n_1 - 1\right)}\right)\sum \limits_{i: Z_i = 1}^{n} \left(y_i(1) - \hat{\mu}_{\bm{y}(\bm{1})}\right)^2 \\ 
+\hat{\mu}_{\bm{y}(\bm{0})} & = \left(\frac{1}{n_0}\right) \sum \limits_{i = 1}^N \left(1 - Z_i\right)y_i(0) \\ 
+\hat{\mu}_{\bm{y}(\bm{1})} & = \left(\frac{1}{n_1}\right) Z_i y_i(1)
 \end{align*}
 \vfill
 \end{frame}
