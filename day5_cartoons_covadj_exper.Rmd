@@ -47,12 +47,11 @@ library(DeclareDesign)
 
 ## Today
 
- 1. Agenda: Overview and context for where we are in the course,
-    Statistical Inference and Causal Inference, Linear regresssion for
-    estimation in randomized experiments, Linear regression for covariance
-    adjustment in randomized experiments, Linear regression for covariance
-    adjustment in observational studies ("controlling for")
- 2. Maybe open time for work on exercise with TAs and me around.
+ 1. Agenda: Overview and context for where we are in the course, Modes of
+    Statistical Inference for Counterfactual Causal Inference, Linear
+    regresssion for estimation in randomized experiments, Linear regression for
+    covariance adjustment in randomized experiments
+ 2. Maybe open time for work on HW 1 with TAs and me around.
  3. Questions arising from the reading or assignments or life.
 
 # An overview of approaches to statistical inference for causal quantities
@@ -315,7 +314,7 @@ A hypothesis like $H_0: \bar{\tau}=\tau_0$ is compatible with many different sha
 \item This justifies use of standard Normal distribution for hypothesis tests
 \end{itemize}
 
-```{r}
+```{r, warning=FALSE}
 
 y_C <- c(10, 15, 20, 20, 10, 15, 15)
 y_T <- c(15, 15, 30, 15, 20, 15, 30)
@@ -438,8 +437,8 @@ ggsave(plot = asymp_stand_ests_plot,
 
 ## Hypothesis tests of the weak null
 \begin{itemize}
-\item ``Village heads'' example we calculate an estimate for each of the
-possible ways to randomize and subtract off the expected value (here "5") such
+\item In the ``village heads'' example we calculate an estimate for each of the
+possible ways to randomize and subtract off the expected value ("5") such
 that the distribution is now centered at 0 (a hypothesized value).
 \begin{figure}[H]
 \includegraphics[width=\linewidth]{asymp_stand_ests_plot.pdf}
@@ -478,14 +477,14 @@ p_t & = 2\left(1 - \Phi\left(\frac{\left\lvert\hat{\tau}\left(\mathbf{Z}, \mathb
 \item Power tends to $1$ as $N \to \infty$
 \end{enumerate}
 
-## Hypothesis tests of the weak null}
+## Hypothesis tests of the weak null
 \begin{itemize}
 \item We can prove that tests of weak null satisfy (1) -- (3) as $N \to \infty$ \vfill
 \item Thus, when experiments are large, we can often safely use such tests \vfill
 \item But (1) -- (3) may not always be satisfied when experiments are small, have skewed outcome distributions or extreme outliers \vfill
 \end{itemize}
 
-## Confidence intervals}
+## Confidence intervals
 \begin{itemize}
 \item Equivalence between hypothesis testing and confidence intervals
 \item Confidence interval is set of null hypotheses we fail to reject
@@ -505,12 +504,12 @@ Consider two-sided confidence interval, $\mathcal{C}_t$:
 \normalsize
 
 
-## Confidence intervals
+## Confidence intervals {.allowframebreaks}
 
 Here is an example showing how a confidence interval is a collection of
 not-rejected hypotheses (here using the weak null hypothesis)
 
-```{r, echo=TRUE}
+```{r, echo=TRUE, warning=FALSE}
 vh_dat <- data.frame(Y=Y,Z=Z,y_C=y_C,y_T=y_T)
 
 p_val_fun <- function(h,thealpha=.05,return_p=FALSE){
@@ -531,7 +530,7 @@ res <- sapply(the_hyps,function(h){
        })
 hyp_res <- data.frame(h=the_hyps,p=res)
 ## Keep the largest and smallest hypotheses for which p>=.05
-hyp_res %>% filter(abs(p)>=.05) %>% summarize(range(h))
+hyp_res %>% filter(abs(p)>=.05) %>% reframe(range(h)) 
 
 ## Second directly search for the hypotheses where alpha-p = 0.
 upper_lim <- uniroot(p_val_fun,interval=c(0,20),extendInt="no",trace=2)
@@ -556,7 +555,7 @@ confint(lm2,parm="Z")
   \includegraphics[width=.95\textwidth]{images/cartoonBayesNew.pdf}
 
 ## Model Based 1: Predict Distributions of $(y_{i,1},y_{i,0})$
-> 1. Given a model of $Y_i$:^[see [this website](https://mc-stan.org/users/documentation/case-studies/model-based_causal_inference_for_RCT.html).]
+> 1. Given a model of $Y_i$:(see [this website](https://mc-stan.org/users/documentation/case-studies/model-based_causal_inference_for_RCT.html).)
 \begin{equation}
 \mathrm{Pr}(Y_{i}^{obs} \vert \mathrm{Z}, \theta) \sim \mathsf{Normal}(Z_{i} \cdot \mu_{1} + (1 - Z_{i}) \cdot \mu_{0} , Z_{i} \sigma_{1}^{2} + (1 - Z_{i}) \cdot \sigma_{0}^{2})
 \end{equation}
@@ -691,7 +690,7 @@ Examples of use of the testing approach:
    \parencite{bowers2016research,bowers2013sutva,bowers2018models}.
 
 
-# Linear Regression in Experiments and Observational Studies
+# Linear Regression to Enhance Precision in Experiments
 
 ## What does linear regression do in an experiment?
 
@@ -722,7 +721,7 @@ Let's make a slightly bigger dataset where the potential outcomes depend on a ba
 
 
 Notice that background outcomes are now a function of a background covariate:
-```{r echo=TRUE}
+```{r echo=TRUE,out.width="50%"}
 with(dat,cor(x1,y0))
 summary(lm(y0~x1,data=dat))$r.squared
 with(dat,plot(x1,y0))
@@ -751,6 +750,10 @@ dat$resid_Z_x1 <- resid(lm_Z_x1)
 lm_resid_Y_x1 <- lm(resid_Y_x1~x1,data=dat)
 lm_resid_Z_x1 <- lm(resid_Z_x1~x1,data=dat)
 ```
+
+## What does linear regression do in an experiment?
+
+First, how does linear regression "adjust" for x1? (Answer: by removing linear relationships between `x1` and `Z` and between `x1` and `Y`):
 
 ```{r plotresids, echo=FALSE,out.width=".8\\textwidth"}
 par(mfrow=c(2,2),mar=c(2,3,1,0),mgp=c(1.25,.5,0),oma=rep(0,4))
