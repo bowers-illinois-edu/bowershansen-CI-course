@@ -217,15 +217,16 @@ asymp_ests_plot <- ggplot(data = ests_plot_data,
 #       units = "in",
 #       dpi = 600)
 
+h <- 1
+prop_T <- (2/7)
+y_C = c(y_C, rep(x = y_C, times = h - 1))
 
-y_C = c(.y_C, rep(x = .y_C, times = .h - 1))
-
-y_T = c(.y_T, rep(x = .y_T, times = .h - 1))
+y_T = c(y_T, rep(x = y_T, times = h - 1))
 
 true_EV_diff_means_est = mean(y_T) - mean(y_C)
 
 true_var_diff_means_est = diff_means_var(.n = length(y_C),
-                                         .n_t = length(y_C) * .prop_T,
+                                         .n_t = length(y_C) * prop_T,
                                          .y_C = y_C,
                                          .y_T = y_T)
 
@@ -259,51 +260,3 @@ ggsave(plot = asymp_stand_ests_plot,
        height = 4,
        units = "in",
        dpi = 600)
-
-
-
-var_ests_EVs <- sapply(X = 1:3,
-                       FUN = function(x) { mean(asymp_ests_h_1_3[[x]][[6]]) })
-
-true_vars <- c(asymp_ests_h_1_3[[1]][[3]], asymp_ests_h_1_3[[2]][[3]], asymp_ests_h_1_3[[3]][[3]])
-
-asym_var_ests_data <- data.frame(var_ests = c(asymp_ests_h_1_3[[1]][[6]], asymp_ests_h_1_3[[2]][[6]], asymp_ests_h_1_3[[3]][[6]]),
-                                 h = as.factor(c(rep(x = 1, times = length(asymp_ests_h_1_3[[1]][[6]])),
-                                                 rep(x = 2, times = length(asymp_ests_h_1_3[[2]][[6]])),
-                                                 rep(x = 3, times = length(asymp_ests_h_1_3[[3]][[6]])))))
-
-levels(asym_var_ests_data$h) <- c("h = 1",
-                              "h = 2",
-                              "h = 3")
-
-vline_data <- data.frame(h = levels(asym_var_ests_data$h),
-                         solid_vl = true_vars,
-                         dashed_vl = var_ests_EVs) 
-
-asymp_var_ests_plot <- ggplot(data = asym_var_ests_data,
-                              mapping = aes(x = var_ests, y = (..count..)/sum(..count..))) +
-  geom_histogram(data = subset(x = asym_var_ests_data,
-                               subset = h == "h = 1"),
-                 binwidth = 1) +
-  geom_histogram(data = subset(x = asym_var_ests_data,
-                               subset = h == "h = 2"),
-                 binwidth = 1) +
-  geom_histogram(data = subset(x = asym_var_ests_data,
-                               subset = h == "h = 3"),
-                 binwidth = 1) +
-  geom_vline(mapping = aes(xintercept = solid_vl), linetype = "solid", data = vline_data) +
-  geom_vline(mapping = aes(xintercept = dashed_vl), linetype = "dashed", data = vline_data) +
-  xlab(label = "Variance estimates") +
-  ylab(label = "Probability") +
-  theme_bw() +
-  facet_wrap(facets = .~ h,
-             nrow = 1,
-             ncol = 3) 
-
-ggsave(plot = asymp_var_ests_plot,
-       file = "asymp_var_ests_plot.pdf",
-       width = 6,
-       height = 4,
-       units = "in",
-       dpi = 600)
-
