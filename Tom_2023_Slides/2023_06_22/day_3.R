@@ -1,4 +1,4 @@
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 rm(list = ls())
 
 ## Complete random assignment

@@ -4,7 +4,7 @@ title: |
  | Estimation and Testing 
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2022 Session 2
+  | ICPSR 2023 Session 2
   | Jake Bowers, Ben Hansen, Tom Leavitt
 bibliography:
  - 'BIB/MasterBibliography.bib'
