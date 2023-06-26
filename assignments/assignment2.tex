@@ -3,7 +3,7 @@
 \usepackage{wrapfig}
 \title{Assignment 2}
 \input{courseedition}
-\author{Due Wed August 3}
+\author{Due Fri June 30}
 
 \usepackage{../icpsr-classwork}
 
@@ -40,27 +40,37 @@ The table at right comes from Albertson and Lawrence's (2009, \textit{Amer. Pol.
      combine this and your answer to (\ref{item:1}) to furnish a (hypothetical)
      Bloom-type estimate (estimated ITT/estimated proportion compliers) of the
      complier average causal effect (CACE).
-\item Response rates for the Round 1 RDD sample recruitment effort are not
-     reported in the table. Would you need to know these response rates in order
-     to evaluate the IV assumptions as applied to a ``study population'' of
-     Round 1 respondents?  As applied to a study population of Round 2
-     respondents?
-\item Whether a subject responds at round 2, $R$, can be considered as a
-     (secondary) outcome. Let $r_{Ti}$ be an indicator of whether subject $i$
-     would respond at round 2 if assigned to the encouragement condition, with
-     $r_{Ci}$ denoting $i$'s corresponding potential response if assigned to
-     control. \begin{enumerate}
+%% \item Response rates for the Round 1 RDD sample recruitment effort are not
+%%      reported in the table. Would you need to know these response rates in order
+%%      to evaluate the IV assumptions as applied to a ``study population'' of
+%%      Round 1 respondents?  As applied to a study population of Round 2
+%%      respondents?
+
+\item We use $R$ to indicate whether a subject responds at round 2. Whether a
+	person responds can be considered as a (secondary) outcome. Let
+	$r_{Ti}$ be an indicator of whether subject $i$ would respond at round
+	2 if assigned to the encouragement condition, with $r_{Ci}$ denoting
+	$i$'s corresponding potential response if assigned to control.
+
+     \begin{enumerate}
+
   \item Despite proper use of random assignment procedures during Round 1, the
-       possibility that, for many individuals, $r_{T}=1$ (would respond if
-       assigned treatment) while $r_{C}=0$ (would not respond if assigned
-       control) poses a threat to inference among \textit{Round 2} respondents.
-       (We can see that the total number of valid observations for Table 3 and
-       Table 4 differ somewhat from the total number of those assigned to treatment and
-       control. The authors do not drop observations based on missing covariates
-       (as they explain in a footnote about using dummy variables for
-       missingness on covariates). So, these differences in numbers reflect missing
-       outcomes.)
-       Explain why.
+	  possibility that, for many individuals, $r_{T}=1$ (would respond if
+	  assigned treatment) while $r_{C}=0$ (would not respond if assigned
+	  control) poses a threat to inference among \textit{Round 2}
+	  respondents. We can see that the total number of valid observations
+	  for Table 3 and Table 4 differ somewhat from the total number of
+	  those assigned to treatment and control. The authors do not drop
+	  observations based on missing covariates (as they explain in a
+	  footnote about using dummy variables for missingness on covariates).
+	  So, these differences in numbers reflect missing outcomes rather than
+	  a simple average of unobserved potential outcomes. Explain why. (It
+	  might help to think about how the ITT is defined as a difference
+	  between average potential outcomes among those assigned treatment
+	  versus among those assigned control, and how  "Always-Reporters" and
+	  "If Treated Reporters" might differ from each other in regards
+	  potential outcomes.)
+
   \item Conversely, explain how for a study population of Round 2 respondents,
        random assignment at round 1 plus the additional assumption that $r_{Ti}
        \equiv r_{Ci}$, all $i$, alleviates this threat to inference.
