@@ -1,7 +1,7 @@
 ---
 title: |
  | Natural Experiments and Discontinuities
- | ICPSR 2021 Session 2
+ | ICPSR 2021 Session 1
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
   | Jake Bowers, Ben Hansen, Tom Leavitt

@@ -3,7 +3,7 @@ title: |
  | "Statistical Adjustment and Assessment of Adjustment in Observational Studies --- Matched Stratification for One and Multiple Variables."
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2021 Session 2
+  | ICPSR 2021 Session 1
   | Jake Bowers, Ben Hansen, Tom Leavitt
 bibliography:
  - 'BIB/MasterBibliography.bib'

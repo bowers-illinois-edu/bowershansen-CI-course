@@ -3,7 +3,7 @@ title: |
  | Sensitivity Analysis I: Rosenbaum Style
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2023 Session 2
+  | ICPSR 2023 Session 1
   | Jake Bowers, Ben Hansen, Tom Leavitt
 bibliography:
  - 'BIB/MasterBibliography.bib'

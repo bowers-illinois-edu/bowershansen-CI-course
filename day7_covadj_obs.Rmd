@@ -3,7 +3,7 @@ title: |
   | Linear Regression in Observational Studies
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2023 Session 2
+  | ICPSR 2023 Session 1
   | Jake Bowers \& Tom Leavitt
 bibliography:
  - BIB/MasterBibliography.bib

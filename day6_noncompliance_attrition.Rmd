@@ -4,7 +4,7 @@ title: |
  |  Noncompliance and Missing Data"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2023 Session 2
+  | ICPSR 2023 Session 1
   | Jake Bowers \& Tom Leavitt
 bibliography:
  - "BIB/MasterBibliography.bib"
@@ -14,6 +14,7 @@ graphics: yes
 biblio-style: authoryear-comp
 biblatexoptions:
   - natbib=true
+colorlinks: true
 output:
   beamer_presentation:
     slide_level: 2
@@ -52,7 +53,7 @@ library(DeclareDesign)
 
 1. Agenda: One step away from easy to interpret experiments: non-random
    doses/compliance [@gerbergreen2012] Chapter 5, non-random missing data
-   [@gerbergreen2012] Chapter 7.
+   [@gerbergreen2012] Chapter 7 and the Threats module of [The Theory and Practice of Field Experiments](https://egap.github.io/theory_and_practice_of_field_experiments/).
 2. Recap: We use statistics to **infer** about unobservable counterfactual
    quantities (functions of potential outcomes); we can estimate unobservable
    averages; we can test unobservable hypotheses; we can test unobservable
@@ -153,16 +154,28 @@ And $\bar{y}_{0}$ is also split into pieces:
 ##  Defining causal effects VII
 
 So, the ITT itself is a combination of the effects of $Z$ on $Y$ within these
-different groups. People who are compliers tend to be different types of people
+different groups.
+
+\medskip
+
+People who are compliers tend to be different types of people
 than people who are always takers: comparisons across types would raise
 questions about how to interpret the results --- interpretations that would
-focus more on differences in types than in differences caused by $Z$. But, we
+focus more on differences in types than in differences caused by $Z$.
+
+\medskip
+
+But, we
 can still estimate it because we have unbiased estimators of $\bar{y}_1$ and
 $\bar{y}_0$ within each type.
 
 ## Learning about the ITT I
 
-First, let's learn about the effect of the policy itself. To write down the
+First, let's learn about the effect of the policy itself.
+
+\medskip
+
+To write down the
 ITT, we do not need to consider all of the types above.  We have no defiers
 ($p_D=0$) and we know the ITT for both Always-takers and Never-takers is 0.
 
@@ -189,8 +202,8 @@ ITT    = & \bar{y}_{1} - \bar{y}_{0} \\
        \intertext{collecting each type together --- to have an ITT for each type}
        = & ( (\bar{y}_{1}|C)p_C -  (\bar{y}_{0}|C)p_C )  +   ( (\bar{y}_{1}|A)p_A - (\bar{y}_{0}|A)p_A ) + \\
        & ( (\bar{y}_1|N)p_N  - (\bar{y}_{0}|N)p_N ) \\
-       = & \left( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C) \right)p_C   +  \\
-       & \left( (\bar{y}_{1}|A)- (\bar{y}_{0}|A) \right)p_A  +  \left( (\bar{y}_1|N) - (\bar{y}_{0}|N) \right)p_N
+       = & \underbrace{\left( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C) \right)}_{\color{blue}\text{ITT among Compliers}}p_C   +  \\
+       & \underbrace{\left( (\bar{y}_{1}|A)- (\bar{y}_{0}|A) \right)}_{\color{blue}\text{ITT among Always-Takers}}p_A  +  \underbrace{\left( (\bar{y}_1|N) - (\bar{y}_{0}|N) \right)}_{\color{blue}\text{ITT among Never-Takers}}p_N
 \end{align}
 
 ## Learning about the ITT III
@@ -203,7 +216,8 @@ ITT     = &   \bar{y}_{1} - \bar{y}_{0} \\
        & ( (\bar{y}_1|N)p_N  - (\bar{y}_{0}|N)p_N ) \\
         = &   ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C   +   ( (\bar{y}_{1}|A)- (\bar{y}_{0}|A))p_A  + \\
        & ( (\bar{y}_1|N) - (\bar{y}_{0}|N) )p_N \\
-       = & (\text{ITT among compliers})(\text{proportion of compliers}) + (\text{ITT among always takers})(\text{proportion of always takers}) + \ldots
+       = & (\text{ITT among compliers})(\text{proportion of compliers}) + \\
+       & (\text{ITT among always takers})(\text{proportion of always takers}) + \ldots
 \end{align}
 
 
@@ -215,7 +229,7 @@ And, if the effect of the dose can only occur for those who open the door, and y
 ( (\bar{y}_{1}|A)- (\bar{y}_{0}|A))p_A = 0  \text{ and } ( (\bar{y}_1|N) - (\bar{y}_{0}|N) )p_N = 0
 \end{equation}
 
-And
+And so, under these assumptions, the ITT is a simple function of the ITT among compliers and the proportion of compliers.
 
 \begin{equation}
 ITT =  ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C  = ( CACE ) p_C.
@@ -227,6 +241,8 @@ ITT =  ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C  = ( CACE ) p_C.
 If we want to can learn about the the causal effect of answering the door and
 having the conversation why not just compare people who answer the door to
 people who do not?
+
+\medskip
 
 The problem with this "as-treated" or "per-protocol" comparison is that this
 comparison is confounded by $x$: a simple $\bar{Y}|D=1 - \bar{Y}|D=0$ comparison
@@ -426,13 +442,14 @@ reshape_diagnosis(results) %>% filter(Estimator=="diff means ITT") %>% select(N,
 
 ## Summary of Encouragement/Complier/Dose oriented designs:
 
- - Analyze as you randomized, even when you don't control the dose you can
+ - Analyze as you randomized: even when you don't control the dose you can
    learn something.
  - The danger of per-protocol analysis: you give up the benefits of the
    research design (i.e. randomization)
- - Variance calculations approximate (and can be untrustworth in small samples,
-   with weak instruments, and in other cases where we would worry about
-   consistency).
+ - Variance calculations approximate (and can be untrustworthy in small
+   samples, with weak instruments, and in other cases where we would worry
+   about consistency (rare binary outcomes, very skewed outcomes,
+   interdependence, \ldots) ).
 
 
 # Hypothesis Tests about Complier causal effects
@@ -441,12 +458,12 @@ reshape_diagnosis(results) %>% filter(Estimator=="diff means ITT") %>% select(N,
 
 \begin{itemize}
 \item We can test the sharp null hypothesis no effect among all units
-\item  We know by random assignment that
+\item  We know by random assignment that this test
 \begin{enumerate}
-\item  this test will have a type I error probability at least as small as $\alpha$
-\item  Will have power greater than $\alpha$ for a class of alternative hypotheses
+\item  will have a type I error probability at least as small as $\alpha$
+\item  will have power greater than $\alpha$ for a class of alternative hypotheses
 \end{enumerate}
-\item  Under what conditions is a test of the sharp null of no effect among all units equivalent to a test of the sharp null of no effect among Compliers?
+\item  Under what conditions /assumptions is a test of the sharp null of no effect among all units equivalent to a test of the sharp null of no effect among Compliers?
 \begin{enumerate}
 \item  Exclusion restriction
 \item  No Defiers
@@ -459,6 +476,8 @@ reshape_diagnosis(results) %>% filter(Estimator=="diff means ITT") %>% select(N,
 ## Sharp null hypothesis testing example
 
 The null hypothesis of no complier causal effect states that the individual causal effect of $\mathbf{Z}$ on $\mathbf{Y}$ is $0$ among units who are Compliers.
+
+\medskip
 
 Along with the exclusion restriction (i.e., that the individual causal effect is $0$ for Always Takers and Never Takers) and the assumption of no Defiers, we can "fill in" missing potential outcomes according to the null hypothesis of no complier causal effect as follows:
 \begin{align*}
@@ -545,8 +564,9 @@ both can be assessed safely in a randomized experiment).
 ## Sharp null hypothesis testing example
 
 
-The null hypothesis of no effect among compliers under excludability (only a complier in the treatment group can have a causal effect), no defiers
-and nonzero proportion of compliers assumptions:
+The null hypothesis of no effect among compliers under excludability (only a
+complier in the treatment group can have a causal effect), no defiers and
+nonzero proportion of compliers assumptions:
 
 \begin{table}[H]
 \centering
@@ -591,13 +611,15 @@ and nonzero proportion of Compliers assumptions:
     1 & 27 & 27  & 27 & 0 & 0 & 0 & Never Taker \sout{or Defier} \\
     \end{tabular}
     \caption{Sharp null of no effect among Compliers}
-    \label{tab: pot outs under null}
+    \label{tab: pot outs under null 2}
 \end{table}
 
 
-So: a regular test of the sharp null of no effects **is also a test of the sharp
-null of no effects among compliers** (under the assumptions of no defiers,
-non-zero compliers, exclusion, and no interference).
+So: a regular test of the sharp null of no effects **is also a test of the
+sharp null of no effects among compliers** (under the assumptions of no
+defiers, non-zero compliers, exclusion, and no interference). The fact that
+$\tau_i=0$ for Never Takers and Always Takers is by assumption, not a
+hypothesis.
 
 
 ```{r codeforabove, echo=FALSE, results="hide"}
@@ -693,7 +715,7 @@ null_dist_plot <- ggplot(data = null_test_stats_data,
   ylab(label = "Probability")
 
 ggsave(plot = null_dist_plot,
-       file = here("images","null_dist_plot.pdf"),
+       file = here("images","null_dist_plot_iv.pdf"),
        width = 6,
        height = 4,
        units = "in",
@@ -701,14 +723,12 @@ ggsave(plot = null_dist_plot,
 
 ```
 
-<!--
 ## Sharp null hypothesis testing example
 
 \begin{figure}[H]
-\includegraphics[width = \linewidth]{null_dist_plot.pdf}
-\caption{Distribution of the Difference-in-Means test statistic under the sharp null of no effect}
+\includegraphics[width = \linewidth]{null_dist_plot_iv.pdf}
+\caption{Distribution of the Difference-in-Means test statistic under the sharp null of no effect: under the assumptions of excludability (no effects on Always Takers and Never Takers), no defiers, at least one complier, and SUTVA, this is a test of the hypothesis of no effects on compliers.}
 \end{figure}
--->
 
 ## Summary
 
@@ -716,7 +736,11 @@ ggsave(plot = null_dist_plot,
    experiment using assignment to treatment and ignoring compliance.
  - The assumptions of excludability, no defiers, and at least one complier mean
    that we can interpret the test of the sharp null of no effects as a test of
-   the sharp null of no effects on compliers.
+   the sharp null of no effects on compliers: those assumptions require no
+   effects among always-takers and never-takers, and there are no defiers in
+   the data (again, all of this by assumption).
+ - Notice: no need for approximations; weak instruments do not threaten the
+   validity of the statistical inferences.
 
 # Learning about causal effects when data are missing
 
@@ -726,7 +750,7 @@ ggsave(plot = null_dist_plot,
 
   2. Non-interference
 
-  3. Random assignment of subjects treatment
+  3. Random assignment of treatment
 
 ## Attrition (missing data on outcomes)
 
@@ -743,7 +767,7 @@ ggsave(plot = null_dist_plot,
 
 - If we analyze the data by dropping units with missing outcomes, then we are no longer comparing similar treatment and control groups. (We have trouble analyzing as we randomized!)
 
-- Dropping the missing observations brings us closer to per-protocol analysis.
+- Dropping the missing observations brings us closer to per-protocol analysis and confounding.
 
 ## What can we do?
 
@@ -752,6 +776,8 @@ ggsave(plot = null_dist_plot,
 - Check whether treatment and control groups have similar covariate profiles.
 
 - Do not drop observations that are missing outcome data from your analysis.
+
+- Analyze missingness on outcome as another outcome: could treatment have caused missing outcomes?
 
 - When outcome data are missing we can sometimes **bound** our estimates of treatment effects.
 
@@ -765,7 +791,9 @@ ggsave(plot = null_dist_plot,
 
    - Plan ex ante to reach all subjects at endline.
 
-   - Budget for intensive follow-up with a random sample of attriters.
+   - Budget for intensive follow-up with a random sample of attriters [@gerbergreen2012] Chapter 7.
+
+See also [Chapter on Threats to Internal Validity in Experiments](https://egap.github.io/theory_and_practice_of_field_experiments/threats-to-the-internal-validity-of-randomized-experiments.html)
 
 ## Missing data on covariates is not as problematic
 

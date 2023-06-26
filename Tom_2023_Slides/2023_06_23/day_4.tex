@@ -92,7 +92,7 @@
 \usepackage{xparse}
 \usepackage{subfig}
 \usepackage{amsmath}
-\usepackage{amsfonts,amsthm,amsmath,amssymb}    
+\usepackage{amsfonts,amsthm,amsmath,amssymb}
 \usepackage{bbm}
 \usepackage{bm}
 \usepackage{empheq}
@@ -175,33 +175,33 @@
 %------------------------------------------------------------------------
 \section{Variance of Difference-in-Means}
 \begin{frame}
-\frametitle{Variance of Difference-in-Means estimator} 
+\frametitle{Variance of Difference-in-Means estimator}
 \begin{itemize}
-\item Yesterday we showed that Difference-in-Means estimator in ``village heads'' example is 
+\item Yesterday we showed that Difference-in-Means estimator in ``village heads'' example is
 \item[]
 \begin{figure}[H]
 \includegraphics[width=0.9\linewidth]{cra_est_dist_plot.pdf}
-\end{figure} 
-\item What is the variance of this estimator?  
+\end{figure}
+\item What is the variance of this estimator?
 \item Why do we care about variance of an estimator?
 \end{itemize}
 \end{frame}
 %------------------------------------------------------------------------
 \begin{frame}
-\frametitle{Variance of Difference-in-Means estimator} 
+\frametitle{Variance of Difference-in-Means estimator}
 \begin{itemize}
-\item Variance is average squared distance of estimator from its expected value:  
+\item Variance is average squared distance of estimator from its expected value:
 \begin{equation*}
 \underbrace{\E\left[\underbrace{\left(\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \underbrace{\E\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}_{\color{red}{\text{Expected value}}}\right)^2}_{\color{blue}{\text{Squared distance from expected value}}}\right]}_{\color{green}{\text{Average (or expected) squared distance}}}
 \end{equation*} \pause
-\item Diff-in-Means unbiased for $\tau$, so write variance as 
+\item Diff-in-Means unbiased for $\tau$, so write variance as
 \begin{equation*}
 \E\left[\left(\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau\right)^2\right]
 \end{equation*} \pause
 \item In ``village heads'' example with 21 possible assignments
 \begin{align*}
 \left(\hat{\tau}\left(\bm{z}_1, \bm{y}_1\right) - \tau\right)^2 \Pr\left(\bm{Z} = \bm{z}_1\right) + \ldots + \left(\hat{\tau}\left(\bm{z}_{21}, \bm{y}_{21}\right) - \tau\right)^2 \Pr\left(\bm{Z} = \bm{z}_{21}\right)
-\end{align*}  
+\end{align*}
 \item[] Variance is $\approx 21.19$
 \end{itemize}
 \end{frame}
@@ -212,8 +212,8 @@
 \item Neyman (1923) derived expression for variance of Diff-in-Means under complete random assignment
 \begin{equation*}
 \Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{1}{N - 1}\left(\frac{n_1 \mh{\sigma^2_{\bm{y}(\bm{0})}}}{n_0} + \frac{n_0 \mh{\sigma^2_{\bm{y}(\bm{1})}}}{n_1} + 2\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}\right)
-\end{equation*}  
-where 
+\end{equation*}
+where
 \item[] $\sigma^2_{\bm{y}(\bm{0})} = \frac{1}{N} \sum \limits_{i = 1}^N \left(y_i(0) - \frac{1}{N} \sum \limits_{i = 1}^N y_i(0)\right)^2$ is var of control POs
 \item[] $\sigma^2_{\bm{y}(\bm{1})} = \frac{1}{N} \sum \limits_{i = 1}^N \left(y_i(1) - \frac{1}{N} \sum \limits_{i = 1}^N y_i(1)\right)^2$ is var of treated POs
 \item[] $\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})} = \frac{1}{N} \sum \limits_{i = 1}^N \left(y_i(0) - \frac{1}{N} \sum \limits_{i = 1}^N y_i(0)\right)\left(y_i(1) - \frac{1}{N} \sum \limits_{i = 1}^N y_i(1)\right)$ is cov of POs
@@ -231,7 +231,7 @@ $\star$ Note that $\mh{\sigma^2_{\bm{y}(\bm{0})}}$, $\mh{\sigma^2_{\bm{y}(\bm{1}
 \end{equation*}
 where
 \item[] $S_{\bm{y}(\bm{0})} = \frac{1}{N - 1} \sum \limits_{i = 1}^N \left(y_i(0) - \frac{1}{N} \sum \limits_{i = 1}^N y_i(0)\right)^2$
-\item[] $S_{\bm{y}(\bm{1})} = \frac{1}{N - 1} \sum \limits_{i = 1}^N \left(y_i(1) - \frac{1}{N} \sum \limits_{i = 1}^N y_i(1)\right)^2$ 
+\item[] $S_{\bm{y}(\bm{1})} = \frac{1}{N - 1} \sum \limits_{i = 1}^N \left(y_i(1) - \frac{1}{N} \sum \limits_{i = 1}^N y_i(1)\right)^2$
 \item[] $S_{\tau} = \frac{1}{N - 1} \sum \limits_{i = 1}^N \left(\tau_i - \frac{1}{N} \sum \limits_{i = 1}^N \tau_i\right)^2$
 \end{itemize} \pause
 \vspace{1em}
@@ -248,7 +248,7 @@ $\star$ Note that $\mh{S_{\bm{y}(\bm{0})}}$, $\mh{S_{\bm{y}(\bm{1})}}$ and $\mh{
 & \multicolumn{3}{c}{Budget share (\%)} \\
 Village &$\bm{\bm{y}(\bm{0})}$& $\bm{\bm{y}(\bm{1})}$& $\bm{\tau}$  \\ \hline
 1& 10 & 15  & 5  \\
-2& 15 & 15  & 0   \\ 
+2& 15 & 15  & 0   \\
 3& 20 & 30  & 10   \\
 4& 20 & 15  & -5   \\
 5& 10 & 20  & 10   \\
@@ -265,7 +265,7 @@ Average & 15 & 20 & 5  \\ \hline
 \end{frame}
 %------------------------------------------------------------------------
 \section{Variance estimation}
-\begin{frame}{Variance estimation} 
+\begin{frame}{Variance estimation}
 We showed that the Diference-in-Means estimator's variance is \vspace{1em}
 \begin{equation*}
 \Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{1}{N - 1}\left(\frac{n_1 \bh{\sigma^2_{\bm{y}(\bm{0})}}}{n_0} + \frac{n_0 \bh{\sigma^2_{\bm{y}(\bm{1})}}}{n_1} + 2\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}\right)
@@ -287,12 +287,12 @@ We showed that the Diference-in-Means estimator's variance is \vspace{1em}
 \end{itemize}
 \end{frame}
 %------------------------------------------------------------------------
-\begin{frame}{Conservative variance estimator} 
+\begin{frame}{Conservative variance estimator}
 \begin{equation*}
 \Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{1}{N - 1}\left(\frac{n_1 \bh{\sigma^2_{\bm{y}(\bm{0})}}}{n_0} + \frac{n_0 \bh{\sigma^2_{\bm{y}(\bm{1})}}}{n_1} + 2\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}\right)
 \end{equation*} \pause
 \begin{itemize}
-\item The maximum possible value of $2\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}$ is $\bh{\sigma^2_{\bm{y}(\bm{0})}} + \bh{\sigma^2_{\bm{y}(\bm{1})}}$ 
+\item The maximum possible value of $2\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}$ is $\bh{\sigma^2_{\bm{y}(\bm{0})}} + \bh{\sigma^2_{\bm{y}(\bm{1})}}$
 \item So substitute $\bh{\sigma^2_{\bm{y}(\bm{0})}} + \bh{\sigma^2_{\bm{y}(\bm{1})}}$ for $2\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}$: \pause
 \begin{align*}
 \Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] & = \frac{1}{N - 1}\left(\frac{n_1 \bh{\sigma^2_{\bm{y}(\bm{0})}}}{n_0} + \frac{n_0 \bh{\sigma^2_{\bm{y}(\bm{1})}}}{n_1} + \left(\bh{\sigma^2_{\bm{y}(\bm{0})}} + \bh{\sigma^2_{\bm{y}(\bm{1})}}\right)\right) \\
@@ -307,7 +307,7 @@ We showed that the Diference-in-Means estimator's variance is \vspace{1em}
 \end{itemize}
 \end{frame}
 %------------------------------------------------------------------------
-\begin{frame}{Variance estimation} 
+\begin{frame}{Variance estimation}
 \vfill
 \begin{itemize} \vfill
 \item Here is the conservative variance estimator in ``village heads'' example: \vfill
@@ -347,7 +347,7 @@ We showed that the Diference-in-Means estimator's variance is \vspace{1em}
 \end{equation*} \pause \vfill
 \item In words: \vfill
 \begin{center}
-Pick any $\epsilon$ you want, no matter how small. There will be some value $N^{*}$ such that, if size of experiment is greater than $N^*$, 
+Pick any $\epsilon$ you want, no matter how small. There will be some value $N^{*}$ such that, if size of experiment is greater than $N^*$,
 the probability of an estimate within a distance of $\epsilon$ from the truth is equal to $1$.
 \end{center} \pause \vfill
 \item Intuitively, with large experiment, our estimate will be close to true ATE! \vfill
@@ -369,10 +369,10 @@ the probability of an estimate within a distance of $\epsilon$ from the truth is
 \section{Hypothesis testing}
 \begin{frame}{Hypothesis tests of the weak null}
 \begin{itemize}
-\item The finite population CLT tells us that 
+\item The finite population CLT tells us that
 \begin{align*}
 \cfrac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \E\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}{\sqrt{\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}} & \overset{d}{\to} \mathcal{N}\left(0, 1\right)
-\end{align*}  \pause 
+\end{align*}  \pause
 \item Diff-in-Means is unbiased, so write
 \begin{align*}
 \cfrac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau}{\sqrt{\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}} & \overset{d}{\to} \mathcal{N}\left(0, 1\right)
@@ -405,7 +405,7 @@ the probability of an estimate within a distance of $\epsilon$ from the truth is
 H_0: & \tau = \tau_0 \text{ versus either } \\
 H_A: & \tau > \tau_0, \, H_A: \tau < \tau_0 \text{ or } H_A: \left\lvert \tau \right\rvert > \left\lvert \tau_0 \right \rvert
 \end{align*} \pause
-\item Calculate upper(u), lower(l) or two-sided(t) p-value as 
+\item Calculate upper(u), lower(l) or two-sided(t) p-value as
 \begin{align*}
 p_u & =  1 - \Phi\left(\frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0}{\sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}}\right) \\
 p_l & =  \Phi\left(\frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0}{\sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}}\right) \\
@@ -421,19 +421,19 @@ p_t & = 2\left(1 - \Phi\left(\frac{\left\lvert\hat{\tau}\left(\bm{Z}, \bm{Y}\rig
 \begin{itemize}
 \item Type I error: Rejecting null hypothesis when it is true
 \item Type II error: \textit{Failing} to reject null hypothesis when it is false
-\end{itemize} \pause 
+\end{itemize} \pause
 \bh{A good test} controls these errors:
 \begin{enumerate}
 \item Type I error probability is less than or equal to size ($\alpha$-level) of test
 \item Power (1 - type II error probability) is at least as great as $\alpha$-level
 \item Power tends to $1$ as $N \to \infty$
-\end{enumerate}  
+\end{enumerate}
 \end{frame}
 %------------------------------------------------------------------------
 \begin{frame}{Hypothesis tests of the weak null}
 \vfill
 \begin{itemize} \vfill
-\item We can prove that tests of weak null satisfy (1) -- (3) as $N \to \infty$ \vfill 
+\item We can prove that tests of weak null satisfy (1) -- (3) as $N \to \infty$ \vfill
 \item Thus, when experiments are large, we can often safely use such tests \vfill
 \item But (1) -- (3) may not always be satisfied when experiments are small, have skewed outcome distributions or extreme outliers \vfill
 \end{itemize}
@@ -449,11 +449,11 @@ Consider two-sided confidence interval, $\mathcal{C}_t$:
 \footnotesize
 \begin{equation*}
 \begin{split}
-\mathcal{C}_t & = \left\{\tau_0 : \left\lvert \cfrac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right)- \tau_0}{\sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}} \right\rvert \leq z_{1 - \alpha/2}\right\} \\ 
-& = \left\{\tau_0 : - z_{1 - \alpha/2} \leq \cfrac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right)- \tau_0}{\sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}} \leq z_{1 - \alpha/2} \right\} \\ 
-& = \left\{\tau_0 : - z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\leq \hat{\tau}\left(\bm{Z}, \bm{Y}\right)- \tau_0 \leq z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\right\} \\ 
-& = \left\{\tau_0 : -\hat{\tau}\left(\bm{Z}, \bm{Y}\right)- z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\leq - \tau_0 \leq - \hat{\tau}\left(\bm{Z}, \bm{Y}\right)+ z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\right\} \\ 
-& = \left\{\tau_0 : \hat{\tau}\left(\bm{Z}, \bm{Y}\right)+ z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\geq \tau_0 \geq  \hat{\tau}\left(\bm{Z}, \bm{Y}\right)- z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\right\} \\ 
+\mathcal{C}_t & = \left\{\tau_0 : \left\lvert \cfrac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right)- \tau_0}{\sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}} \right\rvert \leq z_{1 - \alpha/2}\right\} \\
+& = \left\{\tau_0 : - z_{1 - \alpha/2} \leq \cfrac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right)- \tau_0}{\sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}} \leq z_{1 - \alpha/2} \right\} \\
+& = \left\{\tau_0 : - z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\leq \hat{\tau}\left(\bm{Z}, \bm{Y}\right)- \tau_0 \leq z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\right\} \\
+& = \left\{\tau_0 : -\hat{\tau}\left(\bm{Z}, \bm{Y}\right)- z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\leq - \tau_0 \leq - \hat{\tau}\left(\bm{Z}, \bm{Y}\right)+ z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\right\} \\
+& = \left\{\tau_0 : \hat{\tau}\left(\bm{Z}, \bm{Y}\right)+ z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\geq \tau_0 \geq  \hat{\tau}\left(\bm{Z}, \bm{Y}\right)- z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\right\} \\
 & = \left\{\tau_0 : \hat{\tau}\left(\bm{Z}, \bm{Y}\right)- z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\leq \tau_0 \leq \hat{\tau}\left(\bm{Z}, \bm{Y}\right)+ z_{1 - \alpha/2} \sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] }\right\}
 \end{split}
 \end{equation*}
@@ -465,15 +465,15 @@ Consider two-sided confidence interval, $\mathcal{C}_t$:
 \begin{frame}[t, label = Variance estimators]
 \frametitle{Appendix: Estimator of Difference-in-Means estimator's variance}
 \vfill
-Neyman's conservative estimator of the Difference-in-Means estimator's variance is 
+Neyman's conservative estimator of the Difference-in-Means estimator's variance is
 \begin{equation*}
 \widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{N}{N - 1}\left(\frac{\hat{\sigma}^2_{\bm{y}(\bm{0})}}{n_0} + \frac{\hat{\sigma}^2_{\bm{y}(\bm{1})}}{n_1} \right),
 \end{equation*}
-where 
+where
 \begin{align*}
 \hat{\sigma}^2_{\bm{y}(\bm{0})} & = \left(\frac{N - 1}{N\left(n_0 - 1\right)}\right)\sum \limits_{i: Z_i = 0}^N \left(y_i(0) - \hat{\mu}_{\bm{y}(\bm{0})}\right)^2 \\
-\hat{\sigma}^2_{\bm{y}(\bm{1})} & = \left(\frac{N - 1}{N\left(n_1 - 1\right)}\right)\sum \limits_{i: Z_i = 1}^{n} \left(y_i(1) - \hat{\mu}_{\bm{y}(\bm{1})}\right)^2 \\ 
-\hat{\mu}_{\bm{y}(\bm{0})} & = \left(\frac{1}{n_0}\right) \sum \limits_{i = 1}^N \left(1 - Z_i\right)y_i(0) \\ 
+\hat{\sigma}^2_{\bm{y}(\bm{1})} & = \left(\frac{N - 1}{N\left(n_1 - 1\right)}\right)\sum \limits_{i: Z_i = 1}^{n} \left(y_i(1) - \hat{\mu}_{\bm{y}(\bm{1})}\right)^2 \\
+\hat{\mu}_{\bm{y}(\bm{0})} & = \left(\frac{1}{n_0}\right) \sum \limits_{i = 1}^N \left(1 - Z_i\right)y_i(0) \\
 \hat{\mu}_{\bm{y}(\bm{1})} & = \left(\frac{1}{n_1}\right) Z_i y_i(1)
 \end{align*}
 \vfill
