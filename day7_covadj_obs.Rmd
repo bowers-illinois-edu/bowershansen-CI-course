@@ -77,6 +77,27 @@ library(kableExtra)
     covariates to improve our design and/or estimation and/or testing by (a)
     blocking or stratification and/or (b) **covariance adjustment**.
 
+
+## So far/Non-random compliance {.fragile}
+
+ - We can learn about the causal effects of non-randomized variables, $D$, if we have an instrument, $Z$ under certain assumptions:
+
+\begin{center}
+\begin{tikzcd}[column sep=large]
+Z  \arrow[from=1-1,to=1-2, "\text{ITT}_D \ne 0"] \arrow[from=1-1, to=1-4, bend left, "\text{0 (exclusion)}"] & d  \arrow[from=1-2,to=1-4, "CACE"] & & y \\
+(x_1 \ldots x_p) \arrow[from=2-1,to=1-1, "\text{0 (as if randomized)}"]  \arrow[from=2-1,to=1-2] \arrow[from=2-1,to=1-4]
+\end{tikzcd}
+\end{center}
+
+ - The @angrist1996 assumptions for estimating the CACE/LATE are: (1) sutva, (2) ignorable $Z$ (see above), (3) exclusion (see above), (4) no defiers (or they might call this "monotonicity"), (5) non-zero causal effect of $Z$ on $D$.
+
+ - This enables **Encouragement Designs**
+
+ - We can test the sharp null of no complier average effects directly (under
+   those assumptions): this helps us sidestep the problem of estimating $\Var\left[\cfrac{\widehat{\text{ITT}}_Y}{\widehat{\text{ITT}}_D}\right]$.
+
+
+
 ## So far
 
   - Although covariance adjustment in an experiment looks like "controlling
@@ -90,7 +111,9 @@ library(kableExtra)
        - the Lin approach `Y~Z + Z*(x-mean(x)) + (x-mean(x))`,
        - the Rosenbaum approach `resid_Y_x ~ Z` after `resid_Y_x <- resid(lm(Y~x))`.
 
-# A Predictive Approach to Statistical Inference about Causal Quantities
+
+
+# A Predictive Approach to Statistical Inference about Causal Quantities in Randomized Experiments
 
 ## So far: Statistics Inference about Counterfactual Causal Quantities
 
