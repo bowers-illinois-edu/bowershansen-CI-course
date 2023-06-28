@@ -56,22 +56,25 @@ library(optmatch)
      confounding. **How can we answer the question about whether we have
      adjusted enough and avoided extrapolation and dependence on functional
      form?**
-     a. A simple approach: stratification on one categorical variable (using
-     weighted combinations of within-strata estimates for an overall estimate).
-     Justify this **design** by comparison of this stratification with one or more
-     **standards** of unconfounded designs (like an experiment with treatment
-     randomized within strata).
-     b. A more complex approach: find sets that are as similar as possible in terms of a continuous variable
+     a. A simple approach: stratification on one categorical variable
+     (using weighted combinations of within-strata estimates for an overall
+     estimate). Justify this **design** by comparison of this stratification
+     with one or more **standards** of unconfounded designs (like an experiment
+     with treatment randomized within strata).
+     b. A more complex approach: find
+     sets that are as similar as possible in terms of a continuous variable
      (bipartite matching). Balance assessment after stratification.
-  2. Review of past concepts and discussions.
-     a. Problems of using linear (or other parametric models) for **adjustment**
-     (as well as statistical inference) include justifying variables, justifying
-     functional forms (of $x_1 \rightarrow Z$ and $x_1 \rightarrow Y$ and $x_1
-     \rightarrow x_2$, and $f(x_1,x_2) \rightarrow Y$ and $f(x_1,x_2)
-     \rightarrow Z$ and $f(x_1,x_2) \rightarrow x_3$, diagnosing extrapolation,
-     diagnosing and confronting overly influential points. And, basically,
-     finding a **standard of adjustment** for such models where we can answer
-     the question "have we adjusted enough"?
+  2. Recap: Problems of using linear (or
+     other parametric models) for **adjustment** (as well as statistical
+     inference) include justifying variables, justifying functional forms (of
+     $x_1 \rightarrow Z$ and $x_1 \rightarrow Y$ and $x_1 \rightarrow x_2$, and
+     $f(x_1,x_2) \rightarrow Y$ and $f(x_1,x_2) \rightarrow Z$ and $f(x_1,x_2)
+     \rightarrow x_3$, diagnosing extrapolation and interpolation, diagnosing
+     and confronting overly influential points, and struggling with the
+     problems of seeing the causal estimate and test results everytime you try
+     a new specification. And, basically, finding a **standard of adjustment**
+     for such models where we can answer the question "have we adjusted
+     enough"?
   3. Questions arising from the reading or assignments or life?
 
 # Strategies for Causal Inference
@@ -109,6 +112,36 @@ library(optmatch)
  - Weighting (the stratification approaches imply weightings, so we could try to calculate good weightings directly)
  - Direct theoretical modeling / Directed Acyclic Graphs (DAGS) to guide other
    data modeling choices.
+
+# Recap
+
+## Regression is not research design {.shrink}
+ 
+What does this mean?
+
+Research design occurs **before** estimation and testing. You can try out lots
+of ideas, simulate, discuss, pre-register your planned analysis and your
+design, all before you produce the estimate or test having to do with some
+causal effect. This means (1) you are not seeing the estimates and tests when
+you are looking for a good design and (2) standards for good design are not the
+same as the standards for good estimators and tests.
+
+When you present the result of a regression model after searching for a
+specification, readers wonder: (1) is this just the best result out of
+thousands? Are most results like this? Or was this cherry picked? (2) how many
+$p$-values were looked at before reporting this one with $p < .05$? (Recall
+that if we reject $H_0$ when $p < .05$, we are saying that it is ok for 5% of
+tests to mislead us --- to have $p < .05$ when there is no effect (when $H_0$
+is true).) So, a $p < .05$ after one test means that either have a rare testing
+error (a false positive result) or that it truly would be very rare to see the
+observed result under the null and that the risk of the false positive result
+is less than or equal to .05.  But a $p <  .05$ after 100 tests is virtually
+certain to occur (with false positive prob of .99) when $H_0$ is true so we
+should not reject the null even if the $p$ is small.
+
+## Regression is not research design
+
+
 
 # How to assess the randomization process in an experiment (to teach us how to assess research designs in observational studies).
 

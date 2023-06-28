@@ -411,6 +411,11 @@ dat$resid_Z_x1 <- resid(lm_Z_x1)
 lm_resid_Y_x1 <- lm(resid_Y_x1 ~ x1, data = dat)
 lm_resid_Z_x1 <- lm(resid_Z_x1 ~ x1, data = dat)
 lm1b <- lm(resid_Y_x1 ~ resid_Z_x1, data = dat)
+
+lmYbig <- lm(Y~x1+x2+x3+x4,data=dat)
+lmZbig <- lm(Z~x1+x2+x3+x4,data=dat)
+coef(lm(resid(lmYbig)~resid(lmZbig)))[2]
+lm(Y~Z+x1+x2+x3+x4,data=dat)
 ```
 
 ```{r plotresids, echo=FALSE,out.width=".7\\textwidth"}
@@ -630,6 +635,11 @@ coef(lm_x4_0)[["Z"]]
 ```
 
 In this case we can say that we have "held constant" $x_4$. But what is the **overall estimate** in this case?
+
+Choosing an additive and linear functional form allows us to predict $Y$ for any given $x$ where the differences in predicted Y relate to differences in x in a constant way with respect to the other variables. But this an implication or consequence of the linearity and additivity choice.
+
+
+
 
 ## Estimate an overall ATE with stratification {.allowframebreaks}
 
