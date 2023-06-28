@@ -110,8 +110,7 @@ library(optmatch)
  - Direct theoretical modeling / Directed Acyclic Graphs (DAGS) to guide other
    data modeling choices.
 
-# How to assess the randomization process in an experiment (to teach us how to
-assess research designs in observational studies).
+# How to assess the randomization process in an experiment (to teach us how to assess research designs in observational studies).
 
 ## The Neyman-Rubin Model for (simple) experiments
 
@@ -192,7 +191,7 @@ print(balplot1)
 ```{r d1, echo=TRUE}
 d_stat <- function(zz, mm, ss) {
   ## this is the d_statistic (harmonic mean weighted diff of means statistic)
-  ## from Hansen and Bowers 2008 almost directly from xBalance.Engine
+  ## from Hansen and Bowers 2008 almost directly from balanceTest.Engine
   h.fn <- function(n, m) {
     (m * (n - m)) / n
   }
@@ -208,7 +207,7 @@ d_stat <- function(zz, mm, ss) {
 }
 ```
 
-## DeMystifying xBalance
+## DeMystifying balanceTest
 
 Recall our discussion of estimation "holding constant" within strata?
 
@@ -237,7 +236,7 @@ d_stat_v2 <- function(zz, mm, ss) {
 }
 ```
 
-## DeMystifying xBalance
+## DeMystifying balanceTest
 
 ```{r nullddistsetup, echo=TRUE}
 acorncovs <- c("v_p2003", "v_m2003", "v_g2002", "v_p2002", "v_m2002", "v_s2001", "v_g2000", "v_p2000", "v_m2000", "v_s1999", "v_m1999", "v_g1998", "v_m1998", "v_s1998", "v_m1997", "v_s1997", "v_g1996", "v_p1996", "v_m1996", "v_s1996", "size")
@@ -279,7 +278,7 @@ dps <- matrix(NA, nrow = length(obs.d), ncol = 1)
 for (i in 1:length(obs.d)) {
   dps[i, ] <- 2 * min(mean(d_dist[i, ] >= obs.d[i]), mean(d_dist[i, ] <= obs.d[i]))
 }
-## You can compare this to the results from xBalance
+## You can compare this to the results from balanceTest
 round(cbind(randinfps = dps[, 1], xbps = xb1ps, obsdstats = obs.d, xbdstats = xb1ds), 3)
 ```
 
@@ -325,9 +324,9 @@ abline(v = obs.d2)
 ```
 
 
-## Why differences between xBalance and d2?
+## Why differences between balanceTest and d2?
 
-I suspect that $N=28$ is too small. `xBalance` uses an asymptotic
+I suspect that $N=28$ is too small. `balanceTest` uses an asymptotic
 approximation to the randomization distribution.
 
 ```{r echo=FALSE, out.width=".8\\textwidth", cache=FALSE}
@@ -447,7 +446,7 @@ Sometimes people ask about "bias from observed confounding" or "bias from select
 How would we interpret the following results where `nhAboveHS` is proportion
 with more than a high school education in the neighborhood in 2003 or so and
 `nhTrt` is 0=no station built, 1=station built? (Recall how we justified the
-use of `xBalance` in terms of randomization above.)
+use of `balanceTest` in terms of randomization above.)
 
 ```{r xbmed, echo=TRUE}
 xbMed1 <- balanceTest(nhTrt ~ nhAboveHS, data = meddat)
@@ -857,7 +856,7 @@ xbfm1$overall
 
 
 
-## What is xBalance doing?
+## What is balanceTest doing?
 
 ```{r xbagain, echo=TRUE}
 setmeanDiffs <- meddat %>%
@@ -872,7 +871,7 @@ setmeanDiffs <- meddat %>%
 setmeanDiffs
 ```
 
-## What is xBalance doing with multiple sets/blocks?
+## What is balanceTest doing with multiple sets/blocks?
 
 The test statistic is a weighted average of the set-specific differences (same
 approach as we would use to test the null in a block-randomized experiment)
@@ -882,7 +881,7 @@ approach as we would use to test the null in a block-randomized experiment)
 with(setmeanDiffs, sum(diffAboveHS * nTb / sum(nTb)))
 ## The mean diff used as the observed value in the testing
 with(setmeanDiffs, sum(diffAboveHS * hwt / sum(hwt)))
-## Compare to xBalance output
+## Compare to balanceTest output
 xbfm1$results[, , "fm1"]
 ```
 
