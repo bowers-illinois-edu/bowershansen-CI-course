@@ -127,9 +127,14 @@ you are looking for a good design and (2) standards for good design are not the
 same as the standards for good estimators and tests.
 
 When you present the result of a regression model after searching for a
-specification, readers wonder: (1) is this just the best result out of
-thousands? Are most results like this? Or was this cherry picked? (2) how many
-$p$-values were looked at before reporting this one with $p < .05$? (Recall
+specification, readers wonder: 
+
+1. is this just the best result out of
+thousands? Are most results like this? Or was this cherry picked?
+2. how many
+$p$-values were looked at before reporting this one with $p < .05$?
+
+\small{(Recall
 that if we reject $H_0$ when $p < .05$, we are saying that it is ok for 5% of
 tests to mislead us --- to have $p < .05$ when there is no effect (when $H_0$
 is true).) So, a $p < .05$ after one test means that either have a rare testing
@@ -137,10 +142,30 @@ error (a false positive result) or that it truly would be very rare to see the
 observed result under the null and that the risk of the false positive result
 is less than or equal to .05.  But a $p <  .05$ after 100 tests is virtually
 certain to occur (with false positive prob of .99) when $H_0$ is true so we
-should not reject the null even if the $p$ is small.
+should not reject the null even if the $p$ is small. (See
+[EGAP Guide on Multiple Comparisons](https://egap.org/resource/10-things-to-know-about-multiple-comparisons/) ).
+}
 
 ## Regression is not research design
 
+Say we write the relationship between an outcome $y$, a focal explanatory
+variable, $z$ and a potential confounder $x$ as a linear and additive function:
+$y_i = \beta_0 + \beta_1 z_i + \beta_2 x_i$ 
+
+
+```{r}
+library(plot3D)
+n <- 20
+uniq_x <- seq(0,1,length=n)
+uniq_z <- seq(0,100,length=n)
+region <- expand.grid(x = uniq_x, z = uniq_z)
+
+y <- matrix(-(region$x + region$z), n, n)
+
+surface3d(x=uniq_x, y=uniq_z, z=y, back = 'line', front = 'line', col = 'red', lwd = 1.5, alpha = 0.4)
+axes3d()
+
+```
 
 
 # How to assess the randomization process in an experiment (to teach us how to assess research designs in observational studies).
