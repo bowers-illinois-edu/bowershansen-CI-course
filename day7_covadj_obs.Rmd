@@ -6,11 +6,12 @@ author: |
   | ICPSR 2023 Session 1
   | Jake Bowers \& Tom Leavitt
 bibliography:
- - BIB/MasterBibliography.bib
+  - BIB/MasterBibliography.bib
 fontsize: 10pt
 geometry: margin=1in
 graphics: yes
 biblio-style: authoryear-comp
+colorlinks: true
 output:
   beamer_presentation:
     slide_level: 2
@@ -20,11 +21,10 @@ output:
     template: icpsr.beamer
     incremental: true
     includes:
-        in_header:
-           - defs-all.sty
+     in_header:
+        - defs-all.sty
     md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
 ---
-
 
 <!-- To show notes  -->
 <!-- https://stackoverflow.com/questions/44906264/add-speaker-notes-to-beamer-presentations-using-rmarkdown -->
@@ -42,17 +42,20 @@ library(ggplot2)
 library(estimatr)
 library(coin)
 library(DeclareDesign)
+library(kableExtra)
 ```
 
 ## Today
 
- 1. Agenda: Linear regression for covariance adjustment in observational
-    studies ("controlling for") (FYI, a new section of the syllabus with some
-    readings about this.) Concerns about extrapolation, interpolation,
-    linearity, influential points, parallel slopes, and in general whether we
-    have "controlled for" enough.
- 2. Random break-out rooms to work on the code for the day and/or the
-    assignments.
+ 1. Agenda:
+   - Recap: Modes of statistical inference for causal effects, Learning about
+     the causal effect of treatment **receipt** (or a **dose** of treatment) on
+     non-random groups of people using an **instrument** (that was created by
+     the researcher via randomization).
+   - Linear regression for covariance adjustment in observational studies,
+       aka "controlling for". Concerns about extrapolation, interpolation,
+       linearity, influential points, parallel slopes, and in general whether
+       we have "controlled for" enough.
  3. Questions arising from the reading or assignments or life.
 
 ## So far
@@ -68,9 +71,8 @@ library(DeclareDesign)
     variables (aka "covariates") which provide alternative explanations (often
     represented by $x$) for a given $Z \rightarrow Y$ relationship. And a
     common approach is to "control for" those variables using linear
-    regression. (We didn't talk about this last time but this is context for
-    last time.)
-  - In **experimental studies we do not control for covariates** since we
+    regression.
+    - In **experimental studies we do not control for covariates** since we
     control the assignment of the causal driver, $Z$. However, we can **use**
     covariates to improve our design and/or estimation and/or testing by (a)
     blocking or stratification and/or (b) **covariance adjustment**.
@@ -81,12 +83,207 @@ library(DeclareDesign)
     for" in an observational study, it is not the same. Think of it as
     "removing non-treatment related noise from the outcome" rather than
     "clarifying comparisons".
-     - It also involves some bias. Although the bias may be small.
+     - It also involves some bias. Although the bias may be small if an experiment is large enough.
      - And there are multiple approaches to de-noise the outcome so as to
       increase precision while minimizing (but not eliminating bias):
        -  direct approach `Y~Z+x`,
        - the Lin approach `Y~Z + Z*(x-mean(x)) + (x-mean(x))`,
        - the Rosenbaum approach `resid_Y_x ~ Z` after `resid_Y_x <- resid(lm(Y~x))`.
+
+# A Predictive Approach to Statistical Inference about Causal Quantities
+
+## So far: Statistics Inference about Counterfactual Causal Quantities
+
+  - There is more than one way to use what we observe to reason about
+    unobserved potential outcomes: testing (Fisher/Rosenbaum), estimating
+    (Neyman/many people including Angrist \& Pischke, Gerber \& Green),
+    predicting (Bayes and Rubin).
+
+## A Model Based Approach: Predict Distributions of Potential Outcomes
+
+  \smallskip
+  \centering
+  \includegraphics[width=.95\textwidth]{images/cartoonBayesNew.pdf}
+
+## Model Based 1: Predict Distributions of $(y_{i,1},y_{i,0})$
+> 1. Given a model of $Y_i$ (see [this website](https://mc-stan.org/users/documentation/case-studies/model-based_causal_inference_for_RCT.html).)
+\begin{equation}
+\mathrm{Pr}(Y_{i}^{obs} \vert \mathrm{Z}, \theta) \sim \mathsf{Normal}(Z_{i} \cdot \mu_{1} + (1 - Z_{i}) \cdot \mu_{0} , Z_{i} \sigma_{1}^{2} + (1 - Z_{i}) \cdot \sigma_{0}^{2})
+\end{equation}
+where $\mu_{0}=\alpha$ and $\mu_{1}=\alpha + \tau$.
+
+> 2. And a model of the pair $\{y_{i,0},y_{i,1}\} \equiv \{Y_{i}(0), Y_{i}(1)\}$ but random not fixed as before (and so written as upper-case):
+
+\begin{equation}
+\begin{pmatrix} Y_{i}(0) \\ Y_{i}(1) \end{pmatrix} \biggm\vert \theta
+\sim
+\mathsf{Normal}
+\begin{pmatrix}
+\begin{pmatrix} \mu_{0} \\ \mu_{1} \end{pmatrix},
+\begin{pmatrix} \sigma_{0}^{2} & \rho \sigma_{0} \sigma_{1} \\ \rho \sigma_{0} \sigma_{1} & \sigma_{1}^{2} \end{pmatrix}
+\end{pmatrix}
+\end{equation}
+
+> 3. And a model of $Z_i$ is known because of randomization so we can write: $\mathrm{Pr}(\mathrm{Z}|\mathrm{Y}(0), \mathrm{Z}(1)) = \mathrm{Pr}(\mathrm{Z})$
+
+> 4. And given priors on $\theta= \{ \alpha$, $\tau$, $\sigma_c$, $\sigma_t \}$ (here make them all independent Normal(0,5))).
+
+We can generate the posterior distribution of $\alpha$, $\tau$, $\sigma_c$, and $\sigma_t$ and thus can impute $\{Y_{i}(0),Y_{i}(1)\}$ to generate a distribution for $\tau_i$.
+
+## Some funky data
+
+Here is some fake data from a tiny experiment with weird outcomes.
+
+```{r makesmdat, echo=TRUE}
+smdat <- data.frame(Z = c(0, 1, 0, 1), y0 = c(16, 22, 7, 3990), y1 = c(16, 24, 10, 4000))
+smdat$Y <- with(smdat, Z * y1 + (1 - Z) * y0)
+print(smdat)
+```
+
+## Model Based 1: Predict Distributions of Potential Outcomes
+
+A snippet of the stan command file `rctbayes.stan` showing how the commands map to the math above:
+
+```
+model {
+   // PRIORS
+   alpha ~ normal(0, 5);
+   tau ~ normal(0, 5);
+   sigma_c ~ normal(0, 5);
+   sigma_t ~ normal(0, 5);
+
+   // LIKELIHOOD
+   y ~ normal(alpha + tau*w, sigma_t*w + sigma_c*(1 - w));
+}
+```
+
+## Model Based 1: Predict Distributions of Potential Outcomes
+
+
+## Model Based 1: Predict Distributions of Potential Outcomes {.allowframebreaks}
+
+The `brms` package is a little easier (sometimes). Default priors not the same as the ones we used above.
+
+```{r brms, eval=TRUE, cache=TRUE, echo=TRUE}
+library(brms)
+mod1 <- brm(Y ~ Z, data = smdat, family = gaussian(), cores = 4, iter = 5000, warmup = 2500, chains = 4)
+prior_summary(mod1)
+summary(mod1)
+predmod1 <- predict(mod1, newdata = data.frame(Z = c(0, 1)), summary = FALSE)
+str(predmod1)
+head(predmod1)
+predmod1_df <- as.data.frame(predmod1)
+names(predmod1_df) <- c("C", "T")
+predmod1_df$tau_i <- predmod1_df$T - predmod1_df$C
+head(predmod1_df)
+mean(predmod1_df$tau_i)
+quantile(predmod1_df$tau_i, c(.025, .975))
+```
+
+## Model Based 1: Predict Distributions of Potential Outcomes
+
+```{r}
+plot(density(predmod1_df$tau_i))
+rug(predmod1_df$tau_i)
+```
+
+
+## Summmary: Modes of Statistical Inference for Causal Effects
+
+We can infer about unobserved counterfactuals by:
+
+  1. assessing claims or models or hypotheses about relationships between
+     unobserved potential outcomes (Fisher's testing approach via Rosenbaum)
+  2. estimating averages (or other summaries) of unobserved potential outcomes
+     (Neyman's estimation approach)
+  3. predicting individual level outcomes based on probability models of
+     outcomes, interventions, etc. (Bayes's predictive approach via Rubin)
+
+## Summary: Modes of Statistical Inference for Causal Effects
+
+Statistical inferences --- formalized reasoning about "what if" statements
+("What if I had randomly assigned other plots to treatment?") --- and their properties (like bias, error rates, precision) arise from:
+
+  1. Repeating the design and using the hypothesis and test statistics to
+     generate a reference distribution that describes the variation in the
+     hypothetical world. Compare the observed to the hypothesized to measure
+     consistency between hypothesis, or model, and observed outcomes (*Fisher
+     and Rosenbaum's randomization-based inference for individual causal
+     effects*).
+  2. Repeating the design and the estimation such that standard errors,
+     $p$-values, and confidence intervals reflect design-based variability.
+     Probability distributions (like the Normal or t-distribution) arise from
+     Limit Theorems in large samples.  (*Neyman's randomization-based inference
+     for average causal effects*).
+  3. Repeatedly drawing from the probability distributions that generate the
+     observed data (that represent the design) --- the likelihood and the
+     priors --- to describe a posterior distribution for unit-level causal
+     effects. Calculate posterior distributions for aggregated causal effects
+     (like averages of individual level effects). (*Bayes and Rubin's
+     predictive model-based causal inference*).
+
+## Summary: Applications of the Model-Based Prediction Approach
+
+Examples of use of the model-based prediction approach:
+
+ - Estimating causal effects when we need to model processes of missing
+   outcomes, missing treatment indicators, or complex non-compliance with
+   treatment @barnard2003psa
+ - Searching for heterogeneity (subgroup differences) in how units react to
+   treatment (ex. @hahn2020bayesian but see also literature on BART,
+   Bayesian Machine Learning as applied to causal inference questions).
+
+## Summary: Applications of the Testing Approach
+
+Examples of use of the testing approach:
+
+ - Assessing evidence of pareto optimal effects or no aberrant effect (i.e. no
+   unit was made worse off by the treatment) \parencite{caughey2016beyond, rosenbaum2008aberrant}.
+ - Assessing evidence that the treatment group was made better than the control
+   group (but being agnostic about the precise nature of the difference) (ex.
+   $p>.2$ with difference of means but $p<.001$ with difference of ranks in
+   Office of Evaluation Sciences study of General Services Administration
+   Auctions)
+ - Focusing on detection rather than on estimation (for example to identify
+   promising sites for future research in experiments with many blocks or
+   strata) (Bowers and Chen 2020 working paper).
+ - Assessing hypotheses of no effects in small samples, with rare outcomes,
+   cluster randomization, or other designs where reference distributions may
+   not be Normal (see for example, \parencite{gerber2012field}).
+ - Assessing structural models of causal effects (for example models of
+   treatment effect propagation across networks)
+   \parencite{bowers2016research,bowers2013sutva,bowers2018models}.
+
+
+# Observational Studies
+
+## So far
+
+  - In **non-experimental studies** we worry about confounding --- background
+    variables (aka "covariates") which provide alternative explanations (often
+    represented by $x$) for a given $Z \rightarrow Y$ relationship. And a
+    common approach is to "control for" those variables using linear
+    regression.
+   - In **experimental studies we do not control for covariates** since we
+    control the assignment of the causal driver, $Z$. However, we can **use**
+    covariates to improve our design and/or estimation and/or testing by (a)
+    blocking or stratification and/or (b) **covariance adjustment** (aka **rescaling**).
+
+## So far
+
+  - Although covariance adjustment in an experiment looks like "controlling
+    for" in an observational study, it is not the same. Think of it as
+    "removing non-treatment related noise from the outcome" rather than
+    "clarifying comparisons".
+     - It also involves some bias if using the same data as used in the experiment. Although the bias may be small if the experiment is large enough.
+     - And there are multiple approaches to de-noise the outcome so as to
+      increase precision while minimizing (but not eliminating bias):
+       - direct approach `Y~Z+x`,
+       - the Lin approach `Y~Z + Z*(x-mean(x)) + (x-mean(x))`,
+       - the Rosenbaum approach `resid_Y_x ~ Z` after `resid_Y_x <- resid(lm(Y~x))`.
+       - In certain cases **gain scores** can do this rescaling (kind of like the Rosenbaum approach but without fitting models and residuals)
+
+\bh{The whole point of covariance adjustment in experiments is precision, not adjusting away potential confounders.}
 
 # Linear Regression to "Control For Covariates" rather than "De-noise Outcomes"
 
@@ -98,28 +295,30 @@ Here is another bit of fake data where we know the true causal effects (the $\ta
 N <- 100
 tau <- .3
 set.seed(12345)
-dat <- data.frame(id=1:N,
-    x1 = rpois(n = N, lambda = 10),
-    x2 = sample(1:6,size=N,replace=TRUE))
+dat <- data.frame(
+  id = 1:N,
+  x1 = rpois(n = N, lambda = 10),
+  x2 = sample(1:6, size = N, replace = TRUE)
+)
 
 dat <- mutate(dat,
-    y0 = .2*x1 - .2 * x1^2  + .2*(x2<2) + runif(n = N,min=-2*sd(x1),max=2*sd(x1)),
-    y0 = round(y0 + abs(min(y0))/max(y0)),
-    y0 = abs(ifelse(x1<3,0,y0)),
-    y1 = round(y0 + tau * sd(y0) + runif(n = N,min=-2*tau*sd(y0),max=.5*sd(y0))),
-    x3 = rnorm(n(),mean=mean(x2),sd=sd(x2)),
-    x4 = rbinom(n(),size=1,prob=mean(x1>10))
+  y0 = .2 * x1 - .2 * x1^2 + .2 * (x2 < 2) + runif(n = N, min = -2 * sd(x1), max = 2 * sd(x1)),
+  y0 = round(y0 + abs(min(y0)) / max(y0)),
+  y0 = abs(ifelse(x1 < 3, 0, y0)),
+  y1 = round(y0 + tau * sd(y0) + runif(n = N, min = -2 * tau * sd(y0), max = .5 * sd(y0))),
+  x3 = rnorm(n(), mean = mean(x2), sd = sd(x2)),
+  x4 = rbinom(n(), size = 1, prob = mean(x1 > 10))
 )
 ## In an experiment we would control Z
 ## dat$Z <- complete_ra(N=N,m=floor(N/2))
-dat$Z <- with(dat, as.numeric( (.4*sd(x1)*x1 + runif(n = N,min=-20,max=0) )>0 ))
+dat$Z <- with(dat, as.numeric((.4 * sd(x1) * x1 + runif(n = N, min = -20, max = 0)) > 0))
 ## table(dat$Z)
 ## boxplot(x1~Z,data=dat)
 ## summary(lm(Z~x1,data=dat))$r.squared
-dat <- mutate(dat,Y=Z*y1 + (1-Z)*y0)
-dat$tau <- with(dat,y1-y0)
-##summary(dat$tau)
-kable(head(dat[,c("id","x1","x2","x3","x4","Z","Y","y1","y0","tau")]))
+dat <- mutate(dat, Y = Z * y1 + (1 - Z) * y0)
+dat$tau <- with(dat, y1 - y0)
+## summary(dat$tau)
+kbl(head(dat[, c("id", "x1", "x2", "x3", "x4", "Z", "Y", "y1", "y0", "tau")]))
 ##  summary(lm(y0~x1,data=dat))$r.squared
 ##  blah <- lm_robust(Y~Z,data=dat); blah$p.value["Z"]
 ##  blah2 <- lm_robust(Y~Z+x1,data=dat); blah2$p.value["Z"]
@@ -131,13 +330,13 @@ kable(head(dat[,c("id","x1","x2","x3","x4","Z","Y","y1","y0","tau")]))
 If we had a dataset, like, say, the number of miles people are willing to travel to get tested by COVID (`Y`) and whether they downloaded a COVID prevention information kit from a local US municipal government website, (`Z`), we could estimate the average causal effect of the COVID info kit like so:
 
 ```{r res1, echo=TRUE}
-lm0 <- lm_robust(Y~Z,data=dat)
+lm0 <- lm_robust(Y ~ Z, data = dat)
 coef(lm0)
 ```
 
 But how should we interpret this? It looks like the kit causes a reduction in
 willingness to travel to be tested. This might be true. But we can immediately
-think of alternative explanations:
+think of **alternative explanations**:
 
  - Maybe people who download information kits differ from people who don't
    choose to download such kits in other ways --- they might be wealthier, more
@@ -154,11 +353,11 @@ So, how might we try to set aside, or engage with, those alternative explanation
 A common approach looks like the following --- the "effect of $Z$ 'controlling for' $x_1$".
 
 ```{r lm1, echo=TRUE}
-lm1 <- lm_robust(Y~Z+x1,data=dat)
+lm1 <- lm_robust(Y ~ Z + x1, data = dat)
 coef(lm1)["Z"]
 ```
 
-Recall that this is the problem:
+Recall that this is the problem --- a $Z \rightarrow Y$ relationship could easily just reflect the $x_1 \rightarrow Z$ and $x_1 \rightarrow Y$ relationships and not the $Z \rightarrow Y$ relationship.
 
 \begin{center}
 \begin{tikzcd}[column sep=large]
@@ -167,41 +366,49 @@ Recall that this is the problem:
 \end{tikzcd}
 \end{center}
 
-What does "controlling for" mean here? How would we know whether we did a good job --- did we "control for $x_1$" **enough**?
+
+Today: Let's talk about what "controlling for" means. And then let's ask "How
+would we know whether we did a good job --- did we "control for $x_1$"
+**enough**?"
+
+What does "controlling for" mean here? How can we explain it? Exercise for the class: Please explain what this means, as far as you can tell, here <https://www.menti.com/amwgborzsv>.
+
+ - How would we know whether we did a good job --- did we "control for $x_1$" **enough**?
+
 
 ## First, recall how linear models control or adjust
 
-Notice that the linear model **does not hold constant** $x_1$. Rather it **removes a linear relationship** -- the coefficient of `r coef(lm1)[["Z"]]` from `lm1` is **the effect of $Z$ after removing the linear relationship between $x_1$ and $Y$ and between $x_1$ and $Z$**.
+Notice that the linear model **does not hold constant** $x_1$. Rather it **removes a linear relationship** -- the coefficient of `r coef(lm1)[["Z"]]` from `lm1` is **the effect of $Z$ after removing the linear relationship between $x_1$ and $Y$ and between $x_1$ and $Z$**. (blue is treated)
 
 ```{r covadj2, echo=FALSE}
-lm_Y_x1 <- lm(Y~x1,data=dat)
-lm_Z_x1 <- lm(Z~x1,data=dat)
+lm_Y_x1 <- lm(Y ~ x1, data = dat)
+lm_Z_x1 <- lm(Z ~ x1, data = dat)
 dat$resid_Y_x1 <- resid(lm_Y_x1)
 dat$resid_Z_x1 <- resid(lm_Z_x1)
-lm_resid_Y_x1 <- lm(resid_Y_x1~x1,data=dat)
-lm_resid_Z_x1 <- lm(resid_Z_x1~x1,data=dat)
-lm1b <- lm(resid_Y_x1 ~ resid_Z_x1,data=dat)
+lm_resid_Y_x1 <- lm(resid_Y_x1 ~ x1, data = dat)
+lm_resid_Z_x1 <- lm(resid_Z_x1 ~ x1, data = dat)
+lm1b <- lm(resid_Y_x1 ~ resid_Z_x1, data = dat)
 ```
 
 ```{r plotresids, echo=FALSE,out.width=".7\\textwidth"}
-par(mfrow=c(2,2),mar=c(2,3,1,0),mgp=c(1.25,.5,0),oma=rep(0,4))
-with(dat,plot(x1,Y,col=c("black","blue")[dat$Z+1],pch=c(1,19)[dat$Z+1]))
+par(mfrow = c(2, 2), mar = c(2, 3, 1, 0), mgp = c(1.25, .5, 0), oma = rep(0, 4))
+with(dat, plot(x1, Y, col = c("black", "blue")[dat$Z + 1], pch = c(1, 19)[dat$Z + 1]))
 abline(lm_Y_x1)
-with(dat,plot(x1,resid_Y_x1,ylab="Y - b*x1 or Y without linear relation with x1",col=c("black","blue")[dat$Z+1],pch=c(1,19)[dat$Z+1]))
+with(dat, plot(x1, resid_Y_x1, ylab = "Y - b*x1 or Y without linear relation with x1", col = c("black", "blue")[dat$Z + 1], pch = c(1, 19)[dat$Z + 1]))
 abline(lm_resid_Y_x1)
 # with(dat,plot(x1,jitter(Z,factor=.1)))
-with(dat,plot(x1,Z,col=c("black","blue")[dat$Z+1],pch=c(1,19)[dat$Z+1]))
+with(dat, plot(x1, Z, col = c("black", "blue")[dat$Z + 1], pch = c(1, 19)[dat$Z + 1]))
 abline(lm_Z_x1)
-with(dat,plot(x1,resid_Z_x1,ylab="Y - b*x1 or Y without linear relation with x1",col=c("black","blue")[dat$Z+1],pch=c(1,19)[dat$Z+1]))
+with(dat, plot(x1, resid_Z_x1, ylab = "Z - b*x1 or Z without linear relation with x1", col = c("black", "blue")[dat$Z + 1], pch = c(1, 19)[dat$Z + 1]))
 abline(lm_resid_Z_x1)
 ```
 
 ## Recall how linear models control or adjust
 
-Notice that the linear model **does not hold constant** $x_1$. Rather it **removes a linear relationship** -- the coefficient of `r coef(lm1)[["Z"]]` from `lm1` is **the effect of $Z$ after removing the linear relationship between $x_1$ and $Y$ and between $x_1$ and $Z$**.
+Notice that the linear model **does not hold constant** $x_1$. Rather it **removes a linear relationship** -- the coefficient of `r coef(lm1)[["Z"]]` from `lm1` is **the effect of $Z$ after removing the linear relationship between $x_1$ and $Y$ and between $x_1$ and $Z$**. (blue=treated, black=control).
 
 ```{r echo=FALSE}
-with(dat,plot(resid_Z_x1,resid_Y_x1,,col=c("black","blue")[dat$Z+1],pch=c(1,19)[dat$Z+1]))
+with(dat, plot(resid_Z_x1, resid_Y_x1, , col = c("black", "blue")[dat$Z + 1], pch = c(1, 19)[dat$Z + 1]))
 abline(lm1b)
 ```
 
@@ -210,13 +417,13 @@ abline(lm1b)
 How might this plot help us make decisions about the adequacy of our linear model adjustment strategy? Signs of extrapolation? Non-linearity?
 
 ```{r plot2, out.width=".8\\textwidth"}
-par(mfrow=c(1,1))
+par(mfrow = c(1, 1))
 dat$ZF <- factor(dat$Z)
-with(dat,plot(x1,jitter(Y),col=c("black","blue")[dat$Z+1],pch=c(1,19)[dat$Z+1]))
-preddat <- expand.grid(Z=c(0,1),x1=sort(unique(dat$x1)))
-preddat$fit <- predict(lm1,newdata=preddat)
-with(preddat[preddat$Z==0,],lines(x1,fit))
-with(preddat[preddat$Z==1,],lines(x1,fit,col="blue",lwd=2))
+with(dat, plot(x1, jitter(Y), col = c("black", "blue")[dat$Z + 1], pch = c(1, 19)[dat$Z + 1]))
+preddat <- expand.grid(Z = c(0, 1), x1 = sort(unique(dat$x1)))
+preddat$fit <- predict(lm1, newdata = preddat)
+with(preddat[preddat$Z == 0, ], lines(x1, fit))
+with(preddat[preddat$Z == 1, ], lines(x1, fit, col = "blue", lwd = 2))
 ```
 
 ##  What about improving the model?
@@ -224,19 +431,19 @@ with(preddat[preddat$Z==1,],lines(x1,fit,col="blue",lwd=2))
 Does this help?
 
 ```{r echo=TRUE}
-lm2 <- lm(Y~Z+x1 + I(x1^2), data=dat)
+lm2 <- lm(Y ~ Z + x1 + I(x1^2), data = dat)
 coef(lm2)[["Z"]]
 ```
 
 ```{r lm1andlm2}
-par(mfrow=c(1,1))
+par(mfrow = c(1, 1))
 dat$ZF <- factor(dat$Z)
-with(dat,plot(x1,jitter(Y),col=c("black","blue")[dat$Z+1],pch=c(1,19)[dat$Z+1]))
-with(preddat[preddat$Z==0,],lines(x1,fit))
-with(preddat[preddat$Z==1,],lines(x1,fit,col="blue",lwd=2))
-preddat$fit2 <- predict(lm2,newdata=preddat)
-with(preddat[preddat$Z==0,],lines(x1,fit2))
-with(preddat[preddat$Z==1,],lines(x1,fit2,col="blue",lwd=2))
+with(dat, plot(x1, jitter(Y), col = c("black", "blue")[dat$Z + 1], pch = c(1, 19)[dat$Z + 1]))
+with(preddat[preddat$Z == 0, ], lines(x1, fit))
+with(preddat[preddat$Z == 1, ], lines(x1, fit, col = "blue", lwd = 2))
+preddat$fit2 <- predict(lm2, newdata = preddat)
+with(preddat[preddat$Z == 0, ], lines(x1, fit2))
+with(preddat[preddat$Z == 1, ], lines(x1, fit2, col = "blue", lwd = 2))
 ```
 
 ##  What about when we control for more than one variable?
@@ -245,17 +452,17 @@ with(preddat[preddat$Z==1,],lines(x1,fit2,col="blue",lwd=2))
 Is this better? Or worse?
 
 ```{r lm3, echo=TRUE}
-lm3 <- lm(Y~Z+x1+x2+x3+x4,data=dat)
+lm3 <- lm(Y ~ Z + x1 + x2 + x3 + x4, data = dat)
 coef(lm3)[["Z"]]
 ```
 
-We could still residualize:
+We could still residualize (removing the multidimensional linear relationship):
 
 
 ```{r lm3res, echo=TRUE}
-dat$resid_Y_xs <- resid(lm(Y~x1+x2+x3+x4,data=dat))
-dat$resid_Z_xs <- resid(lm(Z~x1+x2+x3+x4,data=dat))
-lm3_resid <- lm(resid_Y_xs ~ resid_Z_xs,data=dat)
+dat$resid_Y_xs <- resid(lm(Y ~ x1 + x2 + x3 + x4, data = dat))
+dat$resid_Z_xs <- resid(lm(Z ~ x1 + x2 + x3 + x4, data = dat))
+lm3_resid <- lm(resid_Y_xs ~ resid_Z_xs, data = dat)
 coef(lm3_resid)[[2]]
 ```
 ##  What about when we control for more than one variable?
@@ -263,9 +470,43 @@ coef(lm3_resid)[[2]]
 Is this better? Or worse?
 
 ```{r plotres2, echo=TRUE}
-with(dat,plot(resid_Z_xs,resid_Y_xs,,col=c("black","blue")[dat$Z+1],pch=c(1,19)[dat$Z+1]))
+with(dat, plot(resid_Z_xs, resid_Y_xs, col = c("black", "blue")[dat$Z + 1], pch = c(1, 19)[dat$Z + 1]))
 abline(lm3_resid)
 ```
+
+##  What about when we control for more than one variable?
+
+Does adding variables help? (Here we can see influential points using the Cook's
+D statistic. See the code for the different specifications.)
+
+```{r plotcooks, eval=FALSE, echo=FALSE, results=FALSE, outwidth=".8\\textwidth"}
+par(mfrow = c(2, 2), pty = "m", mgp = c(1.25, .5, 0), mar = c(3, 3, 2, 0), oma = c(0, 0, 0, 0))
+plot(lm3, which = c(1, 3, 5, 6), col = c("black", "blue")[dat$Z + 1], , pch = c(1, 19)[dat$Z + 1])
+```
+
+```{r cooksplots, warning=FALSE}
+library(olsrr)
+library(splines)
+library(gridExtra)
+v1 <- ols_plot_cooksd_bar(lm(Y ~ Z + x1, data = dat), print_plot = FALSE)
+v2 <- ols_plot_cooksd_bar(lm(Y ~ Z + x1 + x2, data = dat), print_plot = FALSE)
+v3 <- ols_plot_cooksd_bar(lm(Y ~ Z + x1 + x2 + x3, data = dat), print_plot = FALSE)
+v4 <- ols_plot_cooksd_bar(lm(Y ~ Z + x1 + x2 + x3 + x4, data = dat), print_plot = FALSE)
+v5 <- ols_plot_cooksd_bar(lm(Y ~ Z + poly(x1, 3) + poly(x2, 2) + poly(x3, 4) + x4, data = dat), print_plot = FALSE)
+v6 <- ols_plot_cooksd_bar(lm(Y ~ Z + I(cut(x1, 3)) * I(cut(x2, 3)) * I(cut(x3, 3)) * x4, data = dat), print_plot = FALSE)
+v7 <- ols_plot_cooksd_bar(lm(Y ~ Z * x1 * x2 * x3 * x4, data = dat), print_plot = FALSE)
+v8 <- ols_plot_cooksd_bar(lm(Y ~ Z + ns(x1, 3) + ns(x2, 3) * ns(x3, 3) * x4, data = dat), print_plot = FALSE)
+
+plots <- lapply(1:8, function(i) {
+  newplot <- get(paste0("v", i))$plot
+  return(newplot + ggtitle(paste0("v", i)) + theme(legend.position = "none"))
+})
+
+cooksd_plot <- marrangeGrob(plots, nrow = 2, ncol = 4)
+ggsave("cooksd.pdf", cooksd_plot, width = 12, height = 6)
+```
+
+\includegraphics[width=.9\linewidth]{cooksd.pdf}
 
 ## How to choose? Maybe a specification curve?
 
@@ -273,31 +514,47 @@ How many choices do we have? Should we try as many choices as possible?^[see <ht
 
 ```{r specr, echo=TRUE}
 library(specr)
+## see https://cran.r-project.org/web/packages/specr/vignettes/getting-started.html
 
 ## possible covariates:
 library(splines)
 
-basecovs <- c("x1","x2","x3","x4")
-mf <-model.frame(Y~Z+x1*x2*x3*x4+x1*poly(x1,3) + x2*poly(x2,2) + x3*poly(x3,4) + ns(x1,3) + ns(x2,3) + ns(x3,3) + 
-    I(cut(x1,3)) * I(cut(x2,3)) * I(cut(x3,3)),data=dat)
-mm <- model.matrix(mf,data=dat)
-thedat <- data.frame(mm[,-1])
+basecovs <- c("x1", "x2", "x3", "x4")
+mf <- model.frame(Y ~ Z + x1 * x2 * x3 * x4 + x1 * poly(x1, 3) + x2 * poly(x2, 2) + x3 * poly(x3, 4) + ns(x1, 3) + ns(x2, 3) + ns(x3, 3) +
+  I(cut(x1, 3)) * I(cut(x2, 3)) * I(cut(x3, 3)), data = dat)
+mm <- model.matrix(mf, data = dat)
+thedat <- data.frame(mm[, -1])
 thedat$Y <- dat$Y
-results <- run_specs(df = thedat,
-                     y = c("Y"),
-                     x = c("Z"),
-                     model = c("lm"),
-                     controls = grep("^x|^poly|^I|^ns",names(thedat),value=TRUE))
 
-summary(results$estimate)
+specr_setup_obj <- specr::setup(
+  data = thedat,
+  y = c("Y"),
+  x = c("Z"),
+  model = c("lm"),
+  # controls = grep("^x|^poly|^I|^ns",names(thedat),value=TRUE))
+  controls = c(
+    "x1", "x2", "x3", "x4",
+    "poly(x1,3)",
+    "poly(x1,2)",
+    "poly(x2,2)",
+    "poly(x3,2)",
+    "poly(x3,3)",
+    "poly(x3,4)"
+  )
+)
+summary(specr_setup_obj)
+results <- specr(specr_setup_obj)
+summary(results)
+summary(results$data$estimate)
 ```
 
 ## How to choose? A specification curve.
 
 How many choices do we have? Should we try as many choices as possible?^[see <https://masurp.github.io/specr/index.html> for more citations]
 
-```{r plotspecs}
-plot_specs(results,choices=c("controls"),ci=FALSE)
+```{r plotspecs, out.width=".9\\textwidth",eval=FALSE}
+plot(results, choices = c("controls"), ci = FALSE, rel_heights = c(1, 4), ribbon = TRUE)
+# plot_curve(results)
 ```
 
 
@@ -306,33 +563,34 @@ plot_specs(results,choices=c("controls"),ci=FALSE)
 How many choices do we have? Should we try as many choices as possible?
 
 ```{r exploremanycuts, echo=TRUE, results="markup", cache=TRUE}
-lmadjfn<-function(){
-    covs <- c("x1", "x2","x3","x4")
-    ncovs <- sample(1:length(covs),1)
-    somecovs <- sample(covs,size=ncovs)
-    ncuts <- round(runif(ncovs,min=1,max=8))
-    theterms <- ifelse(ncuts==1,somecovs,
-        paste("cut(",somecovs,",",ncuts,")",sep=""))
-    thefmla <- reformulate(c("Z",theterms),response="Y")
-    thelm <- lm(thefmla,data=dat)
-    theate <- coef(thelm)[["Z"]]
-    return(theate)
+lmadjfn <- function() {
+  covs <- c("x1", "x2", "x3", "x4")
+  ncovs <- sample(1:length(covs), 1)
+  somecovs <- sample(covs, size = ncovs)
+  ncuts <- round(runif(ncovs, min = 1, max = 8))
+  theterms <- ifelse(ncuts == 1, somecovs,
+    paste("cut(", somecovs, ",", ncuts, ")", sep = "")
+  )
+  thefmla <- reformulate(c("Z", theterms), response = "Y")
+  thelm <- lm(thefmla, data = dat)
+  theate <- coef(thelm)[["Z"]]
+  return(theate)
 }
 
 set.seed(12345)
-res <- replicate(10000,lmadjfn())
+res <- replicate(10000, lmadjfn())
 summary(res)
 ```
 
 ## How to choose? Choosing different break-points.
 
-How many choices do we have? Should we try as many choices as possible?
+How many choices do we have? Should we try as many choices as possible? Here
+are the estimates of $Z \rightarrow Y$ from 10,000 different ways to "control
+for" $x_1,x_2,x_3,x_4$.
 
 ```{r plotres}
-
 plot(density(res))
 rug(res)
-
 ```
 
 
@@ -342,33 +600,38 @@ rug(res)
 Ok. What about simplifying? When a person wants to know whether we have "controlled for", say, $x_4$, I suspect they are really asking for this:
 
 ```{r strat1, echo=TRUE}
-lm_x4_0 <- lm(Y~Z,data=dat,subset=x4==0)
-lm_x4_1 <- lm(Y~Z,data=dat,subset=x4==1)
+lm_x4_0 <- lm(Y ~ Z, data = dat, subset = x4 == 0)
+lm_x4_1 <- lm(Y ~ Z, data = dat, subset = x4 == 1)
 coef(lm_x4_1)[["Z"]]
 coef(lm_x4_0)[["Z"]]
 ```
 
 In this case we can say that we have "held constant" $x_4$. But what is the **overall estimate** in this case?
 
-## Detail: How to estimate an overall ATE while holding constant?
+## Estimate an overall ATE with stratification {.allowframebreaks}
 
 We know how to analyze a block-randomized (or strata-randomized) experiment
 (see [@gerbergreen2012]): each block is a mini-experiment. We *estimate the ATE
-within each block* and *combine by weighting each block specific estimate*. The block-size weight
-produces an unbiased estimator in randomized experiments. The precision weight
-tends to produce smaller standard errors and confidence intervals.
+within each block* and *combine by weighting each block specific estimate*.
+
+The block-size weight produces an unbiased estimator in randomized experiments
+--- in an observational study we don't know about the bias since we don't
+exactly know how to repeat the study.  The precision weight (aka the "fixed
+effects" weights) tends to produce smaller standard errors and confidence
+intervals but is biased in randomized experiments.
 
 ```{r weighting, echo=TRUE}
 dat_sets <- dat %>%
   group_by(x4) %>%
-  summarize(nb=n(),
+  summarize(
+    nb = n(),
     ateb = mean(Y[Z == 1]) - mean(Y[Z == 0]),
     prob_trt = mean(Z),
     nbwt = n() / nrow(dat),
     prec_wt = nbwt * prob_trt * (1 - prob_trt),
   )
 
-dat_sets$prec_wt_norm <- with(dat_sets,prec_wt/sum(prec_wt))
+dat_sets$prec_wt_norm <- with(dat_sets, prec_wt / sum(prec_wt))
 
 print(dat_sets)
 
@@ -376,7 +639,7 @@ est_ate1 <- with(dat_sets, sum(ateb * nbwt))
 est_ate2 <- with(dat_sets, sum(ateb * prec_wt / (sum(prec_wt))))
 ```
 
-## Detail: How to estimate an overall ATE while holding constant?
+## Estimate an overall ATE with stratification? {.allowframebreaks}
 
 Block-  or strata-level weights can also be represented at the individual level --- and this allows us to use linear models (least squares) to produce block-weighted estimates of the overall average causal effect after "holding constant" $x_4$.
 
@@ -404,28 +667,35 @@ est_ate2a <- lm_robust(Y ~ Z + x4, data = dat)
 est_ate2b <- lm_robust(Y ~ Z, fixed_effects = ~x4, data = dat)
 est_ate2c <- lm_robust(Y ~ Z, weights = prec_wt, data = dat)
 
-c(est_ate1,coef(est_ate1a)[["Z"]],coef(est_ate1b)[["Z"]],coef(est_ate1c)[["Z"]])
-c(est_ate2,coef(est_ate2a)[["Z"]],coef(est_ate2b)[["Z"]],coef(est_ate2c)[["Z"]])
+c(est_ate1, coef(est_ate1a)[["Z"]], coef(est_ate1b)[["Z"]], coef(est_ate1c)[["Z"]])
+c(est_ate2, coef(est_ate2a)[["Z"]], coef(est_ate2b)[["Z"]], coef(est_ate2c)[["Z"]])
 ```
 
-## Finally, what about variable selection?
+## Finally, what about variable selection? {.allowframebreaks}
 
 We could use a penalized model (like the lasso or adaptive lasso) or some other approach (like random forests) to **automatically choose** a specification.
 
-```{r}
+```{r glmnet1, echo=TRUE}
+## Here using the mm data with polynomials
 library(glmnet)
-
-cv1 <- cv.glmnet(mm[,3:15],y=dat$Y)
-cv1
-plot(cv1$glmnet.fit,xvar="lambda")
-abline(v=.743)
-sol1 <- coef(cv1$glmnet.fit,s=.743)
-sol1
-
-
+cv1 <- cv.glmnet(mm[, 3:15], y = dat$Y)
 ```
 
-Of course, then we have to argue that our **tuning parameter choice** made sense. And, again, we have no standard for knowing when we have done **enough**.
+```{r cvplot, out.width=".6\\textwidth"}
+coefs_lasso <- coef(cv1$glmnet.fit)
+coefnms <- row.names(coefs_lasso)
+plot(cv1$glmnet.fit, xvar = "lambda")
+abline(v = .743)
+text(x = rep(-4, 13), y = coefs_lasso[-1, 65], labels = coefnms)
+```
+
+```{r}
+sol1 <- coef(cv1$glmnet.fit, s = .743)
+sol1
+```
+
+ - Of course, then we have to argue that our **tuning parameter choice** made sense.
+ - And, again, we have no standard for knowing when we have done **enough**.
 
 ## Summary of the Day
 
@@ -441,9 +711,10 @@ Finally, we don't have a **standard** that we can use to craft an argument that 
 
 Notice also: In an observational study, we don't know how to assess bias without making some kinds of claims about the design or model of the outcome.
 
-## Next Time
+\medskip
 
-Using instrumental variables to side-step the problems of "controlling for" in linear regression.
+All is not lost: stratification based approaches will come to the rescue
+tomorrow!
 
 ## References
 
