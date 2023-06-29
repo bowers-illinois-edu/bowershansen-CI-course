@@ -346,6 +346,7 @@ kbl(head(dat[, c("id", "x1", "x2", "x3", "x4", "Z", "Y", "y1", "y0", "tau")]))
 ##  blah <- lm_robust(Y~Z,data=dat); blah$p.value["Z"]
 ##  blah2 <- lm_robust(Y~Z+x1,data=dat); blah2$p.value["Z"]
 ##  with(dat,scatter.smooth(x1,Y,col=Z+1))
+save(dat,file=here::here("day7_dat.rda"))
 ```
 
 ## What is the effect of Z on Y?

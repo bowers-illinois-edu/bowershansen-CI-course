@@ -134,33 +134,58 @@ thousands? Are most results like this? Or was this cherry picked?
 2. how many
 $p$-values were looked at before reporting this one with $p < .05$?
 
-\small{(Recall
+\small{Recall
 that if we reject $H_0$ when $p < .05$, we are saying that it is ok for 5% of
 tests to mislead us --- to have $p < .05$ when there is no effect (when $H_0$
-is true).) So, a $p < .05$ after one test means that either have a rare testing
-error (a false positive result) or that it truly would be very rare to see the
-observed result under the null and that the risk of the false positive result
-is less than or equal to .05.  But a $p <  .05$ after 100 tests is virtually
-certain to occur (with false positive prob of .99) when $H_0$ is true so we
-should not reject the null even if the $p$ is small. (See
+is true). So, a $p < .05$ after one test means that either have a rare testing
+error (a false positive result) or that $H_0$ is false.  But an unadjusted $p <  .05$ after 100 tests is virtually
+certain to occur (with prob of .99) when $H_0$ is true: $p < .05$ is a signal of a false positive error not of a substantive signal about $H_0$. So we
+should not reject the null even if the $p < .05$ in this case. (See
 [EGAP Guide on Multiple Comparisons](https://egap.org/resource/10-things-to-know-about-multiple-comparisons/) ).
 }
 
 ## Regression is not research design
 
-Say we write the relationship between an outcome $y$, a focal explanatory
+Say we want to describe the relationship between an outcome $y$, a focal explanatory
 variable, $z$ and a potential confounder $x$ as a linear and additive function:
-$y_i = \beta_0 + \beta_1 z_i + \beta_2 x_i$ 
+$y_i = \beta_0 + \beta_1 z_i + \beta_2 x_i$. What can we say about this?
+
+1. "The math implies that the difference in $y$ between any two values of $z$ that differ by 1 must be the same regardless of which two values and regardless of the values that we plug-in for $x$." (Correct)
+2. "The math says that relationship between differences in $z$ and differences in $y$ ($\frac{dy}{dz}$), is the same for all values of $z$ and $x$. This is a constant relation." (Correct)
+
+Say we find the plane that best fits the data
+
+```{r}
+load(here::here("day7_dat.rda"))
+lm_Y_x1 <- lm(Y ~ x1, data = dat)
+lm_Z_x1 <- lm(Z ~ x1, data = dat)
+dat$resid_Y_x1 <- resid(lm_Y_x1)
+dat$resid_Z_x1 <- resid(lm_Z_x1)
+g1 <- ggplot(dat,aes(x=resid_Z_x1,y=resid_Y_x1))+geom_point()+geom_smooth(method="lm",se=FALSE)
+print(g1)
+```
 
 
 ```{r}
-library(plot3D)
+library(rgl)
+lm2 <- lm(Y~Z+x1,data=dat)
+with(dat,plot3d(x=x1,z=Z,y=Y,type="s"))
+planes3d(b=coef(lm2)[["x1"]],a=coef(lm2)[["Z"]],c=1,d=coef(lm2)[["(Intercept)"]],alpha=.5)
+
+uniq_x1 <- sort(unique(dat$x1))
+pdat <- expand.grid(x1=uniq_x1,Z=c(0,1))
+pdat$fit <- predict(lm2,newdata=pdat)
+pdat_mat <- matrix(pdat$fit,ncol=2,nrow=length(uniq_x1))
+surface3d(x=uniq_x1,y=c(0,1),z=pdat_mat)
+
+region <- expand.grid(x1=sort(unique(dat$x1)),Z=c(0,1))
+
 n <- 20
 uniq_x <- seq(0,1,length=n)
-uniq_z <- seq(0,100,length=n)
+uniq_z <- seq(0,1,length=n)
 region <- expand.grid(x = uniq_x, z = uniq_z)
 
-y <- matrix(-(region$x + region$z), n, n)
+y <- matrix((region$x + region$z), n, n)
 
 surface3d(x=uniq_x, y=uniq_z, z=y, back = 'line', front = 'line', col = 'red', lwd = 1.5, alpha = 0.4)
 axes3d()
