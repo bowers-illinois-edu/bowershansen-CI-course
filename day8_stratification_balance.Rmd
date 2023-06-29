@@ -116,7 +116,7 @@ library(optmatch)
 # Recap
 
 ## Regression is not research design {.shrink}
- 
+
 What does this mean?
 
 Research design occurs **before** estimation and testing. You can try out lots
@@ -127,7 +127,7 @@ you are looking for a good design and (2) standards for good design are not the
 same as the standards for good estimators and tests.
 
 When you present the result of a regression model after searching for a
-specification, readers wonder: 
+specification, readers wonder:
 
 1. is this just the best result out of
 thousands? Are most results like this? Or was this cherry picked?
@@ -150,43 +150,42 @@ Say we want to describe the relationship between an outcome $y$, a focal explana
 variable, $z$ and a potential confounder $x$ as a linear and additive function:
 $y_i = \beta_0 + \beta_1 z_i + \beta_2 x_i$. What can we say about this?
 
-1. "The math implies that the difference in $y$ between any two values of $z$ that differ by 1 must be the same regardless of which two values and regardless of the values that we plug-in for $x$." (Correct)
-2. "The math says that relationship between differences in $z$ and differences in $y$ ($\frac{dy}{dz}$), is the same for all values of $z$ and $x$. This is a constant relation." (Correct)
+1. "The **math implies** that the difference in $y$ between any two values of $z$ that differ by 1 must be the same regardless of which two values and regardless of the values that we plug-in for $x$." (Correct)
+2. "The **math says** that relationship between differences in $z$ and differences in $y$ ($\frac{dy}{dz}$), is the same for all values of $z$ and $x$. This is a constant relation." (Correct)
 
-Say we find the plane that best fits the data
+## Regression is not research design
 
-```{r}
+
+Say we fit that mathematical model, $y_i = \beta_0 + \beta_1 z_i + \beta_2 x_i$, to data. What can we say?
+
+```{r, echo=FALSE, out.width=".5\\textwidth"}
 load(here::here("day7_dat.rda"))
 lm_Y_x1 <- lm(Y ~ x1, data = dat)
 lm_Z_x1 <- lm(Z ~ x1, data = dat)
 dat$resid_Y_x1 <- resid(lm_Y_x1)
 dat$resid_Z_x1 <- resid(lm_Z_x1)
-g1 <- ggplot(dat,aes(x=resid_Z_x1,y=resid_Y_x1))+geom_point()+geom_smooth(method="lm",se=FALSE)
+lm2 <- lm(Y~Z+x1,data=dat)
+coef(lm2)
+```
+
+Here is a plot of Y-without-linear-x1 on X-without-linear-x1 with a slope of `r coef(lm2)[["Z"]]`.
+
+```{r, echo=FALSE, out.width=".5\\textwidth",warning=FALSE}
+g1 <- ggplot(dat,aes(x=resid_Z_x1,y=resid_Y_x1,color=x1))+geom_point()+geom_smooth(method="lm",se=FALSE)
 print(g1)
 ```
+
+1. "Are we comparing $Y$ values with different $Z$ values but the same $x1$ value? Does our data fitting do the same thing as actually holding constant $x1$?" (No.)
+2. "Does fitting our mathematical model to data do the same thing as physically holding constant?" (No.)
 
 
 ```{r}
 library(rgl)
-lm2 <- lm(Y~Z+x1,data=dat)
-with(dat,plot3d(x=x1,z=Z,y=Y,type="s"))
-planes3d(b=coef(lm2)[["x1"]],a=coef(lm2)[["Z"]],c=1,d=coef(lm2)[["(Intercept)"]],alpha=.5)
-
-uniq_x1 <- sort(unique(dat$x1))
-pdat <- expand.grid(x1=uniq_x1,Z=c(0,1))
-pdat$fit <- predict(lm2,newdata=pdat)
-pdat_mat <- matrix(pdat$fit,ncol=2,nrow=length(uniq_x1))
-surface3d(x=uniq_x1,y=c(0,1),z=pdat_mat)
-
-region <- expand.grid(x1=sort(unique(dat$x1)),Z=c(0,1))
-
 n <- 20
 uniq_x <- seq(0,1,length=n)
 uniq_z <- seq(0,1,length=n)
 region <- expand.grid(x = uniq_x, z = uniq_z)
-
 y <- matrix((region$x + region$z), n, n)
-
 surface3d(x=uniq_x, y=uniq_z, z=y, back = 'line', front = 'line', col = 'red', lwd = 1.5, alpha = 0.4)
 axes3d()
 
