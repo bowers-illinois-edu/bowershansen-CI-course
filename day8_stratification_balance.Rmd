@@ -175,11 +175,31 @@ g1 <- ggplot(dat,aes(x=resid_Z_x1,y=resid_Y_x1,color=x1))+geom_point()+geom_smoo
 print(g1)
 ```
 
+
+## Regression is not research design {.shrink}
+
+```{r, echo=FALSE, out.width=".8\\textwidth",warning=FALSE}
+g2 <- ggplot(dat,aes(x=x1,y=Y,color=factor(Z)))+geom_point()+
+	geom_abline(intercept=coef(lm2)[["(Intercept)"]],slope=coef(lm2)[["x1"]])+
+	geom_abline(intercept=(coef(lm2)[["(Intercept)"]]+coef(lm2)[["Z"]]),
+		    slope=coef(lm2)[["x1"]],color="turquoise")
+
+##print(g2)
+library(cowplot)
+plot_grid(g1,g2)
+```
+
+
 1. "Are we comparing $Y$ values with different $Z$ values but the same $x1$ value? Does our data fitting do the same thing as actually holding constant $x1$?" (No.)
 2. "Does fitting our mathematical model to data do the same thing as physically holding constant?" (No.)
+3. "Do predictions of $Y$ from our model for two values of $Z$ that are 1 apart differ by the same amount regardless of (a) which two values they are and (b) any value that we put in for $x$?" (Yes. This is because we decided to describe all of the relationships with a line.)
 
 
-```{r}
+## A 3D surface
+
+Notice that the lines have the same slope as you move across the plane.
+
+```{r, fig.keep="last"}
 library(rgl)
 n <- 20
 uniq_x <- seq(0,1,length=n)
@@ -188,8 +208,29 @@ region <- expand.grid(x = uniq_x, z = uniq_z)
 y <- matrix((region$x + region$z), n, n)
 surface3d(x=uniq_x, y=uniq_z, z=y, back = 'line', front = 'line', col = 'red', lwd = 1.5, alpha = 0.4)
 axes3d()
-
 ```
+
+## Recap summary:
+
+- Correct interpretation of mathematical linear models may involve the word
+  "constant" (after all, lines have constant slope, planes have constant slopes
+  (one slope per dimension)).
+- Mathematical linear models fit to data are not research designs. We learn
+  which linear model fits the data best (where "best" can be defined in least
+  squares ways for example), but we cannot learn whether confounding is linear
+  from fitting such a model.
+- Linear models estimate average treatment effects well (since OLS is a
+  mean-difference calculator) and friendly software designers provide tests of
+  the weak null of no average effects by default (that are valid given
+  assumptions about standard errors and CLTs).
+- Linear models are not research designs and should not be used as such.
+- Using linear models for adjustment might make sense if you are not worried
+  about and/or have investigated: extrapolation, interpolation, functional
+  form, influential points, and you have pre-specified your specification to
+  avoid multiple testing problems and/or maybe generate a specification curve
+  (of the millions of ways to specify the **adjustment part** of the linear
+  model).
+
 
 
 # How to assess the randomization process in an experiment (to teach us how to assess research designs in observational studies).
