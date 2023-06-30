@@ -1,0 +1,174 @@
+
+# But first, review after the weekend:
+
+## Review of Instrumental Variables
+
+Say you think you have an instrument: "rainfall", "economic liberalization as
+a result of NAFTA", "a housing/school lottery". You then need to convince
+yourself about:
+
+ - SUTVA
+ - "As if randomized"/Ignorability
+ - That the instrument detectibly changes the dose / The instrument is not
+   weak.
+ - That the instrument influences the outcome **only** via the dose
+   (Excludable)
+ - (for *estimation* of CACE/LATE) That there are no defiers / the instrument
+   changes the dose in one direction and the dose changes the outcome in one
+   direction.
+
+## Review of randomization assessment in a randomized experiment
+
+How, in principle, might one do this? Notice that a wide variety of "imbalance" is consistent with a well randomized experiment:
+
+```{r bal1, echo=TRUE}
+library(MASS)
+library(randomizr)
+N <- 100
+set.seed(1235)
+xmat <- mvrnorm(n=N,mu=rep(0,N/2),Sigma=diag(N/2))
+summary(as.vector(cor(xmat)))
+dat <- data.frame(xmat)
+dat$Z <- complete_ra(N=100,m=50)
+xbFake <- balanceTest(Z~.,data=dat)
+xbFake$overall
+xbFake_dat <- as.data.frame(xbFake$results)
+xbFake_dat$varnm <- row.names(xbFake_dat)
+xbFake_dat$varnmN <- 1:nrow(xbFake_dat)
+names(xbFake_dat) <- make.names(names(xbFake_dat))
+names(xbFake_dat)
+
+```
+
+## Review of randomization assessment in a randomized experiment
+
+How, in principle, might one do this? Notice that a wide variety of "imbalance" is consistent with a well randomized experiment: (Line at 0=expected difference under randomization, lines are $\pm$ 2 sds of the randomization distribution of the null hypothesis of no difference.
+
+```{r bal2, echo=FALSE, out.width=".7\\textwidth"}
+g <- ggplot(data=xbFake_dat,aes(x=pooled.sd...,y=varnmN))+
+    geom_point()+
+    geom_segment(aes(x=-2*pooled.sd...,xend=2*pooled.sd...,y=varnmN,yend=varnmN)) +
+    geom_vline(xintercept=0) +
+xlab(label="Standardized Mean Difference") +
+ylab(label="Covariate")
+
+print(g)
+```
+
+
+
+## Review of linear model "control for"
+
+Did the Metrocable intervention decrease
+violence in those neighborhoods? We have Homicides per 1000 people in 2008 (`HomRate08`) as a function of Metrocable.
+
+```{r echo=FALSE, cache=TRUE}
+load(url("http://jakebowers.org/Data/meddat.rda"))
+meddat <- mutate(meddat,
+  HomRate03 = (HomCount2003 / Pop2003) * 1000,
+  HomRate08 = (HomCount2008 / Pop2008) * 1000
+)
+row.names(meddat) <- meddat$nh
+```
+
+```{r lmraw, echo=TRUE}
+lmRaw <- lm(HomRate08 ~ nhTrt, data = meddat)
+coef(lmRaw)[["nhTrt"]]
+```
+
+What do we need to believe or know in order to imagine that we have done a good job adjusting for Proportion with more than HS Education below? (concerns about extrapolation, interpolation, linearity, influential points, parallel slopes, biased estimation of the average causal effect)
+
+```{r lmadj1, echo=TRUE}
+lmAdj1 <- lm(HomRate08 ~ nhTrt + nhAboveHS, data = meddat)
+coef(lmAdj1)["nhTrt"]
+```
+
+What about when we try to adjust for more than one variable? (all of the other questions+the curse of
+dimensionality)
+
+```{r lmadj2, echo=TRUE}
+lmAdj2 <- lm(HomRate08 ~ nhTrt + nhAboveHS + nhRent, data = meddat)
+coef(lmAdj2)["nhTrt"]
+```
+
+## The Problem of Using  the Linear Model for  Adjustment
+
+ - *Problem of Interepretability:* "Controlling for" is  "removing (additive) linear relationships" it is  not "holding constant"
+ - *Problem of Diagnosis and Assessment:* What is the  standard against which we can compare a given linear covariance adjustment specification?
+ - *Problem of extrapolation and interpolation:* Often known as "common support" plus "functional form dependence".
+ - *Problems of overly influential points and curse of  dimensionality*: As dimensions increase, odds of influential  point increase (ex. bell curve in one dimension, one very influential point in 2 dimensions); also real limits on number of covariates (roughly $\sqrt{n}$ for OLS).
+ - *Problems of  bias and assessing bias*:
+
+\begin{equation}
+Y_i = \beta_0 + \beta_1 Z_i + e_i
+\end{equation}
+
+This is a common practice because, we know that the formula to estimate $\beta_1$ in equation \ref{eq:olsbiv} is the same as the difference of means in $Y$ between treatment and control groups:
+
+\begin{equation}
+\hat{\beta}_1 = \overline{Y|Z=1} - \overline{Y|Z=0} = \frac{cov(Y,Z)}{var(Z)}. \label{eq:olsbiv}
+\end{equation}
+
+\begin{equation}
+Y_i = \beta_0 + \beta_1 Z_i + \beta_2 X_i + e_i
+\end{equation}
+
+What is $\beta_1$ in this case? We know the matrix representation here $(\bX^{T}\bX)^{-1}\bX^{T}\by$, but here is the scalar formula for this particular case in \ref{eq:olsbiv}:
+
+\begin{equation}
+\hat{\beta}_1 = \frac{\var(X)\cov(Z,Y) - \cov(X,Z)\cov(X,Y)}{\var(Z)\var(X) - \cov(Z,X)^2}
+\end{equation}
+
+## The Problem of Using  the Linear Model for  Adjustment
+
+ - Problems of  bias:
+
+\begin{equation}
+Y_i = \beta_0 + \beta_1 Z_i + e_i (\#eq:olsbiv)
+\end{equation}
+
+This is a common practice because, we know that the formula to estimate $\beta_1$ in equation \@ref(eq:olsbiv) is the same as the difference of means in $Y$ between treatment and control groups:
+
+\begin{equation}
+\hat{\beta}_1 = \overline{Y|Z=1} - \overline{Y|Z=0} = \frac{cov(Y,Z)}{var(Z)}.
+\end{equation}
+
+\begin{equation}
+Y_i = \beta_0 + \beta_1 Z_i + \beta_2 X_i + e_i
+\end{equation}
+
+What is $\beta_1$ in this case? We know the matrix representation here $(\bX^{T}\bX)^{-1}\bX^{T}\by$, but here is the scalar formula for this particular case in \@ref{eq:olsbiv}:
+
+\begin{equation}
+\hat{\beta}_1 = \frac{\var(X)\cov(Z,Y) - \cov(X,Z)\cov(X,Y)}{\var(Z)\var(X) - \cov(Z,X)^2}
+\end{equation}
+
+
+
+# Matching on one variable to create strata
+
+## Can we improve stratified adjustment?
+
+Rather than two strata, why not three?
+
+```{r lm1cut3, echo=TRUE}
+meddat$nhAboveHScut3 <- cut(meddat$nhAboveHS,3)
+lm1cut3 <- lm(HomRate08~nhTrt+nhAboveHScut3,data=meddat)
+coef(lm1cut3)["nhTrt"]
+```
+
+Compare this stratification to a standard (the dist. we'd see if we had randomized `nhTrt` within each of those strata):
+
+```{r lm1cut3ab, echo=TRUE}
+xbcut3 <- balanceTest(nhTrt~nhAboveHS+strata(cut3=~nhAboveHScut3),data=meddat)
+xbcut3$results
+```
+
+But why those cuts? And why not 4? Why not...?
+
+\medskip
+
+One idea: collect observations into strata such that the sum of the
+differences in means of nhAboveHS within strata is smallest? This is the idea
+behind `optmatch` and other matching approaches.
+
