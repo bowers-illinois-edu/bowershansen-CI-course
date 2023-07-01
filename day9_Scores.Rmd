@@ -856,7 +856,7 @@ Another example: We may want to match on propensity distance but disallow any pa
 
 ```{r echo=TRUE}
 ## Now create a new distance matrix using two calipers:
-distCal <- psdist + caliper(mhdist, 9) + caliper(absdist, 2)
+distCal <- psdist + caliper(mhdist, 3) + caliper(absdist, 2)
 as.matrix(distCal)[5:10, 5:10]
 ## Compare to:
 as.matrix(mhdist)[5:10, 5:10]

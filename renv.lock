@@ -465,6 +465,37 @@
       ],
       "Hash": "9fe98599ca456d6552421db0d6772d8f"
     },
+    "blkvar": {
+      "Package": "blkvar",
+      "Version": "0.0.1.5",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "lmiratrix",
+      "RemoteRepo": "blkvar",
+      "RemoteRef": "master",
+      "RemoteSha": "4ff110f41b328f509849ea036096517902923c0e",
+      "Requirements": [
+        "MASS",
+        "R",
+        "arm",
+        "dplyr",
+        "formula.tools",
+        "ggplot2",
+        "lme4",
+        "lmtest",
+        "magrittr",
+        "msm",
+        "nlme",
+        "purrr",
+        "rlang",
+        "sandwich",
+        "survey",
+        "tibble",
+        "tidyr"
+      ],
+      "Hash": "8b6699beb119a9f2c2460cdce5ee1d83"
+    },
     "blob": {
       "Package": "blob",
       "Version": "1.2.4",
@@ -1283,6 +1314,17 @@
       ],
       "Hash": "94147cf8c853bd5287201283bdc2b3a9"
     },
+    "expm": {
+      "Package": "expm",
+      "Version": "0.999-7",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "Matrix",
+        "methods"
+      ],
+      "Hash": "af0c5d9f9ece61d4723904c7b2b49b4d"
+    },
     "fabricatr": {
       "Package": "fabricatr",
       "Version": "1.0.0",
@@ -1394,6 +1436,19 @@
         "utils"
       ],
       "Hash": "467ec0ca895d4e61a22cfbac9bccddf8"
+    },
+    "formula.tools": {
+      "Package": "formula.tools",
+      "Version": "1.7.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "methods",
+        "operator.tools",
+        "utils"
+      ],
+      "Hash": "935ab0bce1a92340866983f3a97e09de"
     },
     "fs": {
       "Package": "fs",
@@ -2487,6 +2542,18 @@
       ],
       "Hash": "587ce77fd3c7bada7eadb2d18b62930d"
     },
+    "mitools": {
+      "Package": "mitools",
+      "Version": "2.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "DBI",
+        "methods",
+        "stats"
+      ],
+      "Hash": "a4b659bd0528226724d55034f11ed7cb"
+    },
     "modelr": {
       "Package": "modelr",
       "Version": "0.1.11",
@@ -2565,6 +2632,18 @@
         "R"
       ],
       "Hash": "160b07a985d207f1888b016178aededf"
+    },
+    "msm": {
+      "Package": "msm",
+      "Version": "1.7",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "expm",
+        "mvtnorm",
+        "survival"
+      ],
+      "Hash": "4c08d52892951cc803a86f4b2bc5ce00"
     },
     "multcomp": {
       "Package": "multcomp",
@@ -2710,6 +2789,16 @@
         "askpass"
       ],
       "Hash": "0f7cd2962e3044bb940cca4f4b5cecbe"
+    },
+    "operator.tools": {
+      "Package": "operator.tools",
+      "Version": "1.6.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "utils"
+      ],
+      "Hash": "bd93354f4a2ee4e096e3d7ad33e08b72"
     },
     "optmatch": {
       "Package": "optmatch",
@@ -3903,6 +3992,27 @@
         "vctrs"
       ],
       "Hash": "671a4d384ae9d32fc47a14e98bfa3dc8"
+    },
+    "survey": {
+      "Package": "survey",
+      "Version": "4.2-1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "Matrix",
+        "R",
+        "graphics",
+        "grid",
+        "lattice",
+        "methods",
+        "minqa",
+        "mitools",
+        "numDeriv",
+        "splines",
+        "stats",
+        "survival"
+      ],
+      "Hash": "03195177db81a992f22361f8f54852f4"
     },
     "survival": {
       "Package": "survival",

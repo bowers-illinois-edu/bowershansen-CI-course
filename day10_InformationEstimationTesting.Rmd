@@ -533,18 +533,24 @@ matchAndBalance2(results3$pars[1], distmat = psdist, alpha = .25)
 
 ## Cardinality Matching Example
 
-Another approach to matching combines different constraints --- attempting to, for example minimize the sum of distances between units within set while also maximizing the number of units in the design. See the citations in the `designmatch` package for papers explaining and applying these ideas.ca
+Another approach to matching combines different constraints --- attempting to,
+for example minimize the sum of distances between units within set while also
+maximizing the number of units in the design. See the citations in the
+`designmatch` package for papers explaining and applying these ideas.ca
 
 ```{r designmatchsetup, eval=TRUE, waring=FALSE, message=FALSE, cache=TRUE}
 library(designmatch)
-library(gurobi)
+## library(gurobi)
 
+## Let's match on the propensity score
 meddat$pscore <- thebglm$linear.predictors
+## designmatch needs the observations on the data to be in order of treatment assignment
 meddat_new <- meddat[order(meddat$nhTrt,decreasing=TRUE),]
 z <- as.vector(meddat_new$nhTrt)
-Xmat <- model.matrix(~pscore+HomRate03-1,data=meddat_new)
+Xmat <- model.matrix(~pscore,data=meddat_new)
+thedistmat <- distmat(z,Xmat,digits=2)
 
-thedistmat <- distmat(z,Xmat)
+
 
 thecovs <- unique(c(names(meddat)[c(6:7, 9:24)], "HomRate03"))
 balfmla <- reformulate(thecovs, response = "nhTrt")
@@ -554,29 +560,23 @@ distmat <- as.matrix(psdist)
 distmat_scaled <- round(distmat/mean(distmat),2)
 dimnames(distmat_scaled) <- dimnames(thedistmat)
 
-## mom_covs <- fill.NAs(update(balfmla,~-nhClass+.),data=meddat)
-mom_covs <- meddat_new[, c("nhAgeYoung","nhAboveHS","nhOwn")]
-## calculated absolute std mean diffs between trt and ctrl on covs
-## differences should be at most .5 sds apart
-mom_tols <- round(absstddif(mom_covs, z, 1), 2)
-momlist <- list(covs = mom_covs, tols = mom_tols)
-
-solverlist <- list(name='gurobi',approximate=0,t_max=2000,trace=1)
-## solverlist <- list(name = "glpk", approximate = 1, t_max = 1000)
-
-nearlist <- list(covs=meddat_new %>% dplyr::select(HomRate03) %>% as.matrix(),
-                 pairs=c(HomRate03=4))
-rownames(nearlist$covs) <- 1:nrow(meddat_new)
+nearlist <- list(covs=as.matrix(meddat_new$HomRate03),pairs=2)
+#rownames(nearlist$covs) <- 1:nrow(meddat_new)
 ## A simple design that attempts to find pairs that keep absolute standarized mean differences within pair below .1.
+
+## solverlist <- list(name='gurobi',approximate=0,t_max=2000,trace=1)
+solverlist <- list(name = "glpk", approximate = 1, t_max = 1000)
 res <- bmatch(
   t_ind = z,
-  #dist_mat = thedistmat,
-  dist_mat = distmat_scaled,
-  #mom = momlist,
+  dist_mat = thedistmat,
   near = nearlist,
   solver = solverlist,
-  subset_weight = 1 #median(distmat)
+  subset_weight = 1
 )
+
+## library(cobalt)
+## bal.tab(res,balfmla,data=meddat_new)
+
 
 ```
 
@@ -608,14 +608,11 @@ row.names(meddat2) <- row.names(meddat)
 
 
 ```{r designmatcheval}
-## meantab(mom_covs, z, res$t_id, res$c_id)
-
+## Compare to optmatch pairmatch
 pm1 <- pairmatch(psdist, data = meddat2)
 meddat2$pm1 <- pm1
 
-balfmla2 <- reformulate(thecovs, response = "nhTrt")
-xbdm <- balanceTest(nhTrt~HomRate03+nhAboveHS+nhHS+nhRent+nhOwn+nhSepDiv+nhMarDom+nhAgeYoung+nhSisben + nhPopD + nhQP03 + nhPV03 + nhTP03 + nhBI03 +
-    nhCE03 + nhNB03 +
+xbdm <- balanceTest(nhTrt~HomRate03+nhAboveHS+nhHS+nhRent+nhOwn+nhSepDiv+nhMarDom+nhAgeYoung+nhSisben + nhPopD + nhQP03 + nhPV03 + nhTP03  +
     strata(dm1)+strata(pm1), data = meddat2)
 xbdm$overall
 
@@ -741,7 +738,7 @@ Why would we **model** the variability between sets? When might this be useful? 
 ##   control = lmerControl(optimizer = "bobyqa", restart_edge = TRUE, optCtrl = list(maxfun = 10000))
 ## )
 ## summary(lmer1)$coef
-
+## Here is the more directly bayesian version of adjusting for the strata as random intercepts
 library(rstanarm)
 lmer2 <- stan_lmer(HomRate08 ~ nhTrt + (1 | fm0),
   data = wdat,seed=12345)
@@ -783,21 +780,23 @@ all.equal(origtab, with(oneexp, table(trt = Z, b = fm0)))
 
 ```{r message=FALSE, warning=FALSE}
 
-estimand1 <- declare_estimand(ACE = mean(Y_Z_1 - Y_Z_0))
+estimand1 <- declare_inquiry(ACE = mean(Y_Z_1 - Y_Z_0))
 
 est1 <- declare_estimator(Y ~ Z,
-  estimand = estimand1,
-  model = difference_in_means,
-  label = "E1: Ignoring Blocks"
+    .method = difference_in_means,
+  label = "E1: Ignoring Blocks",
+  inquiry="ACE"
 )
 est2 <- declare_estimator(Y ~ Z,
   fixed_effects = ~fm0,
-  estimand = estimand1, model = lm_robust,
-  label = "E2: precision weights fe1"
+  .method = lm_robust,
+  label = "E2: precision weights fe1",
+  inquiry="ACE"
 )
 est3 <- declare_estimator(Y ~ Z + fm0,
-  estimand = estimand1, model = lm_robust,
-  label = "E3: precision weights fe2"
+  .method = lm_robust,
+  label = "E3: precision weights fe2",
+  inquiry="ACE"
 )
 
 nbwt_est_fun <- function(data) {
@@ -815,8 +814,8 @@ hbwt_est_fun <- function(data) {
   return(res)
 }
 
-est4 <- declare_estimator(handler = tidy_estimator(nbwt_est_fun), estimand = estimand1, label = "E4: direct block size weights")
-est5 <- declare_estimator(handler = tidy_estimator(hbwt_est_fun), estimand = estimand1, label = "E5: direct precision weights")
+est4 <- declare_estimator(handler = label_estimator(nbwt_est_fun), inquiry = estimand1, label = "E4: direct block size weights")
+est5 <- declare_estimator(handler = label_estimator(hbwt_est_fun), inquiry = estimand1, label = "E5: direct precision weights")
 
 
 direct_demean_fun <- function(data) {
@@ -836,7 +835,7 @@ direct_demean_fun <- function(data) {
   )
 }
 
-est6 <- declare_estimator(handler = tidy_estimator(direct_demean_fun), estimand = estimand1, label = "E6: Direct Demeaning")
+est6 <- declare_estimator(handler = label_estimator(direct_demean_fun), inquiry = estimand1, label = "E6: Direct Demeaning")
 
 library(lme4)
 lmer_est_fun <- function(data) {
@@ -859,7 +858,7 @@ lmer_est_fun <- function(data) {
   )
 }
 
-est7 <- declare_estimator(handler = tidy_estimator(lmer_est_fun), estimand = estimand1, label = "E7: Random Effects")
+est7 <- declare_estimator(handler = label_estimator(lmer_est_fun), inquiry = estimand1, label = "E7: Random Effects")
 est7(oneexp)
 thedesign_plus_est <- thedesign + estimand1 + est1 + est2 + est3 + est4 + est5 + est6 + est7
 ```
@@ -1018,10 +1017,24 @@ lines(density(rdistwc_asymp), col = "blue")
 abline(v = statistic(rankTestAsym))
 ```
 
-See also `RItest` (in development) and the `ri2` and `ri` packages for R.
-
 ## Summary and Questions:
 
-What do you think? What questions arise?
+ - A good research design allows us to interpret comparisons (or relationships)
+   with some clarity (i.e. "My est. of $Z \rightarrow Y$ at least does not
+   reflect age. Nor does it mostly reflect noise"). i.e. at least some way to
+   address alternative explanations and reasonable statistical power (high
+   probability of detecting an effect when an effect exists).
+ - Different stratifications pose different combinations of information (i.e.
+   statistical power) and clarity.
+ - Since we create a research design without looking at outcomes, we are free
+   to explore the space of possible designs.
+ - We are not limited to only distance matrices (and combinations thereof),
+   calipers, and exact matching. We could also specify certain criteria --- to
+   think of finding the design as a constrained optimization problem (which is
+   what `designmatch` does).
+ - Once we have a defensible design, we estimate and test following the design
+   --- just as we would in a randomized experiment.
+ - We can investigate our choices of estimators (and test) using simulation.
 
+ 
 
