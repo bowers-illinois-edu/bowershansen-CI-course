@@ -296,16 +296,6 @@
       ],
       "Hash": "a45594a00f5dbb073d5ec9f48592a08a"
     },
-    "Rglpk": {
-      "Package": "Rglpk",
-      "Version": "0.6-5",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "slam"
-      ],
-      "Hash": "5190f2200c77e13f66b26b6db549ba08"
-    },
     "Rsolnp": {
       "Package": "Rsolnp",
       "Version": "1.16",
@@ -1054,17 +1044,17 @@
     },
     "designmatch": {
       "Package": "designmatch",
-      "Version": "0.4.1",
+      "Version": "0.5.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "MASS",
         "R",
-        "Rglpk",
+        "highs",
         "lattice",
         "slam"
       ],
-      "Hash": "65e8ca102327ec7ec50196ef0840dd7a"
+      "Hash": "b9216891c8686af0cffd01f267f359cb"
     },
     "devtools": {
       "Package": "devtools",
@@ -1977,6 +1967,17 @@
       ],
       "Hash": "06230136b2d2b9ba5805e1963fa6e890"
     },
+    "highs": {
+      "Package": "highs",
+      "Version": "0.1-10",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "Rcpp",
+        "checkmate"
+      ],
+      "Hash": "2452f57d5833a306ca76972d9e8144e6"
+    },
     "hms": {
       "Package": "hms",
       "Version": "1.1.3",
@@ -2369,6 +2370,22 @@
         "utils"
       ],
       "Hash": "2fa7b59feca0d767533fd0c8a7a2bf4b"
+    },
+    "lmerTest": {
+      "Package": "lmerTest",
+      "Version": "3.1-3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "MASS",
+        "R",
+        "ggplot2",
+        "lme4",
+        "methods",
+        "numDeriv",
+        "stats"
+      ],
+      "Hash": "f04948de84602afc23bfa9f5427e954d"
     },
     "lmtest": {
       "Package": "lmtest",
