@@ -270,7 +270,8 @@ wtsfm1 <- meddat %>%
   group_by(fm1) %>%
   summarise(
     nb = n(),
-    nTb = sum(nhTrt), nCb = nb - nTb,
+    nTb = sum(nhTrt),
+    nCb = nb - nTb,
     hwt = (2 * (nCb * nTb) / (nTb + nCb))
   )
 wtsfm1
@@ -461,7 +462,7 @@ candDesigns <- candDesigns[, 1]
 
 ```{r bigmatch, echo=TRUE}
 stopifnot(nrow(candDesigns) == 1)
-fm4 <- fullmatch(psdist + caliper(psdist, candDesigns["x1"]) + caliper(mhdist, candDesigns["x2"]), data = meddat, tol = .00001)
+fm4 <- fullmatch(psdist + caliper(psdist, candDesigns["x1"]) + caliper(mhdist, candDesigns["x2"]) + caliper(hrdist2,candDesigns["x4"]), min.controls=candDesigns["x3"], data = meddat, tol = .00001)
 summary(fm4, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
 meddat$fm4 <- NULL ## this line exists to prevent confusion with new fm4 objects
 meddat[names(fm4), "fm4"] <- fm4

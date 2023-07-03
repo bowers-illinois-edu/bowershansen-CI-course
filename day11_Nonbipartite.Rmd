@@ -52,10 +52,10 @@ library(sensitivitymw)
 library(sensitivitymult)
 library(sensitivityfull)
 library(senstrat)
-library(rbounds)
 library(nbpMatching)
 library(lme4)
 library(rstanarm)
+library(slam)
 ```
 
 ## Today
@@ -64,7 +64,7 @@ library(rstanarm)
     have more than two groups to compare? Multiple treatments, continuous
     treatments.
   3. Questions arising from the reading or assignments or life?
- 
+
 # But first, review
 
 ## Due Diligence and Stratified Observational Designs
@@ -74,10 +74,13 @@ library(rstanarm)
    context for causality. (What are the drivers of the "treatment"? How
    **much** adjustment in substantive terms is required? What are the most
    compelling alternative explanations for the treatment$\rightarrow$outcome
-   relationship? (Alternative to the explanation that we are
+   relationship? (Alternative to the theoretical explanation that we are
    exploring/assessing))
  - **Before looking at outcomes** we explain our designs to ourselves by
-   comparing the design to an equivalently designed randomized experiment.
+   comparing the design to an equivalently designed randomized experiment using
+   the known distribution of the $d^2$ statistic under the null hypothesis of
+   no covariate-to-treatment relationships across any covariates (see the
+   Hansen and Bowers 2008 piece).
  - We estimate (average) effects and test hypotheses about effects **as if the
    research design was randomized**.
  - **After estimating effects/testing hypotheses** we again engage with
@@ -89,20 +92,20 @@ library(rstanarm)
  - Statistical inference for Causal Effects and Causal Hypotheses in Randomized
    Experiments
  - Adjustment by stratification;
-   - Matching to generate optimal stratifications  (decisions and strategies that are part of research design;
-     matching on missingness and `fill.NAs`; `exactMatch`; `caliper`;
-     `min.controls`; `effectiveSampleSize`);
+   - Matching to generate optimal stratifications  (decisions and strategies
+     that are part of research design; matching on missingness and `fill.NAs`;
+     `exactMatch`; `caliper`; `min.controls`; `effectiveSampleSize`);
    - Assessing success of stratified research designs in adjustment;
    - The As-If-Randomized mode of statistical inference for stratified research
-   designs (treat a matched design as a block-randomized experiment).
+     designs (treat a matched design as a block-randomized experiment).
 
 ## Review 2: An Adjustment Strategy to Address Alternative Explanations Effectively
 
 How to strengthen evidence about the claim that Metrocable caused a decrease in crime?
 
- 1. **List main alternative explanations** (could crime have caused Metrocable
-    stations; socio-economic status differences; \ldots). Can we operationalize
-    these explanations?
+ 1. **List the main alternative explanations** (could crime have caused
+    Metrocable stations; socio-economic status differences; \ldots). Can we
+    operationalize these explanations?
  2. **Stratify data to minimize heterogeneity within set.** If education does
     not vary within set, then we have "adjusted for" education by conditioning
     on the set. The `optmatch` package for R finds sets that minimize the
@@ -112,7 +115,8 @@ How to strengthen evidence about the claim that Metrocable caused a decrease in 
        `exactMatch`) (Scalar distances on  especially important variables like
        baseline outcomes; Multivariate distances in terms of other covariates
        via Mahalanobis or Propensity scores distances.)
-    2. Find stratifications using `fullmatch`.
+    2. Find stratifications using `fullmatch` etc (`bmatch` from `designmatch`,
+       etc.).
 
 
 
@@ -137,9 +141,9 @@ names(tmp) <- rownames(meddat)
 absdist <- match_on(tmp, z = meddat$nhTrt,data=meddat)
 ```
 
-## Example design  and workflow
+## Example design  and workflow {.allowframebreaks}
 
-```{r}
+```{r echo=TRUE}
 ## Inspect the distance matrices
 quantile(as.vector(psdist),seq(.9,1,.01))
 quantile(as.vector(mhdist),seq(.9,1,.01))
@@ -196,26 +200,27 @@ setmeanDiffs %>% dplyr::select(fm1,ateb,nbwt,hbwt)
     experiments.
 
 ```{r  estandtest,  cache=TRUE, warning=FALSE}
-meddat <-  meddat %>%  filter(!is.na(fm1)) %>% group_by(fm1) %>%
+meddat_new <-  meddat %>%  filter(!is.na(fm1)) %>% group_by(fm1) %>%
 	mutate(trtprob=mean(nhTrt), nbwt=nhTrt/trtprob + (1-nhTrt)/(1-trtprob))
-estate <-  lm_robust(HomRate08~nhTrt,data=meddat,weights=nbwt,subset=!is.na(fm1))
+estate <-  lm_robust(HomRate08~nhTrt,data=meddat_new,weights=nbwt,subset=!is.na(fm1))
 estate
 with(setmeanDiffs,sum(ateb*nb/sum(nb)))
 with(setmeanDiffs,sum(ateb*nbwt))
 
 with(setmeanDiffs,sum(ateb*hbwt))
 
-estate_fe <- lm_robust(HomRate08~nhTrt,fixed_effects = ~fm1, data=meddat,subset=!is.na(fm1))
+estate_fe <- lm_robust(HomRate08~nhTrt,fixed_effects = ~fm1, data=meddat_new,subset=!is.na(fm1))
 estate_fe
 
-estate_fe2 <- lm_robust(HomRate08~nhTrt+fm1, data=meddat,subset=!is.na(fm1))
+estate_fe2 <- lm_robust(HomRate08~nhTrt+fm1, data=meddat_new,subset=!is.na(fm1))
 coef(estate_fe2)["nhTrt"]
 
 
-ranktest1  <-  wilcox_test(HomRate08~nhTrtF|fm1,data=meddat,
+set.seed(12345)
+ranktest1  <-  wilcox_test(HomRate08~nhTrtF|fm1,data=meddat_new,
 		       distribution=approximate(nresample=10000))
+## Notice that the "99 percent confidence interval" below refers to predicted differences in the p-value across difference simulations with different seeds.
 pvalue(ranktest1)
-
 ```
 
 ## An Adjustment Strategy to Address Alternative Explanations
@@ -269,7 +274,7 @@ for Causal Inference with Time-Series Cross-Sectional Data"
 # Non-bipartite Matching: The Medellin Data
 
 
-# Hypothetical Setup
+# Hypothetical Setup {.allowframebreaks}
 
 Imagine that there is a debate about whether housing insecurity is more strongly
 related to violence than unemployment. We have neighborhoods in Medellin where
@@ -281,15 +286,14 @@ background variables: maybe the relationships we would summarize between housing
 violence and between employment and violence would be confounded by those other
 relationships.
 
+# Designmatch nmatch Setup {.allowframebreaks}
 
 
+We will use an approach to adjustment called **non-bipartite** matching) which
+doesn't require two groups. Rather it creates pairs of units (neighborhoods) in
+this case, which are as similar as possible in regards to many covariates.
 
-2. Now here is an approach to adjustment that has many moving parts (like the
-   bipartite matching approach but is called **non-bipartite** matching) but which doesn't require two groups. Rather it
-   creates pairs of units (neighborhoods) in this case, which are as similar as
-   possible in regards to many covariates.
-
-```{r}
+```{r echo=TRUE}
 covs <- c("nhClass", "nhSisben","nhPopD",  "nhQP03",  "nhPV03",  "nhTP03",
     "nhBI03",  "nhCE03",  "nhNB03" , "nhMale",  "nhAgeYoung",
     "nhAgeMid","nhMarDom","nhSepDiv","nhAboveHS" , "nhHS", "HomRate03")
@@ -299,33 +303,41 @@ covmat <- dplyr::select(meddat,one_of(covs))
 ## Mahalanobis distances for each neighborhood
 meddat$covmh <- mahalanobis(
   x = covmat ,
-  center = col_means(covmat),
+  center = slam::col_means(covmat),
   cov = cov(covmat)
 )
 
 ## Absolute mahalanobis distances between neighborhoods
 mhdist_mat <- outer(meddat$covmh, meddat$covmh, FUN = function(x, y){ abs(x - y) })
-
+dimnames(mhdist_mat) <- list(meddat$nh,meddat$nh)
 ```
 
 Now, we can match on those distances:
 
 
-```{r}
+```{r echo=TRUE}
 ## Turns out that the designmatch software doesn't like too many decimals, and prefers
 ## mean-centered distances. This doesn't really matter in substantive terms but is important in
 ## regards to getting the software to work
-matchdist_mat <- round(mhdist_mat / mean(mhdist_mat), 2)
+matchdist_mat <- round(100*mhdist_mat / mean(mhdist_mat), 1)
 
-## Don't allow any pairs that differ by more than 2 on HomRate03
-nearlist <- list(covs=as.matrix(meddat$HomRate03),pairs=c(HomRate03=2))
+## Restrict allowable matches. This is like a caliper but on two dimensions.
+nearlist <- list(covs=as.matrix(meddat[,c("HomRate03","nhAboveHS")]),
+		 pairs=c(HomRate03=4,nhAboveHS=.5))
 
 ## For larger problems you will want to install gurobi using an academic
 ## license. After installing the license, then I do something like the following
 ## where the details of the version numbers will differ
-##install.packages("/Library/gurobi911/mac64/R/gurobi_9.1-1_R_4.0.2.tgz",repos=NULL)
-#3library(gurobi)
-solverlist <- list(name = "glpk", approximate = 1, t_max = 1000, trace = 1)
+## install.packages("/Library/gurobi952/macos_universal2/R/gurobi_9.5-2_R_4.2.0.tgz",repos=NULL)
+## also had to use a different version of designmatch for now:
+
+## Only run this next one one time
+### renv::install("bowers-illinois-edu/designmatch")
+library(designmatch)
+#library(slam)
+library(highs)
+#library(gurobi)
+solverlist <- list(name = "highs", approximate = 1, t_max = 1000, trace = 1)
 
 mh_pairs <- nmatch(
   dist_mat = matchdist_mat,
@@ -338,7 +350,7 @@ mh_pairs <- nmatch(
 ## Looks like neighborhood 6 is matched with neighborhood 1, etc..
 
 #' Function to convert the output of nmatch into a factor variable for use in analysis
-  nmatch_to_df <- function(obj, origid) {
+nmatch_to_df <- function(obj, origid) {
 ## We want a factor that we can merge onto our
 ## existing dataset. Here returning a data.frame so that
 ## we can merge --- seems less error prone than using
@@ -369,7 +381,7 @@ stopifnot(nrow(meddat2) == nrow(mh_pairs_df))
 stopifnot(length(unique(meddat2$bm)) == nrow(meddat2) / 2)
 nrow(mh_pairs_df)
 nrow(meddat2)
-## Notice some observations were not matched (we only have 28 neighborhoods in meddat2 after the matching)
+## Notice some observations were not matched:
 nrow(meddat)
 ```
 
