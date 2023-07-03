@@ -61,11 +61,9 @@ row.names(meddat) <- meddat$nh
 
 ## Today
 
-  1. Agenda:
-    a. How to characterize the information in a matched design (use what
-     we know about the variance of estimators from block-randomized
-     experiments) `effective sample size`
-    b. Estimating average causal effects and testing hypotheses about causal effects (focusing on hypotheses of no effects) using stratified designs (the "as-if-randomized approach")
+ 1. Agenda:
+   a. How to characterize the information in a matched design (use what we know about the variance of estimators from block-randomized experiments); what does `effective sample size` mean?
+   b. Estimating average causal effects and testing hypotheses about causal effects (focusing on hypotheses of no effects) using stratified designs (the "as-if-randomized approach")
  3. Questions arising from the reading or assignments or life?
 
 # But first, review
@@ -84,7 +82,7 @@ row.names(meddat) <- meddat$nh
  - (Possibly) How much statistical power does this design provide for the quantity of interest?
  - Other questions to ask about a research design aiming to help clarify comparisons.
 
-## Example:
+## Example: {.allowframebreaks}
 
 
 ```{r echo=TRUE}
@@ -93,16 +91,19 @@ balfmla <- reformulate(thecovs[-c(1, 14)], response = "nhTrt")
 thebglm <- arm::bayesglm(balfmla, data = meddat, family = binomial(link = "logit"))
 mhdist <- match_on(balfmla, data = meddat)
 psdist <- match_on(thebglm, data = meddat)
+```
 
-## Two versions of a scalar distance: One is standardized (mahalanobis dist is just standardized when you have only one variable)
+Showing here 3 different ways to get a scalar distance:
+```{r echo=TRUE}
+## This is just standardized and centered
 hrdist1 <- match_on(nhTrt ~ HomRate03, data = meddat)
 
-## Distance in terms of homicide rate
+## Distance in terms of homicide rate itself
 tmp <- meddat$HomRate03
 names(tmp) <- rownames(meddat)
 hrdist2 <- match_on(tmp, z = meddat$nhTrt, data = meddat)
 
-## Distance after centering and standardizing
+## By Hand absolute distance after centering and standardizing
 tmp <- scale(meddat$HomRate03)[, 1]
 names(tmp) <- rownames(meddat)
 hrdist3 <- match_on(tmp, z = meddat$nhTrt, data = meddat)
@@ -111,6 +112,12 @@ hrdist1[1:3, 1:6]
 hrdist2[1:3, 1:6]
 hrdist3[1:3, 1:6]
 
+## They are all just linear transforms. hrdist2 allows us to talk about homicide rates when we make calipers.
+cor(hrdist1[1,],hrdist2[1,])
+cor(hrdist1[1,],hrdist3[1,])
+```
+
+```{r echo=TRUE}
 psCal <- quantile(as.vector(psdist), .9)
 mhCal <- quantile(as.vector(mhdist), .9)
 hrCal <- quantile(as.vector(hrdist2), .9)
@@ -140,7 +147,11 @@ hrdist201 <- (hrdist2 - min(as.matrix(hrdist2))) / (max(as.matrix(hrdist2)) - mi
 summary(as.vector(psdist01))
 summary(as.vector(mhdist01))
 summary(as.vector(hrdist201))
+```
 
+You can also use penalties rather than calipers:
+
+```{r penalties, echo=TRUE}
 ## The larger the differences in psdist, mhdist, and hrdist, the worse the
 ## matches (by maxdist).
 matchdistPen <- psdist + psdist01 * maxdist + mhdist01 * maxdist + hrdist201 * maxdist
@@ -164,7 +175,12 @@ fm4 <- fullmatch(matchdistPen, data = meddat)
 summary(fm4, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
 ```
 
+# Information and Balance: Matching structure and effective sample size
+
+
 ## Showing matches
+
+Fullmatching offers us more choices:
 
 \centering
 ```{r out.width=".8\\textwidth", echo=FALSE}
@@ -196,9 +212,6 @@ plot(graph_from_adjacency_matrix(blah2a, mode = "undirected", diag = FALSE),
   vertex.color = c("white", "green")[meddat$nhTrt + 1], main = "Pen V 2,MinCtrls=.5, MeanCtrls=23/22"
 )
 ```
-
-
-# Information and Balance: Matching structure and effective sample size
 
 ##  Tracking effective sample size
 
@@ -243,7 +256,7 @@ assuming the OLS model and homoskedastic errors.  (This is b/c the anova formula
 For matched pairs, of course, $h_{s}=1$.  Harmonic mean of 1, 2 is $4/3$. Etc.
 
 
-## Matching so as to maximize effective sample size
+## Matching so as to maximize effective sample size {.allowframebreak}
 
 ```{r echo=TRUE, tidy=FALSE}
 stratumStructure(fm1)
@@ -292,9 +305,9 @@ effectiveSampleSize(pm1)
 
 ## Why does it matter?
 
-Or see here:
+Or see here: Higher effective sample size $\rightarrow$ lower standard error.
 
-```{r}
+```{r echo=TRUE}
 stratumStructure(fm2)
 stratumStructure(fm4)
 effectiveSampleSize(fm2)
@@ -307,11 +320,11 @@ lm_fm2$std.error
 lm_fm4$std.error
 ```
 
-## Design Search for both precision and balance
+## How to find a good design?: Design Search for both precision and balance {.allowframebreaks}
 
 Here I demonstrate searching for two calipers and `min.controls` using a grid of possible caliper values.
 
-```{r gridsearch, cache=FALSE}
+```{r gridsearch, echo=TRUE, cache=FALSE}
 findbalance <- function(x, mhdist = mhdist, psdist = psdist, absdist = hrdist2, thedat = meddat, thebalfmla = balfmla) {
   ## message(paste(x,collapse=" "))
   thefm <- try(fullmatch(psdist + caliper(mhdist, x[2]) +
@@ -342,7 +355,7 @@ findbalance <- function(x, mhdist = mhdist, psdist = psdist, absdist = hrdist2, 
 
 ## Design Search for both precision and balance
 
-```{r eval=TRUE,echo=FALSE, cache=TRUE, warning=FALSE}
+```{r eval=TRUE,echo=TRUE, cache=TRUE, warning=FALSE}
 ## Test the function
 findbalance(c(psCal, mhCal, 0, 2), thedat = meddat, psdist = psdist, mhdist = mhdist)
 ## Don't worry about errors for certain combinations of parameters
@@ -352,7 +365,7 @@ maxpsdist <- max(as.vector(psdist))
 minpsdist <- min(as.vector(psdist))
 ```
 
-```{r findbal, eval=FALSE}
+```{r findbal, echo=TRUE, eval=FALSE}
 set.seed(123455)
 system.time({
   resultsTemp <- replicate(10, findbalance(x = c(
@@ -387,12 +400,12 @@ system.time({
 ```
 
 
-## Which matched design might we prefer?
+## Which matched design might we prefer? {.allowframebreaks}
 
 Now, how might we interpret the results of this search for matched designs?
 Here are a few ideas.
 
-```{r check_out_results}
+```{r check_out_results, echo=TRUE}
 if (any(class(results) == "list")) {
   resAnyNA <- sapply(results, function(x) {
     any(is.na(x))
@@ -414,7 +427,7 @@ apply(highbalres, 1, summary)
 The darker points have smaller maximum within set differences on the baseline outcome.
 
 ```{r eval=TRUE, echo=FALSE,out.width=".8\\textwidth"}
-par(mfrow=c(1,2),pty="m",mgp=c(1.5,.5,0))
+par(mfrow = c(1, 2), pty = "m", mgp = c(1.5, .5, 0))
 # color points more dark for smaller differences
 plot(resNoNA["d2p", ], resNoNA["n", ],
   xlab = "d2p", ylab = "n",
@@ -446,7 +459,7 @@ candDesigns <- candDesigns[, 1]
 
 ## How would we use this information in `fullmatch`?
 
-```{r bigmatch}
+```{r bigmatch, echo=TRUE}
 stopifnot(nrow(candDesigns) == 1)
 fm4 <- fullmatch(psdist + caliper(psdist, candDesigns["x1"]) + caliper(mhdist, candDesigns["x2"]), data = meddat, tol = .00001)
 summary(fm4, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
@@ -459,9 +472,9 @@ xb3$overall[, 1:3]
 zapsmall(xb3$results["HomRate03", , ])
 ```
 
-## Another approach: more fine tuned optimization
+## Another approach: Optimization {.allowframebreaks}
 
-Here is another approach that tries to avoid searching the whole space. It focuses on getting close to a target $p$-value from the omnibus/overall balance test. Here we are just looking for one caliper value that gets us close to a particular target balance using one distance matrix. But, of course we care about **both** effective sample size **and** omnibus balance test.
+Here is another approach that tries to avoid searching the whole space. It focuses on getting close to a target $p$-value from the omnibus/overall balance test and ignores effective sample size. Here we are just looking for one caliper value that gets us close to a particular target balance using one distance matrix. But, of course we care about **both** effective sample size **and** omnibus balance test results.
 
 ```{r, echo=TRUE,eval=TRUE,cache=FALSE, warning=FALSE}
 matchAndBalance2 <- function(x, distmat, alpha) {
@@ -472,7 +485,7 @@ matchAndBalance2 <- function(x, distmat, alpha) {
   thefm <- fullmatch(distmat + caliper(distmat, x), data = meddat, tol = .00001)
   balfmla_to_use <- update(balfmla, . ~ . + strata(thefm))
   thexb <- balanceTest(balfmla_to_use, data = data.frame(cbind(meddat, thefm)))
-  return(thexb$overall[, "p.value"])
+  return(thexb$overall["thefm", "p.value"])
 }
 
 maxpfn <- function(x, distmat, alpha) {
@@ -485,6 +498,7 @@ maxpfn <- function(x, distmat, alpha) {
 
 maxpfn(c(minpsdist, minpsdist + 5), distmat = psdist, alpha = .25)
 maxpfn(c(minpsdist + .31, minpsdist + 1), distmat = psdist, alpha = .25)
+## Try basically no caliper:
 maxpfn(c(maxpsdist - .01, maxpsdist), distmat = psdist, alpha = .25)
 # quantile(as.vector(psdist),seq(0,1,.1))
 # sort(as.vector(psdist))[1:10]
@@ -493,8 +507,8 @@ maxpfn(c(maxpsdist - .01, maxpsdist), distmat = psdist, alpha = .25)
 ## Another approach: more fine tuned optimization
 
 ```{r solnp, echo=TRUE, warning=FALSE, message=FALSE, cache=TRUE}
-library(Rsolnp)
 ### This takes a long time
+library(Rsolnp)
 results3 <- gosolnp(
   fun = maxpfn,
   ineqfun = function(x, distmat, alpha) {
@@ -520,8 +534,9 @@ results3$values
 
 Results of the optimization search:
 
-```{r}
+```{r echo=TRUE}
 maxpfn(results3$pars, distmat = psdist, alpha = .25)
+## This is the d2 p-value for the chosen caliper
 matchAndBalance2(results3$pars[1], distmat = psdist, alpha = .25)
 ```
 
@@ -610,7 +625,7 @@ xbdm$results[, "std.diff", ]
 
 # Estimation
 
-## Overview: Estimate and Test "as if block-randomized"
+## Overview: Estimate and Test "as if block-randomized" {.allowframebreaks}
 
 What are we estimating? Most people would say ACE=$\bar{\tau}=\bar{y}_1 - \bar{y}_0$. What estimator estimates this without bias?
 
@@ -646,7 +661,7 @@ stopifnot(all.equal(datB$hbwt101, datB$hbwt301))
 First, we could estimate the set-size weighted ATE. Our estimator uses the
 size of the sets to estimate this quantity.
 
-```{r}
+```{r echo=TRUE}
 ## The set-size weighted version
 atewnb <- with(datB, sum(Y * nb / sum(nb)))
 atewnb
@@ -656,7 +671,7 @@ atewnb
 
 Sometimes it is convenient to use `lm` (or the more design-friendly `lm_robust`) because there are R functions for design-based standard errors and confidence intervals.
 
-```{r message=FALSE, warning=FALSE}
+```{r usinglm,echo=TRUE,message=FALSE, warning=FALSE}
 meddat$id <- row.names(meddat)
 meddat$nhTrtF <- factor(meddat$nhTrt)
 ## See Gerber and Green section 4.5 and also Chapter 3 on block randomized experiments. Also Hansen and Bowers 2008.
@@ -686,7 +701,7 @@ lm0b
 
 Set-size weighting is easy to explain but may differ in terms of precision:
 
-```{r}
+```{r echo=TRUE}
 atewhb <- with(datB, sum(Y * hbwt1 / sum(hbwt1)))
 atewhb
 lm1 <- lm_robust(HomRate08 ~ nhTrt + fm0, data = wdat)
@@ -704,7 +719,7 @@ for not "estimating fixed effects" --- in quotes because there is nothing to
 estimate here --- set or block-means are fixed quantities and need not be
 estimated in this framework.
 
-```{r}
+```{r echo=TRUE}
 wdat$HomRate08Cent <- with(wdat, HomRate08 - ave(HomRate08, fm0))
 wdat$nhTrtCent <- with(wdat, nhTrt - ave(nhTrt, fm0))
 
@@ -733,8 +748,8 @@ lmer2 <- stan_lmer(HomRate08 ~ nhTrt + (1 | fm0),
 )
 ```
 
-```{r printlmer2mod}
-#print(lmer2)
+```{r printlmer2mod, echo=TRUE}
+# print(lmer2)
 summary(lmer2,
   pars = c("nhTrt"),
   probs = c(0.025, 0.975),
@@ -824,11 +839,12 @@ direct_demean_fun <- function(data) {
     conf.high = obj$conf.high[[2]],
     df = obj$df[[2]],
     outcome = "Y"
-  )}
+  )
+}
 
 est6 <- declare_estimator(handler = label_estimator(direct_demean_fun), inquiry = estimand1, label = "E6: Direct Demeaning")
 
-#library(lme4)
+# library(lme4)
 library(lmerTest)
 lmer_est_fun <- function(data) {
   thelmer <- lmer(Y ~ Z + (1 | fm0),
@@ -842,10 +858,10 @@ lmer_est_fun <- function(data) {
     estimate = obj$coefficients[2, 1],
     std.error = obj$coefficients[2, 2],
     statistic = obj$coefficients[2, 3],
-    p.value = obj$coefficients[2,5],
+    p.value = obj$coefficients[2, 5],
     conf.low = cis[1, 1],
     conf.high = cis[1, 2],
-    df = obj$coefficients[2,4],
+    df = obj$coefficients[2, 4],
     outcome = "Y"
   )
 }
@@ -892,9 +908,8 @@ reshape_diagnosis(diagnosis, digits = 4)[, -c(1:2, 4)]
 ```
 
 ```{r}
-
 thesims <- get_simulations(diagnosis)
-thesims %>% filter(estimator=="E7: Random Effects")
+thesims %>% filter(estimator == "E7: Random Effects")
 ```
 
 
@@ -1034,4 +1049,3 @@ abline(v = statistic(rankTestAsym))
  - We can investigate our choices of estimators (and test) using simulation.
 
  
-
