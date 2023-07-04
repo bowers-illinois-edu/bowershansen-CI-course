@@ -62,7 +62,7 @@ library(slam)
 
  1. Agenda: Non-bipartite matching: How to created stratified comparisons if we
     have more than two groups to compare? Multiple treatments, continuous
-    treatments.
+    treatments. See Rabb et al (2022) as a published example.
   3. Questions arising from the reading or assignments or life?
 
 # But first, review
@@ -250,7 +250,7 @@ Rosenbaum 2010 and 2017 on "risk-set matching".)
  - \bh{If you find it difficult to make the as-if-randomized design} If you don't want to find units which were similar up until the moment of
 treatment (say, you have few covariates), can you make other assumptions? (See
 the difference-in-differences idea of parallel trends and/or lagged DV and/or
-other assumptions in Tom's discussion next week.)
+other assumptions in Tom's discussion.)
 
 
 ## What about data with multiple observations of each unit?
@@ -263,30 +263,28 @@ are you assuming about SUTVA/interference across those treatments within a unit?
 problem into simpler pieces.)
 
 
-- See papers
-referred to here <https://imai.fas.harvard.edu/research/FEmatch.html> and
-<https://yiqingxu.org/research/> "A Practical Guide to Counterfactual Estimators
-for Causal Inference with Time-Series Cross-Sectional Data"
-<https://onlinelibrary.wiley.com/doi/10.1111/ajps.12723>.
+- See papers on TSCS / panel / longitudinal data referred to here
+  <https://imai.fas.harvard.edu/research/FEmatch.html> and
+  <https://yiqingxu.org/research/> "A Practical Guide to Counterfactual
+  Estimators for Causal Inference with Time-Series Cross-Sectional Data"
+  <https://onlinelibrary.wiley.com/doi/10.1111/ajps.12723>.
+ - And Ding and Li 2019, Blackwell and Glynn 2018 with a nice pre-post design
+   application: Keele, L., Cubbison, W., and White, I. (2021). Suppressing
+   black votes: A historical case study of voting restrictions in louisiana.
+   American Political Science Review, pages 1–7.
 
 
 # Non-bipartite Matching: The Medellin Data
 
 
-# Hypothetical Setup {.allowframebreaks}
+## Hypothetical Setup {.allowframebreaks}
 
-Imagine that there is a debate about whether housing insecurity is more strongly
-related to violence than unemployment. We have neighborhoods in Medellin where
+Imagine that there is a debate about whether housing insecurity is strongly
+related to violence. We have neighborhoods in Medellin where
 we have measured both violence scaled by the population of the place
-(`HomRate08`), whether people own their own home (`nhOwn`), and the proportion
-of people who are employed (`nhEmp`).  However, we know that both housing
-insecurity and employment as well as violence can be predicted from other
-background variables: maybe the relationships we would summarize between housing and
-violence and between employment and violence would be confounded by those other
-relationships.
+(`HomRate08`), whether people own their own home (`nhOwn`), and potential confounders like the proportion of people who are employed (`nhEmp`).  However, we know that both housing insecurity as well as violence can be predicted from other background variables: maybe the relationships we would summarize between housing and violence  would be confounded by those other relationships.
 
-# Designmatch nmatch Setup {.allowframebreaks}
-
+## Designmatch setup {.allowframebreaks}
 
 We will use an approach to adjustment called **non-bipartite** matching) which
 doesn't require two groups. Rather it creates pairs of units (neighborhoods) in
@@ -310,6 +308,8 @@ meddat$covmh <- mahalanobis(
 mhdist_mat <- outer(meddat$covmh, meddat$covmh, FUN = function(x, y){ abs(x - y) })
 dimnames(mhdist_mat) <- list(meddat$nh,meddat$nh)
 ```
+
+## Designmatch use {.allowframebreaks}
 
 Now, we can match on those distances:
 
@@ -337,17 +337,21 @@ library(designmatch)
 library(highs)
 #library(gurobi)
 solverlist <- list(name = "highs", approximate = 0, t_max = 1000, trace = 1)
+```
 
+The function `nmatch` does the optimization. It is not full-matching, but is pair-matching. 
+
+```{r}
 mh_pairs <- nmatch(
   dist_mat = matchdist_mat,
   near = nearlist,
   subset_weight = 1,
   solver = solverlist
 )
-## look at raw mh_pairs output.
 ## mh_pairs
-## Looks like neighborhood 6 is matched with neighborhood 1, etc..
+```
 
+```{r def_fn, echo=FALSE}
 #' Function to convert the output of nmatch into a factor variable for use in analysis
 nmatch_to_df <- function(obj, origid) {
 ## We want a factor that we can merge onto our
@@ -361,8 +365,9 @@ nmatch_to_df <- function(obj, origid) {
       matchesdat$id <- origid[matchesdat$match_id]
       return(matchesdat)
   }
+```
 
-
+```{r convert_matches_to_factor, echo=TRUE}
 mh_pairs_df <- nmatch_to_df(mh_pairs,origid=meddat$nh)
 nrow(mh_pairs_df)
 
@@ -384,15 +389,13 @@ nrow(meddat2)
 nrow(meddat)
 ```
 
-Can you make a matched design that drops fewer observations? Or a matched design that drops more?
+## Assessing the design {.allowframebreaks}
 
 Now, what we are trying to do is break the relationship between covariates and
 the main explanatory variables (just as we might in a pair randomized study):
-the neighborhood higher on the explanatory variable shouldn't be systematically more
-or less likely to be the neighborhood higher on any given covariate in such a study.
-We assess this below:
+the neighborhood higher on the explanatory variable shouldn't be systematically more or less likely to be the neighborhood higher on any given covariate in such a study. We assess this below:
 
-```{r}
+```{r echo=TRUE}
 ## Make a new variable that is 1 for the neighborhood higher in home ownership
 ## and 0 for the neighborhood who is lower. (Similarly for Employment)
 ## We'd like to show that the covariates are not related to either home
@@ -410,8 +413,7 @@ meddat2 %>% dplyr::select(bm,nh, nhOwn,rank_own,nhEmp, rank_emp)
 ## Notice we have two sets with a tie:
 table(meddat2$rank_own)
 
-## Since balanceTest demands binary treatment, we remove them for now.
-
+## Since balanceTest demands binary treatment, we remove ties for now.
 meddat3 <- meddat2 %>% filter(rank_own!=.5)
 table(meddat3$rank_own)
 
@@ -432,8 +434,9 @@ arrange(xb_own_vars, p) %>% zapsmall(digits = 5)
 stopifnot(xb_own$overall[, "p.value"] > .3)
 ```
 
-```{r`}
-## An equivalent way to do what balanceTest is doing
+An equivalent way to do what balanceTest is doing
+
+```{r echo=TRUE}
 library(formula.tools)
 library(coin)
 coin_fmla <- ~ rank_own | bmF
@@ -445,9 +448,7 @@ coin_test_perm <- independence_test(coin_fmla,data=meddat3,teststat="quadratic",
 
 ## Outcome Analysis
 
-Now, assuming we are happy with the design, we move onto assessing the
-relationships between home ownership and violence in 2008 at the neighborhood
-level.
+Now, assuming we are happy with the design, we describe the relationships between home ownership and violence in 2008 at the neighborhood level.
 
 ```{r}
 ## Ways to assess the relationship between home ownership and the outcome
@@ -458,7 +459,8 @@ level.
 ## relationship between differences in proportion home ownership and the
 ## outcome.
 
-## First, the most transparent way, but most typing.
+## First, the most transparent way, but most typing is to convert the data
+## into the strata level and create averages.
 meddat2$bmF <- factor(meddat2$bm)
 pair_diffs <- meddat2 %>% filter(rank_own!=.5) %>%
     group_by(bmF) %>%
@@ -534,18 +536,22 @@ meddat2 %>% filter(bmF=="1") %>% dplyr::select( rank_own, nhOwn, HomRate08) %>%
     summarize(mean(HomRate08))
 ```
 
+## Graphing the possibly non-linear/heterogeneous relationships
+
 This next allows us to explore the within pair differences --- here we look at how differences in proportion home ownership within pair relate to differences in homocide rate within pair.
 
 ```{r}
 ## More exploring about the pair-differences
 g1 <- ggplot(data=pair_diffs,aes(x=own_diff,y=hr_diff))+
     geom_point()+
-    geom_smooth(method="loess",se = FALSE,method.args=list(family="symmetric")) +
+    geom_smooth(method="loess",se = FALSE,method.args=list(family="gaussian",deg=2,span=.6)) +
     geom_smooth(method="loess",se =
-        FALSE,method.args=list(family="symmetric",span=.5,deg=1),col="orange")
+        FALSE,method.args=list(family="symmetric",span=.8,deg=1),col="orange")
 
 g1
 ```
+
+## Outcome analysis 2: Size of the difference within pairs
 
 So far our analysis asked, "Did the neighborhood in the pair with higher home ownership have less or more violence, on average, than the neighborhood in the pair with less home ownership." This ignores the *size* of the difference in proportion owning a home and in exchange allows us to simplify the question. That said, we can also look how the mean neighborhood violence differs given different magnitude of differences within pair. What about when we are looking at the difference in violence associated linearly
 with continuous differences in home ownership? (i.e. looking at how differences
@@ -554,14 +560,15 @@ Notice below that we have the same methods as above (only that the
 `difference_in_means` doesn't work because we don't have a binary explanatory
 variable.)
 
+## Outcome analysis 2: Size of the difference within pairs
+
 In each case the interpretation is about average differences in outcome for a
 one unit difference in the explanatory variable (which is really large, it is
 the maximum difference between any two neighborhoods on the explanatory.)
 
-```{r}
+```{r echo=TRUE}
 ## Still restricting attention to pairs that are not identical so that we can be
 ## using the same observations for both analyses.
-
 est1cont <- lm_robust(hr_diff~own_diff-1,data=pair_diffs)
 
 est3cont <- lm_robust(HomRate08~nhOwn,fixed_effects=~bmF,data=meddat2,subset=rank_own!=.5)
@@ -581,32 +588,18 @@ rbind(est1cont=coef(est1cont)[["own_diff"]],
 
 ```
 
-So, the average proportion HS among those neighborhoods higher on home
-ownership within a pair was .55 and the average proportion HS education was .60 among
-those neighborhoods lower on home ownership within a pair. But this difference
-of .08 would not be surprising from the perspective of a randomized experiment
-within pairs like this. And, in fact, the overall pattern is similar to what
-we'd see in a randomized experiment (as we can see from the omnibus test).
+## Summary of non-bipartite matching
 
-Can you replace `rank_own` with an actually randomized treatment here
-(randomized within pair)? What does `balanceTest` report when  you do the test
-using that variable? (The point here is to see what would happen if, in fact,
-rank of home ownership were really randomized within pair of neighborhoods.)
-
-How different are the neighborhoods within pair on key covariates? (I'm
-thinking of baseline Homocide Rate myself, but you might want to look at some
-others.) You can use code from previous explorations to summarize these
-differences within pair.
-
-How do the estimates of relationships conditioning on pair differ from the
-estimates that did not? Were there any substantive changes in the
-interpretation? (The previous work on matching offers hints about how to
-estimate effects conditional on the stratification.)
-
-How might we improve this matching? (See, for example, the help page for
-`nmatch` for some ideas.)
-
-
+ - We can make pairs of units within which we can claim to have broken the
+   relationship between many background covariates and another causal driver,
+   intervention, or treatment even if that $Z$ variable has many values. This
+   is called **non-bipartite matching**.
+ - We can compare these relationships to (1) our substantive and contextual
+   knowledge and (2) the kind of $X \rightarrow Z$ relationships we would see
+   had $Z$ been randomly assigned within pair (imagine $Z$ having multiple
+   values and the higher value being assigned at random within pair).
+ - We can compare how $Z \rightarrow Y$ conditional on pair in a variety of
+   ways: estimation and testing comparing the higher-vs-lower treatment value member of a pair or by averaging over the size of the higher-vs-lower treatment value differences (say, using OLS to focus on the linear relationship). We can also visualize the relationships to assess linearity and/or learn more.
 
 # Non-bipartite Matching: An Application with the Study of Race and Place
 
