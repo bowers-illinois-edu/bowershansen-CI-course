@@ -47,7 +47,6 @@ library(coin)
 library(RItools)
 library(optmatch)
 library(estimatr)
-library(estimatr)
 library(sensitivitymv)
 library(sensitivitymw)
 library(sensitivitymult)
@@ -155,14 +154,14 @@ DiD approaches.)
 balfmla <- nhTrt ~ HomRate03 + nhPopD + nhHS + nhAboveHS + nhEmp + nhAgeMid + nhAgeYoung + nhMarDom + nhOwn + nhRent
 glm1 <- arm::bayesglm(balfmla, data = meddat)
 meddat <- transform(meddat, pairm = pairmatch(glm1, data = meddat))
-xb1 <- xBalance(balfmla, strata = list(pm = ~pairm), data = meddat, report = "chisquare.test")
+xb1 <- balanceTest(update(balfmla,.~.+strata(pairm)), data = meddat)
 xb1$overall
 ```
 
-And here is an outcome analysis using `HomRate08 - HomRate03` as my outcome:
+And here is an **outcome analysis** using `HomRate08 - HomRate03` as my outcome:
 
 ```{r echo=TRUE}
-xbtest3 <- xBalance(nhTrt ~ HomRate0803, strata = list(pairm = ~pairm), data = meddat[matched(meddat$pairm), ], report = "all")
+xbtest3 <- balanceTest(nhTrt ~ HomRate0803+strata(pairm), data = meddat[matched(meddat$pairm), ])
 xbtest3$overall
 xbtest3$results[, c("adj.diff", "z", "p"), ]
 ## OR using a different asymptotic approximation:
@@ -504,6 +503,7 @@ plot(as.numeric(names(ampres1)), ampres1,
 ## Add a line for another Gamma
 ## lines(as.numeric(names(ampres2)), ampres2, type = "b")
 ```
+
 ## Interpreting sensitivity analyses
 
 ```{r echo=FALSE, out.width=".5\\textwidth"}

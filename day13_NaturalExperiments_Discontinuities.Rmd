@@ -66,18 +66,18 @@ library(rdd)
 ## So far:
 
 - Q: How can we argue that the relationship between $Z$ and $Y$ is $Z
-  \rightarrow Y$? 
+  \rightarrow Y$?
 - A: By excluding alternative explanations for this relationship.
 - Q: How do we exclude alternative explanations?
 - A: Many approaches
   1. Randomize $Z$;
-  2. Randomize an instrument for $Z$;
+  2. Randomize an instrument for $Z$ (or $D$);
   3. Remove specific $X \rightarrow Z$ relationships via stratification and/or weighting.
   4. (Today:) use a discontinuity as a kind of instrument for $Z$.
 
 # Discontinuity Designs
 
-## General Introduction and Setup
+## General Introduction and Setup {.shrink}
 
 Today we are going to use the data on close US House of Representatives races
 1942--2008 used in  @caugheysekhon2011.^[The full replication data is
@@ -96,11 +96,11 @@ rdd_data <- read_dta("http://jakebowers.org/Matching/RDReplication.dta") %>%
   filter(Use == 1) ## Use is indicator for whether unit is included in RD incumbency advantage sample
 ```
 
-## The Running Variable
+## The Running Variable {.shrink}
 
 The "running variable" is called `DifDPct`, which is defined as the Democratic margin of victory or defeat in the election; in other words, DifDPct is the difference between the percentage of all votes that were cast for the leading Democrat in the race and the percentage cast for the leading non-Democrat. Races in which no Democrat ran or in which the top two vote-getters were both Democrats are coded as missing.
 
-```{r}
+```{r echo=FALSE}
 running_var <- matrix(c("DifDPct", "Democrat Margin of Victory"),
   ncol = 2,
   byrow = TRUE
@@ -138,13 +138,14 @@ a democrat in the next election, and the democratic vote margin in the next
 election.
 
 ```{r echo=FALSE}
-dvs <- matrix(c(
-  "DWinNxt", "Dem Win t + 1",
-  "DPctNxt", "Dem % t + 1",
-  "DifDPNxt", "Dem % Margin t + 1"
-),
-ncol = 2,
-byrow = TRUE
+dvs <- matrix(
+  c(
+    "DWinNxt", "Dem Win t + 1",
+    "DPctNxt", "Dem % t + 1",
+    "DifDPNxt", "Dem % Margin t + 1"
+  ),
+  ncol = 2,
+  byrow = TRUE
 )
 
 dimnames(dvs) <- list(
@@ -163,47 +164,48 @@ kable(dvs)
 
 Effect of a democrat winning on democrat votes in next election? Alternative explanations? Reasonable comparisons?
 
-```{r echo=FALSE, out.width=".7\\textwidth", warnings=FALSE}
-g <- ggplot(rdd_data,aes(x=DifDPct, y=DPctNxt,color=DemWin)) +
-    geom_point()
+```{r echo=FALSE, out.width=".7\\textwidth", warning=FALSE}
+g <- ggplot(rdd_data, aes(x = DifDPct, y = DPctNxt, color = DemWin)) +
+  geom_point()
 print(g)
 ```
 
 
-## Baseline Covariates
+## Baseline Covariates {.shrink}
 
 The relevant baseline covariates (all measured prior to the realization of the running variable) are:
 
 ```{r echo=FALSE}
-covs <- matrix(c(
-  "DWinPrv", "Dem Win t - 1",
-  "DPctPrv", "Dem % t - 1",
-  "DifDPPrv", "Dem % Margin t - 1",
-  "IncDWNOM1", "Inc's D1 NOMINATE",
-  "DemInc", "Dem Inc in Race",
-  "NonDInc", "Rep Inc in Race",
-  "PrvTrmsD", "Dem's # Prev Terms",
-  "PrvTrmsO", "Rep's # Prev Terms",
-  "RExpAdv", "Rep Experience Adv",
-  "DExpAdv", "Dem Experience Adv",
-  "ElcSwing", "Partisan Swing",
-  "CQRating3", "CQ Rating {-1, 0, 1}",
-  "DSpndPct", "Dem Spending %",
-  "DDonaPct", "Dem Donation %",
-  "SoSDem", "Dem Sec of State",
-  "GovDem", "Dem Governor",
-  "DifPVDec", "Dem Pres % Margin", ## average over decade
-  "DemOpen", "Dem-held Open Seat",
-  "NonDOpen", "Rep-held Open Seat",
-  "OpenSeat", "Open Seat",
-  "VtTotPct", "Voter Turnout %",
-  "GovWkPct", "Pct Gov't Worker",
-  "UrbanPct", "Pct Urban",
-  "BlackPct", "Pct Black",
-  "ForgnPct", "Pct Foreign Born"
-),
-ncol = 2,
-byrow = TRUE
+covs <- matrix(
+  c(
+    "DWinPrv", "Dem Win t - 1",
+    "DPctPrv", "Dem % t - 1",
+    "DifDPPrv", "Dem % Margin t - 1",
+    "IncDWNOM1", "Inc's D1 NOMINATE",
+    "DemInc", "Dem Inc in Race",
+    "NonDInc", "Rep Inc in Race",
+    "PrvTrmsD", "Dem's # Prev Terms",
+    "PrvTrmsO", "Rep's # Prev Terms",
+    "RExpAdv", "Rep Experience Adv",
+    "DExpAdv", "Dem Experience Adv",
+    "ElcSwing", "Partisan Swing",
+    "CQRating3", "CQ Rating {-1, 0, 1}",
+    "DSpndPct", "Dem Spending %",
+    "DDonaPct", "Dem Donation %",
+    "SoSDem", "Dem Sec of State",
+    "GovDem", "Dem Governor",
+    "DifPVDec", "Dem Pres % Margin", ## average over decade
+    "DemOpen", "Dem-held Open Seat",
+    "NonDOpen", "Rep-held Open Seat",
+    "OpenSeat", "Open Seat",
+    "VtTotPct", "Voter Turnout %",
+    "GovWkPct", "Pct Gov't Worker",
+    "UrbanPct", "Pct Urban",
+    "BlackPct", "Pct Black",
+    "ForgnPct", "Pct Foreign Born"
+  ),
+  ncol = 2,
+  byrow = TRUE
 )
 
 dimnames(covs) <- list(
@@ -240,7 +242,7 @@ We know from @hansensales2015, @rosenbaum2008, @berger1988 that "if a researcher
 pre-specifies a sequence of hypotheses and corresponding level-$\alpha$ tests,
 tests those hypotheses in order, and stops testing after the first non-rejected
 hypothesis, then the probability of incorrectly rejecting at least one correct
-hypothesis is at most $\alpha$" \citep[p. 185]{hansensales2015}.
+hypothesis is at most $\alpha$" \citep[p. 185]{hansensales2015}. This is the Sequential Intersection Union Principle (SIUP) of hypothesis testing.
 \smallskip
 
 As applied to bandwidth selection in the RDD context, the SIUP implies that one should start with a set of candidate bandwidths and sequentially test for covariate balance (beginning from either the largest candidate bandwidth or the smallest candidate bandwidth).
@@ -249,7 +251,6 @@ As applied to bandwidth selection in the RDD context, the SIUP implies that one 
 Let's specify a set of candidate bandwidths and then sequentially test covariate balance. Before actually testing, though, we want to specify a balance criterion and then maximize effective sample size subject to that criterion.
 
 ```{r}
-
 bal_fmla <- reformulate(covs[1:25], response = "DemWin")
 
 candidate_bands <- seq(
@@ -263,63 +264,53 @@ Now let's first filter our dataset and check for balance in the largest candidat
 
 ```{r}
 lower_bound <- seq(from = -5, to = -0.1, by = 0.1)
-
 upper_bound <- seq(from = 0.1, to = 5, by = 0.1) %>%
   sort(decreasing = TRUE)
 
 rdd_dataA <- rdd_data
 rdd_dataA %<>% filter(DifDPct > lower_bound[1] & DifDPct < upper_bound[1])
 
+## The Pct diffs in the first, and widest, window of
+c(lower_bound[1], upper_bound[1])
 rdd_dataA %$% summary(DifDPct)
 
-xBalance(
+xb1 <- balanceTest(
   fmla = bal_fmla,
-  data = rdd_dataA,
-  report = "chisquare.test"
+  data = rdd_dataA
 )
-
-xb1 <- xBalance(
-  fmla = bal_fmla,
-  data = rdd_dataA,
-  report = "all"
-)
-xb1$results
+xb1$overall
 ```
+
+
 
 Now let's write a function to perform this same procedure over all candidate
 bandwidth sizes beginning with the largerst candidate bandwidth and
 subsequently testing smaller and smaller bandwidths in order.
 
 ```{r}
-
 chi_squared_balance <- function(i,
                                 running_var,
                                 bal_fmla,
+                                thelower_bound = lower_bound,
+                                theupper_bound = upper_bound,
                                 data) {
-
   # Preliminaries
   suppressMessages(stopifnot(require(dplyr, quietly = TRUE)))
   suppressMessages(stopifnot(require(parallel, quietly = TRUE)))
   suppressMessages(stopifnot(require(magrittr, quietly = TRUE)))
   suppressMessages(stopifnot(require(RItools, quietly = TRUE)))
 
-  lower_bound <- seq(from = -5, to = -0.1, by = 0.1)
-
-  upper_bound <- seq(from = 0.1, to = 5, by = 0.1) %>%
-    sort(decreasing = TRUE)
-
-  data %<>% filter(running_var > lower_bound[i] & running_var < upper_bound[i])
+  window_dat <- data %>% filter(running_var > thelower_bound[i] & running_var < theupper_bound[i])
 
   # Effective Sample Size
-  ess <- nrow(data)
+  ess <- nrow(window_dat)
 
-  p_value <- xBalance(
+  p_value <- balanceTest(
     fmla = bal_fmla,
-    data = data,
-    report = "chisquare.test"
+    data = window_dat
   )$overall[[3]]
 
-  bands <- cbind(ess, p_value, lower_bound[i], upper_bound[i])
+  bands <- cbind(ess, p_value, lb=thelower_bound[i], ub=theupper_bound[i])
 
   return(bands)
 }
@@ -335,47 +326,55 @@ is <- seq(
 )
 ```
 
-Now use the function:
+## Optimal Bandwidth Selection {.allowframebreaks}
+
+Now use the function (here using parallel processing)
 
 ```{r}
-cl <- makeCluster(parallel::detectCores())
+library(future)
+library(future.apply)
+plan(multicore,workers=6)
 
-band_df <- data.frame(t(parSapply(cl, is,
+# chi_squared_balance(1, running_var = rdd_data$DifDPct, bal_fmla = bal_fmla, data = rdd_data)
+
+res0 <- future_sapply(is,
   chi_squared_balance,
   running_var = rdd_data$DifDPct,
   bal_fmla = bal_fmla,
-  data = rdd_data
-))) %>%
-  rename(
-    ess = X1,
-    p_value = X2
-  )
+  data = rdd_data,
+  future.seed=TRUE
+)
 
-parallel::stopCluster(cl)
+band_df <- data.frame(t(res0)) %>% rename( ess = X1, p_value = X2, lb=X3,ub=X4)
+
+plan(sequential)
 
 kable(band_df)
 ```
 
+## Optimal Bandwidth Selection {.allowframebreaks}
+
+
 And look at the results
 
 ```{r}
-
-band_df$limits <- paste(round(band_df$X3,1),round(band_df$X4,1),sep=",")
-g2 <- ggplot(band_df,aes(x=p_value,y=ess,label=limits))+
-    geom_point() +
-    geom_label()
+band_df$limits <- paste(round(band_df$lb, 1), round(band_df$ub, 1), sep = ",")
+g2 <- ggplot(band_df, aes(x = p_value, y = ess, label = limits)) +
+  geom_point() +
+  geom_label()
 print(g2)
 ```
 
 ```{r}
-band_df[47,c("ess","p_value","X3","X4")]
+band_df[47, c("ess", "p_value", "lb", "ub")]
 ```
 
+## Optimal Bandwidth Selection {.allowframebreaks}
+
+The data within the selected window:
 
 ```{r}
-
-g + xlim(c(-.4,.4))
-
+g + xlim(c(-.4, .4))
 ```
 
 
@@ -396,8 +395,9 @@ potential outcomes through a mechanism other than $Z \given R \in W_0$.
 The exclusion restriction is a strong assumption in the RDD context since $Z$
 is a deterministic function of the running variable, $R$, which implies that
 treatment and control groups, by construction, will be imbalanced on the
-running variable. Thus, if $R$ relates to $(y_{c}, y_{t})$, through a mechanism
-other than $Z \given R \in W_0$, then the exlcusion restriction is violated.
+running variable (and covariates that relate to the running variable). Thus, if
+$R$ relates to $(y_{c}, y_{t})$, through a mechanism other than $Z \given R \in
+W_0$, then the exlcusion restriction is violated.
 
 \medskip
 
@@ -406,18 +406,18 @@ analysis within a window around the cutpoint where local randomization
 presumably holds:
 
 ```{r}
-
-rdd_data47 <-  rdd_data %>% filter(DifDPct > lower_bound[47] & DifDPct < upper_bound[47])
+rdd_data47 <- rdd_data %>% filter(DifDPct > lower_bound[47] & DifDPct < upper_bound[47])
 
 rdd_data47 %>% nrow()
 
 lm_robust(formula = DPctNxt ~ DemWin, data = rdd_data47)
 ```
 
-We coud also perform permutation inference within the window around the cutpoint under the assumption that local randomization holds (useful especially if the window contains relatively few observations, skewed outcomes, etc..):
+## Outcome Analysis and the Exclusion Restriction {.allowframebreaks}
+
+We could also perform permutation inference within the window around the cutpoint under the assumption that local randomization holds (useful especially if the window contains relatively few observations, skewed outcomes, etc..):
 
 ```{r}
-
 set.seed(1:5)
 sharp_null_dist <- replicate(
   n = 10^3,
@@ -425,36 +425,38 @@ sharp_null_dist <- replicate(
 )
 
 obsstat <- coef(lm(formula = DPctNxt ~ DemWin, data = rdd_data47))[["DemWin"]]
-
 upper_p_val <- mean(sharp_null_dist >= obsstat)
 lower_p_val <- mean(sharp_null_dist <= obsstat)
 two_sided_p_val <- min(1, 2 * min(upper_p_val, lower_p_val))
-
 two_sided_p_val
-
 rdd_data47$DemWinF <- factor(rdd_data47$DemWin)
-
 ## Alternatively
-wctest <- wilcox_test(DPctNxt~DemWinF,data=rdd_data47,distribution=approximate(nresample=1000))
-ttest <- oneway_test(DPctNxt~DemWinF,data=rdd_data47,distribution=approximate(nresample=1000))
+wctest <- wilcox_test(DPctNxt ~ DemWinF, data = rdd_data47, distribution = approximate(nresample = 1000))
+ttest <- oneway_test(DPctNxt ~ DemWinF, data = rdd_data47, distribution = approximate(nresample = 1000))
 pvalue(wctest)
 pvalue(ttest)
 ```
 
 ## Outcome Analysis and the Exclusion Restriction {.allowframebreaks}
 
-What can we do if the exclusion restriction is violated? Or worse, if the
-running variable, $R$, confounds the relationship between $Z$ and $Y$? One
-approach is to model potential outcomes as a function of the running variable,
-and then to "de-trend" (or "transform'') the outcome variable and to
-subsequently make the claim of "residual ignorability."
+What can we do if the running variable, $R$, confounds the relationship between
+$Z$ and $Y$ within the window? One approach is to model potential outcomes as a
+function of the running variable, and then to "de-trend" (or "transform'') the
+outcome variable and to subsequently argue that we have "residual
+ignorability." (See Hansen and Sales).
 
 For example, we could do the following:
 ```{r}
+## Estimate a linear trend
 tmp_lm <- lm(DPctNxt ~ DifDPct, data = rdd_data47)
-
-rdd_data47 %<>% mutate(resid_DPctNxt = resid(tmp_lm))
+## Estimate a non-linear trend resistent to outliers
+## We could look for an optimal bandwidth for this smoother by minimized SSE or something.
+tmp_loess <- loess(DPctNxt ~ DifDPct, data = rdd_data47, family="symmetric", deg=1, span=1/3)
+rdd_data47  <- rdd_data47 %>% mutate(resid_DPctNxt = resid(tmp_lm),
+resid_DPctNxt_loess=resid(tmp_loess))
 ```
+
+## Outcome Analysis and the Exclusion Restriction {.allowframebreaks}
 
 ```{r}
 ## An influential point robust loess smoother.
@@ -475,33 +477,37 @@ ggplot(
   geom_vline(xintercept = 0, linetype = "dashed")
 ```
 
-## Outcome Analysis
+## Outcome Analysis on Detrended Outcome Variable
 
 We can now perform outcome analysis on the detrended outcome variable:
 
 ```{r}
 lm_robust(formula = resid_DPctNxt ~ DemWin, data = rdd_data47)
+lm_robust(formula = resid_DPctNxt_loess ~ DemWin, data = rdd_data47)
 ```
 
-@saleshansen2020, however, propose robust regression, which is less sensitive to violations of the regression model's assumptions --- still removing linear trend here.
+@saleshansen2020, however, propose robust regression, which is less sensitive to violations of the regression model's assumptions --- although still removing linear trend here. And notice that we can test hypotheses about the effect caused by crossing the discontinuity using the detrended variable as well.
 
 ```{r}
 tmp_rlm <- rlm(DPctNxt ~ DifDPct, data = rdd_data47)
 rdd_data47 %<>% mutate(rlm_resid_DPctNxt = resid(tmp_rlm))
 lm_robust(formula = rlm_resid_DPctNxt ~ DemWin, data = rdd_data47)
-
-wctest2 <- wilcox_test(rlm_resid_DPctNxt~DemWinF,data=rdd_data47,distribution=approximate(nresample=1000))
-ttest2<- oneway_test(rlm_resid_DPctNxt~DemWinF,data=rdd_data47,distribution=approximate(nresample=1000))
+wctest2 <- wilcox_test(rlm_resid_DPctNxt ~ DemWinF, data = rdd_data47, distribution = approximate(nresample = 1000))
+ttest2 <- oneway_test(rlm_resid_DPctNxt ~ DemWinF, data = rdd_data47, distribution = approximate(nresample = 1000))
 pvalue(wctest2)
 pvalue(ttest2)
-
 ```
 
 ## Matching to create variable "bandwidths"
 
+We could also match across the threshold to either (1) Just treat this as a
+natural experiment (i.e. no exclusion restriction, no special assumptions about
+$R$ and $Z$) or (2) Strengthen arguments in favor of exclusion restriction.
+
 ```{r}
-mdist <- match_on(bal_fmla,data=rdd_data)
-pm1 <- pairmatch(mdist,data=rdd_data,remove.unmatchables = TRUE)
+
+mdist <- match_on(bal_fmla, data = rdd_data)
+pm1 <- pairmatch(mdist, data = rdd_data, remove.unmatchables = TRUE)
 summary(pm1)
 ```
 
@@ -526,12 +532,17 @@ below and above the cutpoint.
 
 
 ```{r}
+library(forcats)
+
 rdd_data %<>% arrange(DifDPct)
 
 rdd_data_cp <- dplyr::select(.data = rdd_data, DifDPct, DPctNxt, DemWin) %>%
-  mutate(cp = ifelse(test = DifDPct < 0, yes = "Below Cutpoint",
+  mutate(cp = factor(ifelse(test = DifDPct < 0, yes = "Below Cutpoint",
     no = "Above Cutpoint"
-  ))
+  )))
+
+rdd_data_cp$cp<- fct_relevel(rdd_data_cp$cp,c("Below Cutpoint","Above Cutpoint"))
+
 ```
 
 ```{r echo=FALSE}
@@ -542,10 +553,10 @@ ggplot(
     y = DPctNxt
   )
 ) +
-  geom_point() +
+  geom_point(color="grey",alpha=.5) +
   geom_smooth(method = lm, se = FALSE) +
   geom_smooth(method = rlm, se = FALSE, colour = "black") +
-  geom_smooth(method = loess, se = FALSE, colour = "red", method.args = list(deg = 1, span = 1 / 2, family = "symmetric")) +
+  geom_smooth(method = loess, se = FALSE, colour = "red", method.args = list(deg = 1, span = 1 / 3, family = "symmetric")) +
   theme(
     plot.title = element_text(hjust = 0.5),
     axis.text.x = element_text(size = 4)
@@ -556,7 +567,7 @@ ggplot(
   facet_wrap(
     facets = ~cp,
     nrow = 1,
-    ncol = 2
+    ncol = 2, scales="free"
   )
 ```
 
@@ -566,7 +577,6 @@ ggplot(
 Let's first use a simple linear model to estimate the relationship on both sides of the cutpoint. Here we are not using a window.
 
 ```{r}
-
 lm_predict_below <- predict(
   object = lm(formula = DPctNxt ~ DifDPct, data = rdd_data, subset = DifDPct < 0),
   newdata = data.frame(DifDPct = 0)
@@ -582,14 +592,15 @@ lm_predict_above - lm_predict_below
 
 ## Continuity in Potential Outcomes Framework {.allowframebreaks}
 
-We could also do the same thing with LOESS regression:
+We could also do the same thing with LOESS regression (here, choosing span and degree arbitrarily)
 
 ```{r}
-
 loess_predict_below <- predict(
   object = loess(
     formula = DPctNxt ~ DifDPct,
     data = rdd_data,
+    span=1/3,
+    deg=1,
     subset = DifDPct < 0,
     surface = "direct"
   ),
@@ -600,6 +611,8 @@ loess_predict_above <- predict(
   object = loess(
     formula = DPctNxt ~ DifDPct,
     data = rdd_data,
+      span=1/3,
+    deg=1,
     subset = DifDPct > 0,
     surface = "direct"
   ),
@@ -609,10 +622,9 @@ loess_predict_above <- predict(
 loess_predict_above - loess_predict_below
 ```
 
-We could also use a $p$th order polynomial. For example:
+We could also use a $p$th order polynomial although this is not a good idea because it is a global fit. For example:
 
 ```{r}
-
 lm_poly_predict_below <- predict(
   object = lm(
     formula = DPctNxt ~ I(DifDPct^3) + I(DifDPct^2) + DifDPct,
@@ -635,8 +647,7 @@ lm_poly_predict_above - lm_poly_predict_below
 This next calculates a bandwidth and then does what we just did above (all in one step):
 
 ```{r}
-
-rdest1 <- RDestimate(DPctNxt~DifDPct,data=rdd_data, se.type="HC3")
+rdest1 <- RDestimate(DPctNxt ~ DifDPct, data = rdd_data, se.type = "HC3")
 summary(rdest1)
 
 plot(rdest1)
@@ -646,16 +657,20 @@ plot(rdest1)
 ```{r}
 library(rdrobust)
 
-rdrest1 <- rdrobust(y=rdd_data$DPctNxt,x=rdd_data$DifDPct)
+rdrest1 <- rdrobust(y = rdd_data$DPctNxt, x = rdd_data$DifDPct)
 summary(rdrest1)
 
 
-rdplot(y=rdd_data$DPctNxt,x=rdd_data$DifDPct)
-
+rdplot(y = rdd_data$DPctNxt, x = rdd_data$DifDPct)
 ```
 
 
-\citet[647]{cattaneotitiunikvazquez-bare2017} view the potential outcomes as a random sample from an infinite superpopulation. How does this fit with this course's emphasis on finite population, design-based causal inference?
+From the perspective of statistical inference,
+\citet[647]{cattaneotitiunikvazquez-bare2017} view the potential outcomes as a
+random sample from an infinite superpopulation. This differs this course's
+emphasis on finite population, design-based causal inference. An interesting
+moment to think about whether and how this difference in foundational
+assumptions matters or not in a case like this.
 
 
 ## Summary
@@ -665,12 +680,12 @@ rdplot(y=rdd_data$DPctNxt,x=rdd_data$DifDPct)
  - Notice that we could have matched observations pre-vs-post within a window,
    to strengthen the argument for the "as randomized" assumption.
  - One can use a model to help the argument that the pre- and post-observations
-   are comparable (for example, removing trends).  
+   are comparable (for example, removing trends).
  - "Regression discontinuity" tends to imply use of a discontinity plus a
    continuity assumption for estimation --- estimation of a difference in
    curves at the cut-point.
  - So, there are two major approaches to the use of discontinuities for causal
-   inference: 
+   inference:
    1. It is a  "natural experiment" that allows a kind of instrumental
       variables estimation plus or minus stratification or trend adjustment;
    2. It is like an instrument in the middle of a continuous and smooth process
