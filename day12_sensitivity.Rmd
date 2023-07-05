@@ -544,8 +544,13 @@ plot(sens2,sensitivity.of="t-value")
 
 ## Summary and Questions:
 
-
+ - Formal sensitivity analysis allows us to use the as-if randomized approach to statistical inference **provisionally** (versus fearfully): we can directly ask how our distributions would change under different forms of unobserved confounding.
+ - The fact that a $p<.01$ would change to $p=.051$ if $\Gamma=3$ (or if $\Lambda$=4.5 and $\Delta$=14.7) does not mean that such an unobserved covariate exists.
+ - Since we are reasoning about unobserved covariates, we have a naming problem: We have to ask: What covariate could conceivably play this role?
  - See the Rabb et al (2022) piece for an example of this kind of sensitivity analysis in application.
+ - See Hazlett (2020) for an application of the regression based approach: "Angry or Weary?
+How Violence Impacts Attitudes toward Peace among Darfurian Refugees".
+
 
  
  
