@@ -53,7 +53,6 @@ library(sensitivitymw)
 library(sensitivitymult)
 library(sensitivityfull)
 library(senstrat)
-library(rbounds)
 ```
 
 ## Today
@@ -63,7 +62,7 @@ library(rbounds)
     style.
  2. We are now in the "Sensitivity Analysis" part of the course
     (see the reading there).
- 3. Questions arising from the reading or assignments or life?
+ 3. Questions arising from the reading or assignments or life? (Bipartite matching? Non-bipartite matching? Instrumental variables? Randomized experiments?)
 
 # But first, review
 
@@ -478,30 +477,13 @@ respmatPm <- with(droplevels(meddat[matched(meddat$pairm), ]), reshape_sensitivi
 two-sided intervals have lower bounds that are lower than the one-sided
 intervals. }
 
-
-## Confidence Intervals
-
-Or with a pairmatch we could use the \texttt{rbounds} package:
-
-```{r }
-hlsens(respmatPm[, 2], respmatPm[, 1])
-```
-
-## Confidence Intervals
-
-Or with a pairmatch we could use the \texttt{rbounds} package:
-
-```{r}
-psens(respmatPm[, 2], respmatPm[, 1])
-```
-
 ## Interpreting sensitivity analyses
 
 
  As an aid to interpreting sensitivity analyses,
   @rosenbaum2009amplification propose a way decompose $\Gamma$ into two
   pieces: one $\Delta$ gauges the relationship between an unobserved
-  confounder at the outcome (it records the maximum effect of the unobserved
+  confounder and the outcome (it records the maximum effect of the unobserved
   confounder on the odds of a positive response (imagining a binary outcome))
   and the other $\Lambda$ gauges the maximum relationship between the unobserved
   confounder and treatment assignment.
@@ -522,16 +504,51 @@ plot(as.numeric(names(ampres1)), ampres1,
 ## Add a line for another Gamma
 ## lines(as.numeric(names(ampres2)), ampres2, type = "b")
 ```
+## Interpreting sensitivity analyses
+
+```{r echo=FALSE, out.width=".5\\textwidth"}
+par(mar = c(3, 3, 1, 1), mgp = c(1.5, .5, 0))
+plot(as.numeric(names(ampres1)), ampres1,
+  xlab = "Lambda (maximum selection effect of confounder)",
+  ylab = "Delta (maximum outcome effect of confounder)",
+  main = paste("Decomposition of Gamma=", round(res1_h$root, 2))
+)
+## Add a line for another Gamma
+## lines(as.numeric(names(ampres2)), ampres2, type = "b")
+```
 
 
+## Sensitivity analysis for the weak null
 
+@cinellihazlett2020 and @hosman2010 expresse sensitivity analysis in terms more familiar to people who are using linear regression for estimation and testing of the weak null. Here is a version using the `sensemakr` package:
 
+```{r echo=TRUE}
+library(sensemakr)
+res1_lm <- lm(HomRate0803~nhTrt+pairm, data = meddat)
+sens1 <-  sensemakr(model = res1_lm, treatment = "nhTrt")
+
+summary(sens1)
+## If you have trouble using lm() and want to use lm_robust() or 
+## another least squares fitter (say, you have lots of pairs) or want 
+## a different standard error
+## you can do this:
+sens2 <- sensemakr(estimate = coef(lm1)[["nhTrt"]], se = lm1$std.error[["nhTrt"]], treatment = "nhTrt", dof = lm1$df.residual)
+
+summary(sens2)
+```
+
+```{r}
+plot(sens2,sensitivity.of="t-value")
+```
 
 
 ## Summary and Questions:
 
-What do you think? What questions arise?
 
+ - See the Rabb et al (2022) piece for an example of this kind of sensitivity analysis in application.
+
+ 
+ 
 
 
 ## References

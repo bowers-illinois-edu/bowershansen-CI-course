@@ -67,6 +67,14 @@ library(slam)
 
 # But first, review
 
+## What is regression doing?
+
+Following Berk (2004)'s *Regression Analysis: A Constructive Critique*.
+
+ - Describing relationships: If $Z \in {0,1}$ then `lm(Y~Z)` gives you `mean(Y[Z==1]) - mean(Y[Z==0])`; If $Z$ has more values, then this describes a linear relationship. Very useful. Simple interpretation.
+ - Statistical Inference
+ - Causal Inference
+
 ## Due Diligence and Stratified Observational Designs
 
  - **Before looking at outcomes** we explain our designs to ourselves by
@@ -217,9 +225,13 @@ coef(estate_fe2)["nhTrt"]
 
 set.seed(12345)
 ranktest1  <-  wilcox_test(HomRate08~nhTrtF|fm1,data=meddat_new,
-		       distribution=approximate(nresample=10000))
+		       distribution=approximate(nresample=1000))
 ## Notice that the "99 percent confidence interval" below refers to predicted differences in the p-value across difference simulations with different seeds.
 coin::pvalue(ranktest1)
+## Doing another 10000
+blah<- wilcox_test(HomRate08~nhTrtF|fm1,data=meddat_new,
+		       distribution=approximate(nresample=1000))
+coin::pvalue(blah)
 ```
 
 ## An Adjustment Strategy to Address Alternative Explanations
@@ -410,7 +422,7 @@ meddat2 <- meddat2 %>%
 ## Notice pair bm=1
 meddat2 %>% dplyr::select(bm,nh, nhOwn,rank_own,nhEmp, rank_emp)
 
-## Notice we have two sets with a tie:
+## Check for sets with a tie
 table(meddat2$rank_own)
 
 ## Since balanceTest demands binary treatment, we remove ties for now.
@@ -421,11 +433,11 @@ table(meddat3$rank_own)
 ## explanatories. Let's look at one of them here.
 
 ## Since we have a smaller dataset, we need to use fewer covariates if we want to use the large sample approximation from balanceTest
-newcovs <- c("nhClass","HomRate03","nhTP03","nhAgeYoung","nhAboveHS")
+newcovs <- c("nhClass","HomRate03","nhTP03","nhAgeYoung","nhAboveHS","nhEmp")
 
 balfmla_new <- reformulate(newcovs, response = "rank_own")
 ## Using only the matched data and also conditional within sets
-xb_own <- balanceTest(update(balfmla_new,.~.+strata(bm)), data = meddat3)
+xb_own <- balanceTest(update(balfmla_new,.~.+strata(bm)), data = meddat3,p.adjust="none")
 xb_own$overall
 xb_own_vars <- data.frame(xb_own$results[, c("Control", "Treatment", "adj.diff", "std.diff", "p"), "bm"])
 ## xb_own_vars$padj <- p.adjust(xb_own_vars$p, method = "holm") ## already adjusted using holm adjustment by default in balanceTest
