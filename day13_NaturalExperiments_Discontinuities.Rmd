@@ -1,11 +1,11 @@
 ---
 title: |
  | Natural Experiments and Discontinuities
- | ICPSR 2021 Session 1
+ | ICPSR 2023 Session 1
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | Jake Bowers, Ben Hansen, Tom Leavitt
-author-meta: Jake Bowers, Ben Hansen, Tom Leavitt
+  | Jake Bowers \& Tom Leavitt
+author-meta: Jake Bowers, Tom Leavitt
 bibliography:
  - 'BIB/MasterBibliography.bib'
 fontsize: 10pt
@@ -354,7 +354,6 @@ kable(band_df)
 
 ## Optimal Bandwidth Selection {.allowframebreaks}
 
-
 And look at the results
 
 ```{r}
@@ -368,6 +367,8 @@ print(g2)
 ```{r}
 band_df[47, c("ess", "p_value", "lb", "ub")]
 ```
+
+Idea: use power analysis prior to outcome analysis to choose bandwidth. Sample size and/or variance in outcome required for power and then use p-value arising from that.
 
 ## Optimal Bandwidth Selection {.allowframebreaks}
 
@@ -506,8 +507,8 @@ $R$ and $Z$) or (2) Strengthen arguments in favor of exclusion restriction.
 
 ```{r}
 
-mdist <- match_on(bal_fmla, data = rdd_data)
-pm1 <- pairmatch(mdist, data = rdd_data, remove.unmatchables = TRUE)
+mdist <- match_on(bal_fmla, data = rdd_data47)
+pm1 <- fullmatch(mdist, data = rdd_data47, remove.unmatchables = TRUE)
 summary(pm1)
 ```
 
