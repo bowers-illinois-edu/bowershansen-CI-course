@@ -236,11 +236,10 @@ coin::pvalue(blah)
 
 ## An Adjustment Strategy to Address Alternative Explanations
 
- 6. **Assess the sensitivity of the analysis to the assumptions of
-    as-if-randomized** The design is not a randomized design. Is this likely to
+ 6. **Assess the sensitivity of the analysis to the assumptions of as-if-randomized** The design is not a randomized design. Is this likely to
     cause small or large changes in the substantive interpretation of our
-    results? (R packages `sensitivityfull`, `sensitivitymv`, `sensitivitymw`, `sensitivitymult`,
-    `rbounds`)
+    results? (R packages `sensitivityfull`, `sensitivitymv`, `sensitivitymw`,
+    `sensitivitymult`, `rbounds`)
 
 ## What about data with multiple observations of each unit?
 
