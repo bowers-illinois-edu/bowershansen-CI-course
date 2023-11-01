@@ -463,7 +463,7 @@ head(newdat)
 And we include that variable in our balance testing and matching:
 
 ```{r echo=TRUE}
-theglm <- arm::bayesglm(nhTrt ~ nhAboveHS + nhPopD + nhPopD.NA + HomRate03, data = newdat)
+theglm <- arm::bayesglm(nhTrt ~ nhAboveHS + nhPopD + nhPopD.NA + HomRate03, data = newdat, family=binomial(link="logit"))
 psdist <- match_on(theglm, data = meddat)
 maxCaliper(theglm$linear.predictor, z = newdat$nhTrt, widths = c(.1, .5, 1))
 balfmla <- formula(theglm)

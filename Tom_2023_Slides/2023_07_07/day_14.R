@@ -1,4 +1,4 @@
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 library(dplyr)
 library(tidyverse)
@@ -101,12 +101,12 @@ standard_scale_DID_plot <- ggplot(data = standard_scale_DID_data,
         legend.title = element_blank(),
         legend.position = "right")
 
-#ggsave(plot = standard_scale_DID_plot,
-#       file = "standard_scale_DID_plot.pdf",
-#       width = 6,
-#       height = 4,
-#       units = "in",
-#       dpi = 600)
+ggsave(plot = standard_scale_DID_plot,
+       file = "standard_scale_DID_plot.pdf",
+       width = 6,
+       height = 4,
+       units = "in",
+       dpi = 600)
 
 log_scale_ATT <- log(exp(4)) - log(exp(3.75))
 round(x = log_scale_ATT, digits = 2)
@@ -140,9 +140,9 @@ log_scale_DID_plot <- ggplot(data = log_scale_DID_data,
         legend.title = element_blank(),
         legend.position = "right")
 
-#ggsave(plot = log_scale_DID_plot,
-#       file = "log_scale_DID_plot.pdf",
-#       width = 6,
-#       height = 4,
-#       units = "in",
-#       dpi = 600)
+ggsave(plot = log_scale_DID_plot,
+       file = "log_scale_DID_plot.pdf",
+       width = 6,
+       height = 4,
+       units = "in",
+       dpi = 600)
