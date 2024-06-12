@@ -1,0 +1,5 @@
+\beamer@sectionintoc {1}{Instructional Team}{2}{0}{1}
+\beamer@sectionintoc {2}{Course outline}{6}{0}{2}
+\beamer@sectionintoc {3}{Course Goals}{9}{0}{3}
+\beamer@sectionintoc {4}{Audience and Prerequisites}{11}{0}{4}
+\beamer@sectionintoc {5}{Textbooks and assignments}{13}{0}{5}

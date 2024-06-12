@@ -1,0 +1,28 @@
+\begin{thebibliography}{}
+
+\bibitem[\protect\citeauthoryear{Gerber and Green}{Gerber and Green}{2012}]{gerbergreen2012}
+Gerber, A.~S. and D.~P. Green (2012).
+\newblock {\em Field Experiments: Design, Analysis, and Interpretation}.
+\newblock New York, NY: W.W. Norton.
+
+\bibitem[\protect\citeauthoryear{Imbens and Rubin}{Imbens and Rubin}{2015}]{imbensrubin2015}
+Imbens, G.~W. and D.~B. Rubin (2015).
+\newblock {\em Causal Inference for Statistics, Social, and Biomedical Sciences: An Introduction}.
+\newblock New York, NY: Cambridge University Press.
+
+\bibitem[\protect\citeauthoryear{Rosenbaum}{Rosenbaum}{2002}]{rosenbaum2002}
+Rosenbaum, P.~R. (2002).
+\newblock {\em Observational Studies\/} (2nd ed.).
+\newblock New York, NY: Springer.
+
+\bibitem[\protect\citeauthoryear{Rosenbaum}{Rosenbaum}{2010}]{rosenbaum2010}
+Rosenbaum, P.~R. (2010).
+\newblock {\em Design of Observational Studies}.
+\newblock New York, NY: Springer.
+
+\bibitem[\protect\citeauthoryear{Rosenbaum}{Rosenbaum}{2017}]{rosenbaum2017}
+Rosenbaum, P.~R. (2017).
+\newblock {\em Observation and Experiment: An Introduction to Causal Inference}.
+\newblock Cambridge, MA: Harvard University Press.
+
+\end{thebibliography}
