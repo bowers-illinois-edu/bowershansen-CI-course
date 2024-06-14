@@ -1,39 +1,49 @@
-# Setup -------------------------------------------------------------------
+##' ---
+##' output: github_document
+##' ---
+##' # Setup -------------------------------------------------------------------
+
+##' <!-- Run this file using `rmarkdown::render()` (or `knitr::spin()`) -->
+##+ eval=TRUE, echo=FALSE
+if (!exists("saveplots_")) saveplots_ <- FALSE
+
+##' <!-- If running interactively in RStudio, may set this eval to TRUE -> 
+##+ eval=FALSE
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) ## set wd to where file is saved
 rm(list = ls())
 
-# Fisher's Lady Tasting Tea experiment ------------------------------------
+##' # Fisher's Lady Tasting Tea experiment ------------------------------------
 
-## Total of N = 8 cups
+##' Total of N = 8 cups
 N <- 8
 
-## Generate all 2^8 = 256 possible assignments
+##' Generate all 2^8 = 256 possible assignments
 expand.grid(replicate(n = N,
                       expr = 0:1,
                       simplify = FALSE))
 
-## To generate set of all allowable assignments, set number of milk-first (treated)
-## cups to n_1 = 4
+##' To generate set of all allowable assignments, set number of milk-first (treated)
+##' cups to n_1 = 4
 n_1 <- 4
 n_0 <- N - n_1 ## Remaining N - n_1 cups are tea-first (control) cups
 
-## Generate set of allowable assignments
+##' Generate set of allowable assignments
 Omega <- apply(X = combn(x = N,
                          m = n_1,
                          simplify = TRUE),
                MARGIN = 2,
                FUN = function(x) as.integer(1:N %in% x))
-## Each assignment has equal probability
+##' Each assignment has equal probability
 Omega_probs <- rep(x = 1/ncol(Omega),
                    times = ncol(Omega))
 
-## Suppose realized assignment is
+##' Suppose realized assignment is
 z <- Omega[,1]
 
-## Also suppose "lady" correctly judges all cups
+##' Also suppose "lady" correctly judges all cups
 y <- z
 
-## Write function to calculate Fisher's test statistic 
+##' Write function to calculate Fisher's test statistic 
 fisher_test_stat <- function(z,
                              y){
   
@@ -41,11 +51,11 @@ fisher_test_stat <- function(z,
   
 }
 
-## Calculate test-statisic on observed data
+##' Calculate test-statisic on observed data
 obs_test_stat <- fisher_test_stat(z = z,
                                   y = y)
 
-## Generate distribution over Omega holding y fixed
+##' Generate distribution over Omega holding y fixed
 test_stats_no_disc <- apply(X = Omega,
                             MARGIN = 2,
                             FUN = function(x) { fisher_test_stat(z = x,
@@ -55,9 +65,9 @@ space_test_stats_no_disc <- sort(unique(test_stats_no_disc))
 probs_no_disc <- sapply(X = space_test_stats_no_disc,
                         FUN = function(x) { sum((test_stats_no_disc == x) * Omega_probs) })
 
-## Plot distribution of null test-stat
+##' Plot distribution of null test-stat
 
-## Use ggplot2 and all tidyverse packages
+##' Use ggplot2 and all tidyverse packages
 # install.packages("tidyverse")
 library(tidyverse)
 
@@ -65,7 +75,7 @@ null_test_stats <- data.frame(null_test_stat = space_test_stats_no_disc,
                               prob = probs_no_disc,
                               null = "No discrimination")
 
-## Use Freedman-Diaconis rule for binwidth
+##' Use Freedman-Diaconis rule for binwidth
 #bw <- 2 * IQR(null_test_stats$null_test_stat) / length(null_test_stats$null_test_stat)^(1/3)
 
 null_dist_no_discrim_plot <- ggplot(data = null_test_stats,
@@ -79,13 +89,15 @@ null_dist_no_discrim_plot <- ggplot(data = null_test_stats,
   ylab(label = "Probability")
 null_dist_no_discrim_plot
 
-#ggsave(plot = null_dist_no_discrim_plot,
-#       file = "null_dist_no_discrim_plot.pdf",
-#       width = 6,
-#       height = 4,
-#       units = "in",
-#       dpi = 600)
+##+ eval=saveplots_
+ggsave(plot = null_dist_no_discrim_plot,
+       file = "null_dist_no_discrim_plot.pdf",
+       width = 6,
+       height = 4,
+       units = "in",
+       dpi = 600)
 
+##+ 
 test_stats_perf_disc <- apply(X = Omega,
                               MARGIN = 2,
                               FUN = function(x) { fisher_test_stat(z = x,
@@ -120,13 +132,10 @@ null_dists_discrim_plot <- ggplot(data = null_test_stats,
              scales = "fixed")
 null_dists_discrim_plot
 
-#ggsave(plot = null_dists_discrim_plot,
-#       file = "null_dists_discrim_plot.pdf",
-#       width = 6,
-#       height = 4,
-#       units = "in",
-#       dpi = 600)
-
-
-
-
+##+ eval=saveplots_
+ggsave(plot = null_dists_discrim_plot,
+       file = "null_dists_discrim_plot.pdf",
+       width = 6,
+       height = 4,
+       units = "in",
+       dpi = 600)

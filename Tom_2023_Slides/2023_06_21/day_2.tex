@@ -159,6 +159,8 @@
 \newtheorem{algo}{Algorithm}
 \newcommand*\diff{\mathop{}\!\mathrm{d}}
 \newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand{\bh}[1]{{\color{blue}{#1}}}
+\newcommand{\mh}[1]{{\color{magenta}{#1}}}
 \newcommand{\thisthmnumber}{}
 \newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
 \newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
@@ -267,11 +269,11 @@
 \vfill
 \begin{itemize} \vfill
 \item Upper, one-sided $p$-value \vfill
-\begin{itemize} \vfill
+%\begin{itemize} \vfill
 \begin{align*}
 \Pr\left(t(\bm{Z}, \bm{y}) \geq t^{\text{obs}}\right) & = \sum \limits_{\bm{z} \in \Omega} \mathbbm{1}\left\{t(\bm{z}, \bm{y}) \geq t^{\text{obs}}\right\} \Pr\left(\bm{Z} = \bm{z}\right)
 \end{align*} \vfill
-\end{itemize} \vfill 
+%\end{itemize} \vfill 
 \item[] \pause
 \begin{align*}
 \Pr\left(t(\bm{Z}, \bm{y}) \geq t^{\text{obs}}\right) & = \overbrace{\sum \limits_{\bm{z} \in \Omega}}^{\substack{\textcolor{magenta}{\text{Sum over all}} \\ \textcolor{magenta}{\text{assignments}}}} \underbrace{\mathbbm{1}\left\{t(\bm{z}, \bm{y}) \geq t^{\text{obs}}\right\}}_{\substack{\textcolor{magenta}{\text{Indicator of whether null test-stat}} \\ \textcolor{magenta}{\text{under assignment } \bm{z} \text{ is } \geq \text{ obs test-stat}}}} \underbrace{\Pr\left(\bm{Z} = \bm{z}\right)}_{\textcolor{magenta}{\text{Prob of assignment } \bm{z}}}

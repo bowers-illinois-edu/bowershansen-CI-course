@@ -1,7 +1,19 @@
+##' ---
+##' output: github_document
+##' ---
+##' # Setup -------------------------------------------------------------------
+
+##' <!-- Run this file using `rmarkdown::render()` (or `knitr::spin()`) -->
+##+ eval=TRUE, echo=FALSE
+if (!exists("saveplots_")) saveplots_ <- FALSE
+
+##' <!-- If running interactively in RStudio, may set this eval to TRUE -> 
+##+ eval=FALSE
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 rm(list = ls())
 
-acorn_data <- read.csv("acorn03.csv")
+##+
+acorn_data <- read.csv("../../data/acorn03.csv")
 
 acorn_data <- dplyr::select(.data = acorn_data, unit, size, z, vote03, v_g2002)
 
@@ -55,16 +67,18 @@ null_dist_no_effect_plot <- ggplot(data = null_dist_data_no_effect,
   xlab(label = "Null test statistics") +
   ylab(label = "Probability")
 
-#ggsave(plot = null_dist_no_effect_plot,
-#       file = "null_dist_no_effect_plot.pdf",
-#       width = 6,
-#       height = 4,
-#       units = "in",
-#       dpi = 600)
+##+ eval=saveplots_
+ggsave(plot = null_dist_no_effect_plot,
+       file = "null_dist_no_effect_plot.pdf",
+       width = 6,
+       height = 4,
+       units = "in",
+       dpi = 600)
 
 ################################################################################################################################################################################
 
 ## sharp null hypothesis for every unit
+##'
 tau_h <- .025 * 100
 
 ## Adjusted outcomes
@@ -100,14 +114,16 @@ null_unif_plot <- ggplot(data = null_dist_data,
   xlab(label = "Null test statistic") +
   ylab(label = "Probability")
 
-#ggsave(plot = null_unif_plot,
-#       file = "null_unif_plot.pdf",
-#       width = 6,
-#       height = 4,
-#       units = "in",
-#       dpi = 600)
+##+ eval=saveplots_
+ggsave(plot = null_unif_plot,
+       file = "null_unif_plot.pdf",
+       width = 6,
+       height = 4,
+       units = "in",
+       dpi = 600)
 
 ## Null hypotheses we will test
+##+ 
 nulls <- seq(from = -0.05, to = .15, by = .001) * 100
 
 ## Function to calculate p-values (lower and upper) for each null hypothesis

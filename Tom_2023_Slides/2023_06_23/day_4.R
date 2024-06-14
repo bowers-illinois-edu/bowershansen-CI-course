@@ -1,7 +1,18 @@
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+##' ---
+##' output: github_document
+##' ---
+##' # Setup -------------------------------------------------------------------
+
+##' <!-- Run this file using `rmarkdown::render()` (or `knitr::spin()`) -->
+##+ eval=TRUE, echo=FALSE
+if (!exists("saveplots_")) saveplots_ <- FALSE
+
+##' <!-- If running interactively in RStudio, may set this eval to TRUE -> 
+##+ eval=FALSE
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 rm(list = ls())
 
-## Complete random assignment
+##' Complete random assignment
 n <- 7
 n_1_cra <- 2
 
@@ -128,6 +139,7 @@ cra_var_est_dist_plot <- ggplot(data = cra_dist_var_est_data,
 
 cra_var_est_dist_plot
 
+##+ eval=saveplots_
 ggsave(plot = cra_var_est_dist_plot,
        file = "cra_var_est_dist_plot.pdf",
        width = 6,
@@ -135,6 +147,7 @@ ggsave(plot = cra_var_est_dist_plot,
        units = "in",
        dpi = 600)
 
+##+
 asymp_ests_exact <- function(.y_C,
                              .y_T,
                              .prop_T,
@@ -210,13 +223,15 @@ asymp_ests_plot <- ggplot(data = ests_plot_data,
         axis.text.y = element_blank())
 
 
-#ggsave(plot = asymp_ests_plot,
-#       file = "asymp_ests_plot.pdf",
-#       width = 6,
-#       height = 4,
-#       units = "in",
-#       dpi = 600)
+##+ eval=saveplots_
+ggsave(plot = asymp_ests_plot,
+       file = "asymp_ests_plot.pdf",
+       width = 6,
+       height = 4,
+       units = "in",
+       dpi = 600)
 
+##+
 h <- 1
 prop_T <- (2/7)
 y_C = c(y_C, rep(x = y_C, times = h - 1))
@@ -254,6 +269,8 @@ asymp_stand_ests_plot <- ggplot(data = stand_ests_plot_data,
   scale_x_continuous(labels = 0, breaks = 1) +
   theme(axis.ticks.y = element_blank(),
         axis.text.y = element_blank())
+
+##+ eval=saveplots_
 ggsave(plot = asymp_stand_ests_plot,
        file = "asymp_stand_ests_plot.pdf",
        width = 6,

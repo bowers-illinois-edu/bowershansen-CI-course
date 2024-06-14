@@ -1,7 +1,18 @@
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+##' ---
+##' output: github_document
+##' ---
+##' # Setup -------------------------------------------------------------------
+
+##' <!-- Run this file using `rmarkdown::render()` (or `knitr::spin()`) -->
+##+ eval=TRUE, echo=FALSE
+if (!exists("saveplots_")) saveplots_ <- FALSE
+
+##' <!-- If running interactively in RStudio, may set this eval to TRUE -> 
+##+ eval=FALSE
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 rm(list = ls())
 
-## Complete random assignment
+##' Complete random assignment
 n <- 7
 n_1_cra <- 2
 
@@ -49,6 +60,7 @@ cra_est_dist_plot <- ggplot(data = cra_dist_est_data,
 
 cra_est_dist_plot
 
+##+ eval=saveplots_
 ggsave(plot = cra_est_dist_plot,
        file = "cra_est_dist_plot.pdf",
        width = 6,
@@ -58,6 +70,7 @@ ggsave(plot = cra_est_dist_plot,
 
 ## Simple random assignment
 ## n_1 can now range from 0 to 7
+##+
 n_1_sra <- 0:7
 
 ## Again, don't worry about the code to follow
@@ -168,6 +181,7 @@ asymp_ests_plot <- ggplot(data = asym_ests_data,
              ncol = 4,
              scales = "free") 
 
+##+ eval=saveplots_
 ggsave(plot = asymp_ests_plot,
        file = "asymp_ests_plot.pdf",
        width = 6,
