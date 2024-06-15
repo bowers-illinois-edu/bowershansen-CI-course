@@ -9,7 +9,7 @@ output:
     fig_height: 5
     fig_width: 7
     highlight: tango
-    keep_tex: true
+    keep_tex: false
     latex_engine: xelatex
     toc: no
     toc_depth: 1
@@ -387,26 +387,23 @@ We know that $\mathrm{Var}\left[X\right] = \E\left[X^2\right] - \E\left[X\right]
 
 \subsection*{6h}
  
-For methods C and P, $\mathbf{Z}^{\prime}\mathbf{1}$ is a constant that is equal to $n_1$. The expected value of a constant is the constant; hence,
-\begin{align*}
-\E\left[\mathbf{Z}^{\prime}\mathbf{1}\right] \\
-& = \E\left[n_1\right] \\
-& = n_1
-\end{align*}
-Therefore, we can express $\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right]$ as follows:
+For methods C and P, $\mathbf{Z}^{\prime}\mathbf{1}$ is a constant that is equal to $n_1$. We can pull constant factors out of the expected value operator:
+\begin{equation*}
+\E\left[1/(\mathbf{Z}^{\prime}\mathbf{1})\right]  = (1/n_1)\E[1]  = n_1^{-1}
+\end{equation*}
+Furthermore, we can express $\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right]$ as follows:
 \begin{align*}
 \E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right] \\
-& = \E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{n_1}\right] \\
-& \vdots  \\
-& = \frac{\left(x_1 + \dots + x_n\right)}{n} \\
+& = n_1^{-1}\E\left[\mathbf{Z}^{\prime}\mathbf{x}\right] \\
+& n_1^{-1}\left[(n_1/n)x_1 + \cdots + (n_1/n)x_n\right]  \\
+& = \frac{\left(x_1 + \cdots + x_n\right)}{n} \\
 & = \overline{x},
 \end{align*}
 which is simply the mean of $\mathbf{x}$.
 
-For method I, $\mathbf{Z}^{\prime}\mathbf{1}$ is a random quantity that varies across different possible realizations of treatment assignment. Since, the number of treated units, $\mathbf{Z}^{\prime}\mathbf{1}$, is a random variable, we can no longer write $\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right] = \E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{n_1}\right]$. In addition, it is \textit{not} the case in general that $\E\left[\frac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}} \right] =
-\frac{\E\left[\mathbf{Z}'\mathbf{x} \right]}{\E\left[\mathbf{Z}'\mathbf{1} \right]}$. Therefore, the fact that $\cfrac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}} = \bar{x}$ in a completely randomized experiment does not immediately carry over to a simply randomized experiment.
+For method I, $\mathbf{Z}^{\prime}\mathbf{1}$ is a random quantity that varies across different possible realizations of treatment assignment. Since, the number of treated units, $\mathbf{Z}^{\prime}\mathbf{1}$, is a random variable, we are no longer entitled to conclude $\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right] = \E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{n_1}\right]$. For completely randomized experiments, this will be true, with certain caveats -- see below -- but the algebraic argument just given doesn't work, and will generate false conclusions for slightly different designs and circumstances.
 
-Nevertheless, so long as $n_1 > 0$, it follows that
+So in what sense is $\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right] = \E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{n_1}\right]$ true following complete randomization, and with what caveat?  So long as $n_1 > 0$, it follows that
 \begin{align*}
 \E\left[\frac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}}\big| \mathbf{Z}' \mathbf{1} = n_{1}\right] & = \E\left[\frac{\mathbf{Z}'\mathbf{x}}{n_1}\big| \mathbf{Z}' \mathbf{1} = n_{1}\right] \\
 & \vdots \\
