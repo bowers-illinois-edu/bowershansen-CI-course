@@ -1,0 +1,47 @@
+\usetheme[sectionpage=simple,subsectionpage=none,block=fill]{metropolis}
+\setbeamercolor{palette primary}{fg=white,bg=blue}
+\usepackage{amsmath} % added @ u3, FA2020
+\usepackage{amsfonts,amssymb}
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{empheq}
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{listings}
+\usepackage{soul} % for strikethrough
+\usepackage{awesomebox}
+\usepackage{colonequals}
+\setbeamerfont{subtitle}{size=\small}
+
+%\AtBeginSubsection{}
+\AtBeginSubsubsection{}
+\setlength{\emergencystretch}{0em}
+\setlength{\parskip}{0pt}
+
+\newcounter{tempcounter}
+\newlength{\tabcolsepadj}
+\setlength{\tabcolsepadj}{1.3mm}
+\addtolength{\tabcolsep}{-\tabcolsepadj} 
+
+\newcommand{\EE}{\ensuremath{\mathbf{E}}}
+\newcommand{\PP}{\ensuremath{\mathbf{Pr}}}
+\DeclareMathOperator{\var}{Var}
+\DeclareMathOperator{\cov}{Cov}
+\DeclareMathOperator{\avg}{avg}
+
+\newcommand{\hatvar}{\ensuremath{\widehat{\mathrm{Var}}}}
+\newcommand{\hatcov}{\ensuremath{\widehat{\mathrm{Cov}}}}
+
+\newcommand{\sehat}{\ensuremath{\widehat{\mathrm{se}}}}
+
+\newcommand{\vfillPrintout}{}
+\newcommand{\igrphx}[2][width=\linewidth]{\includegraphics[#1]{images/#2}}
+\renewcommand{\note}[2][]{}
+\newcommand{\itnote}[2][]{}%{\note{\begin{itemize} #2 \end{itemize}}}
+\newcommand{\Exercise}[2][\frametitle{Exercise}]{#1   #2}
+\newcommand{\Answer}[2][]{\vfill}
+\newcommand{\Answers}[2][]{\vfill}
+
+\newenvironment{Column}[1][.5\linewidth]{\begin{column}{#1}}{\end{column}}
+\newcommand{\tcw}{\textcolor{black}}
+\newcommand{\bh}[1]{{\color{blue}{#1}}}
+\newcommand{\mh}[1]{{\color{magenta}{#1}}}

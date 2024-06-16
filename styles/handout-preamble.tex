@@ -1,0 +1,45 @@
+\usepackage{amsmath} % added @ u3, FA2020
+\usepackage{amsfonts,amssymb}
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{empheq}
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and
+% \bottomrule in tables
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{soul} % for strikethrough
+\usepackage{awesomebox}
+\usepackage{colonequals}
+\newcounter{tempcounter}
+\newcommand{\note}[2][]{}
+\newcommand{\itnote}[2][]{}
+\newcommand{\igrphx}[2][width=.7\linewidth]{\includegraphics[#1]{images/#2}}
+\newcommand{\frametitle}[1]{\emph{#1}}
+\newcommand{\framesubtitle}[1]{\textit{#1}}
+\newcommand{\Exercise}[2][]{ \mbox{ }\\[-10ex] }
+\newcommand{\Answer}[2][]{}
+\newcommand{\Answers}[2][]{}
+
+\newcommand{\pause}{}
+\newcommand{\alert}{}
+\newenvironment{semiverbatim}{}
+
+\newcommand{\EE}{\ensuremath{\mathbf{E}}}
+\newcommand{\PP}{\ensuremath{\mathbf{Pr}}}
+\DeclareMathOperator{\var}{Var}
+\DeclareMathOperator{\cov}{Cov}
+\DeclareMathOperator{\avg}{avg}
+
+\newcommand{\hatvar}{\ensuremath{\widehat{\mathrm{Var}}}}
+\newcommand{\hatcov}{\ensuremath{\widehat{\mathrm{Cov}}}}
+
+\newenvironment{columns}{\noindent\begin{minipage}{\textwidth}
+}{\end{minipage}}
+\newlength\Colsep
+\setlength\Colsep{10pt}
+\newenvironment{column}[1]{\begin{minipage}{#1}}{\end{minipage}}
+\newenvironment{Column}[1][.5\textwidth]{\begin{minipage}{#1}}{\end{minipage}}
+\newcommand{\tcw}[1]{\underline{\textcolor{white}{#1}}}
+\newcommand{\bh}[1]{{\color{blue}{#1}}}
+\newcommand{\mh}[1]{{\color{magenta}{#1}}}

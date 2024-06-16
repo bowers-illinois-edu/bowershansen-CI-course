@@ -42,6 +42,11 @@ renv
 # specific files and directories
 .Rproj.user
 announcement-of-the-day.tex
+daily-announcement.md
+recap.tex
+day_*-handout.tex
+day_*-slides.tex
+day_*-wmn.tex
 2014
 2015
 BIB
@@ -52,3 +57,4 @@ data/lawnsigns
 unit01-fishercombs.tex
 day[0-9]*.tex
 *-scratch.R
+styles/daily-announcement.tex

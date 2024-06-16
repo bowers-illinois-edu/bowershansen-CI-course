@@ -1,0 +1,7 @@
+pdf_document:
+    keep_tex: true
+    latex_engine: pdflatex
+    includes:
+       in_header: styles/handout-preamble.tex
+    pandoc_args:
+       'styles/auth+date.yaml'

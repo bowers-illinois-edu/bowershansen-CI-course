@@ -1,0 +1,12 @@
+beamer_presentation:
+    toc: true
+    fig_width: 7
+    fig_height: 6
+    fig_caption: false
+    slide_level: 3
+    keep_tex: true
+    latex_engine: pdflatex
+    includes:
+       in_header: ./styles/beamer-preamble.tex
+       before_body: recap.tex
+    pandoc_args: './styles/auth+nodate.yaml'

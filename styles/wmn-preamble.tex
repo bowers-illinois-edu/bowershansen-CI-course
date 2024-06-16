@@ -1,0 +1,55 @@
+\usepackage{amsmath} % added @ u3, FA2020
+\usepackage{amsfonts,amssymb}
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{empheq}
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{soul} % for strikethrough
+\usepackage{awesomebox}
+\usepackage{colonequals}
+% \usepackage{ulem}
+\newcounter{tempcounter}
+%\usepackage{pgfpages}
+%%\pgfpagesuselayout{2 on 1}[letterpaper,border shrink=5mm] 
+%\setbeameroption{show notes on second screen=left}
+
+%\setbeamerfont{subtitle}{size=\small}
+
+%\AtBeginSubsection{}
+%\AtBeginSubsubsection{}
+%\setlength{\emergencystretch}{0em}
+%\setlength{\parskip}{0pt}
+% toggle next line OFF if reverting to beamer
+
+\usepackage{beamerarticle}
+% \newcommand{\frametitle}[1]{\emph{#1}}
+% \newcommand{\framesubtitle}[1]{\emph{#1}}
+\renewcommand{\note}[2][]{\textsc{#1}\hspace{1em}\emph{#2}}
+
+\newcommand{\EE}{\ensuremath{\mathbf{E}}}
+\newcommand{\PP}{\ensuremath{\mathbf{Pr}}}
+\DeclareMathOperator{\var}{Var}
+\DeclareMathOperator{\cov}{Cov}
+\DeclareMathOperator{\avg}{avg}
+
+\newcommand{\hatvar}{\ensuremath{\widehat{\mathrm{Var}}}}
+\newcommand{\hatcov}{\ensuremath{\widehat{\mathrm{Cov}}}}
+
+\newcommand{\sehat}{\ensuremath{\widehat{\mathrm{se}}}}
+
+\newcommand{\igrphx}[2][width=\linewidth]{\includegraphics[#1]{images/#2}}
+\newcommand{\itnote}[2][]{\note[#1]{\begin{itemize} #2 \end{itemize}}}
+\newcommand{\Exercise}[2][\textbf{Exercise}]{#1:\\ #2 \vspace{1ex} }
+\newcommand{\Answer}[2][]{\underline{\textit{Answer}}: #2}
+\newcommand{\Answers}[2][]{\underline{\textit{Answers}}: \begin{itemize} #2 \end{itemize}}
+\newcommand{\pause}{\textit{(pause)}}
+% \newenvironment{columns}{\noindent\begin{minipage}{\textwidth}%
+% }{\end{minipage}}
+% \newenvironment{column}[1]{\begin{minipage}{#1}}{\end{minipage}}
+\newenvironment{Column}[1][.5\textwidth]{\begin{minipage}{#1}}{\end{minipage}}
+\newcommand{\tcw}{\textcolor{black}}
+\newcommand{\bh}[1]{{\color{blue}{#1}}}
+\newcommand{\mh}[1]{{\color{magenta}{#1}}}
