@@ -237,14 +237,14 @@ $8$ & $0$ & $0$
 
 ### Randomization-based distributions
 
--   @fisher1935a derived distribution of summary measure,
+-   @fisher1935a: distribution of summary measure,
     $\bm{Z}^{\top} \bm{y}$, if "lady" could not discriminate between
     milk-first and tea-first cups
 
-![image](images/null_dist_no_discrim_plot.pdf){width="90%"}
+- ![distribution of summary measure if no discrimination](images/null_dist_no_discrim_plot.pdf){width="90%"}
 
 
-# Potential Outcomes
+## Potential Outcomes
 
 ### Potential outcomes
 
@@ -255,7 +255,7 @@ $8$ & $0$ & $0$
 
 -   @neyman1923 and @rubin1974 also posited counter-to-fact outcomes
 
-    -   I.e., [potential outcomes]{style="color: magenta"}
+    -   I.e., \mh{potential outcomes}. More next time. 
 
 -   E.g., perfect discrimination in "Lady Tasting Tea" example
 
@@ -343,235 +343,39 @@ $8$ & $0$ & $0$
     \end{tabular}
 \end{table} \vfill
 
-### Potential outcomes
+### Bringing small, simple data into R
 
-![image](images/null_dists_discrim_plot.pdf){width="100%"}
+To enter the coffee data directly into R, do:
 
-### Potential outcomes
+```{r eval=FALSE}
+z = scan(nlines=1)
+1:  1 1 1 1 0 0 0 0
+```
+(I.e., enter "`z = scan(nlines=1)`" at the "`>`"; at the "`1:`" that comes up, enter `1 1 1 1 0 0 0 0`.)  Use the same technique to assign `y`, and bind them together as follows:
+```{r eval=FALSE}
+coffee = data.frame(z, y) ; rm(z,y)
+```
 
--   A \mh{potential outcome schedule} is vector-valued function
-    $\bm{y}: \left\{0, 1\right\}^N \mapsto \mathop{\mathrm{\mathbb{R}}}^N$
+```{r echo=FALSE}
+coffee = data.frame(z=rep(1:0, each=4), y=rep(1:0, each=4)) 
+```
 
-    -   Potential outcomes for all $N$ units written as $\bm{y}(\bm{z})$
+You can now access your two variables as `coffee$z` and `coffee$y`, or using "`with()`" as shown below.
+```{r eval=FALSE}
+with(coffee, sum(z*y)) #figures t(z,y) = z^Ty
+with(coffee, fisher.test(z, y, alternative="g"))
+```
+We'll return to our explanation of `fisher.test()` after starting some R exercises.
 
-    -   Potential outcome for individual unit $i$ written as
-        $y_i(\bm{z})$
+\note{Break to begin exercise sheet}
 
--   Intuitively, a listing of how each unit would respond to any
-    $\bm{z} \in \left\{0, 1\right\}^N$
+# Hypothesis testing
 
--   We often consider potential outcome schedules that satisfy Stable
-    Unit Treatment Value Assumption (SUTVA)
-    [@cox1958a; @rubin1980b; @rubin1986]
-
--   SUTVA means that
-
-    1.  Units in experiment respond to only treatment condition to which
-        each unit is individually assigned
-
-    2.  Treatment condition is actually the same treatment for all units
-        assigned to treatment and control condition is the same for all
-        units assigned to control
-
-### Potential outcomes
-
--   SUTVA implies
-
-    -   One fixed value of the outcome for unit $i$ if it is assigned to
-        treatment $(z_i = 1)$ and another fixed value if unit $i$ is
-        assigned to control $(z_i = 0)$
-
-    -   $\rightarrow$ write potential outcomes for unit $i$ as $y_i(1)$
-        or $y_i(0)$
-
-    -   Each unit has at most two potential outcomes
-
-### Potential outcomes
-\fontsize{8pt}{8pt}\selectfont
-
--   Both no discrimination and perfect discrimination satisfy SUTVA
-
--   Consider, e.g., unit $i = 4$ under each potential outcome schedule
-
-\begin{center}\textbf{No discrimination}\end{center}
-
-\begin{table}[H]
-    \begin{tabular}{l|l}
-    $\mathbf{z}_1$ & $\mathbf{y}$ \\ \midrule
-    1 & 1  \\
-    1 & 1   \\
-    1 & 1   \\
-    \mh{1} & \mh{1}  \\
-    0 & 0  \\
-    0 & 0  \\
-    0 & 0  \\
-    0 & 0  
-    \end{tabular}
-    \hfill
-      \begin{tabular}{l|l}
-    $\mathbf{z}_2$ & $\mathbf{y}$ \\ \midrule
-    1 &  1  \\
-    1 &  1  \\
-    1 &  1  \\
-    \mh{0} &  \mh{1}   \\
-    1 &  0  \\
-    0 &  0  \\
-    0 &  0  \\
-    0 &  0  
-    \end{tabular}
-     \hfill
-      \begin{tabular}{l|l}
-    $\mathbf{z}_3$ & $\mathbf{y}$ \\ \midrule
-    1 & 1  \\
-    1 & 1  \\
-    1 & 1  \\
-    \mh{0} & \mh{1}   \\
-    0 & 0  \\
-    1 & 0  \\
-    0 & 0  \\
-    0 & 0  
-    \end{tabular}
-     \hfill
-     $\cdots $
-     \hfill
-      \begin{tabular}{l|l}
-    $\mathbf{z}_{68}$ & $\mathbf{y}$ \\ \midrule
-    0 & 1  \\
-    0 & 1  \\
-    0 & 1  \\
-    \mh{1} & \mh{1}   \\
-    1 & 0  \\
-    0 & 0  \\
-    1 & 0  \\
-    1 & 0  
-    \end{tabular}
-     \hfill
-      \begin{tabular}{l|l}
-    $\mathbf{z}_{69}$ & $\mathbf{y}$ \\ \midrule
-    0 & 1  \\
-    0 & 1  \\
-    0 & 1  \\
-    \mh{1} & \mh{1}  \\
-    0 & 0 \\
-    1 & 0  \\
-    1 & 0  \\
-    1 & 0  
-    \end{tabular}
-     \hfill
-      \begin{tabular}{l|l}
-    $\mathbf{z}_{70}$ & $\mathbf{y}$ \\ \midrule
-    0 & 1  \\
-    0 & 1  \\
-    0 & 1  \\
-    \mh{0} & \mh{1}  \\
-    1 & 0   \\
-    1 & 0  \\
-    1 & 0  \\
-    1 & 0  
-    \end{tabular}
-\end{table} \vfill
-\vspace{1em}
-
-\begin{center}\textbf{Perfect discrimination}\end{center}
-
-\begin{table}[H]
-    \begin{tabular}{l|l}
-    $\mathbf{z}_1$ & $\mathbf{y}$ \\ \midrule
-    1 & 1  \\
-    1 & 1   \\
-    1 & 1   \\
-    \mh{1} & \mh{1}  \\
-    0 & 0  \\
-    0 & 0  \\
-    0 & 0  \\
-    0 & 0  
-    \end{tabular}
-    \hfill
-      \begin{tabular}{l|l}
-    $\mathbf{z}_2$ & $\mathbf{y}$ \\ \midrule
-    1 &  1  \\ 
-    1 &  1  \\
-    1 &  1  \\
-    \mh{0} &  \mh{0}   \\
-    1 &  1  \\
-    0 &  0  \\
-    0 &  0  \\
-    0 &  0  
-    \end{tabular}
-     \hfill
-      \begin{tabular}{l|l}
-    $\mathbf{z}_3$ & $\mathbf{y}$ \\ \midrule
-    1 & 1  \\
-    1 & 1  \\
-    1 & 1  \\
-    \mh{0} & \mh{0}   \\
-    0 & 0  \\
-    1 & 1  \\
-    0 & 0  \\
-    0 & 0  
-    \end{tabular}
-     \hfill
-     $\cdots$
-     \hfill
-      \begin{tabular}{l|l}
-    $\mathbf{z}_{68}$ & $\mathbf{y}$ \\ \midrule
-    0 & 0  \\
-    0 & 0  \\
-    0 & 0  \\
-    \mh{1} & \mh{1}   \\
-    1 & 1  \\
-    0 & 0  \\
-    1 & 1  \\
-    1 & 1  
-    \end{tabular}
-     \hfill
-      \begin{tabular}{l|l}
-    $\mathbf{z}_{69}$ & $\mathbf{y}$ \\ \midrule
-    0 & 0  \\
-    0 & 0  \\
-    0 & 0  \\
-    \mh{1} & \mh{1}  \\
-    0 & 0 \\
-    1 & 1  \\
-    1 & 1  \\
-    1 & 1  
-    \end{tabular}
-     \hfill
-      \begin{tabular}{l|l}
-    $\mathbf{z}_{70}$ & $\mathbf{y}$ \\ \midrule
-    0 & 0  \\
-    0 & 0  \\
-    0 & 0  \\
-    \mh{0} & \mh{0}  \\
-    1 & 1   \\
-    1 & 1  \\
-    1 & 1  \\
-    1 & 1  
-    \end{tabular}
-\end{table}
-
-### Potential outcomes
-
--   \mh{Fundamental Problem of Causal Inference} [@holland1986]
-
-    ::: center
-    We can never observe both $y_{i}(1)$ and $y_{i}(0)$ for the same
-    $i$\
-    :::
-
--   We can observe only one of the two potential outcomes
-    $$y_i = z_i y_{i}(1) + (1 - z_i)y_{i}(0)$$
-
--   Analogue without supposing SUTVA
-
-    -   We can observe $y_i(\bm{z})$ under only one
-        $\bm{z} \in \left\{0, 1\right\}^N$
-
-# Next class: Hypothesis testing
+## Statistical hypothesis testing in general
 
 ### Hypothesis testing
 
--   Use known assignment mechanism to [reliably]{style="color: magenta"}
+-   Use known assignment mechanism to \mh{reliably}
     gather evidence
 
     -   against null hypothesis about one potential outcome schedule\
@@ -579,6 +383,131 @@ $8$ & $0$ & $0$
 
     -   and in favor of alternative hypothesis about another\
         (e.g., perfect discrimination)
+
+
+### Hypothesis testing: Introduction
+
+-   Steps of hypothesis testing:
+
+    1.  From randomized experiment, we observe data, $(\bm{z}, \bm{y})$,
+        and summarize data by test-stat, $t(\bm{z}, \bm{y})$
+
+    2.  For purposes of argumentation, we postulate a \mh{sharp null hypothesis}
+
+    3.  A sharp null hypothesis implies complete specification of
+        unit-level responses to experiment under every possible
+        assignment
+
+    4.  Under sharp null hypothesis, calculate test-stat over all
+        assignments
+
+    5.  Compare observed test-stat in (1) to distribution of test-stats
+        under null in (3)
+
+    6.  If observed test-stat inconsistent with distribution of
+        test-stat implied by sharp null, then reject sharp null;
+        otherwise, don't
+
+
+### Error and goals of hypothesis tests
+
+-   \mh{Type I Error}: Rejecting null when null is true
+
+-   \mh{Type II Error}: Failing to reject null when null is false
+
+-   Hence, two goals of our tests:
+
+    1.  Control the Type I Error:
+        $\Pr\left(\text{Type I Error}\right) \leq \alpha$, where
+        $\alpha$ is size of test
+
+    2.  Control Type II Error: Make as large as possible, where power is
+        $1 - \Pr\left(\text{Type II Error}\right)$
+
+-   \mh{Definitions}:
+
+-   Unbiased test:
+    $\text{Power} \geq \Pr\left(\text{Type I Error}\right)$
+
+-   Consistent test: $\text{Power} \to 1$ as size of experiment
+    $\to \infty$
+
+
+## Fisherian tests of the hypothesis of no effect
+
+### "Lady Tasting Tea" Example
+
+-   ![Distribution of test-stat over assignments under sharp null of no
+    effects](images/null_dist_no_discrim_plot.pdf){width="90%"}
+
+-   Upper $p$-value is $(1/70) \approx 0.0143$
+
+
+### "Lady Tasting Tea" Example
+\fontsize{11pt}{11pt}\selectfont
+
+
+-   Upper, one-sided $p$-value $$\begin{aligned}
+    \Pr\left(t(\bm{Z}, \bm{y}) \geq t^{\text{obs}}\right) & = \sum \limits_{\bm{z} \in \Omega} \mathbbm{1}\left\{t(\bm{z}, \bm{y}) \geq t^{\text{obs}}\right\} \Pr\left(\bm{Z} = \bm{z}\right)
+    \end{aligned}$$
+
+\pause
+   $$\begin{aligned}
+    \Pr\left(t(\bm{Z}, \bm{y}) \geq t^{\text{obs}}\right) & = \overbrace{\sum \limits_{\bm{z} \in \Omega}}^{\substack{\textcolor{magenta}{\text{Sum over all}} \\ \textcolor{magenta}{\text{assignments}}}} \underbrace{\mathbbm{1}\left\{t(\bm{z}, \bm{y}) \geq t^{\text{obs}}\right\}}_{\substack{\textcolor{magenta}{\text{Indicator of whether null test-stat}} \\ \textcolor{magenta}{\text{under assmt } \bm{z} \text{ is } \geq \text{ obs test-stat}}}} \underbrace{\Pr\left(\bm{Z} = \bm{z}\right)}_{\textcolor{magenta}{\text{Prob of assmt } \bm{z}}}
+    \end{aligned}$$
+
+
+### "Lady Tasting Tea" Example
+
+-   ![Distribution of test-stat over assignments under two sharp causal
+    effects](images/perfect_discrim_test_stat_plot.pdf){width="90%"}
+
+-   Imagine that we test sharp null of no effects when (unbeknownst to
+    us) true effect is that of perfect discrimination. What is power of
+    test?
+
+## Approximate p-values via Normal theory
+
+### A slightly larger experiment
+
+@antonioli2005rct randomized 15 particpants to dolphin therapy, 15 to tropical vacation without dolphins. After, depression was improved ($y=1$) for 13/30 particpants, not improved ($y=0$ for $17/30$. Again, we can consider the distribution of $\bm{Z}^{\top}\bm{y}$ under the sharp null of no effect.
+
+\note{Show https://giphy.com/explore/dolphin}
+
+### Tea and dolphins
+\fontsize{11pt}{11pt}\selectfont
+
+```{r fig.height=5, echo=FALSE}
+allones <- c(teatasting=4, dolphins=13)
+allzeroes <- c(teatasting=4, dolphins=17)
+n_t <- c(teatasting=4, dolphins=15)
+
+plot_dens <- function(expt){
+plot(0:n_t[expt],
+     dhyper(0:n_t[expt], m=allones[expt],
+            n=allzeroes[expt], k=n_t[expt]),
+      type="h", xlab="Test statistic", ylab="Probability",
+      main=expt)
+	    }
+
+par(mfrow=c(2,1))
+plot_dens("teatasting")
+plot_dens("dolphins")
+par(mfrow=c(1,1))
+```
+As $n$ grows -- and $\bar{Z}$, $\bar{y}$ stay away from 0 or 1 -- the histogram tends to Normality.
+
+###  Expected value of random variables {.build}
+
+For Normal-theory approximate *p*-values, the data and the strict null are combined to figure $\EE[\bm{Z}^{\top}\bm{y}]$ and $\var \bm{Z}^{\top}\bm{y}$.  Here we consider only the first.
+
+- In general, $\EE(aX + bY) = a\EE(X) + b\EE(Y)$.  (*Linearity* of expected value.  $X$, $Y$ don't have to be independent.)
+- By def., $\bm{Z}^{\top}\bm{y} = \sum_{i=1}^n Z_i y_i$. So $\EE[\bm{Z}^{\top}\bm{y}] = \sum_{i=1}^n y_i \PP(Z_i=1)$. ($y$ isn't random, $Z$ is.)
+- Under complete randomization, $\PP(Z_i=1) = n_1/n$.
+- In consequence, $\EE[\bm{Z}^{\top}\bm{y}] = \sum_{i=1}^n y_i \cdot (n_1/n) = (n_1/n)\sum_{i=1}^n y_i = n_1\bar{y}$.
+- Similar algebra gives $\EE[t(\bm{Z}, \bm{y})]$, e.g. $t(\bm{Z}, \bm{y}) = \bm{Z}^{\top}\bm{y}$. (But not all $t()$.  If $t(\bm{Z}, \bm{y}) = f(\bm{Z}, \bm{y})g(\bm{Z}, \bm{y})$, linearity does **not** give $\EE[t(\bm{Z}, \bm{y})] = \EE[f(\bm{Z}, \bm{y})]\EE[g(\bm{Z}, \bm{y})]$ -- one factor has to be nonrandom.)
+
+\note{Now continue normal theory part of exercises}
 
 ### References
 

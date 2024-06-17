@@ -5,5 +5,5 @@ pdf_document:
     toc_depth: 2
     includes:
         in_header: styles/wmn-preamble.tex
-        before_body: daily-announcement.tex
+        before_body: styles/daily-announcement.tex
     pandoc_args: 'styles/auth+date.yaml'
