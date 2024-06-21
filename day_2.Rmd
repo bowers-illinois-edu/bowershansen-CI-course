@@ -1,0 +1,666 @@
+---
+title: |
+ | Randomized experiments: Potential outcome schedules
+ | \& estimation of causal effects
+bibliography:
+ - 'BIB/MasterBibliography.bib'
+---
+
+# Recap
+
+### Randomization and potential outcomes schedules
+
+-   Yesterday we introduced two important concepts:
+
+    1.  Random assignment
+
+    2.  Fisherian hypothesis testing, using distributions derived from random assignment as a basis the test
+
+-   Today we will introduce potential outcomes schedules, the missing ingredient to use Fisherian hypothesis testing to learn about causal effects
+
+# Potential Outcomes
+
+### Neyman-Rubin potential outcome framework
+
+-   Thus far, we have entertained counter-to-fact assignments of
+    treatment
+
+    -   Responses have been fixed at their observed values
+
+-   @neyman1923 and @rubin1974 also posited counter-to-fact outcomes
+
+    -   I.e., \mh{potential outcomes}
+
+-   E.g., perfect discrimination in "Lady Tasting Tea" example
+
+\vfill
+\begin{table}[H]
+\scriptsize
+    \begin{tabular}{l|l}
+    \toprule
+    $\mathbf{z}_1$ & $\mathbf{y}$ \\ \midrule
+    1 & 1  \\
+    1 & 1   \\
+    1 & 1   \\
+    1 & 1  \\
+    0 & 0  \\
+    0 & 0  \\
+    0 & 0  \\
+    0 & 0  
+    \end{tabular}
+    \hfill
+      \begin{tabular}{l|l}
+      \toprule
+    $\mathbf{z}_2$ & $\mathbf{y}$ \\ \midrule
+    1 &  1  \\
+    1 &  1  \\
+    1 &  1  \\
+    0 &  0   \\
+    1 &  1  \\
+    0 &  0  \\
+    0 &  0  \\
+    0 &  0  
+    \end{tabular}
+     \hfill
+      \begin{tabular}{l|l}
+      \toprule
+    $\mathbf{z}_3$ & $\mathbf{y}$ \\ \midrule
+    1 & 1  \\
+    1 & 1  \\
+    1 & 1  \\
+    0 & 0   \\
+    0 & 0  \\
+    1 & 1  \\
+    0 & 0  \\
+    0 & 0  
+    \end{tabular}
+     \hfill
+     $\cdots $
+     \hfill
+      \begin{tabular}{l|l}
+      \toprule
+    $\mathbf{z}_{68}$ & $\mathbf{y}$ \\ \midrule
+    0 & 0  \\
+    0 & 0  \\
+    0 & 0  \\
+    1 & 1   \\
+    1 & 1  \\
+    0 & 0  \\
+    1 & 1  \\
+    1 & 1  
+    \end{tabular}
+     \hfill
+      \begin{tabular}{l|l}
+      \toprule
+    $\mathbf{z}_{69}$ & $\mathbf{y}$ \\ \midrule
+    0 & 0  \\
+    0 & 0  \\
+    0 & 0  \\
+    1 & 1  \\
+    0 & 0 \\
+    1 & 1  \\
+    1 & 1  \\
+    1 & 1  
+    \end{tabular}
+     \hfill
+      \begin{tabular}{l|l}
+      \toprule
+    $\mathbf{z}_{70}$ & $\mathbf{y}$ \\ \midrule
+    0 & 0  \\
+    0 & 0  \\
+    0 & 0  \\
+    0 & 0  \\
+    1 & 1   \\
+    1 & 1  \\
+    1 & 1  \\
+    1 & 1  
+    \end{tabular}
+\end{table} \vfill
+
+
+### Potential outcomes
+
+![image](images/null_dists_discrim_plot.pdf){width="100%"}
+
+
+### Causality with Potential Outcomes
+
+-   Definition: \bh{Treatment}
+
+-   $Z_i$: Indicator of treatment assignment for *unit* $i$, where
+    $i = 1, \ldots, N$ $$Z_i = \left\{
+            \begin{array}{ll}
+              1 & \mbox{if unit $i$ receives treatment}\\
+              0 & \mbox{otherwise}
+            \end{array}
+          \right.$$
+
+-   Definition: \bh{Potential Outcomes}  (assuming "SUTVA")
+
+-   $y_i(1)$ or $y_i(0)$: Fixed value of the outcome for unit $i$ if it
+    were to receive treatment or control
+
+-   E.g., $y_i(1)$: voter turnout of person $i$ if person $i$ were to
+    receive mail encouraging turnout
+
+-   E.g., $y_i(0)$: voter turnout of person $i$ if person $i$ were *not*
+    to receive mail encouraging turnout
+
+### Defining Causal Effects + Observed Outcomes
+
+
+-   \mh{Additive} causal effect of the treatment on the outcome for unit $i$:
+    $$\begin{aligned}
+    \tau_i & = & y_i(1) - y_i(0)
+    \end{aligned}$$
+
+    (Again, assumes "SUTVA").
+    
+-   Other functions of of individual potential outcomes possible, e.g.,
+    $\dfrac{y_i(1)}{y_i(0)}$
+
+-    \mh{Fundamental Problem of Causal Inference} (Holland 1986):
+
+::: center
+   We can never observe both $y_i(1)$ and $y_i(0)$ for the same $i$\
+:::
+
+-   We can observe only one of the two potential outcomes:
+    $$Y_i = Z_i y_i(1) + (1 - Z_i)y_i(0)$$
+
+-   Therefore, $\tau_{i}$ is unobserved for every unit
+
+
+###  Average treatment effect: An example
+
+-   Definition: \bh{Average Treatment Effect (ATE)}
+$$\begin{aligned}
+    \tau & = &  \frac{1}{N}\sum_{i = 1}^N \left(y_i(1) - y_i(0) \right)
+    \end{aligned}$$
+
+-   Example: \bh{``Village heads'' study} (Gerber and Green 2012, Chapter 2):
+
+-   ::: center
+      --------- ------------------ ------------------ -------------
+                  Budget share (%)                    
+      Village     $\bm{y}(\bm{0})$   $\bm{y}(\bm{1})$   $\bm{\tau}$
+      1                         10                 15             5
+      2                         15                 15             0
+      3                         20                 30            10
+      4                         20                 15            -5
+      5                         10                 20            10
+      6                         15                 15             0
+      7                         15                 30            15
+      Average                   15                 20             5
+      --------- ------------------ ------------------ -------------
+    :::
+
+
+### Potential outcome schedules
+
+-   A \mh{potential outcome schedule} [@freedman2009] is vector-valued function
+    $\bm{y}: \left\{0, 1\right\}^N \mapsto \mathop{\mathrm{\mathbb{R}}}^N$
+
+    -   Potential outcomes for all $N$ units written as $\bm{y}(\bm{z})$
+
+    -   Potential outcome for individual unit $i$ written as
+        $y_i(\bm{z})$
+
+-   Intuitively, a listing of how each unit would respond to any
+    $\bm{z} \in \left\{0, 1\right\}^N$
+
+-   We often consider potential outcome schedules that satisfy Stable
+    Unit Treatment Value Assumption (SUTVA)
+    [@rubin1980b; @rubin1986]
+
+-   SUTVA means that
+
+    1.  Units in experiment respond to only treatment condition to which
+        each unit is individually assigned (no "interference"; @cox1958a)
+
+    2.  Treatment condition is actually the same treatment for all units
+        assigned to treatment and control condition is the same for all
+        units assigned to control
+
+
+
+### Potential outcome schedules
+
+-   SUTVA implies
+
+    -   One fixed value of the outcome for unit $i$ if it is assigned to
+        treatment $(z_i = 1)$ and another fixed value if unit $i$ is
+        assigned to control $(z_i = 0)$
+
+    -   $\rightarrow$ Each unit has at most two potential outcomes
+
+    -   $\rightarrow$ write potential outcomes for unit $i$ as $y_i(1)$
+        or $y_i(0)$.
+    -   $\rightarrow$ summarize $2^n$ p.o. schedules w/ one $n \times 2$ table, as done above for the Village heads study
+
+### SUTVA 
+\fontsize{8pt}{8pt}\selectfont
+
+-   Both no discrimination and perfect discrimination satisfy SUTVA
+
+-   Consider, e.g., unit $i = 4$ under either potential outcome schedule
+
+\begin{center}\textbf{No discrimination}\end{center}
+
+\begin{table}[H]
+    \begin{tabular}{l|l}
+    $\mathbf{z}_1$ & $\mathbf{y}$ \\ \midrule
+    1 & 1  \\
+    1 & 1   \\
+    1 & 1   \\
+    \mh{1} & \mh{1}  \\
+    0 & 0  \\
+    0 & 0  \\
+    0 & 0  \\
+    0 & 0  
+    \end{tabular}
+    \hfill
+      \begin{tabular}{l|l}
+    $\mathbf{z}_2$ & $\mathbf{y}$ \\ \midrule
+    1 &  1  \\
+    1 &  1  \\
+    1 &  1  \\
+    \mh{0} &  \mh{1}   \\
+    1 &  0  \\
+    0 &  0  \\
+    0 &  0  \\
+    0 &  0  
+    \end{tabular}
+     \hfill
+      \begin{tabular}{l|l}
+    $\mathbf{z}_3$ & $\mathbf{y}$ \\ \midrule
+    1 & 1  \\
+    1 & 1  \\
+    1 & 1  \\
+    \mh{0} & \mh{1}   \\
+    0 & 0  \\
+    1 & 0  \\
+    0 & 0  \\
+    0 & 0  
+    \end{tabular}
+     \hfill
+     $\cdots $
+     \hfill
+      \begin{tabular}{l|l}
+    $\mathbf{z}_{68}$ & $\mathbf{y}$ \\ \midrule
+    0 & 1  \\
+    0 & 1  \\
+    0 & 1  \\
+    \mh{1} & \mh{1}   \\
+    1 & 0  \\
+    0 & 0  \\
+    1 & 0  \\
+    1 & 0  
+    \end{tabular}
+     \hfill
+      \begin{tabular}{l|l}
+    $\mathbf{z}_{69}$ & $\mathbf{y}$ \\ \midrule
+    0 & 1  \\
+    0 & 1  \\
+    0 & 1  \\
+    \mh{1} & \mh{1}  \\
+    0 & 0 \\
+    1 & 0  \\
+    1 & 0  \\
+    1 & 0  
+    \end{tabular}
+     \hfill
+      \begin{tabular}{l|l}
+    $\mathbf{z}_{70}$ & $\mathbf{y}$ \\ \midrule
+    0 & 1  \\
+    0 & 1  \\
+    0 & 1  \\
+    \mh{0} & \mh{1}  \\
+    1 & 0   \\
+    1 & 0  \\
+    1 & 0  \\
+    1 & 0  
+    \end{tabular}
+\end{table} \vfill
+\vspace{1em}
+
+\begin{center}\textbf{Perfect discrimination}\end{center}
+
+\begin{table}[H]
+    \begin{tabular}{l|l}
+    $\mathbf{z}_1$ & $\mathbf{y}$ \\ \midrule
+    1 & 1  \\
+    1 & 1   \\
+    1 & 1   \\
+    \mh{1} & \mh{1}  \\
+    0 & 0  \\
+    0 & 0  \\
+    0 & 0  \\
+    0 & 0  
+    \end{tabular}
+    \hfill
+      \begin{tabular}{l|l}
+    $\mathbf{z}_2$ & $\mathbf{y}$ \\ \midrule
+    1 &  1  \\ 
+    1 &  1  \\
+    1 &  1  \\
+    \mh{0} &  \mh{0}   \\
+    1 &  1  \\
+    0 &  0  \\
+    0 &  0  \\
+    0 &  0  
+    \end{tabular}
+     \hfill
+      \begin{tabular}{l|l}
+    $\mathbf{z}_3$ & $\mathbf{y}$ \\ \midrule
+    1 & 1  \\
+    1 & 1  \\
+    1 & 1  \\
+    \mh{0} & \mh{0}   \\
+    0 & 0  \\
+    1 & 1  \\
+    0 & 0  \\
+    0 & 0  
+    \end{tabular}
+     \hfill
+     $\cdots$
+     \hfill
+      \begin{tabular}{l|l}
+    $\mathbf{z}_{68}$ & $\mathbf{y}$ \\ \midrule
+    0 & 0  \\
+    0 & 0  \\
+    0 & 0  \\
+    \mh{1} & \mh{1}   \\
+    1 & 1  \\
+    0 & 0  \\
+    1 & 1  \\
+    1 & 1  
+    \end{tabular}
+     \hfill
+      \begin{tabular}{l|l}
+    $\mathbf{z}_{69}$ & $\mathbf{y}$ \\ \midrule
+    0 & 0  \\
+    0 & 0  \\
+    0 & 0  \\
+    \mh{1} & \mh{1}  \\
+    0 & 0 \\
+    1 & 1  \\
+    1 & 1  \\
+    1 & 1  
+    \end{tabular}
+     \hfill
+      \begin{tabular}{l|l}
+    $\mathbf{z}_{70}$ & $\mathbf{y}$ \\ \midrule
+    0 & 0  \\
+    0 & 0  \\
+    0 & 0  \\
+    \mh{0} & \mh{0}  \\
+    1 & 1   \\
+    1 & 1  \\
+    1 & 1  \\
+    1 & 1  
+    \end{tabular}
+\end{table}
+
+
+# Tests of general sharp null hypotheses
+
+### A simple model of effects for the Acorn GOTV experiment
+
+-   Consider ACORN GOTV experiment by @arceneaux2005
+
+-   Fisher's sharp null hypothesis of no effect states that individual
+    effect is $p = 0$ percentage points for all precincts
+
+                   GOTV?   vote03(%)   $\bm{y}(\bm{0})$   $\bm{y}(\bm{1})$   $\bm{\tau}$
+      ---------- ------- ----------- ------------------ ------------------ -------------
+               1       0          38                 38                 38             0
+        $\vdots$                                                           
+              13       0          19                 19                 19             0
+              14       0          34                 34                 34             0
+              15       1          49                 49                 49             0
+              16       1          38                 38                 38             0
+        $\vdots$                                                           
+              28       1          29                 29                 29             0
+
+
+### Distribution of test-stat under sharp null of no effect
+
+-   To get a p-value, we could exactly enumerate all assignments,
+    $\Omega$
+
+-   But with $\binom{28}{14} = 40,116,600$, this is too computationally
+    intensive
+
+-   Instead, we randomly sample from set of $\binom{28}{14}$ possible
+    assignments
+
+-   Then calculate test-stat under each assignment holding outcomes
+    fixed
+
+    -   E.g., Diff-in-Means
+        $t\left(\bm{z}, \bm{y}\right) = n_T^{-1} \bm{z}^{\top}\bm{y} - n_C^{-1} \left(1 - \bm{z}\right)^{\top} \bm{y}$
+
+    -   \mh{Note this test-stat is not same as one in Fisher's "Lady
+        Tasting Tea", $\bm{z}^{\top}\bm{y}$}
+
+-   Finally, calculate p-value
+    $$\Pr\left(t\left(\bm{Z},\bm{y}\right) \geq t^{\text{obs}}\right) = \sum \limits_{\bm{z}\in \Omega} \mathbbm{1}\left\{t\left(\bm{z}, \bm{y}\right) \geq t^{\text{obs}}\right\} \Pr\left(\bm{Z} = \bm{z}\right),$$
+
+
+### Distribution of test-stat under sharp null of no effect
+
+![Distribution of the Difference-in-Means test-stat under the sharp null
+of no effect](images/null_dist_no_effect_plot.pdf){width="90%"}
+
+
+### Hypothesis tests in adjusted outcomes
+
+-   How do we test hypotheses other than no effect for all units?
+
+-   @rosenbaum2002a [@rosenbaum2010; @rosenbaum2017]: Write units' true
+    adjusted outcomes as $\tilde{y}_i = y_i - \tau_i z_i$ for
+    $i = 1, \ldots , N$, where $\tau_i \coloneqq y_i(1) - y_i(0)$
+
+-   $\tilde{y}_i$ is fixed for every unit regardless if assigned to
+    treatment or control
+
+    -   I.e.,
+        $\bm{\tilde{y}} = \begin{bmatrix} \tilde{y}_1 & \tilde{y}_2 & \ldots & \tilde{y}_N \end{bmatrix}^{\top}$
+        satisfies sharp null of no effects
+
+-   So to conduct a test about $\bm{\tau}$, we can compare
+    $t(\bm{z}, \bm{\tilde{y}}_{h})$ to randomization distribution of
+    sharp null of no effects on adjusted outcomes,
+    $t(\bm{Z}, \bm{\tilde{y}}_{h})$, where
+    $\tilde{y}_{hi} = y_i - z_i \tau_{hi}$ for all $i = 1, \ldots , N$
+
+-   \mh{Intuition}: Can we make outcomes appear as if there is no effect by removing
+    hypothetical effect from treated units? If so, then this is evidence
+    in favor of that hypothetical effect
+
+
+### Hypothesis tests in adjusted outcomes
+
+-   $H_0$: GOTV campaign increases voter turnout by $p$ percentage
+    points per precinct
+
+\begin{center}
+  \begin{tabular}{r|rr|rrrr}
+  \hline
+ & GOTV? & vote03(\%)& $\bm{\tilde{y}}_h$ & $\bm{y}(\bm{0})$ & $\bm{y}(\bm{1})$ & $\bm{\tau}$\\
+  \hline
+1 & 0 & 38 & 38 & 38 & ? & ?\\
+$\vdots$& & & & & & \\
+13 & 0 & 19 & 19 & 19& ? & ?\\
+14 & 0 & 34 & 34 & 34& ? & ?\\
+15 & 1 & 49 & 49 - p & ?& 49 & ?\\
+16 & 1 & 38 & 38 - p & ?& 38 & ?\\
+$\vdots$& & & & & & \\
+28 & 1 & 29 & 29 - p & ?& 29 & ? \\
+   \hline
+\end{tabular}
+\end{center}
+
+
+### Hypothesis tests in adjusted outcomes
+
+-   For example, $H_0$: $p = 2.5$
+
+\begin{center}
+  \begin{tabular}{r|rr|rrrr}
+  \hline
+ & GOTV? & vote03(\%)& $\bm{\tilde{y}}_h$ & $\bm{y}(\bm{0})$ & $\bm{y}(\bm{1})$ & $\bm{\tau}$\\
+  \hline
+1 & 0 & 38 & 38 & 38 & ? & ?\\
+$\vdots$& & & & & & \\
+13 & 0 & 19 & 19 & 19& ? & ?\\
+14 & 0 & 34 & 34 & 34& ? & ?\\
+15 & 1 & 49 & 46.5 & ?& 49 & ?\\
+16 & 1 & 38 & 35.5 & ?& 38 & ?\\
+$\vdots$& & & & & & \\
+28 & 1 & 29 & 26.5 & ?& 29 & ? \\
+   \hline
+\end{tabular}
+\end{center}
+
+-   The observed test statistic calculated on adjusted outcomes is
+    $t(\bm{z}, \bm{\tilde{y}}_h) \approx 1.13$
+
+-   How does it compare to $t\left(\bm{Z}, \bm{\tilde{y}}_h\right)$?
+
+
+### Hypothesis tests in adjusted outcomes
+
+![image](images/null_unif_plot.pdf){width="90%"}
+
+
+### Confidence sets
+
+-   To get a confidence set we do what we just did with $p = 2.5$ over
+    an entire grid of values of $p$
+
+-   A $1-\alpha$ confidence set for $p$ $=$ {$p$: $H_{p}$ not rejected
+    at level $\alpha$}
+
+-   We test over all values of $p$ and retain those we fail to reject
+    with adjusted outcomes
+
+-   Two sided confidence set for ACORN example:
+    $\left\{-0.4, 7.5\right\}$
+
+-   We fail to reject sharp null of no effect
+
+
+# Difference-in-Means estimator (time permitting)
+
+### Review: setup for randomized experiments
+
+
+-   Units: $i = 1, \ldots, N$
+
+-   Treatment: $Z_i = 0$ or $Z_i = 1$ is randomly assigned
+
+-   Potential outcomes: $y_i(0)$ and $y_i(1)$
+
+-   Observed outcome: $Y_i = Z_i y_i(1) + (1 - Z_i) y_i(0)$
+
+-   Treatment Assignment Mechanism
+
+-   \(1\) \mh{Bernoulli (simple) randomization}: Each unit is independently assigned to treatment with
+    probability $p$
+
+-   \(2\) \mh{Complete randomization}: Exactly $n_1$ units are treated and $N - n_1 = n_0$ units
+    are untreated
+
+-   \(3\) In practice, (1) and (2) are equivalent when we fix $n_1$ by
+    conditioning on its observed value
+
+-   Under complete or simple (conditioning on observed $n_1$)
+    randomization
+    $$\mathop{\mathrm{\rm{E}}}\left[Z_i\right] = \dfrac{n_1}{N}$$
+
+## Bias of Difference-in-Means in simply randomized designs 
+
+###  Unbiasedness of Difference-in-Means: Proof
+
+-  \mh{Difference-in-Means estimator} $$\begin{aligned}
+          \hat{\tau}\left(\bm{Z}, \bm{Y}\right) & = n_1^{-1} \bm{Z}^{\top} \bm{Y} - n_0^{-1} \left(\bm{1} - \bm{Z}\right)^{\top}\bm{Y} \\ 
+          & = \frac{1}{n_1} \sum_{i=1}^N Z_i Y_i - \frac{1}{n_0} \sum_{i = 1}^N (1 - Z_i) Y_i
+    \end{aligned}$$
+
+-   \mh{Unbiased} for the ATE under complete randomization \pause
+
+-   {\footnotesize $$\begin{aligned}
+            \hspace{-0.4in} \mathop{\mathrm{\rm{E}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] & = & \mathop{\mathrm{\rm{E}}}\left[\frac{1}{n_1} \sum_{i=1}^N Z_i Y_i - \frac{1}{n_0} \sum_{i = 1}^N (1 - Z_i) Y_i\right]\\
+            \hspace{-0.4in} & = &  \frac{1}{n_1} \sum_{i=1}^N \mathop{\mathrm{\rm{E}}}\left[Z_i Y_i\right]
+                                  - \frac{1}{n_0} \sum_{i=1}^N \mathop{\mathrm{\rm{E}}}\left[(1 - Z_i) Y_i\right] \hspace{0.1in}
+                                  \mbox{($\because$ Linearity of $\mathop{\mathrm{\rm{E}}}$)}\\ 
+            \hspace{-0.4in} & = &  \frac{1}{n_1} \sum_{i=1}^N \mathop{\mathrm{\rm{E}}}\left[Z_i y_i(1)\right]
+                                  - \frac{1}{n_0} \sum_{i=1}^N \mathop{\mathrm{\rm{E}}}\left[(1 - Z_i) y_i(0) \right] \hspace{0.1in}
+                                  \mbox{($\because$ Definition of POs)}\\ 
+            \hspace{-0.4in} & = &  \frac{1}{n_1} \sum_{i=1}^N y_i(1) \mathop{\mathrm{\rm{E}}}\left[Z_i\right]
+                                  - \frac{1}{n_0} \sum_{i=1}^N y_i(0) \mathop{\mathrm{\rm{E}}}\left[1 - Z_i\right] \hspace{0.1in}
+                                  \mbox{($\because$ POs are fixed)}\\ 
+             \hspace{-0.4in} & = &  \frac{1}{n_1} \sum_{i=1}^N y_i(1) \left(\frac{n_1}{N}\right)
+                                  - \frac{1}{n_0} \sum_{i=1}^N y_i(0) \left(\frac{n_0}{N}\right) \hspace{0.1in}
+                                  \mbox{($\because$ complete randomization)}\\ 
+              \hspace{-0.4in} & = &  \frac{1}{N} \sum_{i=1}^N y_i(1)
+                                  - \frac{1}{N} \sum_{i=1}^N y_i(0)
+    \end{aligned}$$
+    }
+
+###  Unbiasedness of Difference-in-Means: Example
+
+  $\bm{z}_1$   $\bm{y}(\bm{0})$   $\bm{y}(\bm{1})$   $\bm{y}_1$
+  ------------ ------------------ ------------------ ------------
+  1            ?                  15                 15
+  1            ?                  15                 15
+  0            20                 ?                  20
+  0            20                 ?                  20
+  0            10                 ?                  10
+  0            15                 ?                  15
+  0            15                 ?                  15
+
+$\cdots$
+
+  $\bm{z}_{21}$   $\bm{y}(\bm{0})$   $\bm{y}(\bm{1})$   $\bm{y}_{21}$
+  --------------- ------------------ ------------------ ---------------
+  0               10                 ?                  10
+  0               15                 ?                  15
+  0               20                 ?                  20
+  0               20                 ?                  20
+  0               10                 ?                  10
+  1               ?                  15                 15
+  1               ?                  30                 30
+
+-   Random vectors $\bm{Z}$ and $\bm{Y}$ can take on any
+    $\left(\bm{z}_1, \bm{y}_1\right), \cdots , \left(\bm{z}_{21}, \bm{y}_{21}\right)$
+
+-   Applying Diff-in-Means estimator to all $21$ possible realizations
+    of data
+
+-   $\implies$ $21$ possible outputs of estimator:
+    $$\hat{\tau}\left(\bm{z}_1, \bm{y}_1\right) = -1, \, \hat{\tau}\left(\bm{z}_2, \bm{y}_2\right) = 7.5, \, \cdots \, , \, \hat{\tau}\left(\bm{z}_{21}, \bm{y}_{21}\right) = 7.5$$
+
+-   Expected value of Diff-in-Means estimator:
+    $$\mathop{\mathrm{\rm{E}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \hat{\tau}\left(\bm{z}_1, \bm{y}_1\right)\Pr\left(\bm{Z} = \bm{z}_1\right) + \ldots + \hat{\tau}\left(\bm{z}_{21}, \bm{y}_{21}\right)\Pr\left(\bm{Z} = \bm{z}_{21}\right)$$
+
+-   So, in "village heads" example
+    $$\mathop{\mathrm{\rm{E}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = (-1) \left(1/21\right) + (7.5) \left(1/21\right) + \ldots + (7.5) \left(1/21\right) = 5$$
+
+###  Unbiasedness of Difference-in-Means: Example
+
+-   Diff-in-Means estimator under complete random assignment
+
+-   ![Difference-in-Means estimator in "Village heads"
+    example](images/cra_est_dist_plot.pdf){width="\\linewidth"}
+
+###  Next steps
+
+-   What happens when the size of our experiment grows large?
+
+-   Consistency of Difference-in-Means estimator for ATE
+
+-   Asymptotic validity of hypothesis tests about ATE
+
