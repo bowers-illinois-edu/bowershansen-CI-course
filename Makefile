@@ -2,7 +2,7 @@
 SHELL = /bin/sh
 
 RSCRIPT = Rscript
-RDO = $(RSCRIPT) -e 
+RDO = $(RSCRIPT) --no-init-file -e 
 
 .PHONY: day_%-all.pdf
 

@@ -7,6 +7,13 @@
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage{listings}
+\newcommand{\codechunk}[1]{\lstinputlisting{R/#1}}
+\lstset{%
+  language=R,                     % the language of the code
+  basicstyle=\ttfamily, % the size of the fonts that are used for the code
+  numbers=left,                   % where to put the line-numbers
+  numberstyle=\tiny\color{blue},  % the style that is used for the line-numbers
+  stepnumber=5}
 \usepackage{soul} % for strikethrough
 \usepackage{awesomebox}
 \usepackage{colonequals}
