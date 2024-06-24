@@ -1923,7 +1923,7 @@
     },
     "gurobi": {
       "Package": "gurobi",
-      "Version": "11.0.2",
+      "Version": "9.5-2",
       "Source": "unknown",
       "Requirements": [
         "slam"
