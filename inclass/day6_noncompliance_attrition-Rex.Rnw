@@ -1,0 +1,257 @@
+\documentclass{article}
+\usepackage{natbib}
+
+
+\title{Lab: Instrumental variables and ``Models of effects"}
+\author{B. Hansen}
+\input{../courseedition}
+\usepackage{../icpsr-classwork}
+\usepackage{alltt}
+
+\begin{document}
+\maketitle
+
+\section{Setup}
+Here is the Acorn GOTV experiment data described in Arceneaux (2005),
+after aggregation to the precinct level.
+<<echo=1, message=FALSE, warning=FALSE>>=
+acorn <- read.csv("../data/acorn03.csv")
+## Global options
+library("knitr")
+options(max.print = "75")
+opts_chunk$set(echo = TRUE,
+	             cache = TRUE,
+               prompt = FALSE,
+               tidy = TRUE,
+               comment = NA,
+	       results="hide",
+               message = FALSE,
+               warning = FALSE)
+opts_knit$set(width = 75)
+@
+
+And here we load libraries containing some functions we'll be using later on:
+<<results="hide">>=
+library('MASS')
+library('sandwich')
+library('lmtest')
+@ 
+
+NOTE: If running any of the above commands gives you an error like
+the below, you'll need to install\footnote{%
+To install, first make sure you have an active internet connection.  Next, if you're using RStudio, you might use the interactive dialog that pops up when you select ``Install Packages\ldots'' from the Tools menu.  (Leave the ``Install dependencies'' option checked.)  Otherwise, enter
+\texttt{
+install.packages('optmatch', dep=T)
+}
+into R.  You'll be prompted to select a CRAN mirror; choose one that's
+nearby.  You'll also be asked about the directory to install the
+package to. The default selection should be fine. The installation
+process may take a few seconds to a few minutes, depending on your
+internet connection and on how many dependencies need installation.
+Once it's finished, you should be able to load the package.  
+} the package before loading it:\\
+\begin{verbatim}
+Error in library(lmtest) : there is no package called 'lmtest'
+\end{verbatim}
+Each package can be installed via the ``Install Packages'' Tool in the RStudio
+menu.  Make sure to install package dependencies. 
+
+Sigfigs in display:
+<<>>=
+options(digits=3)
+@ 
+\section{Three models of effect (MOEs)}
+
+
+\begin{itemize}
+\item[No effect] says there was no effect (\texttt{moe0})
+\item[one per 10] says the GOTV campaign generated 1 vote for every 10 contacts (\texttt{moe1})
+\item[one per 5]says the GOTV campaign generated 1 vote for every 5 contacts (\texttt{moe2})
+\end{itemize}
+
+
+To translate these into $\mathbf{y}_{c}$s, use \texttt{transform()}%
+\footnote{The \texttt{transform()} command serves two purposes,
+generating the copy and setting up an evaluation environment within
+which you can directly reference \texttt{acorn} variables --- i.e.,
+what we've otherwise used the \texttt{with()} command to do.}
+to create a copy of \texttt{acorn} containing additional columns to
+represent $\mathbf{y}_{c}$ as it would be under each of our models
+of effect.  I call it \texttt{acorn\_e}, short for ``acorn extended.''
+<<>>=
+acorn_e <- transform(acorn, 
+                     yc_moe0 =  vote03,
+                     yc_moe1 = vote03 - contact/10,
+                     yc_moe2 = vote03 -contact/5
+                     )
+@ 
+
+
+\texttt{Exercise.}\\  \newcounter{saveenumi} 
+\begin{enumerate}
+\item Specify a fourth model-of-effect for the acorn data, something
+  non-identical to the three above, and use it to construct a
+  \texttt{yc\_moe3}, to live alongside \texttt{yc\_moe0}, \ldots,
+  \texttt{yc\_moe2} inside of \texttt{acorn\_e}.  It might or might not specify
+  that unit-level treatment effects depend on compliance; up to you.
+  \setcounter{saveenumi}{\value{enumi}}
+\end{enumerate}
+
+
+To test a MOE, we use the correspondingly  reconstructed $y_{c}$, $z$,
+and optional background information, $x$, to compute a test statistic
+$t= T(\mathbf{z}, \mathbf{y}_c, \mathbf{x})$.  Then we compare this value
+to the distribution of $t(\mathbf{Z}, \mathbf{y}_c, \mathbf{x})$ under
+hypothetical re-randomizations of $\mathbf{Z}$.  
+
+\section{Tests based on differences of means}
+\subsection{Differences of simple means}
+
+For example, using
+the difference-of-means test statistic,
+$t(\mathbf{z}, \mathbf{y}, \mathbf{x}) =
+\mathbf{z}'\mathbf{y}/\mathbf{z}'\mathbf{z} - (\mathbf{1} -\mathbf{z})'\mathbf{y}/(\mathbf{1} -\mathbf{z})'(\mathbf{1} -\mathbf{z})$, the hypothesis of no effect is tested as follows.
+
+First, cross-check the new column against old  and extract just the difference of means from a linear regression object:
+<<results="show">>=
+lm(vote03~z, data=acorn_e)
+lm(yc_moe0~z, data=acorn_e) # same answer as w/ last calc?
+coef(lm(yc_moe0~z, data=acorn_e))["z"] # are we extracting the right coeff?
+@ 
+Store $t(\mathbf{z}, \mathbf{y}, \mathbf{x})$:
+<<>>=
+actualD = coef(lm(yc_moe0~z, data=acorn_e))[2]
+@ 
+This verifies that the response schedule is consistent w/ what was
+observed after the experiment.  Going on to simulate repeated trials
+of the experiment: 
+<<>>=
+simD = replicate(1000, 
+   coef(lm(yc_moe0~sample(z),
+            data=acorn_e)
+         )[2])
+@
+
+One and two-sided p-values can be calculated as follows:
+<<results="hide">>=
+mean(simD>=actualD)
+2*pmin(mean(simD>=actualD), mean(simD<=actualD))
+@ 
+(``Two sided p-value'' can be interpreted in different ways; this
+follows the interpretation $2\min\big( \mathrm{Pr}(T\leq t),
+\mathrm{Pr}(T\geq t) \big)$, which is relatively general.)  
+
+\textbf{Exercise.}
+\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
+\item Produce one- and two-sided p-values corresponding to the
+  remaining 3 hypotheses, using the difference-of-means test statistic.
+  \setcounter{saveenumi}{\value{enumi}}
+\end{enumerate}
+
+As long as our test statistic is the difference of simple means, we can also use the large-sample test based on Neyman's asymptotically conservative standard error (as an alternative to the simulation method).  In this example, we'd be hoping that our sample is just large enough for validity of the test. 
+
+It's effected via 
+<<>>=
+t.test(yc_moe0~z, data=acorn_e)
+@ 
+or 
+<<>>=
+lm0 <- lm(yc_moe0~z, data=acorn_e)
+lmtest::coeftest(lm0, sandwich::vcovHC, type="HC2")
+@ 
+(the ``HC2'' argument being passed to function
+\texttt{sandwich::vcovHC} in order to specify the version of the
+Huber-White standard error possessing the not-negatively-biased
+property under the Neyman model).
+
+Since we're looking at differences of simple means, our statistic is also an unbiased estimator of the precinct-level average treatment effect, i.e. the simple mean of each precinct's difference between its potential responses to treatment and control. 
+
+
+\subsubsection{Aside: diff-in-diff and gain score analysis}
+
+When there is a lagged measure of the outcome, one can compare pre-post differences on that measure between treatment and control.  
+
+<<>>=
+acorn_e <- transform(acorn_e, pre_post_diff = vote03 - v_g2002)
+@ 
+
+Comparing means of these differences, as opposed to means of the outcome itself, is known as \textit{differences-in-differences} or as \textit{gain score analysis}.
+
+Unbiased estimation of the precinct-level average treatment effect is the same as if you were comparing the outcome itself, rather than pre-post differences:
+
+<<>>=
+t.test(pre_post_diff~z, data=acorn_e)
+@ 
+
+Likewise for setting up models of effects.
+<<>>=
+acorn_e <- transform(acorn_e, 
+                     dc_moe0 =  pre_post_diff,
+                     dc_moe1 = pre_post_diff - contact/10,
+                     dc_moe2 = pre_post_diff -contact/5
+                     )
+@ 
+
+\subsection{Generalizations of differences of simple means via OLS}
+
+
+The above formulation of the difference-in-simple-means statistic using R's ordinary least squares (OLS) routine, \texttt{lm(yc\_moe0 \textasciitilde\ z, data=acorn\_e)}, suggests important variations.  For starters, 
+
+<<>>=
+lm0_w<- lm(yc_moe0~z, weights=size, data=acorn_e)
+@ 
+This \textit{z}-coefficient suggests itself as a test statistic because it consistently estimates the voter-level average treatment effect, i.e. the difference of precincts' potential outcomes as averaged with weighting for precinct size. 
+
+To use it for simulation-based, finite-sample p-values, proceed as above, except with the addition of a \texttt{weights=size} argument to the `lm()` invoked within the `replicate()` used to create `simT` . 
+Alternatively, if you're satisfied that the number of precincts is sufficiently large to lean on a large-sample method, then you can test the MOE-0 hypothesis via
+<<>>=
+lmtest::coeftest(lm0_w, sandwich::vcovHC, type="HC2")
+@
+However, when we use the ``HC2'' option here it's only out of habit; the
+addition of the \texttt{weights} argument has spoiled the unbiasedness
+of the \texttt{z} coefficient as an estimator of the ACE, and the HC2 standard error no longer has the no-negative-bias property.
+
+Whether you prefer to pair your \texttt{lm()}-based test statistic
+with simulation-based or large-sample p-values, you're entitled to
+incorporate adjustments for prognostic covariates into your statistic.
+For example, here is a difference of weighted means with covariance
+adjustment for turnout rates in the prior general election:
+<<>>=
+coef(lm(yc_moe0~z+v_g2002, weights=size, data=acorn_e))[2]
+@
+
+
+\textbf{Exercise.}
+\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
+\item Produce two-sided p-values corresponding to the
+  remaining 3 hypotheses, two different ways.  (Any two of the three
+  above will do.)
+      \setcounter{saveenumi}{\value{enumi}}
+\end{enumerate}
+
+
+
+%<!--Interesting: with this adjustment, we're able to reject a hypothesis that we weren't able to reject previously.--> 
+<<eval=FALSE, echo=FALSE>>=
+lm2_ppd <- lm(dc_moe2~ z, data=acorn_e)
+coeftest(lm2_ppd, sandwich::vcovHC, type="HC2")
+@ 
+
+\section*{Notes and references}
+
+
+R and R package versions used in this demo:
+<<>>=
+sessionInfo()
+@ 
+
+\bibliographystyle{apalike}
+% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
+% \begin{thebibliography}{1}
+
+
+% \end{thebibliography}
+
+
+
+\end{document}
