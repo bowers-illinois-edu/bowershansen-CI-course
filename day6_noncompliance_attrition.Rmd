@@ -5,7 +5,7 @@ title: |
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
   | ICPSR 2023 Session 1
-  | Jake Bowers \& Tom Leavitt
+  | Jake Bowers, Ben Hansen \& Tom Leavitt
 bibliography:
  - "BIB/MasterBibliography.bib"
 fontsize: 10pt
@@ -97,7 +97,7 @@ In this case we can simplify our potential outcomes:
 
 -->
 
-## Defining causal effects IV
+## Defining causal effects II <!--IV--> 
 
 We can simplify the ways in which people get a dose of the treatment like so
 (where $d$ is lower case reflecting the idea that whether you open the door
@@ -111,7 +111,7 @@ when visited or not is a fixed attribute like a potential outcome).
  -  $D$ : treatment received ($D_i=1$ if answered door, $D_i=0$ if person $i$
    did not answer the door) (using $D$ here because $D_i = d_{i,1} Z_{i} + d_{i,0} (1-Z_i)$)
 
-## Defining causal effects V
+## Defining causal effects III <!--V--> 
 
 We have two causal effects of $Z$: $Z \rightarrow Y$ (known as $\delta$, ITT, ITT$_Y$), and $Z \rightarrow D$ (known as ITT$_D$, $p_c$).
 
@@ -129,7 +129,7 @@ dose with the instrument.
 \end{tabular}
 
 
-##  Defining causal effects VI
+##  Defining causal effects IV <!--VI--> 
 
 
 The $ITT=ITT_Y=\delta= \bar{y}_{Z=1} - \bar{y}_{Z=0}$.
@@ -141,17 +141,17 @@ outcome of those who answered the door (Compliers and Always-takers and
 Defiers). Write $p_C$ for the proportion of compliers in the study, $p_A$ for
 proportion always-takers, etc... The proportions have to sum to 1. So, we have weighted averages:
 
-\begin{equation}
+\begin{equation*}
 \bar{y}_{1}=(\bar{y}_{1}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_1|N)p_N + (\bar{y}_1|D)p_D.
-\end{equation}
+\end{equation*}
 
 And $\bar{y}_{0}$ is also split into pieces:
 
-\begin{equation}
+\begin{equation*}
 \bar{y}_{0}=(\bar{y}_{0}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_{0}|N)p_N + (\bar{y}_0|D)p_D.
-\end{equation}
+\end{equation*}
 
-##  Defining causal effects VII
+##  Defining causal effects V <!--VII--> 
 
 So, the ITT itself is a combination of the effects of $Z$ on $Y$ within these
 different groups.
@@ -175,27 +175,24 @@ First, let's learn about the effect of the policy itself.
 
 \medskip
 
-To write down the
-ITT, we do not need to consider all of the types above.  We have no defiers
-($p_D=0$) and we know the ITT for both Always-takers and Never-takers is 0.
+Let's assume we have no defiers ($p_D=0$). The we can write the ITT more simply.
 
-\begin{equation}
+\begin{equation*}
 \bar{y}_{1}=(\bar{y}_{1}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_1|N)p_N
-\end{equation}
+\end{equation*}
 
-\begin{equation}
+\begin{equation*}
 \bar{y}_{0}=(\bar{y}_{0}|C)p_C + (\bar{y}_{0}|A)p_A + (\bar{y}_{0}|N)p_N
-\end{equation}
+\end{equation*}
 
 
 ## Learning about the ITT II
 
-First, let's learn about the effect of the policy itself. To write down the
-ITT, we do not need to consider all of the types above.  We have no defiers
-($p_D=0$) and we know the ITT for both Always-takers and Never-takers is 0.
+First, let's learn about the effect of the policy itself. We assume no defiers
+($p_D=0$), which allows us to write the ITT more simply. 
 
 
-\begin{align}
+\begin{align*}
 ITT    = & \bar{y}_{1} - \bar{y}_{0} \\
         = & ( (\bar{y}_{1}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_1|N)p_N ) - \\
        & ( (\bar{y}_{0}|C)p_C + (\bar{y}_{0}|A)p_A + (\bar{y}_{0}|N)p_N )  \\
@@ -204,11 +201,11 @@ ITT    = & \bar{y}_{1} - \bar{y}_{0} \\
        & ( (\bar{y}_1|N)p_N  - (\bar{y}_{0}|N)p_N ) \\
        = & \underbrace{\left( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C) \right)}_{\color{blue}\text{ITT among Compliers}}p_C   +  \\
        & \underbrace{\left( (\bar{y}_{1}|A)- (\bar{y}_{0}|A) \right)}_{\color{blue}\text{ITT among Always-Takers}}p_A  +  \underbrace{\left( (\bar{y}_1|N) - (\bar{y}_{0}|N) \right)}_{\color{blue}\text{ITT among Never-Takers}}p_N
-\end{align}
+\end{align*}
 
 ## Learning about the ITT III
 
-\begin{align}
+\begin{align*}
 ITT     = &   \bar{y}_{1} - \bar{y}_{0} \\
         = &  ( (\bar{y}_{1}|C)p_C + (\bar{y}_{1}|A)p_A + (\bar{y}_1|N)p_N ) - \\
        & ( (\bar{y}_{0}|C)p_C + (\bar{y}_{0}|A)p_A + (\bar{y}_{0}|N)p_N )  \\
@@ -218,22 +215,22 @@ ITT     = &   \bar{y}_{1} - \bar{y}_{0} \\
        & ( (\bar{y}_1|N) - (\bar{y}_{0}|N) )p_N \\
        = & (\text{ITT among compliers})(\text{proportion of compliers}) + \\
        & (\text{ITT among always takers})(\text{proportion of always takers}) + \ldots
-\end{align}
+\end{align*}
 
 
 ## Learning about the ITT IV
 
 And, if the effect of the dose can only occur for those who open the door, and you can only open the door when assigned to do so then:
 
-\begin{equation}
+\begin{equation*}
 ( (\bar{y}_{1}|A)- (\bar{y}_{0}|A))p_A = 0  \text{ and } ( (\bar{y}_1|N) - (\bar{y}_{0}|N) )p_N = 0
-\end{equation}
+\end{equation*}
 
 And so, under these assumptions, the ITT is a simple function of the ITT among compliers and the proportion of compliers.
 
-\begin{equation}
+\begin{equation*}
 ITT =  ( (\bar{y}_{1}|C) -  (\bar{y}_{0}|C))p_C  = ( CACE ) p_C.
-\end{equation}
+\end{equation*}
 
 
 ## The complier average causal effect I
