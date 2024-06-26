@@ -1,0 +1,1000 @@
+\documentclass[12pt,leqno]{article}
+\usepackage[left=1in,top=1in,right=1in,bottom=1in]{geometry}
+\newcommand*{\authorfont}{\fontfamily{phv}\selectfont}
+\usepackage{lmodern}
+
+
+  \usepackage[T1]{fontenc}
+
+
+
+
+\usepackage{abstract}
+\renewcommand{\abstractname}{}    % clear the title
+\renewcommand{\absnamepos}{empty} % originally center
+
+\renewenvironment{abstract}
+ {{%
+    \setlength{\leftmargin}{0mm}
+    \setlength{\rightmargin}{\leftmargin}%
+  }%
+  \relax}
+ {\endlist}
+
+\makeatletter
+\def\@maketitle{%
+  \newpage
+%  \null
+%  \vskip 2em%
+%  \begin{center}%
+  \let \footnote \thanks
+    {\fontsize{18}{20}\selectfont\raggedright  \setlength{\parindent}{0pt} \@title \par}%
+}
+%\fi
+\makeatother
+
+
+
+
+\setcounter{secnumdepth}{0}
+
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+
+
+\title{Day 03: Research Design and Hypothesis Testing  }
+
+
+
+\author{\Large \href{mailto:t.leavitt718@gmail.com}{Thomas Leavitt}\vspace{0.05in} \newline\normalsize\emph{}  }
+
+
+\date{}
+
+\usepackage{titlesec}
+
+\titleformat*{\section}{\normalsize\bfseries}
+\titleformat*{\subsection}{\normalsize\itshape}
+\titleformat*{\subsubsection}{\normalsize\itshape}
+\titleformat*{\paragraph}{\normalsize\itshape}
+\titleformat*{\subparagraph}{\normalsize\itshape}
+
+
+\usepackage{natbib}
+\bibliographystyle{apsr}
+
+
+
+\newtheorem{hypothesis}{Hypothesis}
+\usepackage{setspace}
+
+\makeatletter
+\@ifpackageloaded{hyperref}{}{%
+\ifxetex
+  \usepackage[setpagesize=false, % page size defined by xetex
+              unicode=false, % unicode breaks when used with xetex
+              xetex]{hyperref}
+\else
+  \usepackage[unicode=true]{hyperref}
+\fi
+}
+\@ifpackageloaded{xcolor}{
+    \PassOptionsToPackage{usenames,dvipsnames}{xcolor}
+}{%
+    \usepackage[usenames,dvipsnames]{xcolor}
+}
+\makeatother
+\hypersetup{breaklinks=true,
+            bookmarks=true,
+            pdfauthor={\href{mailto:t.leavitt718@gmail.com}{Thomas Leavitt} ()},
+             pdfkeywords = {},  
+            pdftitle={Day 03: Research Design and Hypothesis Testing},
+            colorlinks=true,
+            citecolor=blue,
+            urlcolor=blue,
+            linkcolor=magenta,
+            pdfborder={0 0 0}}
+\urlstyle{same}  % don't use monospace font for urls
+
+% \usepackage{microtype} %
+% \usepackage{setspace}
+% \onehalfspacing
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath,amssymb,bm}          % AMS Fonts
+% \usepackage{empheq}            % To use left brace on {align} environment
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+% \usepackage[mathscr]{euscript}          % Font for right expectation sign
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfigure}
+\usepackage{array}
+% \usepackage{cancel}
+\usepackage{longtable}
+% % \usepackage{lmodern}
+% % \usepackage{libertine} \usepackage[libertine]{newtxmath}
+% \usepackage{stix}
+% % \usepackage[osf,sc]{mathpazo}     % alternative math
+% \usepackage[T1]{fontenc}
+% \usepackage{fontspec}
+% \setmainfont{Times New Roman}
+% \usepackage{mathtools}          % multlined environment with size option
+% \usepackage{verbatim}
+% \usepackage{geometry}
+% \usepackage{bigfoot}
+% \geometry{verbose,margin=.8in,nomarginpar}
+% \setcounter{secnumdepth}{2}
+% \setcounter{tocdepth}{2}
+% \usepackage{lscape}
+
+\setlist{nosep}
+
+
+% \usepackage{url}
+% \usepackage[nobreak=true]{mdframed} % put box around section with \begin{mdframed}\end{mdframed}
+
+% \usepackage{relsize}            % \mathlarger{} environment
+% \usepackage[unicode=true,
+%             pdfusetitle,
+%             bookmarks=true,
+%             bookmarksnumbered=true,
+%             bookmarksopen=true,
+%             bookmarksopenlevel=2,
+%             breaklinks=false,
+%             pdfborder={0 0 1},
+%             backref=false,
+%             colorlinks=true,
+%             hypertexnames=false]{hyperref}
+% \hypersetup{pdfstartview={XYZ null null 1},
+%             citecolor=blue!50,
+%             linkcolor=red,
+%             urlcolor=green!70!black}
+
+% \usepackage{multirow}
+% \usepackage{tikz}
+% \usetikzlibrary{trees, positioning, arrows, automata}
+
+% \tikzset{
+%   treenode/.style = {align=center, inner sep=0pt, text centered,
+%     font=\sffamily},
+%   arn_n/.style = {treenode, rectangle, black, fill=white, text width=6em},
+%   arn_r/.style = {treenode, circle, red, draw=red, text width=1.5em, thick}
+% }
+
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+\usepackage[small,bf]{caption}  % Captions
+
+% \usepackage[obeyFinal,textwidth=0.8in, colorinlistoftodos,prependcaption,textsize=tiny]{todonotes} % \fxnote*[options]{note}{text} to make sticky notes
+% \usepackage{xargs}
+% \newcommandx{\unsure}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+% \newcommandx{\change}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}}
+% \newcommandx{\info}[2][1=]{\todo[linecolor=OliveGreen,backgroundcolor=OliveGreen!25,bordercolor=OliveGreen,#1]{#2}}
+% \newcommandx{\improvement}[2][1=]{\todo[linecolor=Plum,backgroundcolor=Plum!25,bordercolor=Plum,#1]{#2}}
+
+\parskip=8pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\newcommand{\qedknitr}{\hfill\rule{1.2ex}{1.2ex}}
+
+% \makeatletter
+% \def\thm@space@setup{\thm@preskip=0pt
+% \thm@postskip=0pt}
+% \makeatother
+
+\def\tightlist{}
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+% \newtheoremstyle{newstyle}
+% {} %Aboveskip
+% {} %Below skip
+% {\mdseries} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+% {} %Indent
+% {\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+% {.} %Punctuation afer theorem header
+% { } %Space after theorem header
+% {} %Heading
+
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newtheorem{definition}{Definition}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+% suppress table numbering
+\captionsetup[table]{labelformat=empty}
+
+
+\begin{document}
+	
+% \pagenumbering{arabic}% resets `page` counter to 1 
+%
+% \maketitle
+
+{% \usefont{T1}{pnc}{m}{n}
+\setlength{\parindent}{0pt}
+\thispagestyle{plain}
+{\fontsize{18}{20}\selectfont\raggedright 
+\maketitle  % title \par  
+
+}
+
+{
+   \vskip 13.5pt\relax \normalsize\fontsize{11}{12} 
+\textbf{\authorfont \href{mailto:t.leavitt718@gmail.com}{Thomas Leavitt}} \hskip 15pt \emph{\small }   
+
+}
+
+}
+
+
+
+
+
+\vskip 6.5pt
+
+\noindent  \hypertarget{review-of-probability}{%
+\section{Review of Probability}\label{review-of-probability}}
+
+\begin{itemize}
+
+\item Let $\Omega$ denote the \textit{sample space}, i.e., the set of possible events that could result from a random process.
+
+\item Let $\mathcal{F}$ denote the set of all measurable subsets of the sample space, $\Omega$.\footnote{More formally, we stipulate that the set $\mathcal{F}$ of subsets of $\Omega$ satisfies the following conditions: (1) $\Omega \in \mathcal{F}$; (2) if an event $x \in \mathcal{F}$, then $x^c \in \mathcal{F}$, where $x^c$ is the elements of $\mathcal{F}$ that are not in $x$ (i.e., $x^c$ is the complement of $x$); (3) if $x_1, x_2, x_3, \dots \in \mathcal{F}$, then $x_1 \cup x_2 \cup x_3 \cup \dots \in \mathcal{F}$. The formal name for a set of a sample space's subsets that satisfies these three conditions is $\sigma$-algebra.}
+
+\item Let $\Pr: \mathcal{F} \mapsto [0, 1]$ denote a \textit{probability measure}, i.e., a function that maps every element in $\mathcal{F}$ to exactly one element on the closed interval $[0, 1]$, which satisfies the following three conditions:
+\begin{enumerate}
+\item For all $x \in \mathcal{F}$, $\Pr(x) \geq 0$, where $\Pr(x)$ is finite and is a real number, i.e., $\Pr(x) \in \R$.
+\item $\Pr(\Omega) = 1$.
+\item If $x_1, x_2, x_3, \dots \in \mathcal{F}$ are pairwise disjoint, i.e., for all $i$ and $j \neq i$, $x_i \cap x_j = \emptyset$, then $\Pr\left(x_1 \cup x_2 \cup x_3 \cup \dots\right) = \Pr(x_1) + \Pr(x_2) + \Pr(x_3) + \dots = \sum \limits_{i = 1}^{\infty} \Pr(x_i)$
+\end{enumerate}
+\end{itemize}
+
+We call these three parts --- \(\Omega\), \(\mathcal{F}\) and \(\Pr\)
+--- a \enquote{probability space} or \enquote{probability triple.}
+
+We can now formally define a random variable as follows:
+
+\begin{definition}
+Given a probability triple, $\left(\Omega, \mathcal{F}, \Pr\right)$, a random variable is a function $X: \Omega \mapsto \mathbb{R}$ such that, for all $x \in \mathbb{R}$, $\left\{\omega \in \Omega: X\left(\omega\right) \leq x \right\} \in \mathcal{F}$.
+\end{definition}
+
+Without getting into technicalities, we can unpack Definition 1 as
+follows: There is a subset of events such that \(X\left(\omega\right)\)
+takes on a value less than or equal to an arbitrarily chosen real
+number, \(x\). If this subset of events belongs to the set of all
+measurable subsets, \(\mathcal{F}\), of the sample space, \(\Omega\),
+then we can coherently define a function that assigns a probability to
+the event that \(X\left(\omega\right)\) takes on a value less than or
+equal to \(x\). A random variable pertains to this subset of events upon
+which we can coherently define a probability measure.
+
+\hypertarget{discrete-random-variables-and-probability-mass-functions}{%
+\subsection{Discrete Random Variables and Probability Mass
+Functions}\label{discrete-random-variables-and-probability-mass-functions}}
+
+A random variable that can take on a countable number of real values is
+a \textit{discrete random variable}. We can now define a probability
+mass function (PMF) on a discrete random variable as follows:
+
+\begin{definition}
+For a discrete random variable, $X$, the probability mass functon (PMF) of $X$ is $f\left(x\right) = \Pr\left(X = x\right)$.
+\end{definition}
+
+That is, a PMF is a function that assigns a probability to each possible
+value that a random variable could take on.
+
+Let's imagine that we have a coin that, once flipped, can land either
+heads or tails. We can therefore represent the sample space as
+\(\Omega \in \left\{\text{Heads}, \text{Tails} \right\}\) and the random
+variable, \(Z\), as \(Z\left(\text{Heads}\right) = 0\) and
+\(Z\left(\text{Tails}\right) = 1\). Now let's define a PMF, \(f(z)\):
+\begin{equation}
+f(z) =
+\begin{cases}
+p^z\left(1 - p\right)^{(1 - z)} & \text{if } z \in \left\{0, 1\right\} \\
+0 & \text{otherwise},
+\end{cases}
+\end{equation} where \(p \in [0, 1]\) is the probability that a coin
+lands tails and, hence, that \(Z = 1\).
+
+\hypertarget{summarizing-random-variables}{%
+\subsection{Summarizing Random
+Variables}\label{summarizing-random-variables}}
+
+For a random variable variable \(X\) with PMF
+\(f(x) = \Pr\left(X = x\right)\), the expected value of \(X\) is:
+
+\begin{definition}
+$\E\left[X\right] = \sum_{x} x \Pr\left(X = x\right)$,
+where $x$ ranges over the set of possible events in the sample space of $X$.
+\end{definition}
+
+Let's say that we have a random variable \(Z\) that can take on the
+values \(Z = 1\) or \(Z = 0\). Let the probability, \(p\), that
+\(Z = 1\) be equal to \(0.5\) and let the probability, \(1 - p\), that
+\(Z = 0\) be equal to \(1 - 0.5 = 0.5\). What is the expected value of
+the random variable \(Z\)?
+
+\begin{align*}
+\E\left[Z\right] & = \sum_{z} z \Pr\left(Z = z\right) \\
+& = (1)\Pr\left(Z = 1\right) + 0\Pr\left(Z = 0\right) \\
+& = (1)(0.5) + 0(1 - 0.5) \\
+& = 0.5
+\end{align*}
+
+We are often also interested in the variance of a random variable, i.e.,
+the expected squared distance of an outcome from the expected outcome.
+\newcommand{\V}{\mathbb{V}}
+
+\begin{definition}
+\begin{align*}
+\mathbb{V}\left[X\right] & = \E\left[\left(x - \E\left[X\right]\right)^2\right] \\
+& = \sum_x \left(x - \E\left[X\right]\right)^2 \Pr\left(X = x\right).
+\end{align*}
+\end{definition}
+
+What is the variance of the random variable \(Z\)?
+
+\begin{align*}
+\mathbb{V}\left[Z\right] & = \sum_z \left(z - \E\left[Z\right]\right)^2 \Pr\left(Z = z\right) \\
+& = \left(1  - 0.5\right)^2 \Pr\left(Z = 1\right) + \left(0  - 0.5\right)^2 \Pr\left(Z = 0\right)  \\
+& = \left(1  - 0.5\right)^2 \left(0.5\right) + \left(0  - 0.5\right)^2 \left(1 - 0.5\right) \\ 
+& = \left(0.25\right) \left(0.5\right) + \left(0.25\right) \left(1 - 0.5\right) \\ 
+& = 0.25
+\end{align*}
+
+\newtheorem{student_exercise}{Student Exercise}
+\begin{student_exercise}
+Let's imagine again that the random variable $Z$ can take on the values $Z = 1$ or $Z = 0$. But now the probability, $p$, that $Z = 1$ is $0.75$ and the probability, $1 - p$, that $Z = 0$ is $1 - 0.75 = 0.25$. What is the expected value of $Z$? What is the variance of $Z$?
+\end{student_exercise}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{exp_val_Z <-}\StringTok{ }\DecValTok{1} \OperatorTok{*}\StringTok{ }\FloatTok{0.75} \OperatorTok{+}\StringTok{ }\DecValTok{0} \OperatorTok{*}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\FloatTok{0.75}\NormalTok{)}
+
+\NormalTok{var_Z <-}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{exp_val_Z)}\OperatorTok{^}\DecValTok{2} \OperatorTok{*}\StringTok{ }\FloatTok{0.75} \OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{0} \OperatorTok{-}\StringTok{ }\NormalTok{exp_val_Z)}\OperatorTok{^}\DecValTok{2} \OperatorTok{*}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\FloatTok{0.75}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{research-design}{%
+\section{Research Design}\label{research-design}}
+
+At its most basic level, a research design refers to the process by
+which units come to be in one study condition instead of another, i.e.,
+each random \(Z_i\) comes to take on the value of \(1\) (treatment) or
+\(0\) (control). More formally, we denote the collection of the values
+of random variables \(Z_i\) for all
+\(i \in \left\{1, \ldots , n\right\}\) units by the vector
+\(\mathbf{Z}^{\prime} = \begin{bmatrix} Z_1 & \cdots & Z_n \end{bmatrix}\)
+and define a research design as:
+
+\begin{enumerate}
+
+\item A set of possible ways (events) in which the whole vector $\mathbf{Z}$ could occur; and 
+
+\item A probability function on this set of possible events.
+
+\end{enumerate}
+
+\hypertarget{simple-individual-assignment}{%
+\subsection{Simple, Individual
+Assignment}\label{simple-individual-assignment}}
+
+Under completely unconstrained simple, individual assignment, the number
+of units in the treatment condition can range from \(0\) to \(n\) and
+the number of units in the control condition can likewise range from
+\(n - 0\) to \(n - n\). For example, in an experiment with \(8\) units,
+simple, individual assignment can allow \(0\), \(1\), \(2\), \(3\),
+\(4\), \(5\), \(6\), \(7\) or \(8\) units to be in the treatment and
+control conditions, respectively. More formally, we write the set,
+\(\Omega\), of possible ways that a researcher can assign all
+individuals to study conditions as follows: \begin{equation}
+  \Omega = \left\{0, 1\right\}^n =
+  \left\{
+    \begin{bmatrix} 0 \\ 0 \\ \vdots \\ 0 \\ 0 \end{bmatrix},
+    \begin{bmatrix} 1 \\ 0 \\ \vdots \\ 0 \\ 0 \end{bmatrix},
+    \begin{bmatrix} 0 \\ 1 \\ \vdots \\ 0 \\ 0 \end{bmatrix},
+    \cdots ,
+    \begin{bmatrix} 1 \\ 0 \\ \vdots \\ 1 \\ 1 \end{bmatrix},
+    \begin{bmatrix} 0 \\ 1 \\ \vdots \\ 1 \\ 1 \end{bmatrix},
+    \begin{bmatrix} 1 \\ 1 \\ \vdots \\ 1 \\ 1 \end{bmatrix}
+  \right\}.
+  \label{eq: omega simple assignment}
+\end{equation} We can write the number of possible assignments in the
+set \(\Omega\) by \(\left\lvert\Omega\right\rvert\) (the ``cardinality
+of Omega''), under simple, individual assignment as follows:
+\begin{align*}
+  \left\lvert\Omega\right\rvert & = \binom{n}{0} + \binom{n}{1} + \cdots + \binom{n}{n-1} + \binom{n}{n} \\ 
+              & = \sum \limits_{n_1 = 0}^{n} \binom{n}{n_1},
+\end{align*} where \(n_1 = \sum_{i = 1}^n z_i\) is the number of units
+in the treatment condition, which can range from \(0\) to \(n\), and
+\(\binom{n}{n_1} = \frac{n!}{\left(n - n_1\right)!n_1!}\) is the number
+of ways to choose \(n_1\) units from a total of \(n\) units. Conversely,
+\(n_0 = \sum_{i = 1}^n \left(1 - z_i\right)\) is the number of units in
+the control condition, which can range from \(n - 0\) to \(n - n\). In
+practice, researchers who control the assignment process will typically
+forbid assignments in which all units are in either condition, in which
+case
+\(\left\lvert\Omega\right\rvert = \sum \limits_{n_1 = 1}^{n-1} \binom{n}{n_1}\).
+
+\begin{student_exercise}
+Let's imagine that in a study of $n = 8$ units, each of the $i \in \left\{1, \ldots , 8\right\}$ units is assigned to $Z = 1$ or $Z = 0$ by an independent flip of a fair coin. What is the number of possible assignments? What is the probability associated with each one of these assignments, bearing in mind that the probability of $n$ independent events, $\begin{bmatrix} z_1 & \ldots & z_n \end{bmatrix}$, is $\prod \limits_{i = 1}^n \Pr\left(Z_i = z\right)$?
+\end{student_exercise}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{sra_treated <-}\StringTok{ }\KeywordTok{lapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{0}\OperatorTok{:}\DecValTok{8}\NormalTok{,}
+                      \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{combn}\NormalTok{(}\DataTypeTok{x =} \DecValTok{8}\NormalTok{,}
+                                                \DataTypeTok{m =}\NormalTok{ x) \})}
+
+\NormalTok{sra_z_vecs <-}\StringTok{ }\KeywordTok{lapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{length}\NormalTok{(sra_treated),}
+                     \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(t) \{ }\KeywordTok{apply}\NormalTok{(}\DataTypeTok{X =}\NormalTok{ sra_treated[[t]],}
+                                               \DataTypeTok{MARGIN =} \DecValTok{2}\NormalTok{,}
+                                               \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{as.integer}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\DecValTok{8} \OperatorTok{%in%}\StringTok{ }\NormalTok{x) \}) \})}
+
+\NormalTok{sra_z_vecs_mat <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{data =} \KeywordTok{unlist}\NormalTok{(sra_z_vecs),}
+                         \DataTypeTok{nrow =} \DecValTok{8}\NormalTok{,}
+                         \DataTypeTok{byrow =} \OtherTok{FALSE}\NormalTok{)}
+
+\NormalTok{indiv_probs <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ (}\DecValTok{1}\OperatorTok{/}\DecValTok{2}\NormalTok{), }\DataTypeTok{times =} \DecValTok{8}\NormalTok{)}
+
+\NormalTok{sra_vec_probs <-}\StringTok{ }\KeywordTok{apply}\NormalTok{(}\DataTypeTok{X =}\NormalTok{ sra_z_vecs_mat,}
+                       \DataTypeTok{MARGIN =} \DecValTok{2}\NormalTok{,}
+                       \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{prod}\NormalTok{(indiv_probs}\OperatorTok{^}\NormalTok{(x) }\OperatorTok{*}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{indiv_probs)}\OperatorTok{^}\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{x)) \})}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{student_exercise}
+Under the random assignment method described above, what is $\E\left[\mathbf{Z}^{\prime}\mathbf{Z}\right]$? What is $\mathbb{V}\left[\mathbf{Z}^{\prime}\mathbf{Z}\right]$?
+\end{student_exercise}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{N_1s <-}\StringTok{ }\KeywordTok{apply}\NormalTok{(}\DataTypeTok{X =}\NormalTok{ sra_z_vecs_mat,}
+              \DataTypeTok{MARGIN =} \DecValTok{2}\NormalTok{,}
+              \DataTypeTok{FUN =}\NormalTok{ sum)}
+
+\NormalTok{N_}\DecValTok{1}\NormalTok{_probs <-}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{0}\OperatorTok{:}\DecValTok{8}\NormalTok{,}
+                    \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(n_}\DecValTok{1}\NormalTok{) \{ }\KeywordTok{sum}\NormalTok{(sra_vec_probs[}\KeywordTok{which}\NormalTok{(N_1s }\OperatorTok{==}\StringTok{ }\NormalTok{n_}\DecValTok{1}\NormalTok{)])  \})}
+
+\NormalTok{N_}\DecValTok{1}\NormalTok{_ran_var <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\DecValTok{0}\OperatorTok{:}\DecValTok{8}\NormalTok{, N_}\DecValTok{1}\NormalTok{_probs)}
+
+\KeywordTok{colnames}\NormalTok{(N_}\DecValTok{1}\NormalTok{_ran_var) <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"N_1"}\NormalTok{, }\StringTok{"Prob"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{exp_val_n_}\DecValTok{1}\NormalTok{ <-}\StringTok{ }\KeywordTok{sum}\NormalTok{(N_}\DecValTok{1}\NormalTok{_ran_var[,}\StringTok{"N_1"}\NormalTok{] }\OperatorTok{*}\StringTok{ }\NormalTok{N_}\DecValTok{1}\NormalTok{_ran_var[,}\StringTok{"Prob"}\NormalTok{])}
+
+\NormalTok{var_n_}\DecValTok{1}\NormalTok{ <-}\StringTok{ }\KeywordTok{sum}\NormalTok{((N_}\DecValTok{1}\NormalTok{_ran_var[,}\StringTok{"N_1"}\NormalTok{] }\OperatorTok{-}\StringTok{ }\NormalTok{exp_val_n_}\DecValTok{1}\NormalTok{)}\OperatorTok{^}\DecValTok{2} \OperatorTok{*}\StringTok{ }\NormalTok{N_}\DecValTok{1}\NormalTok{_ran_var[,}\StringTok{"Prob"}\NormalTok{])}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{complete-individual-assignment}{%
+\subsection{Complete, Individual
+Assignment}\label{complete-individual-assignment}}
+
+Complete, individual assignment differs from simple, individual
+assignment only in that the value of \(n_1\) is fixed across all
+possible assignments. In other words, we are conditioning on the event
+that \(N_1 = n_1\) by assigning a probability of \(0\) to all
+assignments in which \(N_1 \neq n_1\).
+
+For example, the random assignment process in Fisher's lady tasting tea
+experiment is such that exactly \(4\) cups are assigned to treatment
+(\enquote{milk first}) and \(8 - 4 = 4\) cups are assigned to control
+(\enquote{tea first}). Under this assignment process, there are
+\(\binom{8}{4} = 70\) possible assignments.
+
+To show that the probability of each assignment is \(\cfrac{1}{70}\), we
+can appeal to the definition of conditional probability.
+
+\begin{definition}
+Given two events $x$ and $y$, where $\Pr\left(y\right) > 0$, the conditional probability of $x$ given $y$ is
+\begin{align*}
+\Pr\left(x \vert y \right) & = \cfrac{\Pr\left(x, y\right)}{\Pr\left(y\right)}.
+\end{align*}
+\end{definition}
+
+By the definition of conditional probability, \begin{align*}
+\cfrac{\Pr\left(\mathbf{Z} = \mathbf{z}, \mathbf{Z}^{\prime}\mathbf{Z} = 4\right)}{\Pr\left(\mathbf{Z}^{\prime}\mathbf{Z} = 4\right)}
+\end{align*}
+
+By the definition of joint probability, we know that
+\(\Pr\left(\mathbf{Z} = \mathbf{z}, \mathbf{Z}^{\prime}\mathbf{Z} = 4\right) \equiv \Pr\left(\mathbf{Z} = \mathbf{z}\right)\Pr\left(\mathbf{Z}^{\prime}\mathbf{Z} = 4 \vert \mathbf{Z} = \mathbf{z}\right)\).
+Since
+\(\Pr\left(\mathbf{Z}^{\prime}\mathbf{Z} = 4 \vert \mathbf{Z} = \mathbf{z}\right)\)
+can equal only 0 or 1 depending on whether the assignment vector
+\(\mathbf{z}\) has four treated units or not, we can represent the joint
+probability of \(\mathbf{Z} = \mathbf{z}\) and
+\(\mathbf{Z}^{\prime}\mathbf{Z}\) as follows:
+
+\begin{align*}
+\Pr\left(\mathbf{Z} = \mathbf{z}, \mathbf{Z}^{\prime}\mathbf{Z} = 4\right) & = \begin{cases}
+0 & \text{if } \sum \limits_{i = 1}^n z_i \neq 4 \\
+\prod_{i = 1}^8 0.5^{z_i}\left(1 - 0.5\right)^{(1 - z_i)} & \text{otherwise} 
+\end{cases}
+\end{align*}
+
+Now let's consider
+\(\Pr\left(\mathbf{Z}^{\prime}\mathbf{Z}\right) = 4\). Formally, let the
+index
+\(j \in \left\{1, \dots, \#\Omega \vert \mathbf{z}^{\prime}\mathbf{z} = 4\right\}\)
+run over the set of all assignment vectors with exactly four treatment
+units. Based on the axiom of countable additivity (this is the third
+axiom of probability, which you should look up if more interested), the
+probability of the event that \(\mathbf{z}^{\prime}\mathbf{z} = 4\) is
+simply the sum of probabilities of assignment vectors in which
+\(\mathbf{z}^{\prime}\mathbf{z} = 4\). Hence, \begin{align*}
+\Pr\left(\mathbf{Z}^{\prime}\mathbf{Z} = 4\right) & = \sum_{j = 1} \Pr\left(\mathbf{z}_j\right) 
+\end{align*}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cra_total_prob <-}\StringTok{ }\KeywordTok{sum}\NormalTok{(sra_vec_probs[}\KeywordTok{which}\NormalTok{(N_1s }\OperatorTok{==}\StringTok{ }\DecValTok{4}\NormalTok{)])}
+
+\NormalTok{cra_vec_probs <-}\StringTok{ }\NormalTok{sra_vec_probs[}\KeywordTok{which}\NormalTok{(N_1s }\OperatorTok{==}\StringTok{ }\DecValTok{4}\NormalTok{)]}\OperatorTok{/}\NormalTok{cra_total_prob}
+
+\NormalTok{n <-}\StringTok{ }\DecValTok{8}
+\NormalTok{n_}\DecValTok{1}\NormalTok{ <-}\StringTok{ }\DecValTok{4}
+
+\NormalTok{treated <-}\StringTok{ }\KeywordTok{combn}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\OperatorTok{:}\NormalTok{n,}
+                 \DataTypeTok{m =}\NormalTok{ n_}\DecValTok{1}\NormalTok{) }
+
+\NormalTok{Omega <-}\StringTok{ }\KeywordTok{apply}\NormalTok{(}\DataTypeTok{X =}\NormalTok{ treated,}
+               \DataTypeTok{MARGIN =} \DecValTok{2}\NormalTok{,}
+               \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{as.integer}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n }\OperatorTok{%in%}\StringTok{ }\NormalTok{x) \})}
+
+\NormalTok{cra_vec_probs <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ (}\DecValTok{1}\OperatorTok{/}\KeywordTok{ncol}\NormalTok{(Omega)), }\DataTypeTok{times =} \KeywordTok{ncol}\NormalTok{(Omega))}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{why-does-research-design-matter-hypothesis-testing}{%
+\section{Why Does Research Design Matter? Hypothesis
+Testing}\label{why-does-research-design-matter-hypothesis-testing}}
+
+\hypertarget{null-and-alternative-hypotheses}{%
+\subsection{Null and Alternative
+Hypotheses}\label{null-and-alternative-hypotheses}}
+
+Recall that the observed data of Fisher's lady tasting tea experiment
+were as follows:
+
+\begin{table}[H]
+\centering
+    \begin{tabular}{l|l|l|l|l}
+    Unit & $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ \\ \hline
+    1    & 1            & 1            & ?                & 1 \\
+    2    & 1            & 1            & ?                & 1  \\
+    3    & 1            & 1            & ?                & 1  \\
+    4    & 1            & 1            & ?                & 1  \\
+    5    & 0            & 0            & 0                & ?  \\
+    6    & 0            & 0            & 0                & ?  \\
+    7    & 0            & 0            & 0                & ?  \\
+    8    & 0            & 0            & 0                & ?  \\
+    \end{tabular}
+    \caption{Observed Data}
+\end{table}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tea_data_frame <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{unit =} \DecValTok{1}\OperatorTok{:}\DecValTok{8}\NormalTok{,}
+                             \DataTypeTok{z =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{),}
+                                   \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{)),}
+                             \DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{),}
+                                   \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{)),}
+                             \DataTypeTok{y_c =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \OtherTok{NA}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{),}
+                                     \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{)),}
+                             \DataTypeTok{y_t =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{),}
+                                     \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \OtherTok{NA}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{)))}
+
+\NormalTok{tea_data_frame}
+\end{Highlighting}
+\end{Shaded}
+
+Each cup in the experiment has two potential outcomes, \(y_{c_i}\) and
+\(y_{t_i}\), but only one of these two outcomes can be observed. The
+potential outcome that is observed is a random variable defined as
+\(Y_i = Z_i y_{t_i} + \left(1 - Z_i\right)y_{c_i}\). Notice that \(Y_i\)
+inherits its randomness solely from \(Z_i\).
+
+The sharp null hypothesis postulates that each unit's treatment
+potential outcome, \(y_{t_i}\), is equal to its control potential
+outcome, \(y_{c_i}\). More formally, the sharp null hypothesis states
+that \(y_{c,i} = y_{t,i}\) for all
+\(i \in \left\{1, \ldots , n\right\}\) units.
+
+In other words, the outcome that was observed for each cup (i.e.,
+whether it was marked as \enquote{milk first} or \enquote{tea first})
+would have been the same had that cup been assigned to the alternative
+experimental condition.
+
+\begin{table}[H]
+\centering
+    \begin{tabular}{l|l|l|l|l}
+    Unit & $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ \\ \hline
+    1    & 1            & 1            & 1                & 1 \\
+    2    & 1            & 1            & 1                & 1  \\
+    3    & 1            & 1            & 1                & 1  \\
+    4    & 1            & 1            & 1                & 1  \\
+    5    & 0            & 0            & 0                & 0  \\
+    6    & 0            & 0            & 0                & 0  \\
+    7    & 0            & 0            & 0                & 0  \\
+    8    & 0            & 0            & 0                & 0  \\
+    \end{tabular}
+    \caption{Potential Outcomes under the Sharp Null Hypothesis of No Effect}    
+\end{table}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{sharp_null_tea_data_frame <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{unit =} \DecValTok{1}\OperatorTok{:}\DecValTok{8}\NormalTok{,}
+                                        \DataTypeTok{z =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{),}
+                                              \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{)),}
+                                        \DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{),}
+                                              \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{)),}
+                                        \DataTypeTok{y_c =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{),}
+                                                \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{)),}
+                                        \DataTypeTok{y_t =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{),}
+                                                \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{)))}
+
+\NormalTok{sharp_null_tea_data_frame}
+\end{Highlighting}
+\end{Shaded}
+
+The alternative hypothesis of ``perfect discrimination,'' by contrast,
+stipulates that \(y_{c,i} = 0, y_{t,i} = 1\) for all
+\(i \in \left\{1, \dots, n \right\}\) units.
+
+\begin{table}[H]
+\centering
+    \begin{tabular}{l|l|l|l|l}
+    Unit & $\mathbf{z}$ & $\mathbf{y}$ & $\mathbf{y_c}$ & $\mathbf{y_t}$ \\ \hline
+    1    & 1            & 1            & 0                & 1 \\
+    2    & 1            & 1            & 0                & 1  \\
+    3    & 1            & 1            & 0                & 1  \\
+    4    & 1            & 1            & 0                & 1  \\
+    5    & 0            & 0            & 0                & 1  \\
+    6    & 0            & 0            & 0                & 1  \\
+    7    & 0            & 0            & 0                & 1  \\
+    8    & 0            & 0            & 0                & 1  \\
+    \end{tabular}
+    \caption{Potential Outcomes under the Alternative Hypothesis}    
+\end{table}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{alt_hyp_tea_data_frame <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{unit =} \DecValTok{1}\OperatorTok{:}\DecValTok{8}\NormalTok{,}
+                                     \DataTypeTok{z =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{),}
+                                           \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{)),}
+                                     \DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{),}
+                                           \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{)),}
+                                     \DataTypeTok{y_c =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{),}
+                                             \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{)),}
+                                     \DataTypeTok{y_t =} \KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{),}
+                                             \KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{)))}
+
+\NormalTok{alt_hyp_tea_data_frame}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{test-statistics}{%
+\subsection{Test Statistics}\label{test-statistics}}
+
+Fisher's test statistic is \(\mathbf{z}'\mathbf{y}\). Other test
+statistics are also possible. For example, the proportion of the
+focal-group cups that were correctly identified is
+\(\mathbf{Z}'\mathbf{y}/n_1\), where \(n_{1}\) is the design constant
+\(\sum_{i} Z_{i}\), here 4.
+
+Yet another possibility would be the difference in proportions of focal
+and non-focal group cups that were identified as being in the focal
+group, \(\mathbf{Z}'\mathbf{y}/n_{1} - \mathbf{Z}'\mathbf{y}/n_{0}\),
+where \(n_{0}= \sum_{i} 1- Z_{i} = 4\).
+
+We can calculate these test statistics on the realized experimental data
+to get our observed test statistic.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{z <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{), }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{))}
+\NormalTok{y <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{), }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{))}
+\NormalTok{n <-}\StringTok{ }\KeywordTok{length}\NormalTok{(z)}
+\NormalTok{n_t <-}\StringTok{ }\KeywordTok{sum}\NormalTok{(z)}
+
+\NormalTok{obs_treat_sum <-}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(}\KeywordTok{t}\NormalTok{(z) }\OperatorTok{%*%}\StringTok{ }\NormalTok{y)}
+
+\NormalTok{obs_treat_mean <-}\StringTok{ }\NormalTok{(}\DecValTok{1}\OperatorTok{/}\KeywordTok{sum}\NormalTok{(z)) }\OperatorTok{*}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(}\KeywordTok{t}\NormalTok{(z) }\OperatorTok{%*%}\StringTok{ }\NormalTok{y)}
+
+\NormalTok{obs_mean_diff <-}\StringTok{ }\NormalTok{(}\DecValTok{1}\OperatorTok{/}\KeywordTok{sum}\NormalTok{(z)) }\OperatorTok{*}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(}\KeywordTok{t}\NormalTok{(z) }\OperatorTok{%*%}\StringTok{ }\NormalTok{y) }\OperatorTok{-}
+\StringTok{  }\NormalTok{(}\DecValTok{1}\OperatorTok{/}\KeywordTok{sum}\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{z)) }\OperatorTok{*}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(}\KeywordTok{t}\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{z) }\OperatorTok{%*%}\StringTok{ }\NormalTok{y)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{exact-p-values}{%
+\subsection{Exact P-Values}\label{exact-p-values}}
+
+We first need to define a null distribution of the test statistic, i.e.,
+the test statistics that would be observed under all possible random
+assignments if the sharp null were true. Let's write functions for each
+of these test statistics:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{treat_sum <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.Z,}
+\NormalTok{                      .y_c,}
+\NormalTok{                      .y_t) \{}
+  
+\NormalTok{  y =}\StringTok{ }\NormalTok{.Z }\OperatorTok{*}\StringTok{ }\NormalTok{.y_t }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{.Z) }\OperatorTok{*}\StringTok{ }\NormalTok{.y_c}
+  
+  \KeywordTok{return}\NormalTok{( }\KeywordTok{as.integer}\NormalTok{(}\KeywordTok{t}\NormalTok{(.Z) }\OperatorTok{%*%}\StringTok{ }\NormalTok{y) )}
+  
+\NormalTok{\}}
+
+\NormalTok{treat_mean <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.Z, .y_c, .y_t) \{}
+  
+\NormalTok{  y =}\StringTok{ }\NormalTok{.Z }\OperatorTok{*}\StringTok{ }\NormalTok{.y_t }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{.Z) }\OperatorTok{*}\StringTok{ }\NormalTok{.y_c}
+  
+  \KeywordTok{return}\NormalTok{( (}\DecValTok{1}\OperatorTok{/}\KeywordTok{sum}\NormalTok{(.Z)) }\OperatorTok{*}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(}\KeywordTok{t}\NormalTok{(.Z) }\OperatorTok{%*%}\StringTok{ }\NormalTok{y) ) }
+  
+\NormalTok{\}}
+
+\NormalTok{mean_diff <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.Z, .y_c, .y_t) \{}
+  
+\NormalTok{  y =}\StringTok{ }\NormalTok{.Z }\OperatorTok{*}\StringTok{ }\NormalTok{.y_t }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{.Z) }\OperatorTok{*}\StringTok{ }\NormalTok{.y_c}
+  
+  \KeywordTok{return}\NormalTok{( (}\DecValTok{1}\OperatorTok{/}\KeywordTok{sum}\NormalTok{(.Z)) }\OperatorTok{*}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(}\KeywordTok{t}\NormalTok{(.Z) }\OperatorTok{%*%}\StringTok{ }\NormalTok{y) }\OperatorTok{-}\StringTok{ }\NormalTok{(}\DecValTok{1}\OperatorTok{/}\KeywordTok{sum}\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{.Z)) }\OperatorTok{*}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(}\KeywordTok{t}\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{.Z) }\OperatorTok{%*%}\StringTok{ }\NormalTok{y) ) }
+  
+\NormalTok{  \}}
+\end{Highlighting}
+\end{Shaded}
+
+Now let's generate the null distribution of Fisher's test statistic:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{y_c_null <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{), }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{))}
+\NormalTok{y_t_null <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{), }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{))}
+
+\NormalTok{null_test_stats <-}\StringTok{ }\KeywordTok{apply}\NormalTok{(}\DataTypeTok{X =}\NormalTok{ Omega,}
+                         \DataTypeTok{MARGIN =} \DecValTok{2}\NormalTok{,}
+                         \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{treat_sum}\NormalTok{(}\DataTypeTok{.Z =}\NormalTok{ x,}
+                                                       \DataTypeTok{.y_c =}\NormalTok{ y_c_null,}
+                                                       \DataTypeTok{.y_t =}\NormalTok{ y_t_null) \})}
+
+\NormalTok{null_prob_dist <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\DecValTok{0}\OperatorTok{:}\DecValTok{4}\NormalTok{,}
+                        \KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{0}\OperatorTok{:}\DecValTok{4}\NormalTok{,}
+                               \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{sum}\NormalTok{((null_test_stats }\OperatorTok{==}\StringTok{ }\NormalTok{x) }\OperatorTok{*}\StringTok{ }\NormalTok{cra_vec_probs) \}))}
+
+\KeywordTok{colnames}\NormalTok{(null_prob_dist) <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"Test_Stat"}\NormalTok{, }\StringTok{"Prob"}\NormalTok{)}
+
+\NormalTok{null_prob_dist}
+\end{Highlighting}
+\end{Shaded}
+
+To calculate the one sided p-value, we need to know the probability of
+observing a null test statistic greater than or equal to the observed
+test statistic. Formally, we can write this p-value as follows:
+
+\begin{equation}
+\Pr\left(t\left(\mathbf{z}, \mathbf{y}_0 \right) \geq T \right) = \sum \limits_{\mathbf{z} \in \Omega} \mathbbm{1}\left[t\left(\mathbf{z}, \mathbf{y}_0 \right) \geq T\right] \Pr\left(\mathbf{Z} = \mathbf{z}\right),
+\end{equation} where \(\mathbbm{1}\left[\cdot\right]\) is an indicator
+function that is \(1\) if the argument to the function is true and \(0\)
+if it is false.
+
+Now let's calculate the p-value:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{exact_p_value <-}\StringTok{ }\KeywordTok{sum}\NormalTok{((null_prob_dist[,}\StringTok{"Test_Stat"}\NormalTok{] }\OperatorTok{>=}\StringTok{ }\NormalTok{obs_treat_sum) }\OperatorTok{*}\StringTok{ }\NormalTok{null_prob_dist[,}\StringTok{"Prob"}\NormalTok{])}
+\end{Highlighting}
+\end{Shaded}
+
+We can also get the same exact p-value from the \texttt{fisher.test}
+command in \texttt{[R]}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{coffee_experiment <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{data =} \KeywordTok{c}\NormalTok{(}\DecValTok{4}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{4}\NormalTok{),}
+                            \DataTypeTok{nrow =} \DecValTok{2}\NormalTok{,}
+                            \DataTypeTok{ncol =} \DecValTok{2}\NormalTok{,}
+                            \DataTypeTok{byrow =} \OtherTok{TRUE}\NormalTok{)}
+
+\KeywordTok{colnames}\NormalTok{(coffee_experiment) <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"0"}\NormalTok{, }\StringTok{"1"}\NormalTok{)}
+
+\KeywordTok{rownames}\NormalTok{(coffee_experiment) <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"0"}\NormalTok{, }\StringTok{"1"}\NormalTok{)}
+
+\KeywordTok{fisher.test}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ coffee_experiment,}
+            \DataTypeTok{alternative =} \StringTok{"greater"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+The exact p-value from the Fisher test is
+\(\frac{1}{70} \approx 0.01429\).
+
+\hypertarget{type-i-and-type-ii-errors}{%
+\subsection{Type I and Type II Errors}\label{type-i-and-type-ii-errors}}
+
+Hypothesis tests are subject to at least two types of errors. One could,
+first, reject the null hypothesis when it is true (a type I error) or,
+second, fail to reject the null hypothesis when it is false (a type II
+error). Two features of hypothesis tests related to these two potential
+errors are the \(\alpha\) size of the test and the \textit{power} of the
+test. We now define the \(\alpha\) size (as distinct from the \(\alpha\)
+level) and power of hypothesis tests.
+
+A test's \(\alpha\) \textit{level} is, in the words of
+\citet{rosenbaum2010}, that test's \enquote{promise} that the
+probability of a Type I error (i.e., the probability of a \(p\)-value
+less than \(\alpha\) when the null hypothesis is true) is less than or
+equal to the \(\alpha\) level. The test's \(\alpha\) \textit{size}, on
+the other hand, is the test's true probability of a Type I error, which,
+in general, can be greater than, equal to or less than the \(\alpha\)
+level ``promised'' by the test. In contrast to the \(\alpha\) level and
+size of a test, a test's power is the probability of a \(p\)-value less
+than the \(\alpha\) level when the null hypothesis is false. In other
+words, power is \(1\) minus the Type II error probability; hence, as the
+power of a test increases, the Type II error probability decreases.
+
+Let's calculate the probability of rejecting the sharp null when it is
+true (i.e., the type I error rate).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{y_c_null_true <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{), }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{))}
+\NormalTok{y_t_null_true <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{), }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{4}\NormalTok{))}
+
+\NormalTok{get_p_value <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.y_c,}
+\NormalTok{                        .y_t,}
+\NormalTok{                        .Omega,}
+\NormalTok{                        .probs) \{}
+  
+\NormalTok{  obs_outs =}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(.Omega),}
+                    \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ Omega[,x] }\OperatorTok{*}\StringTok{ }\NormalTok{.y_t }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{Omega[,x]) }\OperatorTok{*}\StringTok{ }\NormalTok{.y_c \})}
+  
+\NormalTok{  obs_test_stats =}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(.Omega),}
+                          \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x)\{ }\KeywordTok{as.integer}\NormalTok{(}\KeywordTok{t}\NormalTok{(Omega[,x]) }\OperatorTok{%*%}\StringTok{ }\NormalTok{obs_outs[,x]) \})}
+  
+\NormalTok{  null_dists <-}\StringTok{ }\KeywordTok{list}\NormalTok{()}
+  
+  \ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(.Omega))\{}
+    
+\NormalTok{    null_dists[[i]] =}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(.Omega),}
+                             \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{as.integer}\NormalTok{(}\KeywordTok{t}\NormalTok{(Omega[,x]) }\OperatorTok{%*%}\StringTok{ }\NormalTok{obs_outs[,i]) \})}
+\NormalTok{  \}}
+  
+\NormalTok{  p_values =}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(.Omega),}
+                    \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{sum}\NormalTok{((null_dists[[x]] }\OperatorTok{>=}\StringTok{ }\NormalTok{obs_test_stats[x]) }\OperatorTok{*}\StringTok{ }\NormalTok{.probs)  \})}
+  
+  \KeywordTok{return}\NormalTok{(}\KeywordTok{list}\NormalTok{(}\StringTok{"obs_test_stats"}\NormalTok{ =}\StringTok{ }\NormalTok{obs_test_stats,}
+              \StringTok{"p_values"}\NormalTok{ =}\StringTok{ }\NormalTok{p_values))}
+  
+\NormalTok{\}}
+
+\NormalTok{p_values_null_true <-}\StringTok{ }\KeywordTok{get_p_value}\NormalTok{(}\DataTypeTok{.y_c =}\NormalTok{ y_c_null_true,}
+                                  \DataTypeTok{.y_t =}\NormalTok{ y_t_null_true,}
+                                  \DataTypeTok{.Omega =}\NormalTok{ Omega,}
+                                  \DataTypeTok{.probs =}\NormalTok{ cra_vec_probs)}\OperatorTok{$}\NormalTok{p_values}
+
+\CommentTok{## The probability of rejecting the null hypothesis when it is true}
+\KeywordTok{sum}\NormalTok{((p_values_null_true }\OperatorTok{<=}\StringTok{ }\FloatTok{0.05}\NormalTok{) }\OperatorTok{*}\StringTok{ }\NormalTok{cra_vec_probs)}
+\end{Highlighting}
+\end{Shaded}
+
+Let's now calculate the probability of rejecting the sharp null when it
+is false and the alternative hypothesis is true (i.e., the power of the
+test).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{y_c_null_false <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{0}\NormalTok{, }\DataTypeTok{times =} \DecValTok{8}\NormalTok{)}
+\NormalTok{y_t_null_false <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DataTypeTok{x =} \DecValTok{1}\NormalTok{, }\DataTypeTok{times =} \DecValTok{8}\NormalTok{)}
+
+\NormalTok{get_p_value <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(.y_c,}
+\NormalTok{                        .y_t,}
+\NormalTok{                        .Omega,}
+\NormalTok{                        .probs) \{}
+  
+\NormalTok{  obs_outs =}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(.Omega),}
+                    \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ Omega[,x] }\OperatorTok{*}\StringTok{ }\NormalTok{.y_t }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{Omega[,x]) }\OperatorTok{*}\StringTok{ }\NormalTok{.y_c \})}
+  
+\NormalTok{  obs_test_stats =}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(.Omega),}
+                          \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x)\{ }\KeywordTok{as.integer}\NormalTok{(}\KeywordTok{t}\NormalTok{(Omega[,x]) }\OperatorTok{%*%}\StringTok{ }\NormalTok{obs_outs[,x]) \})}
+  
+\NormalTok{  null_dists <-}\StringTok{ }\KeywordTok{list}\NormalTok{()}
+  
+  \ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(.Omega))\{}
+    
+\NormalTok{    null_dists[[i]] =}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(.Omega),}
+                             \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{as.integer}\NormalTok{(}\KeywordTok{t}\NormalTok{(Omega[,x]) }\OperatorTok{%*%}\StringTok{ }\NormalTok{obs_outs[,i]) \})}
+\NormalTok{  \}}
+  
+\NormalTok{  p_values =}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\DataTypeTok{X =} \DecValTok{1}\OperatorTok{:}\KeywordTok{ncol}\NormalTok{(.Omega),}
+                    \DataTypeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{ }\KeywordTok{sum}\NormalTok{((null_dists[[x]] }\OperatorTok{>=}\StringTok{ }\NormalTok{obs_test_stats[x]) }\OperatorTok{*}\StringTok{ }\NormalTok{.probs)  \})}
+  
+  \KeywordTok{return}\NormalTok{(}\KeywordTok{list}\NormalTok{(}\StringTok{"obs_test_stats"}\NormalTok{ =}\StringTok{ }\NormalTok{obs_test_stats,}
+              \StringTok{"p_values"}\NormalTok{ =}\StringTok{ }\NormalTok{p_values))}
+  
+\NormalTok{\}}
+
+\NormalTok{p_values_null_false <-}\StringTok{ }\KeywordTok{get_p_value}\NormalTok{(}\DataTypeTok{.y_c =}\NormalTok{ y_c_null_false,}
+                                  \DataTypeTok{.y_t =}\NormalTok{ y_t_null_false,}
+                                  \DataTypeTok{.Omega =}\NormalTok{ Omega,}
+                                  \DataTypeTok{.probs =}\NormalTok{ cra_vec_probs)}\OperatorTok{$}\NormalTok{p_values}
+
+\CommentTok{## The probability of rejecting the null hypothesis when it is true}
+\KeywordTok{sum}\NormalTok{((p_values_null_false }\OperatorTok{<=}\StringTok{ }\FloatTok{0.05}\NormalTok{) }\OperatorTok{*}\StringTok{ }\NormalTok{cra_vec_probs)}
+\end{Highlighting}
+\end{Shaded}
+
+\newpage
+\singlespacing 
+\bibliography{Bibliography.bib}
+
+\end{document}

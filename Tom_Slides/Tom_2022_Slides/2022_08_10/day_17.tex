@@ -1,0 +1,290 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+% PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass[table, xcolor={dvipsnames}, 9pt]{beamer}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\mode<presentation> {
+
+% The Beamer class comes with a number of default slide themes
+% which change the colors and layouts of slides. Below this is a list
+% of all the themes, uncomment each in turn to see what they look like.
+
+%\usetheme{default}
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Dresden}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+% \usetheme{Madrid}
+\usetheme{metropolis}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+% As well as themes, the Beamer class has a number of color themes
+% for any slide theme. Uncomment each of these in turn to see how it
+% changes the colors of your current slide theme.
+
+%\usecolortheme{albatross}
+%\usecolortheme{beaver}
+%\usecolortheme{beetle}
+%\usecolortheme{crane}
+%\usecolortheme{dolphin}
+%\usecolortheme{dove}
+%\usecolortheme{fly}
+%\usecolortheme{lily}
+%\usecolortheme{orchid}
+%\usecolortheme{rose}
+%\usecolortheme{seagull}
+%\usecolortheme{seahorse}
+%\usecolortheme{whale}
+%\usecolortheme{wolverine}
+
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+\setbeamertemplate{footline}{}
+\addtobeamertemplate{footnote}{}{\vspace{24pt}}
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{multirow}
+\usepackage{natbib}
+\usepackage[]{hyperref}
+\usepackage{diagbox}
+\usepackage{makecell}
+\usepackage{subfig}
+\usepackage{amsmath}
+\usepackage{amsfonts,amsthm,amsmath,amssymb}    
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{empheq}
+\makeatletter
+\let\save@measuring@true\measuring@true
+\def\measuring@true{%
+  \save@measuring@true
+  \def\beamer@sortzero##1{\beamer@ifnextcharospec{\beamer@sortzeroread{##1}}{}}%
+  \def\beamer@sortzeroread##1<##2>{}%
+  \def\beamer@finalnospec{}%
+}
+\makeatother
+\hypersetup{unicode=true,
+            pdfusetitle,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            backref=true,
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1}}
+\usepackage{xcolor}
+\newcommand\myheading[1]{%
+  \par\bigskip
+  {\Large\bfseries#1}\par\smallskip}
+\newcommand\given[1][]{\:#1\vert\:}
+\theoremstyle{newstyle}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newtheorem{defin}{Definition}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\mathrm{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\e}{\rm{e}}
+\DeclareMathOperator{\logit}{\rm{logit}}
+\DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
+%\DeclareMathOperator{\Pr}{\rm{Pr}}
+\newenvironment{Column}[1][.5\linewidth]{\begin{column}{#1}}{\end{column}}
+%----------------------------------------------------------------------------------------
+% TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[]{Sensitivity analysis} % The short title appears at the bottom of every slide, the full title is only on the title page
+
+\author{Thomas Leavitt} % Your name
+\institute[] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+% Your institution for the title page
+\medskip
+\textit{} % Your email address
+}
+\date{August 10, 2022} % Date, can be changed to a custom date
+
+\begin{document}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+%\begin{frame}
+%\frametitle{Overview} % Table of contents slide, comment this block out to remove it
+%\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+%\end{frame}
+
+%------------------------------------------------------------------------
+% PRESENTATION SLIDES
+%------------------------------------------------------------------------
+\section{Conservative sensitivity analysis}
+\begin{frame}{Conservative sensitivity analysis in stratified studies}
+\vfill
+\begin{itemize} \vfill
+\item Let the index $b \in \left\{1, \ldots, B\right\}$ runs over the $B$ strata \vfill
+\item  Then order $n$ units lexically by stratum and then in decreasing order within strata by value of outcome $y_{bi}$.
+\begin{itemize} \vfill
+\item  E.g., in \texttt{R}: \texttt{data <- dplyr::arrange(.data = data, strata, desc(y))} \vfill
+\end{itemize}	 \vfill
+\item  The worst-case $\mathbf{u} \in \mathcal{U}^+$ cannot be found by finding $\mathbf{u}_b \in \mathcal{U}_b^+$ in each stratum one at a time \vfill
+\item  All $n$ coordinates of $\mathbf{u} \in \mathcal{U}^+$ must be found simultaneously \vfill
+\item  Hence, there are $\prod \limits_{b = 1}^B \left(n_b - 1\right)$ candidate values to consider \vfill
+\begin{itemize} \vfill
+\item  Usually computationally intractable, even in relatively small studies  \vfill
+\end{itemize} \vfill
+\item So, in practice, we can use asymptotic approximation \\ \citep{gastwirthetal2000,rosenbaum2018} \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}{Asymptotic separability algorithm}
+\vfill
+\begin{itemize} \vfill
+\item An asymptotically valid upper bound to $p$-value is attained by finding $\bm{u}_b$ in each stratum one at a time \citep{gastwirthetal2000} \vfill
+\begin{enumerate} \vfill
+\item In each stratum, find $\bm{u}_b$ that maximizes expectation of test-stat under null \vfill
+\item If multiple $\bm{u}_b$ yield same expectation, choose $\bm{u}_b$ that yields largest variance \vfill
+\item[] \textbf{Intuition}: Put as much mass as possible in upper tail of null distribution \vfill
+\end{enumerate} \vfill
+\item[$\star$] ``Separable'' refers to finding overall ``worst-case'' $\bm{u} = \begin{bmatrix} \bm{u}_1 & \ldots & \bm{u}_B \end{bmatrix}^{\top}$ by finding ``worst case'' $\bm{u}_b$ in each stratum \textbf{separately} \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}{Asymptotic separability algorithm}
+\vfill
+\begin{itemize} \vfill
+\item For any matched design, the $\bm{u}$ this procedure picks may not yield the largest $p$-value, but ... \vfill
+\item As $B \to \infty$ with bounded $\max n_b$, there is \textbf{negligible difference} between \vfill
+\begin{enumerate}
+\item $p$-value from true ``worst case'' $\bm{u}$ and \vfill
+\item $p$-value from $\bm{u}$ picked by separable algorithm \vfill
+\end{enumerate} \vfill
+\item Separable algorithm yields asymptotic rejection probability $\leq \alpha$ for all configurations of $\bm{u} \in \mathcal{U}$ when sensitivity models holds at $\Gamma \geq 1$ and sharp null is true \vfill
+\begin{itemize} \vfill
+\item I.e., controls Type I error probability for any given random assignment violation characterized by $\Gamma \geq 1$ \vfill
+\end{itemize} \vfill
+\item Algorithm is used in \texttt{sensitivitymw} and \texttt{sensitivitymv} \texttt{R} packages \citep{rosenbaum2015} \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}{Asymptotic separability algorithm}
+\vfill
+\begin{itemize} \vfill
+\item Why is asymptotic separability helpful? \vfill
+\begin{itemize} \vfill
+\item With data from \citet{cerdaetal2012}, we made following matched design: \vfill
+\vspace{2em}
+\begin{table}[H]
+\begin{tabular}{l|l|l|l|l}
+\textbf{Structure} & $8:1$ & $7:1$ & $1:1$ & $1:16$ \\ \hline 
+\textbf{No.~of strata} & $1$   & $1$   & $4$   & $1$ \\
+\end{tabular}
+\caption{Structure of matched sets}
+\end{table} \vfill
+\item \textbf{Without} separability, total number of candidate $\bm{u}$s is \vfill
+\begin{align*}
+(9 - 1) \times (8 - 1) \times (2 - 1) \times (2 - 1) \times (2 - 1) \times (2 - 1) \times (17 - 1) & = 896
+\end{align*} \vfill
+\item \textbf{With} separability, total number of candidate $\bm{u}$s is \vfill
+\begin{align*}
+(9 - 1) + (8 - 1) + (2 - 1) + (2 - 1) + (2 - 1) + (2 - 1) + (17 - 1) & = 35
+\end{align*} \vfill
+\item With many strata, \vfill
+\item[] separability $\rightarrow$ finding (approx.) ``worst case'' $\bm{u}$ is computationally tractable! \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}{Difficulties of asymptotic separability algorithm}
+\vfill
+\begin{itemize} \vfill
+\item What do we do when asymptotic approximation is poor and exact solution computationally intractable? \vfill
+\begin{itemize} \vfill
+\item E.g., $B = 10$ and $n_b = 101$ for each $b$ \vfill
+\item[] There are $100^{10}$ candidate values of $\bm{u} \in \mathcal{U}^+$ \vfill
+\item[] Separable algorithm assesses only $100 \times 10 = 1000$ candidate vectors \vfill
+\item[] But separable algorithm works best with many small strata \vfill
+\end{itemize} \vfill
+\item \citet{rosenbaum2018} to the rescue!
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}{An alternative approximation}
+\vfill
+\begin{itemize} \vfill
+\item What does \citet{rosenbaum2018} do? \vfill
+\begin{enumerate} \vfill
+\item In any matched design, separable algorithm is \textbf{always} (slightly) liberal \vfill
+\begin{itemize} \vfill
+\item I.e., finds $\bm{u}$ with $p$-value (slightly) less than $p$-value from true ``worst case'' $\bm{u}$ \vfill
+\item Algorithm's $p$-value \textbf{never} greater than true ``worst case'' $p$-value \vfill
+\end{itemize} \vfill
+\item Alternative Taylor approximation algorithm is \textbf{always} (slightly) conservative \vfill
+\begin{itemize} \vfill
+\item I.e., finds $\bm{u}$ with $p$-value (slightly) greater than $p$-value from true ``worst case'' $\bm{u}$ \vfill
+\item Algorithm's $p$-value \textbf{never} less than than true ``worst case'' $p$-value \vfill
+\end{itemize} \vfill
+\end{enumerate} \vfill
+\item So we use conservative algorithm for sensitivity analysis and compare it to separable algorithm to check that former is not \textbf{too} conservative \vfill
+\begin{itemize} \vfill
+\item In seemingly all examples, $p$-values from the two algorithms differ negligibly \vfill
+\item Easy to implement via \texttt{senstrat} package in \texttt{R} \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[allowframebreaks]
+\frametitle{References} 
+\scriptsize
+\bibliographystyle{chicago}
+\bibliography{sensitivity_analysis}   % name your BibTeX data base
+\end{frame}
+%----------------------------------------------------------------
+\end{document}

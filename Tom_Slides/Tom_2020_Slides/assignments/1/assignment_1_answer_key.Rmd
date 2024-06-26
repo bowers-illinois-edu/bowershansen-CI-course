@@ -1,0 +1,427 @@
+---
+title: "Assignment 1 Answer Key"
+author: \href{mailto:tl2624@columbia.edu}{Thomas Leavitt}
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  pdf_document:
+    citation_package: natbib
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    highlight: tango
+    keep_tex: true
+    latex_engine: xelatex
+    toc: no
+    toc_depth: 1
+    includes:
+      in_header: mystyle.sty
+fontsize: 12pt
+classoption: leqno
+geometry: margin = 1.5cm
+bibliography: Bibliography.bib
+biblio-style: apsr
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include = FALSE}
+#install.packages("knitr")
+
+#install.packages("rmdformats")
+library(knitr)
+library(rmdformats)
+
+## Global options
+options(max.print = "75")
+opts_chunk$set(echo = TRUE,
+	             cache = TRUE,
+               prompt = FALSE,
+               tidy = TRUE,
+               comment = NA,
+               message = FALSE,
+               warning = FALSE)
+opts_knit$set(width = 75)
+
+```
+
+\section*{Question 1}
+
+\subsection*{1a}
+
+Let's first load the data and then write a function to calculate this specific test statistic, $n_1^{-1}\mathbf{Z}^{\prime}\mathbf{y}$, under the sharp null hypothesis of no effect:
+
+\scriptsize
+```{r, results = "hide", message = FALSE}
+
+acorn_data <- read.csv("acorn03.csv")
+  
+acorn_data <- dplyr::select(.data = acorn_data, unit, size, z, vote03)
+
+treat_group_mean <- function(.Z,
+                             .y){
+  
+  n_1 = sum(.Z == 1)
+  
+  test_stat = as.numeric(n_1^{-1} * t(.Z) %*% .y)
+  
+  return(test_stat)
+  
+  }
+
+```
+\normalsize
+
+Calculate the observed test statistic as follows:
+\scriptsize
+```{r, results = "hide", message = FALSE}
+
+obs_test_stat <- treat_group_mean(.Z = acorn_data$z,
+                                  .y = acorn_data$vote03)
+
+```
+\normalsize
+
+In this example there are $\binom{28}{14} = 40,116,600$ possible ways in which $14$ precincts could be assigned to treatment and the remaining $14$ to control. It is too computationally intensive to enumerate all $40,116,600$ of them. Instead, we can use a simulation-based approximation to the null distribution of the test statistic under all possible assignments.
+
+\scriptsize
+```{r, results = "hide", message = FALSE}
+
+set.seed(1:5)
+null_test_stats <- replicate(n = 10^5,
+                             expr = treat_group_mean(.Z = sample(acorn_data$z),
+                                                     .y = acorn_data$vote03))
+
+null_test_stat_dist <- data.frame(null_test_stat = null_test_stats)
+
+```
+\normalsize
+
+\scriptsize
+```{r, message = FALSE, fig.width=5, fig.height=3}
+## Use Freedman-Diaconis rule for bin width
+bw <- 2 * IQR(null_test_stats) / length(null_test_stats)^(1/3)
+
+library(ggplot2)
+ggplot(data = null_test_stat_dist,
+       mapping = aes(x = null_test_stat, y = (..count..)/sum(..count..))) +
+  geom_histogram(binwidth = bw) +
+  geom_vline(xintercept = obs_test_stat,
+             linetype = "dashed") +
+  xlab(label = "Null test statistic") +
+  ylab(label = "Probability") +
+  theme_bw()
+```
+\normalsize
+
+The upper, one-sided p-value is simply the proportion of null test statistics greater than or equal to the observed test statistic (the dashed line in the plot above).
+\scriptsize
+```{r}
+
+null_dist_sim_p_value <- mean(null_test_stats >= obs_test_stat)
+
+null_dist_sim_p_value
+
+```
+\normalsize
+\subsection*{1b}
+
+To calculate the null expected value of our test statistic, simply take the mean of our simulations of the test statistic under the null.
+\scriptsize
+```{r}
+
+null_dist_sim_EV <- mean(null_test_stats)
+
+null_dist_sim_EV
+
+```
+\normalsize
+\subsection*{1c}
+
+We can do the same for the variance.
+\scriptsize
+```{r}
+
+null_dist_sim_var <- mean((null_test_stats - mean(null_test_stats))^2)
+
+null_dist_sim_var
+
+```
+\normalsize
+\section*{Question 2}
+
+We can calculate the null expected value of the test statistic, $\E\left[n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right]$, from first principles via the logic given below. Note that holding the vector $\mathbf{y}$ fixed as $\mathbf{Z}$ varies corresponds to the sharp null hypothesis of no effect.
+
+Drawing upon basic properties of expectations, we can express $\E\left[n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}_t\right]$ as follows:
+
+\begin{align*}
+\E\left[n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right] \\
+& = n_1^{-1} \E\left[\mathbf{Z}^{\prime}\mathbf{y}\right] & \text{Since } \E\left[c\right] = c \\
+& = n_1^{-1} \E\left[\sum \limits_{n = 1}^n Z_i y_{i}\right] & \text{By the definition of matrix multiplication} \\
+& = n_1^{-1} \sum \limits_{n = 1}^n \E\left[Z_i y_{i}\right] & \text{By the linearity of expectations} \\
+& = n_1^{-1} \sum \limits_{n = 1}^n y_{ti} \E\left[Z_i\right] & \text{Since } y_{i} \text{ is a constant} \\
+& = n_1^{-1} \sum \limits_{n = 1}^n y_{i} \frac{n_1}{n} & \text{By the random assignment process of the experiment} \\
+& = n_1^{-1}  \left(y_{1} \frac{n_1}{n}\right) + \dots + \left(y_{n} \frac{n_1}{n}\right) & \text{By the definition of the summation operator} \\
+& = n_1^{-1} \frac{n_1}{n} \left(y_{1} + \dots + y_{n}\right) & \text{By the distributive property } (a b) + (a  c) = a(b + c) \\
+& = \frac{1}{n_1} \frac{n_1}{n} \left(y_{1} + \dots + y_{n}\right) & \text{Since } n_1^{-1} = \frac{1}{n_1} \\
+& = \frac{1}{n} \left(y_{1} + \dots + y_{n}\right) & \text{Since } \frac{n_1}{n n_1} = \frac{1}{n} \\
+& = \frac{\left(y_{1} + \dots + y_{n}\right)}{n} \\
+& = \overline{y}
+\end{align*}
+
+The steps enumerated above show that the expected value of $n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}$ is equal to the mean of the outcome among all $1, \dots , n$ units.
+
+\section*{Question 3}
+
+In our finite population, experimental setup, $\Var\left[n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right] = \frac{1}{n_1} \frac{n_0}{n} \frac{\sum \limits_{i = 1}^n \left(y_i - \bar{y}\right)^2}{n - 1}$.  we can reexpress the variance of the test statistic as follows:
+\begin{align*}
+\Var\left[n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right] & = \frac{1}{n_1} \frac{n_0}{n} \frac{\sum \limits_{i = 1}^n \left(y_i - \bar{y}\right)^2}{n - 1} \\ 
+& = \frac{1}{n_1} \frac{n_0}{n} \frac{\sum_{i = 1}^n \left(y_i - \bar{y}\right)}{n - 1} \\
+& = \frac{n_0 \left(\sum_{i = 1}^n \left(y_i - \bar{y}\right)\right)}{\left(n - 1\right)\left(n\right) \left(n_1\right)} \\
+& = \frac{n_0}{n - 1} \frac{\sum_{i = 1}^n \left(y_i - \bar{y}\right)}{n} \frac{1}{n_1} \\
+& = \frac{n_0}{n - 1} \sigma^2_y \frac{1}{n_1} \\
+& = \frac{n - n_1}{n - 1} \frac{\sigma^2_y}{n_1}
+\end{align*}
+which is the expression for the variance of the sample mean given in the question.
+
+It is now simple to assess when $\Var\left[n_1^{-1} \mathbf{Z}^{\prime}\mathbf{y}\right] = \frac{n - n_1}{n - 1} \frac{\sigma^2_y}{n_1}$ is smaller than the standard expression for the variance we normally encounter in introductory textbooks given by $\frac{\sigma^2_y}{n_1}$, which assumes random sampling from an infinite superpopulation of outcomes. In particular, we can see that if $n_1 > 1$, then $\frac{n - n_1}{n - 1}$ will be less than 1, in which case $\frac{n - n_1}{n - 1} \frac{\sigma^2_y}{n_1}$ will be less than $\frac{\sigma^2_y}{n_1}$.
+
+\section*{Question 4}
+
+For this experiment, the test statistic is $n_1^{-1}\mathbf{Z}^{\prime}\mathbf{y}$. The observed test statistic, $n_1^{-1}\mathbf{z}^{\prime}\mathbf{y}$, then, is simply
+\begin{align*}
+\left(\frac{1}{14}\right) \begin{bmatrix} 0 & 0 & \dots & 1 & 1 \end{bmatrix} \begin{bmatrix}  0.3832 \\ 0.1865 \\ \vdots \\ 0.3690 \\ 0.2924 \end{bmatrix} & \approx \left(\frac{1}{14}\right)\begin{bmatrix} 4.5473 \end{bmatrix} \\
+& \approx 0.3248.
+\end{align*}
+This quantity is the mean turnout proportion among treated units.
+
+We can calculate this value in \texttt{R} as follows:
+\scriptsize
+```{r}
+
+## t() is to transpose a matrix; %*% is the matrix multiplication operator
+(1/sum(acorn_data$z)) *
+  t(acorn_data$z) %*% acorn_data$vote03
+
+```
+\normalsize
+Under the sharp null hypothesis of no effect, the observed outcome $y_i$, is fixed for all $i \in \left\{1 , \dots , 28\right\}$ units over all possible random assignments:
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrr}
+\hline
+Unit Index & $\mathbf{z}$ & $\mathbf{y}$ \\ 
+\hline
+1  & 0  & 0.3832  \\ 
+2  & 0  & 0.1865  \\ 
+$\vdots$ & $\vdots$ \\ 
+27 & 1  & 0.3699 \\ 
+28 & 1  & 0.2924 \\ 
+\hline
+\end{tabular}
+\end{table}
+
+Therefore, we can directly calculate the population mean and variance of all $28$ outcome values under the sharp null hypothesis of no effect. The population mean and variance of the outcome under the sharp null hypothesis of no effect are $\mu_{y} \approx 0.3071$ and $\sigma^2_{y} \approx 0.0042$, respectively.
+
+\scriptsize
+```{r}
+
+pop_mean <- mean(acorn_data$vote03)
+
+pop_var <- mean((acorn_data$vote03 -
+                   mean(acorn_data$vote03))^2)
+
+cbind(pop_mean,
+      pop_var)
+
+```
+\normalsize
+
+Given that we now know $\mu_{y}$ and $\sigma^2_{y}$ under the sharp null hypothesis, we can directly calculate $\Var\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]$:
+\begin{align*}
+\Var\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right] & = \left(n_1^{-1}\right) \left(\frac{n_0}{n}\right) \left(\frac{\sum \limits_{i = 1}^n \left(y_i - \bar{y}\right)^2}{n - 1}\right) \\
+& \approx \left(\frac{1}{14}\right) \left(\frac{14}{28}\right) \left(\frac{0.1175}{28 - 1}\right) \\
+& \approx 0.0002.
+\end{align*}
+This quantity is the variance of the randomization distribution, which is distinct from the variance of the finite population of $28$ outcomes under the sharp null hypothesis of no effect.
+
+\scriptsize
+```{r}
+
+fpc_var_sample_mean <- function(.y,
+                                .n_1) {
+  
+  (.n_1^(-1)) * ((length(.y) - .n_1)/length(.y)) *
+    (sum((.y - mean(.y))^2))/(length(.y) - 1)
+  
+}
+
+fpc_var <- fpc_var_sample_mean(.y = acorn_data$vote03,
+                               .n_1 = sum(acorn_data$z))
+
+fpc_var
+
+(abs(null_dist_sim_var - fpc_var)/fpc_var) * 100
+
+```
+\normalsize
+
+The error of the simulation based approximation, expressed as a percentage of $\mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]$ is:
+\begin{align*}
+\left(\frac{\left|\mathrm{Var}_{sim}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right] - \mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]\right|}{\mathrm{Var}\left[n_1^{-1} \mathbf{Z}^{\prime} \mathbf{y}\right]}\right) 100 = 0.5318 \%.
+\end{align*}
+
+\section*{Question 5}
+
+In the case of the Acorn experiment, we can calculate the Z-score as follows:
+\begin{align*}
+\text{Z-score} & = \frac{n_1^{-1}\mathbf{Z}^{\prime}\mathbf{y} - \E\left[n_1^{-1}\mathbf{Z}^{\prime}\mathbf{y}\right]}{\sqrt{\mathrm{Var}\left[n_1^{-1}\mathbf{Z}^{\prime}\mathbf{y}\right]}} \\
+& \approx \frac{\left(0.3248 - .3067\right)}{0.0125}
+\end{align*}
+
+\scriptsize
+```{r}
+
+z_score <- (obs_test_stat - pop_mean) / sqrt(fpc_var)
+
+```
+\normalsize
+
+We can now calculate the Normal approximation based upper, one-sided p-value as follows:
+
+\scriptsize
+```{r}
+
+pnorm(q = z_score,
+      lower.tail = FALSE)
+
+```
+\normalsize
+
+The \texttt{pnorm} function reports the probability density to the left of the observed test statistic by default; but since we expect a positive effect, we want the probability density to the right of the observed test statistic, which we can do by setting \texttt{lower.tail = FALSE}.
+
+\section*{Question 6}
+
+A researcher plans to ask six subjects to donate time to an adult literacy program. Each subject will be asked to donate either $30$ $(Z = 0)$ or $60$ $(Z = 1)$ minutes. The researcher is considering three methods for randomizing the treatment. Method I is to make independent decisions for each subject, tossing a coin each time. Method C is to write "30" and "60" on three playing cards each, and then shuffle the six cards. Method P tosses one coin for each of the 3 pairs (1, 2), (3, 4), (5, 6), asking for 30 (60) minutes from exactly one member of each pair.
+
+\subsection*{6a}
+
+Method I independently assigns each subject to treatment $(Z_i = 1)$ with probability $0.5$. Under simple random assignment all subjects are assigned to groups without regard to the assignments of other subjects in the study; this assignment process is especially simple to implement. With a small $n$, however, this method may result in no subjects in one of the two conditions. If $n = 6$, then, under simple random assignment (method I), the probability that all units are assigned to the treatment condition is $0.5^6 \approx 0.0156$ and the probability that all units are assigned to the control condition is also $0.5^6 \approx 0.0156$. Although small, the probability of these two outcomes taken together is $0.5^6 + 0.5^6 \approx 0.0312$. Method C has the benefit of enabling the researcher to assign a predetermined number of subjects to treatment and control such that there is a fixed number of participants in each condition. Method P assigns units to treatment and control within blocked pairs, which (if covariates are predictive of potential outcomes) decreases the variance of the randomization distribution.
+
+\subsection*{6b}
+
+If $n$ increases to $600$, then the probability that all $600$ units are assigned to treatment is $0.5^{600}$ and the probability that all units are assigned to control is also $0.5^{600}$. Thus, the probability that all units are assigned to one of the two treatment conditions is $0.5^{600} + 0.5^{600}$. The aforementioned weakness of method $I$ is far less of a concern if $n$ were $600$ instead of $6$.
+
+\subsection*{6c}
+
+Let's first consider the set of possible assignments under each method. Under method $I$ the set of possible assignments, $\Omega_I$ is
+\begin{align*}
+\Omega_{I} & = \left\{ \ \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}, \  \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}, \ \cdots , \ \begin{bmatrix} 1 \\ 1 \\ 1 \\ 1 \\ 1 \\ 0  \end{bmatrix}, \ \begin{bmatrix} 1 \\ 1 \\ 1 \\ 1 \\ 1 \\ 1  \end{bmatrix} \ \right\}.
+\end{align*}
+
+Under method $C$, the set of assignments, $\Omega_C$, is
+\begin{align*}
+\Omega_{C} & = \left\{ \mathbf{z}: \sum \limits_{i = 1}^n z_i = n_1 \right\} = \left\{ \ \begin{bmatrix} 1 \\ 1 \\ 0 \\ 1 \\ 0 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}, \ \cdots , \ \begin{bmatrix} 0 \\ 0 \\ 1 \\ 0 \\ 1 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 0 \\ 0 \\ 1 \\ 1 \\ 1  \end{bmatrix} \ \right\}.
+\end{align*}
+
+Finally, under method $P$, the set of assignments, $\Omega_P$, is 
+\begin{align*}
+\Omega_{P} & = \left\{ \mathbf{z}: \sum \limits_{i = 1}^n z_{bi} = 1, \sum \limits_{i = 1}^n \left(1 - z_{bi}\right) = 1, b = 1, \dots , B \right\} = \left\{ \ \begin{bmatrix} 1 \\ 0 \\ 1 \\ 0 \\ 1 \\ 0 \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 1 \\ 0 \\ 1 \\ 0 \end{bmatrix}, \ \cdots , \ \begin{bmatrix} 1 \\ 0 \\ 0 \\ 1 \\ 0 \\ 1  \end{bmatrix}, \ \begin{bmatrix} 0 \\ 1 \\ 0 \\ 1 \\ 0 \\ 1  \end{bmatrix} \ \right\},
+\end{align*}
+where the index $b \in \left\{1, \dots , B\right\}$ runs over the pairs in the randomized experiment. 
+
+Under all three methods, the respective probabilities of each possible assignment is $\cfrac{1}{\left\lvert \Omega_I \right \rvert}$, $\cfrac{1}{\left\lvert \Omega_C \right \rvert}$ and $\cfrac{1}{\left\lvert \Omega_P \right \rvert}$, respectively. Recall that for a set $S$, $\left\lvert S \right\rvert$ denotes the number of elements in (i.e., the cardinality of) the set, $S$. After noting that $\E\left[Z_1\right]$ is equivalent to $\Pr\left(Z_1 = 1\right)$, we can calculate $\E\left[Z_1\right]$ by summing the probabilities of assignment vectors in which $z_1 = 1$. Under all three methods, $\E\left[Z_1\right] = 0.5$.  
+
+\subsection*{6d}
+
+Along the same lines as the question above, we can also deduce that $\E\left[Z_i\right] = 0.5$ for all $i \in \left\{1, \dots , n\right\}$ under each method. Then, by the linearity of expectations, we know that
+\begin{align*}
+\E\left[Z_1 + \dots + Z_6\right] \\
+& = \E\left[Z_1\right] + \dots + \E\left[Z_6\right] \\
+& = 0.5 + \dots + 0.5 \\
+& = 3
+\end{align*}
+for all methods.
+
+\subsection*{6e}
+
+Under each method, we can calculate $\E\left[\mathbf{Z}^{\prime}\mathbf{1}\right]$, which is the expected number of treated units, by calculating $\mathbf{z}'\mathbf{1}$ for each $\mathbf{z} \in \Omega_{\cdot}$ and then calculating the average of all possible values of $\mathbf{z}'\mathbf{1}$.
+
+For all three methods, the expected number of treated units, $\E\left[\mathbf{Z}'\mathbf{1}\right]$ is equal to $3$. For example, in \texttt{R}, we could calculate the expexted number of treated units as follows:
+
+\scriptsize
+```{r}
+
+n_1_sra <- function(.n,
+                    .k,
+                    .p) {
+  
+  return(choose(n = .n, k = .k) * .p^(.k)*(1 - .p)^(.n - .k))
+  
+  }
+
+probs <- sapply(X = seq(from = 0,
+                        to = 6,
+                        by = 1),
+                FUN = n_1_sra,
+                .n = 6,
+                .p = 0.5)
+
+
+events <- seq(from = 0 , to = 6, by = 1)
+
+sum(events * probs)
+
+```
+\normalsize
+
+\subsection*{6f}
+
+For methods C and P, the variance of $\mathbf{Z}^{\prime} \mathbf{1}$ is $0$, since under every treatment assignment permutation in $\Omega_C$ and $\Omega_P$, respectively, the value of $\mathbf{Z}^{\prime}\mathbf{1}$ is constant. 
+
+We know that $\mathrm{Var}\left[X\right] = \E\left[X^2\right] - \E\left[X\right]^2$; hence, for method I we can calculate the variance as follows:
+\begin{align*}
+\E\left[\left(\mathbf{Z}^{\prime}\mathbf{1}\right)^2\right] - \E\left[\mathbf{Z}^{\prime}\mathbf{1}\right]^2 & = 10.5 - 9 \\
+& = 1.5
+\end{align*}
+
+\subsection*{6h}
+ 
+For methods C and P, $\mathbf{Z}^{\prime}\mathbf{1}$ is a constant that is equal to $n_1$. The expected value of a constant is the constant; hence,
+\begin{align*}
+\E\left[\mathbf{Z}^{\prime}\mathbf{1}\right] \\
+& = \E\left[n_1\right] \\
+& = n_1
+\end{align*}
+Therefore, we can express $\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right]$ as follows:
+\begin{align*}
+\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right] \\
+& = \E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{n_1}\right] \\
+& \vdots  \\
+& = \frac{\left(x_1 + \dots + x_n\right)}{n} \\
+& = \overline{x},
+\end{align*}
+which is simply the mean of $\mathbf{x}$.
+
+For method I, $\mathbf{Z}^{\prime}\mathbf{1}$ is a random quantity that varies across different possible realizations of treatment assignment. Since, the number of treated units, $\mathbf{Z}^{\prime}\mathbf{1}$, is a random variable, we can no longer write $\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right] = \E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{n_1}\right]$. In addition, it is \textit{not} the case in general that $\E\left[\frac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}} \right] =
+\frac{\E\left[\mathbf{Z}'\mathbf{x} \right]}{\E\left[\mathbf{Z}'\mathbf{1} \right]}$. Therefore, the fact that $\cfrac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}} = \bar{x}$ in a completely randomized experiment does not immediately carry over to a simply randomized experiment.
+
+Nevertheless, so long as $n_1 > 0$, it follows that
+\begin{align*}
+\E\left[\frac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}}\big| \mathbf{Z}' \mathbf{1} = n_{1}\right] & = \E\left[\frac{\mathbf{Z}'\mathbf{x}}{n_1}\big| \mathbf{Z}' \mathbf{1} = n_{1}\right] \\
+& \vdots \\
+& = \sum \limits_{i = 1}^n \E\left[\frac{Z_{i}}{n_{1}} \big| \mathbf{Z}'\mathbf{1} = n_{1} \right] x_i \\ 
+& = \sum \limits_{i = 1}^n \E\left[\frac{\left(n_1/n\right)}{n_{1}} \big| \mathbf{Z}'\mathbf{1} = n_{1} \right] x_i \\ 
+& = \sum \limits_{i = 1}^n \E\left[\frac{n_1}{n n_{1}} \big| \mathbf{Z}'\mathbf{1} = n_{1} \right] x_i \\ 
+& = \sum \limits_{i = 1}^n \frac{1}{n} x_i \\ 
+& = \bar{x}
+\end{align*}
+
+But when $n_1 = 0$, which will occur with probability $\cfrac{1}{\left\lvert \Omega_I \right\rvert}$ under method $I$, the quantity $\frac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}}\big| \mathbf{Z}' \mathbf{1} = n_{1}$ is no longer defined. Thus, in general $\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right]$ does not reduce to $\bar{x}$ under simple random assignment. But if one were to condition on all assignments in $\Omega_I$ such that $n_1 > 0$, then it would be the case that $\E\left[\frac{\mathbf{Z}^{\prime}\mathbf{x}}{\mathbf{Z}^{\prime}\mathbf{1}}\right] = \bar{x}$.
+
+\newpage
+# References
+
+
+
+
