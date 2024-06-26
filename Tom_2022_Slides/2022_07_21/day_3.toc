@@ -1,4 +1,0 @@
-\beamer@sectionintoc {1}{Potential Outcomes Framework}{2}{0}{1}
-\beamer@sectionintoc {2}{The average treatment effect}{7}{0}{2}
-\beamer@sectionintoc {3}{Randomized experiments}{10}{0}{3}
-\beamer@sectionintoc {4}{Difference-in-Means estimator}{13}{0}{4}
