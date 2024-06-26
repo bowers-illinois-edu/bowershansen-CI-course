@@ -1,0 +1,72 @@
+---
+title: "Instrumental Variables Notes"
+author: "Thomas Leavitt"
+date: "2024-06-26"
+output: pdf_document
+header-includes:
+    - \usepackage{setspace}\doublespacing
+bibliography: Bibliography.bib
+---
+
+# Setup
+
+Under \textcolor{magenta}{SUTVA}, we can partition participants into $4$ principal strata related to participants' compliance with treatment assignment. Let $d_i(0)$ denote whether participant $i$ would receive the treatment if assigned to the control condition; also let $d_i(1)$ denote whether participant $i$ would receive the treatment if assigned to the treatment condition. The $4$ principal strata in terms of $d_i(0)$ and $d_i(1)$ are below.
+
+\begin{table}[h]
+\centering
+    \begin{tabular}{l|l|l}
+    $z_i = 0$ & $z_i = 1$ & Principal Stratum \\ \hline
+    $d_{i}(0) = 1$ & $d_{i}(1) = 1$ & \textit{Always-Taker} \\
+    $d_{i}(0) = 0$ & $d_{i}(1) = 1$ & \textit{Complier} \\
+    $d_{i}(0) = 1$ & $d_{i}(1) = 0$ & \textit{Defier} \\
+    $d_{i}(0) = 0$ & $d_{i}(1) = 0$ & \textit{Never-Taker} \\
+    \end{tabular}
+\end{table}
+
+# Goal
+We would like to estimate the average effect of Z on Y among Compliers. Because we do not know which units are Compliers, we cannot condition on them in estimating the average treatment effect of Z on Y. We can unbiasedly and consistently estimate two unconditional quantities, the average effect of Z on Y and the average effect of Z on D. Our goal is to show that, under specific assumptions, the ratio of these two unconditional average effects is equal to the conditional average effect of Z on Y among Compliers. This equality is helpful because it means that, under random assignment, we can consistently estimate the conditional average effect among Compliers despite our inability to directly condition on Compliers.
+
+# Proof
+
+First, we will derive a new expression for the $\text{ITT}_D$. Then we will derive a new expression for the $\text{ITT}_Y$. Then we will show that the ratio of the new expression of $\text{ITT}_Y$ to the new expression of $\text{ITT}_D$ is equal to the conditional average effect of Z on Y among Compliers.
+
+We can write the $\text{ITT}_D$, as
+\begin{align*}
+\text{ITT}_D = \left(\dfrac{1}{N}\right) \sum \limits_{i = 1}^N d_i(1) - d_i(0).
+\end{align*}
+Note that, for all Always-Takers and Never-Takers, $d_i(1) - d_i(0) = 0$; by contrast, for Compliers, $d_i(1) - d_i(0) = 1$ and, for Defiers, $d_i(1) - d_i(0) = -1$. Hence, $\sum \limits_{i = 1}^N d_i(1) - d_i(0)$ is the number of Compliers minus the number of Defiers, which implies that $\text{ITT}_D$ is
+\begin{align*}
+\text{ITT}_D = \left(\dfrac{1}{N}\right) \left(N^{\textrm{C}} - N^{\textrm{D}}\right) = \pi^{\textrm{C}} - \pi^{\textrm{D}}.
+\end{align*}
+The assumption of No Defiers implies that $\pi^{\textrm{D}} = 0$; hence, $\text{ITT}_D = \pi^{\textrm{C}}$.
+
+Under the additional assumptions of (1) \textcolor{magenta}{Exclusion Restriction} (i.e., treatment assignment affects the outcome only through receipt of the treatment), (2) \textcolor{magenta}{No Defiers} and (3) \textcolor{magenta}{Existence of Compliers}, the ratio of $\textrm{ITT}_Y$ to $\textrm{ITT}_D$ is equal to the CACE. To see why, first note that, under \textcolor{magenta}{SUTVA}, $\textrm{ITT}_Y$ is
+\begin{align*}
+\textrm{ITT}_Y = \left(\dfrac{1}{N}\right) \sum \limits_{i = 1}^N \tau_i.
+\end{align*}
+We can decompose $\sum \limits_{i = 1}^N \tau_i$ into the sum of individual effects among the four compliance types:
+\begin{align*}
+\sum \limits_{i = 1}^N \tau_i = N^{\textrm{AT}} \tau^{\textrm{AT}} + N^{\textrm{C}} \tau^{\textrm{C}} + N^{\textrm{D}} \tau^{\textrm{D}} + N^{\textrm{NT}} \tau^{\textrm{NT}},
+\end{align*}
+where the sum of individual effects for individuals in one compliance type is the number of individuals belonging to that type multiplied by the average effect among individuals belonging to that type, e.g., $N^{\textrm{AT}} \tau^{\textrm{AT}}$.
+
+The \textcolor{magenta}{Exclusion Restriction} stipulates that the individual effects for all Always-Takers and Never-Takers are 0, which implies that the average effects among \textit{Always-Takers} and \textit{Never-Takers} are $0$. Hence, $\textrm{ITT}_Y$ is
+\begin{align*}
+\textrm{ITT}_Y = \left(\dfrac{1}{N}\right) \sum \limits_{i = 1}^N \tau_i = \left(\dfrac{1}{N}\right)\left[N^{\textrm{C}} \tau^{\textrm{C}} + N^{\textrm{D}} \tau^{\textrm{D}}\right] = \pi^{\textrm{C}} \tau^{\textrm{C}} + \pi^{\textrm{D}} \tau^{\textrm{D}},
+\end{align*}
+which, as the assumption of \textcolor{magenta}{No Defiers} implies, is equal to
+\begin{align*}
+\pi^{\textrm{C}} \tau^{\textrm{C}}.
+\end{align*}
+
+Then, invoking the expression for the $\textrm{ITT}_D$, it follows that the ratio of $\textrm{ITT}_Y$ to $\textrm{ITT}_D$ is
+\begin{align*}
+\dfrac{\textrm{ITT}_Y}{\textrm{ITT}_D} = \dfrac{\pi^{\textrm{C}} \tau^{\textrm{C}}}{\pi^{\textrm{C}}} = \tau^{\textrm{C}},
+\end{align*}
+which is the CACE.
+
+Under random assignment, we can unbiasedly estimate both $\textrm{ITT}_Y$ and $\textrm{ITT}_D$, which, since $\textrm{CACE} = \dfrac{\textrm{ITT}_Y}{\textrm{ITT}_D}$, means that we can consistently estimate the CACE. That is, with a suﬀiciently large experiment, we would generate a CACE estimate close to the true CACE with probability close to 1.
+
+
+
+
