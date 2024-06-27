@@ -38,7 +38,10 @@ Note that, for all Always-Takers and Never-Takers, $d_i(1) - d_i(0) = 0$; by con
 \begin{align*}
 \text{ITT}_D = \left(\dfrac{1}{N}\right) \left(N^{\textrm{C}} - N^{\textrm{D}}\right) = \pi^{\textrm{C}} - \pi^{\textrm{D}}.
 \end{align*}
-The assumption of No Defiers implies that $\pi^{\textrm{D}} = 0$; hence, $\text{ITT}_D = \pi^{\textrm{C}}$.
+The assumption of \textcolor{magenta}{No Defiers} implies that $\pi^{\textrm{D}} = 0$; hence,
+\begin{align} \label{eq: ITT_D}
+\text{ITT}_D = \pi^{\textrm{C}}.
+\end{align}
 
 Under the additional assumptions of (1) \textcolor{magenta}{Exclusion Restriction} (i.e., treatment assignment affects the outcome only through receipt of the treatment), (2) \textcolor{magenta}{No Defiers} and (3) \textcolor{magenta}{Existence of Compliers}, the ratio of $\textrm{ITT}_Y$ to $\textrm{ITT}_D$ is equal to the CACE. To see why, first note that, under \textcolor{magenta}{SUTVA}, $\textrm{ITT}_Y$ is
 \begin{align*}
@@ -55,13 +58,17 @@ The \textcolor{magenta}{Exclusion Restriction} stipulates that the individual ef
 \textrm{ITT}_Y = \left(\dfrac{1}{N}\right) \sum \limits_{i = 1}^N \tau_i = \left(\dfrac{1}{N}\right)\left[N^{\textrm{C}} \tau^{\textrm{C}} + N^{\textrm{D}} \tau^{\textrm{D}}\right] = \pi^{\textrm{C}} \tau^{\textrm{C}} + \pi^{\textrm{D}} \tau^{\textrm{D}},
 \end{align*}
 which, as the assumption of \textcolor{magenta}{No Defiers} implies, is equal to
-\begin{align*}
-\pi^{\textrm{C}} \tau^{\textrm{C}}.
-\end{align*}
+\begin{align} \label{eq: ITT_Y}
+\textrm{ITT}_Y = \pi^{\textrm{C}} \tau^{\textrm{C}}.
+\end{align}
 
-Then, invoking the expression for the $\textrm{ITT}_D$, it follows that the ratio of $\textrm{ITT}_Y$ to $\textrm{ITT}_D$ is
+Then, invoking the expression for the $\textrm{ITT}_D$ in \eqref{eq: ITT_D}, it follows that the ratio of $\textrm{ITT}_Y$ to $\textrm{ITT}_D$ is
 \begin{align*}
-\dfrac{\textrm{ITT}_Y}{\textrm{ITT}_D} = \dfrac{\pi^{\textrm{C}} \tau^{\textrm{C}}}{\pi^{\textrm{C}}} = \tau^{\textrm{C}},
+\dfrac{\textrm{ITT}_Y}{\pi^{\textrm{C}}}.
+\end{align*}
+The \textcolor{magenta}{Existence of Compliers} implies that this ratio is well-defined (i.e., that it does not divide by $0$). Then, plugging in the expression for $\textrm{ITT}_Y$ in \eqref{eq: ITT_Y} implies that the ratio of $\textrm{ITT}_Y$ to $\textrm{ITT}_D$ is
+\begin{align*}
+\dfrac{\pi^{\textrm{C}} \tau^{\textrm{C}}}{\pi^{\textrm{C}}} = \tau^{\textrm{C}},
 \end{align*}
 which is the CACE.
 
