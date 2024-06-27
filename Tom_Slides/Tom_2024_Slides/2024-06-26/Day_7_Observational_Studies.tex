@@ -290,7 +290,6 @@ where $\pi_i \in [0, 1]$ is probability of treatment \vfill
 \item \textcolor{magenta}{Propensity score} \vfill
 \item For each unit, $\pi_i$ is function of covariates, either observed, $\bm{x}_i$, or unobserved, $\bm{u}_i$ \vfill
 \begin{itemize} \vfill
-\item Under \textcolor{magenta}{no hidden bias}, $\pi_i = \lambda(\bm{x}_i)$, where $\lambda$ is a function, $\lambda: \R^K \mapsto [0, 1]$, whose form is unknown \vfill
 \item Under \textcolor{magenta}{common support}, $\pi \in (0, 1)$ for all $i = 1, \ldots , N$ \vfill
 \end{itemize} \vfill
 \end{itemize} \vfill
@@ -300,9 +299,21 @@ where $\pi_i \in [0, 1]$ is probability of treatment \vfill
 \frametitle{Observational studies}
 \vfill
 \begin{itemize} \vfill
+\item Under \textcolor{magenta}{no hidden bias}, $\pi_i = \lambda(\bm{x}_i)$, where $\lambda$ is a function, $\lambda: \R^K \mapsto [0, 1]$, whose form is unknown \vfill
+\item No hidden bias implies that we can express the model in \eqref{eq: obs study mod} as \vfill
+\begin{align*}
+\Pr\left(\bm{Z} = \bm{z}\right) = \prod \limits_{i = 1}^N \lambda(\bm{x}_i)^{z_i} (1 - \lambda(\bm{x}_i))^{1 - z_i},
+\end{align*} \vfill
+\end{itemize} \vfill
+\end{frame}
+%-------------------------------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Observational studies}
+\vfill
+\begin{itemize} \vfill
 \item We want to compare ``apples to apples,'' \textit{not} ``apples to oranges'' \\ \citep{rubinwaterman2006} \vfill
 \begin{itemize} \vfill
-\item I.e., make strata of treated and control units \textcolor{magenta}{homogeneous in propensity scores} \vfill
+\item I.e., strata of treated and control units \textcolor{magenta}{homogeneous in propensity scores} \vfill
 \end{itemize} \vfill
 \item Although propensity scores unknown, if any two units are same on covariates that determine treatment assignment probability \vfill
 \item[] $\implies$ identical propensity scores \vfill
@@ -327,10 +338,22 @@ where $\pi_i \in [0, 1]$ is probability of treatment \vfill
 \frametitle{Observational studies}
 \vfill
 \begin{itemize} \vfill
-\item More formally, let $s = 1, \ldots , S$ tun over $S$ strata \vfill
-\item If $\pi_{s,i} = \pi_{s,j}$ for all $i,j = 1, \ldots , n_s$ in stratum $s$, then \vfill 
+\item More formally, let $s = 1, \ldots , S$ run over $S$ strata \vfill
+\item Suppose we \textbf{exactly} stratify on $\bm{x}$ so that $\bm{x}_{s,i} = \bm{x}_{s,j}$ for all $s = 1, \ldots , S$ and $i,j = 1, \ldots , n_s$ \vfill
+\item Since propensity scores are homogeneous within strata, write $\lambda_s$ instead of $\lambda(\bm{x}_{s,i})$ and the model in \eqref{eq: obs study mod} within stratum $s$ as \vfill
 \begin{align*}
-\Pr\left(\bm{Z}_z = \bm{z}_s\right) = \dfrac{1}{\left\lvert \Omega_s \right\rvert} \text{ for all } \bm{z}_s \in \Omega_s, \text{ where } \Omega_s = \left\{\bm{z}_s: \sum \limits_{i = 1}^{n_s} z_{s,i} = n_{1,s}\right\}
+\Pr\left(\bm{Z}_s = \bm{z}_s\right) = \prod \limits_{i = 1}^{n_s} \lambda_s^{z_{s,i}} (1 - \lambda_s)^{1 - z_{s,i}},
+\end{align*} \vfill
+\end{itemize} \vfill
+\end{frame}
+%-------------------------------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Observational studies}
+\vfill
+\begin{itemize} \vfill
+\item If propensity scores homogeneous in stratum $s$, then \vfill 
+\begin{align*}
+\Pr\left(\bm{Z}_s = \bm{z}_s\right) = \dfrac{1}{\left\lvert \Omega_s \right\rvert} \text{ for all } \bm{z}_s \in \Omega_s, \text{ where } \Omega_s = \left\{\bm{z}_s: \sum \limits_{i = 1}^{n_s} z_{s,i} = n_{1,s}\right\}
 \end{align*} \vfill
 \item[$\star$] As-if randomization holds conditional on observed number of treated units \vfill
 \end{itemize} \vfill
@@ -377,16 +400,18 @@ where $\pi_i \in [0, 1]$ is probability of treatment \vfill
 \begin{frame}[t]
 \frametitle{Observational studies}
 \vfill
-\textcolor{magenta}{Two concerns} \vfill
 \begin{itemize} \vfill
 \item In practice, even under no hidden bias, exact stratification on covariates determining assignment probabilities is difficult or impossible \vfill
 \begin{itemize} \vfill
+\item Imagine many covariates (i.e., $\bm{x}$ of high-dimension) and continuous measurements of $\bm{x}$ \vfill
+\item[] $\implies$ All $N$ units likely to have different values of $\bm{x}$
+\end{itemize} \vfill
 \item[$\star$] Exact stratification on covariates \textbf{sufficient}, but not \textbf{necessary}, for homogeneous assignment probabilities within strata \vfill
-\item Common instead to stratify on \textbf{estimated} propensity score \vfill
+\begin{itemize} \vfill 
+\item[] Propensity scores can be homogeneus w/in strata even if covariates are not \vfill
 \end{itemize} \vfill
-\item Propensity scores may differ within strata due to unobserved covariates, $\bm{u}$ \vfill
+\item[$\star$] Common instead to stratify on \textbf{estimated} propensity score \vfill
 \end{itemize} \vfill
-We will address both concerns in days on matching and sensitivity analysis
 \end{frame}
 %-------------------------------------------------------------------------------------
 \section{Estimation and testing}
