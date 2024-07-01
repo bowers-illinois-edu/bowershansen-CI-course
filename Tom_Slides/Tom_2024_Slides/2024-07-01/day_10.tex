@@ -1,0 +1,848 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%------------------------------------------------------------------------------------------------
+%   PACKAGES AND THEMES
+%------------------------------------------------------------------------------------------------
+
+\documentclass[table, xcolor = {dvipsnames}, 9pt]{beamer}
+\usepackage{tikz}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows,shapes}
+\usetikzlibrary{tikzmark}
+\usetikzlibrary{calc}
+\usetikzlibrary{colorbrewer}
+\mode<presentation> {
+
+% The Beamer class comes with a number of default slide themes
+% which change the colors and layouts of slides. Below this is a list
+% of all the themes, uncomment each in turn to see what they look like.
+
+\usetheme{default}
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Dresden}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+%\usetheme{Madrid}
+\usetheme{metropolis}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+% As well as themes, the Beamer class has a number of color themes
+% for any slide theme. Uncomment each of these in turn to see how it
+% changes the colors of your current slide theme.
+
+%\usecolortheme{albatross}
+%\usecolortheme{beaver}
+%\usecolortheme{beetle}
+%\usecolortheme{crane}
+%\usecolortheme{dolphin}
+%\usecolortheme{dove}
+%\usecolortheme{fly}
+%\usecolortheme{lily}
+%\usecolortheme{orchid}
+%\usecolortheme{rose}
+\usecolortheme{seagull}
+%\usecolortheme{seahorse}
+%\usecolortheme{whale}
+%\usecolortheme{wolverine}
+\usefonttheme{professionalfonts}
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{multirow}
+\usepackage{xspace}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{diagbox}
+\usepackage{makecell}
+\usepackage{xparse}
+\usepackage{subfig}
+\usepackage{amsfonts,amsthm,amsmath,amssymb}
+\usepackage{mathtools, nccmath}
+\usepackage[ruled, vlined, linesnumbered]{algorithm2e}
+\usepackage{wrapfig}
+\usepackage{comment}  
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{empheq}
+\usepackage{pgfplots}
+\usepgfplotslibrary{colorbrewer}
+\usepackage{animate}
+\usepackage{array}
+\usepackage{ragged2e}
+\newcolumntype{P}[1]{>{\RaggedRight\hspace{0pt}}p{#1}}
+\newcolumntype{X}[1]{>{\RaggedRight\hspace*{0pt}}p{#1}}
+
+% color box
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows,shapes}
+\usetikzlibrary{tikzmark}
+\usetikzlibrary{calc}
+% Commands for Highlighting text -- non tikz method
+\newcommand{\highlight}[2]{\colorbox{#1!17}{$\displaystyle #2$}}
+%\newcommand{\highlight}[2]{\colorbox{#1!17}{$#2$}}
+\newcommand{\highlightdark}[2]{\colorbox{#1!47}{$\displaystyle #2$}}
+
+% my custom colors for shading
+\colorlet{mhpurple}{Plum!80}
+
+
+% Commands for Highlighting text -- non tikz method
+\renewcommand{\highlight}[2]{\colorbox{#1!17}{#2}}
+\renewcommand{\highlightdark}[2]{\colorbox{#1!47}{#2}}
+
+\usepgfplotslibrary{colorbrewer}
+
+\newcommand\mybox[2][]{\tikz[overlay]\node[fill=lightgray,inner sep=2pt, anchor=text, rectangle, rounded corners=1mm,#1] {#2};\phantom{#2}}
+\hypersetup{unicode=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1}}
+\usepackage{xcolor}
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+\newcommand\myheading[1]{%
+  \par\bigskip
+  {\Large\bfseries#1}\par\smallskip}
+\newcommand\given[1][]{\:#1\vert\:}
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}{Proposition\thisthmnumber}
+\newtheorem{lem}{Lemma\thisthmnumber}
+\newtheorem{cor}{Corollary}
+\newtheorem{defin}{Definition}
+\newtheorem{algo}{Algorithm}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand{\thisthmnumber}{}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\DeclareMathOperator{\N}{\mathbb{N}}
+\DeclareMathOperator{\E}{\rm{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\e}{\rm{e}}
+\DeclareMathOperator{\logit}{\rm{logit}}
+\DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+%\DeclareMathOperator{\Pr}{\rm{Pr}}
+%------------------------------------------------------------------------
+% TITLE PAGE
+%-----------------------------------------------------------------------
+\pagestyle{empty}
+\title[]{Difference-in-Differences} % The short title appears at the bottom of every slide, the full title is only on the title page
+
+\author{Thomas Leavitt and Ben Hansen} % Your name
+\institute[] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+%Columbia University \\ % Your institution for the title page
+\medskip
+%\textit{tl2624@columbia.edu} % Your email address
+}
+\date{July 1, 2024} % Date, can be changed to a custom date
+
+\NewDocumentEnvironment{statement}{mo}
+ {%
+  \IfValueT{#2}{\renewcommand{\thisthmnumber}{ #2}}\begin{#1}%
+ }
+ {\end{#1}}
+
+\begin{document}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+%\begin{frame}
+%\frametitle{Overview} % Table of contents slide, comment this block out to remove it
+%\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+%\end{frame}
+
+%------------------------------------------------------------------------
+% PRESENTATION SLIDES
+%----------------------------------------------------------------
+\section{Introduction}
+\begin{frame}[t]
+\frametitle{Causal inference and DID}
+\vfill
+\begin{itemize} \vfill
+\item Fundamental problem of causal inference \citep{holland1986} \vfill
+\begin{itemize} \vfill
+\item For any unit, we observe only treated or control potential outcome, not both
+\end{itemize} \vfill
+\item Solution to \textcolor{magenta}{fundamental problem of causal inference} \vfill
+\begin{itemize} \vfill
+\item Randomized experiments are ``gold standard'' for inferring causal effects \vfill
+\item Observational designs often aim to justify \textit{as-if-randomization} \vfill
+\end{itemize}
+\item Other designs aim to predict counterfactual quantities \vfill
+\item[] $\rightarrow$ then compare observed quantities with predicted counterfactual ones \vfill 
+\begin{itemize} \vfill
+\item Predictions often generated via regression \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\section{Identification of ATT}
+\begin{frame}[t]
+\frametitle{Identification of ATT}
+\vfill
+\begin{itemize}
+\item \textcolor{Dark2-A}{\textbf{Setting}}: \vfill
+\begin{itemize}
+\item Two populations, $G = 0$ and $G = 1$, over periods $t = 0, 1, \ldots , T$ \vfill
+\item Population $G = 1$ is treated between $T - 1$ and $T$ \vfill
+\item Approx. \textrm{i.i.d.} sampling from $G = 0$ and from $G = 1$ \vfill
+\end{itemize}
+\item \textcolor{Dark2-A}{\textbf{Causal target}}: Treated population's average effect is \vfill
+\begin{equation*}
+\textrm{ATT} \coloneqq \E\left[Y_{i,T}(1) - Y_{i,T}(0) \given G_i = 1\right]
+\end{equation*} \vfill
+\end{itemize}
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Identification of ATT}
+\vfill
+\begin{figure}
+\includegraphics[width = \linewidth]{Identification/Part 1/Identification_Part_1.pdf}
+\end{figure}
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Identification of ATT}
+\vfill
+\begin{figure}
+\includegraphics[width = \linewidth]{Identification/Part 2/Identification_Part_2.pdf}
+\end{figure}
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Identification of ATT}
+\vfill
+\begin{figure}
+\includegraphics[width = \linewidth]{Identification/Part 3/Identification_Part_3.pdf}
+\end{figure}
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Identification of ATT}
+\vfill
+\begin{figure}
+\includegraphics[width = \linewidth]{Identification/Part 4/Identification_Part_4.pdf}
+\end{figure}
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Identification of ATT}
+\vfill
+\begin{figure}
+\includegraphics[width = \linewidth]{Identification/Part 5/Identification_Part_5.pdf}
+\end{figure}
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+\section{One group pre-post design}
+\begin{frame}[t]
+\frametitle{One group pre-post design}
+\vfill
+\begin{itemize} \vfill
+\item Treated group's before treatment mean $\implies$
+\item[] treated group's post-treatment mean in absence of treatment \\ (\textcolor{magenta}{counterfactual})
+\begin{figure}
+\includegraphics[width = \linewidth]{pre_post_plot.pdf}
+\caption{One group pre-post design \citep[][p.~108-110]{shadishetal2002}}
+\end{figure} \vfill
+\end{itemize} \vfill
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{One group pre-post design}
+\vfill
+\begin{itemize} \vfill
+\item Additional pre-periods function as ``\textbf{dry run}''
+\begin{figure}
+\includegraphics[width = \linewidth]{ITS_plot_B.pdf}
+\end{figure} \vfill
+\end{itemize} \vfill
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{One group pre-post design}
+\vfill
+\begin{itemize} \vfill
+\item Additional pre-periods function as ``\textbf{dry run}''
+\begin{figure}
+\includegraphics[width = \linewidth]{ITS_plot_A.pdf}
+\end{figure} \vfill
+\end{itemize} \vfill
+\end{frame}
+%---------------------------------------------------------------
+\section{Canonical DID design}
+\begin{frame}[t]
+\frametitle{Canonical DID design}
+\vfill
+\begin{itemize}
+\item Canonical setup: \vfill
+\begin{itemize}
+\item Two populations measured over time \vfill
+\item One population treated between two time periods and the other is not \vfill
+\end{itemize} \vfill
+\vfill
+\end{itemize} \vfill
+\begin{figure}
+\includegraphics[width = 0.9\linewidth]{DID_plot.pdf}
+\vskip1ex
+\end{figure}
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Canonical DID design}
+\vfill
+DID estimator: 
+\begin{align*}
+\text{treated sample's after-minus-before mean } - \\ \text{control sample's after-minus-before mean} 
+\end{align*} \vfill
+\vfill
+\begin{figure}[htb]
+    \vspace{2\baselineskip}
+    \begin{equation*}
+        \widehat{\text{DID}}_t \coloneqq \highlight{Dark2-D}{$\dfrac{\tikzmarknode{sumtreatpost}{\sum}_{i: G_{i} = 1} \tikzmarknode{treatpotout}{Y}_{i,t}}{\tikzmarknode{ntreatpost}{n}_{1,t}}$} - \highlight{Dark2-D}{$\dfrac{\tikzmarknode{sumtreatpre}{\sum}_{i: G_{i} = 1} \tikzmarknode{treatpreout}{Y}_{i,t-1}}{\tikzmarknode{ntreatpre}{n}_{1,t}}$} - \left(\highlight{Dark2-D}{$\dfrac{\tikzmarknode{sumcontpost}{\sum}_{i: G_{i} = 0} \tikzmarknode{contpostout}{Y}_{i,t}}{\tikzmarknode{ncontpost}{n}_{0,t}}$} - \highlight{Dark2-D}{$\dfrac{\tikzmarknode{sumcontpre}{\sum}_{i: G_{i} = 0} \tikzmarknode{contpreout}{Y}_{i,t-1}}{\tikzmarknode{ncontpre}{n}_{0,t}}$}\right)
+    \end{equation*}
+    \begin{tikzpicture}[overlay,remember picture,>=stealth,nodes={align=left,inner ysep=1pt},<-]
+
+        \path (treatpotout.north) ++ (-3.25em,2.3em) node[anchor=south west, color=Dark2-D!67] (scalep){\scriptsize \textsf{Observable outcome}};
+        \draw[<->,color=Dark2-D!57] (treatpotout.north) -- ++(0,0.67)  -| node[] {} (treatpotout.north);
+
+        \path (treatpreout.north) ++ (-2em,2.3em) node[anchor = south west, color=Dark2-D!67] (scalep){\scriptsize \textsf{Lagged outcome}};
+        \draw[<->, color = Dark2-D!57] (treatpreout.north) -- ++(0,0.67)  -| node[] {} (treatpreout.north);
+
+        % sumtreatpost to sumtreatpre
+        \path (sumtreatpost.north) ++ (0em,6.7em) node[anchor=south west, color=Dark2-D!67] (scalep){\scriptsize \textsf{Sum over treated units}};
+        \draw[<->,color=Dark2-D!57] (sumtreatpost.north) -- ++(0,2)  -| node[] {} (sumtreatpre.north);
+
+        % ntreatpost to ntreatpre
+        \path (ntreatpost.south) ++ (0em,-3.3em) node[anchor=south west,color=Dark2-D!67] (scalep){\scriptsize \textsf{Number of treated units}};
+        \draw[<->,color=Dark2-D!57] (ntreatpost.south) -- ++(0,-0.67)  -| node[] {} (ntreatpre.south);
+
+        \path (contpostout.north) ++ (-3.25em,2.3em) node[anchor=south west, color=Dark2-D!67] (scalep){\scriptsize \textsf{Observable outcome}};
+        \draw[<->,color=Dark2-D!57] (contpostout.north) -- ++(0,0.67)  -| node[] {} (contpostout.north);
+
+        \path (contpreout.north) ++ (-2em,2.3em) node[anchor=south west, color=Dark2-D!67] (scalep){\scriptsize \textsf{Lagged outcome}};
+        \draw[<->,color=Dark2-D!57] (contpreout.north) -- ++(0,0.67)  -| node[] {} (contpreout.north);
+
+        % sumcontpost to sumcontpre
+        \path (sumcontpost.north) ++ (-0.5em,6.7em) node[anchor=south west, color=Dark2-D!67] (scalep){\scriptsize \textsf{Sum over untreated units}};
+        \draw[<->,color=Dark2-D!57] (sumcontpost.north) -- ++(0,2)  -| node[] {} (sumcontpre.north);
+
+        % ncontpost to ncontpre
+        \path (ncontpost.south) ++ (-0.5em,-3.3em) node[anchor=south west,color=Dark2-D!67] (scalep){\scriptsize \textsf{Number of untreated units}};
+        \draw[<->,color=Dark2-D!57] (ncontpost.south) -- ++(0,-0.67)  -| node[] {} (ncontpre.south);
+
+    \end{tikzpicture}
+    \vspace{\baselineskip}
+\end{figure} \vfill
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{DID Estimation}
+\vfill
+\begin{figure}
+\includegraphics[width = 0.9\linewidth]{DID_pt_plot.pdf}
+\vskip1ex
+\end{figure} \vfill
+\vspace{-2em}
+\begin{itemize} \vfill
+\item Parallel trends: \vfill
+\begin{align*}
+\text{Treated population's counterfactual after-minus-before mean} = \\ \text{control population's after-minus-before mean} 
+\end{align*} \vfill
+\end{itemize}  
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{DID Estimation}
+Parallel trends $\implies$ \\ Descriptive difference between treated and control populations $=$ ATT 
+\begin{itemize}
+\item Descriptive difference
+\begin{equation*}
+\begin{split}
+\underbrace{\E\left[Y_{iT}(1) - Y_{iT-1} \given G_i = 1\right] - \E\left[Y_{iT} - Y_{iT-1} \given G_i = 0\right]}_{\text{Descriptive difference between treated and control populations}}
+\end{split} 
+\end{equation*}
+\item Parallel trends: 
+\vskip3ex 
+\small
+\large
+\begin{equation*}
+\begin{split}
+\E\left[Y_{iT}(0) \tikzmark{treatedafterbeforemeannotreat}- Y_{iT-1} \given G_i = 1\right] & = \E\left[Y_{iT} - Y_{iT-1} \given G_i = 0\right]
+\end{split} 
+\end{equation*}
+\normalsize
+\vspace{-1em}
+\item Rearranging parallel trends assumption yields
+\small
+\vspace{0.75em}
+\begin{align*}
+\underbrace{\E\left[Y_{iT}(0) \given G_i = 1\right]}_{\text{Counterfactual}} - \E\left[Y_{T-1} \given G_i = 1 \right]+ \E\left[Y_{iT-1} \given G_i = 0\right] & = \E\left[Y_{iT} \given G_i = 0\right]
+\end{align*}
+\normalsize
+\vspace{0.75em}
+\item Substitute for $\E\left[Y_{iT} \given G_i = 0\right]$ 
+\small\begin{align*}
+\underbrace{\E\left[Y_{iT}(1) - Y_{iT-1} \given G_i = 1\right] - \E\left[Y_{iT} - Y_{iT-1} \given G_i = 0\right]}_{\text{Descriptive difference between treated and control populations}} \\ = \underbrace{\E\left[Y_{iT}(1) - Y_{iT}(0) \given G_i = 1\right]}_{\text{ATT}}
+\end{align*} 
+\normalsize
+\end{itemize}
+\end{frame}
+%----------------------------------------------------------------
+\section{Problems with canonical DID}
+\begin{frame}{Problems with canonical DID}
+\vfill
+\begin{enumerate} \vfill
+\item Identification: Scale dependence \vfill
+\item Inference: Accounts for only sampling uncertainty \vfill
+\end{enumerate} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}{Identification}
+\begin{itemize}
+\item[] 
+\begin{figure}[H]
+\includegraphics[width = \linewidth]{standard_scale_DID_plot.pdf}
+\end{figure}
+\item $\text{ATT} \approx 12.08$ and $\E\left[\widehat{\text{DID}}_{T}\right] \approx 21.01$ 
+\end{itemize}
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}{Identification}
+\begin{itemize}
+\item[] 
+\begin{figure}[H]
+\includegraphics[width = \linewidth]{log_scale_DID_plot.pdf}
+\end{figure}
+\item $\text{ATT} = 0.25$ and $\E\left[\widehat{\text{DID}}_{T}\right] = 0.25$  
+\end{itemize}
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}{Identification}
+\begin{center}
+``It makes no sense, scientifically or mathematically, to say that the null hypothesis of no treatment effect is false for a response, $R_i$, but true for its logarithm, $\log\left(R_i\right)$'' \citep[][p.~164]{rosenbaum2017}
+\end{center}
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Inference}
+\vfill 
+\begin{itemize}
+\item Two primary types of uncertainty in causal inference \citep{abadieetal2020}: \vfill
+\begin{enumerate}
+\item \textbf{Sampling}: Inability to observe all units in a target population \vfill
+\item \textbf{Causal}: Inability to observe counterfactual potential outcomes \textit{among whichever units one samples}  \vfill
+\end{enumerate}
+\item E.g., randomized experiment on random sample from population: \vfill
+\begin{itemize}
+\item Uncertainty in estimator of population average causal effect reflects variation in \vfill
+\begin{enumerate}
+\item average causal effect across possible \textit{samples} \vfill
+\item causal estimates across possible \textit{assignments} conditional on each possible sample \vfill
+\end{enumerate} 
+\end{itemize}
+\item Quantification of uncertainty (standard errors, $p$-values, confidence intervals) in DID reflects only sampling uncertainty \vfill
+\item Quantification of causal uncertainty is difficult because DID based on parallel trends, \textit{not} as-if-randomization \\ 
+\citep{manskipepper2018} \vfill
+\end{itemize}
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\section{Generalization of DID design}
+\begin{frame}[t]
+\frametitle{General identification of ATT}
+\vfill
+\begin{itemize}
+\item \textcolor{Dark2-A}{\textbf{General identification condition}}: \vfill
+\small
+\begin{equation*}
+\begin{split}
+\textcolor{Dark2-D}{\textbf{Equal-expected-prediction-errors}} \coloneqq \\
+\underbrace{\E\left[Y_{i,T}(0) \given G_i = 1\right] - \E\left[\widehat{Y}_{i,T} \given G_i = 1\right]}_{\text{Counterfactual prediction error}} = \underbrace{\E\left[Y_{i,T}(0) \given G_i = 0\right] - \E\left[\widehat{Y}_{i,T} \given G_i = 0\right]}_{\text{Observable prediction error}}
+\end{split}
+\end{equation*}
+\normalsize
+\vfill 
+\item Equal-expected-prediction-errors $\implies$ \vfill
+\small
+\begin{equation*} \label{eq: ATT est desc diff}
+\begin{split}
+\textrm{ATT} = \\ 
+\E\left[Y_{i,T}(1) \given G_i = 1\right] - \E\left[\widehat{Y}_{i,T} \given G_i = 1\right] - \left(\E\left[Y_{i,T}(0) \given G_i = 0\right] - \E\left[\widehat{Y}_{i,T} \given G_i = 0\right]\right)
+\end{split}
+\end{equation*}
+\normalsize \vfill
+\item So $\textrm{ATT}$ is identified \vfill
+\end{itemize}
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t, label = general ID part IV]
+\frametitle{General identification of ATT}
+\vfill
+\begin{itemize} \vfill
+\item General ID assumption is agnostic about predictive function \vfill
+\item Familiar designs are special cases of this general framework \vfill
+\begin{itemize} \vfill
+\item DID, Two-way fixed effects (TWFE), lagged dependent variable (LDV), etc.
+\item E.g., parallel-trends assumption of canonical DID design when \vfill
+\small
+\begin{equation*}
+\widehat{Y}_{i,t} =
+\begin{cases}
+\dfrac{\sum_{i: G_{i} = 1} Y_{i,t-1}}{n_{1,t-1}} & \text{if } G_i = 1 \\[10pt]
+\dfrac{\sum_{i: G_{i} = 0} Y_{i,t-1}}{n_{0,t-1}} & \text{if } G_i = 0
+\end{cases}
+\end{equation*} \vfill
+\normalsize
+for $t = 1, \dots , T$ \vfill
+\end{itemize} \vfill
+\end{itemize}
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{General estimation of ATT}
+\vfill
+\begin{itemize}
+\item \textcolor{Dark2-A}{\textbf{General estimator}}: \vfill
+\end{itemize}
+\vspace{2em}
+\begin{figure}[htb]
+    \vspace{2\baselineskip}
+    \begin{equation*}
+        \widehat{\Delta}_t \coloneqq \highlight{Dark2-D}{$\dfrac{\tikzmarknode{sumtreatpost}{\sum}_{i: G_{i} = 1} \tikzmarknode{treatpotout}{Y}_{i,t}}{\tikzmarknode{ntreatpost}{n}_{1,t}}$} - \highlight{Dark2-D}{$\dfrac{\tikzmarknode{sumtreatpre}{\sum}_{i: G_{i} = 1} \tikzmarknode{treatpreout}{\widehat{Y}}_{i,t}}{\tikzmarknode{ntreatpre}{n}_{1,t}}$} - \left(\highlight{Dark2-D}{$\dfrac{\tikzmarknode{sumcontpost}{\sum}_{i: G_{i} = 0} \tikzmarknode{contpostout}{Y}_{i,t}}{\tikzmarknode{ncontpost}{n}_{0,t}}$} - \highlight{Dark2-D}{$\dfrac{\tikzmarknode{sumcontpre}{\sum}_{i: G_{i} = 0} \tikzmarknode{contpreout}{\widehat{Y}}_{i,t}}{\tikzmarknode{ncontpre}{n}_{0,t}}$}\right)
+    \end{equation*}
+    \begin{tikzpicture}[overlay,remember picture,>=stealth,nodes={align=left,inner ysep=1pt},<-]
+
+        \path (treatpotout.north) ++ (-3.25em,2.3em) node[anchor=south west, color=Dark2-D!67] (scalep){\scriptsize \textsf{Observable outcome}};
+        \draw[<->,color=Dark2-D!57] (treatpotout.north) -- ++(0,0.67)  -| node[] {} (treatpotout.north);
+
+        \path (treatpreout.north) ++ (-2em,2.3em) node[anchor = south west, color=Dark2-D!67] (scalep){\scriptsize \textsf{Prediction}};
+        \draw[<->, color = Dark2-D!57] (treatpreout.north) -- ++(0,0.67)  -| node[] {} (treatpreout.north);
+
+        % sumtreatpost to sumtreatpre
+        \path (sumtreatpost.north) ++ (0em,6.7em) node[anchor=south west, color=Dark2-D!67] (scalep){\scriptsize \textsf{Sum over treated units}};
+        \draw[<->,color=Dark2-D!57] (sumtreatpost.north) -- ++(0,2)  -| node[] {} (sumtreatpre.north);
+
+        % ntreatpost to ntreatpre
+        \path (ntreatpost.south) ++ (0em,-3.3em) node[anchor=south west,color=Dark2-D!67] (scalep){\scriptsize \textsf{Number of treated units}};
+        \draw[<->,color=Dark2-D!57] (ntreatpost.south) -- ++(0,-0.67)  -| node[] {} (ntreatpre.south);
+
+        \path (contpostout.north) ++ (-3.25em,2.3em) node[anchor=south west, color=Dark2-D!67] (scalep){\scriptsize \textsf{Observable outcome}};
+        \draw[<->,color=Dark2-D!57] (contpostout.north) -- ++(0,0.67)  -| node[] {} (contpostout.north);
+
+        \path (contpreout.north) ++ (-2em,2.3em) node[anchor=south west, color=Dark2-D!67] (scalep){\scriptsize \textsf{Prediction}};
+        \draw[<->,color=Dark2-D!57] (contpreout.north) -- ++(0,0.67)  -| node[] {} (contpreout.north);
+
+        % sumcontpost to sumcontpre
+        \path (sumcontpost.north) ++ (-0.5em,6.7em) node[anchor=south west, color=Dark2-D!67] (scalep){\scriptsize \textsf{Sum over untreated units}};
+        \draw[<->,color=Dark2-D!57] (sumcontpost.north) -- ++(0,2)  -| node[] {} (sumcontpre.north);
+
+        % ncontpost to ncontpre
+        \path (ncontpost.south) ++ (-0.5em,-3.3em) node[anchor=south west,color=Dark2-D!67] (scalep){\scriptsize \textsf{Number of untreated units}};
+        \draw[<->,color=Dark2-D!57] (ncontpost.south) -- ++(0,-0.67)  -| node[] {} (ncontpre.south);
+
+    \end{tikzpicture}
+    \vspace{\baselineskip}
+\end{figure} \vfill
+where $\widehat{Y}_{i,t} = \hat{y}_0\left(\bm{X}_{i,t}\right)$ \vfill 
+\begin{itemize} \vfill
+\item $\hat{y}_0\left(\cdot\right)$ is arbitrary function that predicts untreated POs \vfill
+\item $\bm{X}_{i,t}$ is vector of predictors measured prior to period $t$ \vfill 
+\end{itemize}
+\end{frame}
+%---------------------------------------------------------------
+\section{Set identification}
+\begin{frame}[t, label = general set identification]
+\frametitle{General set identification}
+\vfill
+\begin{itemize} \vfill
+\item General set identification to violations of equal-expected-prediction-errors \vfill
+\begin{itemize} \vfill
+\item[] \vfill
+\item[] Extension of set identification to nonparallel trends \\ \citep{rambachanroth2023,manskipepper2018} \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+Let $\tilde{\delta}_t$ denote the difference-in-prediction-errors \vfill
+\begin{align*}
+\tilde{\delta}_t & \coloneqq \left(\E\left[Y_{i,t}(0) \given G_i = 1\right] - \E\left[\widehat{Y}_{i,t} \given G_i = 1\right]\right) \\ 
+& - \left(\E\left[Y_{i,t}(0) \given G_i = 0\right] - \E\left[\widehat{Y}_{i,t} \given G_i = 0\right]\right)
+\end{align*}
+\vfill
+\pause
+\begin{figure}[htb]
+    \begin{equation*}
+    \begin{split}
+        \textcolor{Dark2-D}{\textbf{Worst-case violation of equal-expected-prediction-errors}} \coloneqq \\ \\ \\ \left\{\tilde{\delta}_T: \tikzmarknode{postdifftrends}{\left\lvert \tilde{\delta}_T \right\rvert} \leq \tikzmarknode{mag}{\bar{M}} \tikzmarknode{maxpre}{\max \limits_{s < T}} \tikzmarknode{predifftrends}{\left\lvert \tilde{\delta}_s \right\rvert}\right\}
+        \end{split}
+    \end{equation*}
+    \begin{tikzpicture}[overlay,remember picture,>=stealth,nodes={align=left,inner ysep=1pt},<-]
+
+        \path (postdifftrends.south) ++ (-6.5em,4.5em) node[anchor=south west, color=white] (scalep){\scriptsize \textsf{Abs. post-treatment difference-in-prediction-errors}};
+        %\draw[<->,color=Dark2-D] (postdifftrends.north) -- ++(0,2.5em)  -| node[] {} (postdifftrends.north);
+
+        \path (mag.south) ++ (-3.75em,-2.5em) node[anchor = south west, color=white] (scalep){\scriptsize \textsf{Magnitude parameter}};
+        %\draw[<->, color = Dark2-D] (mag.south) -- ++(0,-1.67em)  -| node[] {} (mag.south);
+
+        \path (maxpre.north) ++ (-4.5em,1.5em) node[anchor=south west, color=white] (scalep){\scriptsize \textsf{Max over pre-treatment periods}};
+        %\draw[<->,color=Dark2-D] (maxpre.north) -- ++(0,1.5em)  -| node[] {} (maxpre.north);
+
+        \path (predifftrends.south) ++ (-7.25em,-4em) node[anchor=south west, color=white] (scalep){\scriptsize \textsf{Abs. pre-treatment difference-in-prediction-errors}};
+        %\draw[<->,color=Dark2-D] (predifftrends.south) -- ++(0,-3em)  -| node[] {} (predifftrends.south);
+
+    \end{tikzpicture}
+    \vspace{\baselineskip}
+\end{figure} \vfill
+\vfill
+\vspace{-2em}
+\begin{itemize} \vfill
+\item[] \textcolor{white}{Violation of parallel-trends is special case} \vfill
+\end{itemize}    
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{General set identification}
+\vfill
+\begin{itemize} \vfill
+\item General set identification to violations of equal-expected-prediction-errors \vfill
+\begin{itemize} \vfill
+\item[] \vfill
+\item[] Extension of set identification to nonparallel trends \\ \citep{rambachanroth2023,manskipepper2018} \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+Let $\tilde{\delta}_t$ denote the difference-in-prediction-errors \vfill
+\begin{align*}
+\tilde{\delta}_t & \coloneqq \left(\E\left[Y_{i,t}(0) \given G_i = 1\right] - \E\left[\widehat{Y}_{i,t} \given G_i = 1\right]\right) \\ 
+& - \left(\E\left[Y_{i,t}(0) \given G_i = 0\right] - \E\left[\widehat{Y}_{i,t} \given G_i = 0\right]\right)
+\end{align*}
+\vfill
+\begin{figure}[htb]
+    \begin{equation*}
+    \begin{split}
+        \textcolor{Dark2-D}{\textbf{Worst-case violation of equal-expected-prediction-errors}} \coloneqq \\ \\ \\ \left\{\tilde{\delta}_T: \tikzmarknode{postdifftrends}{\left\lvert \tilde{\delta}_T \right\rvert} \leq \tikzmarknode{mag}{\bar{M}} \tikzmarknode{maxpre}{\max \limits_{s < T}} \tikzmarknode{predifftrends}{\left\lvert \tilde{\delta}_s \right\rvert}\right\}
+        \end{split}
+    \end{equation*}
+    \begin{tikzpicture}[overlay,remember picture,>=stealth,nodes={align=left,inner ysep=1pt},<-]
+
+        \path (postdifftrends.south) ++ (-6.5em,4.5em) node[anchor=south west, color=Dark2-D] (scalep){\scriptsize \textsf{Abs. post-treatment difference-in-prediction-errors}};
+        \draw[<->,color=Dark2-D] (postdifftrends.north) -- ++(0,2.5em)  -| node[] {} (postdifftrends.north);
+
+        \path (mag.south) ++ (-3.75em,-2.5em) node[anchor = south west, color=white] (scalep){\scriptsize \textsf{Magnitude parameter}};
+        %\draw[<->, color = Dark2-D] (mag.south) -- ++(0,-1.67em)  -| node[] {} (mag.south);
+
+        \path (maxpre.north) ++ (-4.5em,1.5em) node[anchor=south west, color=white] (scalep){\scriptsize \textsf{Max over pre-treatment periods}};
+        %\draw[<->,color=Dark2-D] (maxpre.north) -- ++(0,1.5em)  -| node[] {} (maxpre.north);
+
+        \path (predifftrends.south) ++ (-7.25em,-4em) node[anchor=south west, color=white] (scalep){\scriptsize \textsf{Abs. pre-treatment difference-in-prediction-errors}};
+        %\draw[<->,color=Dark2-D] (predifftrends.south) -- ++(0,-3em)  -| node[] {} (predifftrends.south);
+
+    \end{tikzpicture}
+    \vspace{\baselineskip}
+\end{figure} \vfill
+\vfill
+\vspace{-2em}
+\begin{itemize} \vfill
+\item[] \textcolor{white}{Violation of parallel-trends is special case} \vfill
+\end{itemize}    
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{General set identification}
+\vfill
+\begin{itemize} \vfill
+\item General set identification to violations of equal-expected-prediction-errors \vfill
+\begin{itemize} \vfill
+\item[] \vfill
+\item[] Extension of set identification to nonparallel trends \\ \citep{rambachanroth2023,manskipepper2018} \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+Let $\tilde{\delta}_t$ denote the difference-in-prediction-errors \vfill
+\begin{align*}
+\tilde{\delta}_t & \coloneqq \left(\E\left[Y_{i,t}(0) \given G_i = 1\right] - \E\left[\widehat{Y}_{i,t} \given G_i = 1\right]\right) \\ 
+& - \left(\E\left[Y_{i,t}(0) \given G_i = 0\right] - \E\left[\widehat{Y}_{i,t} \given G_i = 0\right]\right)
+\end{align*}
+\vfill
+\begin{figure}[htb]
+    \begin{equation*}
+    \begin{split}
+        \textcolor{Dark2-D}{\textbf{Worst-case violation of equal-expected-prediction-errors}} \coloneqq \\ \\ \\ \left\{\tilde{\delta}_T: \tikzmarknode{postdifftrends}{\left\lvert \tilde{\delta}_T \right\rvert} \leq \tikzmarknode{mag}{\bar{M}} \tikzmarknode{maxpre}{\max \limits_{s < T}} \tikzmarknode{predifftrends}{\left\lvert \tilde{\delta}_s \right\rvert}\right\}
+        \end{split}
+    \end{equation*}
+    \begin{tikzpicture}[overlay,remember picture,>=stealth,nodes={align=left,inner ysep=1pt},<-]
+
+        \path (postdifftrends.south) ++ (-6.5em,4.5em) node[anchor=south west, color=Dark2-D] (scalep){\scriptsize \textsf{Abs. post-treatment difference-in-prediction-errors}};
+        \draw[<->,color=Dark2-D] (postdifftrends.north) -- ++(0,2.5em)  -| node[] {} (postdifftrends.north);
+
+        \path (mag.south) ++ (-3.75em,-2.5em) node[anchor = south west, color=white] (scalep){\scriptsize \textsf{Magnitude parameter}};
+        %\draw[<->, color = Dark2-D] (mag.south) -- ++(0,-1.67em)  -| node[] {} (mag.south);
+
+        \path (maxpre.north) ++ (-4.5em,1.5em) node[anchor=south west, color=Dark2-D] (scalep){\scriptsize \textsf{Max over pre-treatment periods}};
+        \draw[<->,color=Dark2-D] (maxpre.north) -- ++(0,1.5em)  -| node[] {} (maxpre.north);
+
+        \path (predifftrends.south) ++ (-7.25em,-4em) node[anchor=south west, color=Dark2-D] (scalep){\scriptsize \textsf{Abs. pre-treatment difference-in-prediction-errors}};
+        \draw[<->,color=Dark2-D] (predifftrends.south) -- ++(0,-3em)  -| node[] {} (predifftrends.south);
+
+    \end{tikzpicture}
+    \vspace{\baselineskip}
+\end{figure} \vfill
+\vfill
+\vspace{-2em}
+\begin{itemize} \vfill
+\item[] \textcolor{white}{Violation of parallel-trends is special case} \vfill
+\end{itemize}    
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{General set identification}
+\vfill
+\begin{itemize} \vfill
+\item General set identification to violations of equal-expected-prediction-errors \vfill
+\begin{itemize} \vfill
+\item[] \vfill
+\item[] Extension of set identification to nonparallel trends \\ \citep{rambachanroth2023,manskipepper2018} \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+Let $\tilde{\delta}_t$ denote the difference-in-prediction-errors \vfill
+\begin{align*}
+\tilde{\delta}_t & \coloneqq \left(\E\left[Y_{i,t}(0) \given G_i = 1\right] - \E\left[\widehat{Y}_{i,t} \given G_i = 1\right]\right) \\ 
+& - \left(\E\left[Y_{i,t}(0) \given G_i = 0\right] - \E\left[\widehat{Y}_{i,t} \given G_i = 0\right]\right)
+\end{align*}
+\vfill
+\begin{figure}[htb]
+    \begin{equation*}
+    \begin{split}
+        \textcolor{Dark2-D}{\textbf{Worst-case violation of equal-expected-prediction-errors}} \coloneqq \\ \\ \\ \left\{\tilde{\delta}_T: \tikzmarknode{postdifftrends}{\left\lvert \tilde{\delta}_T \right\rvert} \leq \tikzmarknode{mag}{\bar{M}} \tikzmarknode{maxpre}{\max \limits_{s < T}} \tikzmarknode{predifftrends}{\left\lvert \tilde{\delta}_s \right\rvert}\right\}
+        \end{split}
+    \end{equation*}
+    \begin{tikzpicture}[overlay,remember picture,>=stealth,nodes={align=left,inner ysep=1pt},<-]
+
+        \path (postdifftrends.south) ++ (-6.5em,4.5em) node[anchor=south west, color=Dark2-D] (scalep){\scriptsize \textsf{Abs. post-treatment difference-in-prediction-errors}};
+        \draw[<->,color=Dark2-D] (postdifftrends.north) -- ++(0,2.5em)  -| node[] {} (postdifftrends.north);
+
+        \path (mag.south) ++ (-3.75em,-2.5em) node[anchor = south west, color=Dark2-D] (scalep){\scriptsize \textsf{Magnitude parameter}};
+        \draw[<->, color = Dark2-D] (mag.south) -- ++(0,-1.67em)  -| node[] {} (mag.south);
+
+        \path (maxpre.north) ++ (-4.5em,1.5em) node[anchor=south west, color=Dark2-D] (scalep){\scriptsize \textsf{Max over pre-treatment periods}};
+        \draw[<->,color=Dark2-D] (maxpre.north) -- ++(0,1.5em)  -| node[] {} (maxpre.north);
+
+        \path (predifftrends.south) ++ (-7.25em,-4em) node[anchor=south west, color=Dark2-D] (scalep){\scriptsize \textsf{Abs. pre-treatment difference-in-prediction-errors}};
+        \draw[<->,color=Dark2-D] (predifftrends.south) -- ++(0,-3em)  -| node[] {} (predifftrends.south);
+
+    \end{tikzpicture}
+    \vspace{\baselineskip}
+\end{figure} \vfill
+\pause
+\vfill
+\vspace{-2em}
+\begin{itemize} \vfill
+\item Violation of parallel-trends is special case \vfill
+\end{itemize}    
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{General set identification}
+\vfill
+\begin{itemize} \vfill
+\item For $\bar{M} > 0$, lower and upper bound estimators of $\textrm{ATT}$ are \vfill
+\small
+\begin{align*}
+\widehat{\Delta}_{T}^{\text{LB}} & = \widehat{\Delta}_{T} - \bar{M} \max \limits_{s < T} \left\lvert \widehat{\Delta}_s \right\rvert \\ \\
+\widehat{\Delta}_{T}^{\text{UB}} & = \widehat{\Delta}_{T} + \bar{M} \max \limits_{s < T} \left\lvert \widehat{\Delta}_s \right\rvert
+\end{align*} \vfill
+\normalsize
+\end{itemize}
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+%\begin{frame}[t]
+%\frametitle{Algorithm}
+%\vfill
+%\begin{enumerate}
+%\item \textbf{Input}: Data $\left\{Y_{i,t}, \bm{X}_{i,t}\right\}$, $i = 1, \ldots , n$ and $t = 0, \ldots , T$
+%\item Fit class of stable predictive functions, $\mathcal{F}$ to predict $Y_{i,t}(0)$ from $\bm{X}_{i,t}$ for all $t = 1, \ldots , T-1$
+%\item Choose the stable predictive function, $f^* \in \mathcal{F}$, in which
+%\begin{align*}
+%f^* \coloneqq \argmin \limits_{f \in \mathcal{F}} \left\lvert \max \limits_{s < T} \delta_s \right\rvert
+%\end{align*}
+%\item Then estimate ATT
+%\end{enumerate}
+%\vfill
+%\end{frame}
+\begin{frame}[allowframebreaks]
+\frametitle{References} 
+\scriptsize
+\bibliographystyle{chicago}
+\bibliography{DID_bibliography}   % name your BibTeX data base
+\end{frame}
+%----------------------------------------------------------------
+\end{document}
