@@ -1,0 +1,835 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+  12pt,
+  leqno]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin = 1.5cm]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{xcolor, color, ucs}     % http://ctan.org/pkg/xcolor
+\usepackage{natbib}
+\usepackage{booktabs}          % package for thick lines in tables
+\usepackage{amsfonts,amsthm,amsmath}          % AMS Fonts
+\usepackage{graphicx}          % Insert .pdf, .eps or .png
+\usepackage{enumitem}          % http://ctan.org/pkg/enumitem
+\usepackage{tabularx}          % Get scale boxes for tables
+\usepackage{float}             % Force floats around
+\usepackage{rotating}          % Rotate long tables horizontally
+\usepackage{bbm}                % for bold betas
+\usepackage{csquotes}           % \enquote{} and \textquote[][]{} environments
+\usepackage{subfigure}
+\usepackage{array}
+
+\usepackage{longtable}
+
+
+\setlist{nosep}
+
+\usepackage{setspace}
+\doublespacing
+
+
+
+\usepackage{multirow}
+
+\usepackage{hyperref}
+\usepackage[noabbrev]{cleveref} % Should be loaded after \usepackage{hyperref}
+\usepackage[small,bf]{caption}  % Captions
+
+
+\parskip=8pt
+\parindent=0pt
+\delimitershortfall=-1pt
+\interfootnotelinepenalty=100000
+
+\newcommand{\qedknitr}{\hfill\rule{1.2ex}{1.2ex}}
+
+%
+
+\def\tightlist{}
+
+\makeatletter
+% align all math after the command
+\newcommand{\mathleft}{\@fleqntrue\@mathmargin\parindent}
+\newcommand{\mathcenter}{\@fleqnfalse}
+% tilde with text over it
+\newcommand{\distas}[1]{\mathbin{\overset{#1}{\kern\z@\sim}}}%
+\newsavebox{\mybox}\newsavebox{\mysim}
+\newcommand{\distras}[1]{%
+  \savebox{\mybox}{\hbox{\kern3pt$\scriptstyle#1$\kern3pt}}%
+  \savebox{\mysim}{\hbox{$\sim$}}%
+  \mathbin{\overset{#1}{\kern\z@\resizebox{\wd\mybox}{\ht\mysim}{$\sim$}}}%
+}
+\makeatother
+
+% \newtheoremstyle{newstyle}
+% {} %Aboveskip
+% {} %Below skip
+% {\mdseries} %Body font e.g.\mdseries,\bfseries,\scshape,\itshape
+% {} %Indent
+% {\bfseries} %Head font e.g.\bfseries,\scshape,\itshape
+% {.} %Punctuation afer theorem header
+% { } %Space after theorem header
+% {} %Heading
+
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+\newtheorem{definition}{Definition}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\DeclareMathOperator{\E}{\mathrm{E}}
+\DeclareMathOperator{\Var}{\mathrm{Var}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+% suppress table numbering
+\captionsetup[table]{labelformat=empty}
+
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage[]{natbib}
+\bibliographystyle{apsr}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Regression Discontinuity Design},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Regression Discontinuity Design}
+\author{\href{mailto:thomas.leavitt@baruch.cuny.edu}{Thomas Leavitt}}
+\date{July 2, 2024}
+
+\begin{document}
+\maketitle
+
+\section{Application to close elections}
+
+Today we are going to use the data on close US House of Representatives
+races 1942--2008 used in \citet{caugheysekhon2011}.\footnote{The full
+  replication data is available for download
+  \href{http://sekhon.berkeley.edu/rep/RDReplication.zip}{here}. But we
+  read it directly below.} \citet{caugheysekhon2011} engage in a debate
+whose participants seek to identify the causal effect of the so-called
+``incumbency advantage.'' That is, what effect does a candidate's status
+as an incumbent have on whether or not that candidate wins an election?
+Obviously, whether or not a candidate is an incumbent is \emph{not}
+randomly assigned.
+
+Let's first load the data: \scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rdd\_data }\OtherTok{\textless{}{-}} \FunctionTok{read\_dta}\NormalTok{(}\StringTok{"http://jakebowers.org/Matching/RDReplication.dta"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(Use }\SpecialCharTok{==} \DecValTok{1}\NormalTok{)  }\DocumentationTok{\#\# Use is indicator for whether unit is included in RD incumbency advantage sample}
+\end{Highlighting}
+\end{Shaded}
+
+\normalsize
+
+The ``running variable'' is called \texttt{DifDPct}, which is defined as
+the Democratic margin of victory or defeat in the election; in other
+words, DifDPct is the difference between the percentage of all votes
+that were cast for the leading Democrat in the race and the percentage
+cast for the leading non-Democrat. Races in which no Democrat ran or in
+which the top two vote-getters were both Democrats are coded as missing.
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{running\_var }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"DifDPct"}\NormalTok{, }\StringTok{"Democrat Margin of Victory"}\NormalTok{), }\AttributeTok{ncol =} \DecValTok{2}\NormalTok{, }\AttributeTok{byrow =} \ConstantTok{TRUE}\NormalTok{)}
+
+\FunctionTok{dimnames}\NormalTok{(running\_var) }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}\DecValTok{1}\NormalTok{, }\FunctionTok{c}\NormalTok{(}\StringTok{"Running Variable"}\NormalTok{, }\StringTok{"Description"}\NormalTok{))}
+
+\FunctionTok{kable}\NormalTok{(running\_var)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Running Variable & Description \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+DifDPct & Democrat Margin of Victory \\
+\end{longtable}
+
+\normalsize
+
+The treatment variable is whether or not the Democratic candidate wins
+the election or not. If the candidate wins the election, then that
+candidate is assigned to ``treatment.'' If the candidate loses the
+election, then he or she is assigned to ``control.'\,'
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{treatment }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"DemWin"}\NormalTok{, }\StringTok{"Democrat Wins Election"}\NormalTok{), }\AttributeTok{ncol =} \DecValTok{2}\NormalTok{, }\AttributeTok{byrow =} \ConstantTok{TRUE}\NormalTok{)}
+\FunctionTok{dimnames}\NormalTok{(treatment) }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}\DecValTok{1}\NormalTok{, }\FunctionTok{c}\NormalTok{(}\StringTok{"Treatment"}\NormalTok{, }\StringTok{"Description"}\NormalTok{))}
+\FunctionTok{kable}\NormalTok{(treatment)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Treatment & Description \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+DemWin & Democrat Wins Election \\
+\end{longtable}
+
+\normalsize
+
+Now let's quickly look at the empirical distribution of the treatment
+variable:
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{table}\NormalTok{(rdd\_data}\SpecialCharTok{$}\NormalTok{DemWin)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+
+   0    1 
+4507 5677 
+\end{verbatim}
+
+\normalsize
+
+In \citet{caugheysekhon2011}, the primary outcome variables of interest
+are as follows: whether a democrat wins the next election, the
+proportion voting for a democrat in the next election, and the
+democratic vote margin in the next election.
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dvs }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"DWinNxt"}\NormalTok{, }\StringTok{"Dem Win t + 1"}\NormalTok{, }\StringTok{"DPctNxt"}\NormalTok{, }\StringTok{"Dem t + 1"}\NormalTok{, }\StringTok{"DifDPNxt"}\NormalTok{, }\StringTok{"Dem Margin t + 1"}\NormalTok{),}
+    \AttributeTok{ncol =} \DecValTok{2}\NormalTok{, }\AttributeTok{byrow =} \ConstantTok{TRUE}\NormalTok{)}
+
+\FunctionTok{dimnames}\NormalTok{(dvs) }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}\FunctionTok{seq}\NormalTok{(}\AttributeTok{from =} \DecValTok{1}\NormalTok{, }\AttributeTok{to =} \DecValTok{3}\NormalTok{, }\AttributeTok{by =} \DecValTok{1}\NormalTok{), }\FunctionTok{c}\NormalTok{(}\StringTok{"Outcome"}\NormalTok{, }\StringTok{"Description"}\NormalTok{))}
+
+\FunctionTok{kable}\NormalTok{(dvs)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Outcome & Description \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+DWinNxt & Dem Win t + 1 \\
+DPctNxt & Dem t + 1 \\
+DifDPNxt & Dem Margin t + 1 \\
+\end{longtable}
+
+\normalsize
+
+The relevant baseline covariates (all measured prior to the realization
+of the running variable) are:
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{covs }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"DWinPrv"}\NormalTok{, }\StringTok{"Dem Win t {-} 1"}\NormalTok{,}
+                 \StringTok{"DPctPrv"}\NormalTok{, }\StringTok{"Dem \% t {-} 1"}\NormalTok{,}
+                 \StringTok{"DifDPPrv"}\NormalTok{, }\StringTok{"Dem \% Margin t {-} 1"}\NormalTok{,}
+                 \StringTok{"IncDWNOM1"}\NormalTok{, }\StringTok{"Inc\textquotesingle{}s D1 NOMINATE"}\NormalTok{,}
+                 \StringTok{"DemInc"}\NormalTok{, }\StringTok{"Dem Inc in Race"}\NormalTok{,}
+                 \StringTok{"NonDInc"}\NormalTok{, }\StringTok{"Rep Inc in Race"}\NormalTok{,}
+                 \StringTok{"PrvTrmsD"}\NormalTok{, }\StringTok{"Dem\textquotesingle{}s \# Prev Terms"}\NormalTok{,}
+                 \StringTok{"PrvTrmsO"}\NormalTok{, }\StringTok{"Rep\textquotesingle{}s \# Prev Terms"}\NormalTok{,}
+                 \StringTok{"RExpAdv"}\NormalTok{, }\StringTok{"Rep Experience Adv"}\NormalTok{,}
+                 \StringTok{"DExpAdv"}\NormalTok{, }\StringTok{"Dem Experience Adv"}\NormalTok{,}
+                 \StringTok{"ElcSwing"}\NormalTok{, }\StringTok{"Partisan Swing"}\NormalTok{,}
+                 \StringTok{"CQRating3"}\NormalTok{, }\StringTok{"CQ Rating \{{-}1, 0, 1\}"}\NormalTok{,}
+                 \StringTok{"DSpndPct"}\NormalTok{, }\StringTok{"Dem Spending \%"}\NormalTok{,}
+                 \StringTok{"DDonaPct"}\NormalTok{, }\StringTok{"Dem Donation \%"}\NormalTok{,}
+                 \StringTok{"SoSDem"}\NormalTok{, }\StringTok{"Dem Sec of State"}\NormalTok{,}
+                 \StringTok{"GovDem"}\NormalTok{, }\StringTok{"Dem Governor"}\NormalTok{,}
+                 \StringTok{"DifPVDec"}\NormalTok{, }\StringTok{"Dem Pres \% Margin"}\NormalTok{, }\DocumentationTok{\#\# average over decade}
+                 \StringTok{"DemOpen"}\NormalTok{, }\StringTok{"Dem{-}held Open Seat"}\NormalTok{,}
+                 \StringTok{"NonDOpen"}\NormalTok{, }\StringTok{"Rep{-}held Open Seat"}\NormalTok{,}
+                 \StringTok{"OpenSeat"}\NormalTok{, }\StringTok{"Open Seat"}\NormalTok{,}
+                 \StringTok{"VtTotPct"}\NormalTok{, }\StringTok{"Voter Turnout \%"}\NormalTok{,}
+                 \StringTok{"GovWkPct"}\NormalTok{, }\StringTok{"Pct Gov\textquotesingle{}t Worker"}\NormalTok{,}
+                 \StringTok{"UrbanPct"}\NormalTok{, }\StringTok{"Pct Urban"}\NormalTok{,}
+                 \StringTok{"BlackPct"}\NormalTok{, }\StringTok{"Pct Black"}\NormalTok{,}
+                 \StringTok{"ForgnPct"}\NormalTok{, }\StringTok{"Pct Foreign Born"}\NormalTok{),}
+               \AttributeTok{ncol =} \DecValTok{2}\NormalTok{,}
+               \AttributeTok{byrow =} \ConstantTok{TRUE}\NormalTok{)}
+
+\FunctionTok{dimnames}\NormalTok{(covs) }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}\FunctionTok{seq}\NormalTok{(}\AttributeTok{from =} \DecValTok{1}\NormalTok{,}
+                           \AttributeTok{to =} \DecValTok{25}\NormalTok{,}
+                           \AttributeTok{by =} \DecValTok{1}\NormalTok{),}
+                       \FunctionTok{c}\NormalTok{(}\StringTok{"Covariate"}\NormalTok{, }\StringTok{"Description"}\NormalTok{))}
+
+\FunctionTok{kable}\NormalTok{(covs)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Covariate & Description \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+DWinPrv & Dem Win t - 1 \\
+DPctPrv & Dem \% t - 1 \\
+DifDPPrv & Dem \% Margin t - 1 \\
+IncDWNOM1 & Inc's D1 NOMINATE \\
+DemInc & Dem Inc in Race \\
+NonDInc & Rep Inc in Race \\
+PrvTrmsD & Dem's \# Prev Terms \\
+PrvTrmsO & Rep's \# Prev Terms \\
+RExpAdv & Rep Experience Adv \\
+DExpAdv & Dem Experience Adv \\
+ElcSwing & Partisan Swing \\
+CQRating3 & CQ Rating \{-1, 0, 1\} \\
+DSpndPct & Dem Spending \% \\
+DDonaPct & Dem Donation \% \\
+SoSDem & Dem Sec of State \\
+GovDem & Dem Governor \\
+DifPVDec & Dem Pres \% Margin \\
+DemOpen & Dem-held Open Seat \\
+NonDOpen & Rep-held Open Seat \\
+OpenSeat & Open Seat \\
+VtTotPct & Voter Turnout \% \\
+GovWkPct & Pct Gov't Worker \\
+UrbanPct & Pct Urban \\
+BlackPct & Pct Black \\
+ForgnPct & Pct Foreign Born \\
+\end{longtable}
+
+\normalsize
+
+\section{Local as-if randomization framework}
+
+\subsection{Optimal bandwidth selection}
+
+Let's specify a set of candidate bandwidths and then sequentially test
+covariate balance. Before actually testing, though, we want to specify a
+balance criterion and then maximize effective sample size subject to
+that criterion.
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{bal\_fmla }\OtherTok{\textless{}{-}} \FunctionTok{reformulate}\NormalTok{(}\AttributeTok{termlabels =}\NormalTok{ covs[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{25}\NormalTok{], }\AttributeTok{response =} \StringTok{"DemWin"}\NormalTok{)}
+
+\NormalTok{candidate\_bands }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\AttributeTok{from =} \SpecialCharTok{{-}}\DecValTok{5}\NormalTok{, }\AttributeTok{to =} \DecValTok{5}\NormalTok{, }\AttributeTok{by =} \FloatTok{0.1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\normalsize
+
+Now let's first filter our dataset and check for balance in the largest
+candidate bandwidth spanning from \(-5\) to \(5\).
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lower\_bound }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\AttributeTok{from =} \SpecialCharTok{{-}}\DecValTok{5}\NormalTok{, }\AttributeTok{to =} \SpecialCharTok{{-}}\FloatTok{0.1}\NormalTok{, }\AttributeTok{by =} \FloatTok{0.1}\NormalTok{)}
+
+\NormalTok{upper\_bound }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\AttributeTok{from =} \FloatTok{0.1}\NormalTok{, }\AttributeTok{to =} \DecValTok{5}\NormalTok{, }\AttributeTok{by =} \FloatTok{0.1}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{sort}\NormalTok{(}\AttributeTok{decreasing =} \ConstantTok{TRUE}\NormalTok{)}
+
+\NormalTok{rdd\_dataA }\OtherTok{\textless{}{-}}\NormalTok{ rdd\_data}
+\NormalTok{rdd\_dataA }\OtherTok{\textless{}{-}}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(}\AttributeTok{.data =}\NormalTok{ rdd\_dataA, DifDPct }\SpecialCharTok{\textgreater{}}\NormalTok{ lower\_bound[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{\&}\NormalTok{ DifDPct }\SpecialCharTok{\textless{}}
+\NormalTok{    upper\_bound[}\DecValTok{1}\NormalTok{])}
+
+\NormalTok{rdd\_dataA }\SpecialCharTok{\%$\%}
+    \FunctionTok{summary}\NormalTok{(DifDPct)}
+
+\FunctionTok{xBalance}\NormalTok{(}\AttributeTok{fmla =}\NormalTok{ bal\_fmla, }\AttributeTok{data =}\NormalTok{ rdd\_dataA, }\AttributeTok{report =} \StringTok{"chisquare.test"}\NormalTok{)}
+
+\NormalTok{xb1 }\OtherTok{\textless{}{-}} \FunctionTok{xBalance}\NormalTok{(}\AttributeTok{fmla =}\NormalTok{ bal\_fmla, }\AttributeTok{data =}\NormalTok{ rdd\_dataA, }\AttributeTok{report =} \StringTok{"all"}\NormalTok{)}
+\NormalTok{xb1}\SpecialCharTok{$}\NormalTok{results}
+\end{Highlighting}
+\end{Shaded}
+
+\normalsize
+
+Now let's write a function to perform this same procedure over all
+candidate bandwidth sizes beginning with the largest candidate bandwidth
+and subsequently testing smaller and smaller bandwidths in order.
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{chi\_squared\_balance }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(lb, ub, running\_var, bal\_fmla, data) \{}
+
+\NormalTok{    data }\OtherTok{\textless{}{-}}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(}\AttributeTok{.data =}\NormalTok{ data, running\_var }\SpecialCharTok{\textgreater{}}\NormalTok{ lb }\SpecialCharTok{\&}\NormalTok{ running\_var }\SpecialCharTok{\textless{}}\NormalTok{ ub)}
+
+\NormalTok{    ess }\OtherTok{\textless{}{-}} \FunctionTok{nrow}\NormalTok{(data)}
+
+\NormalTok{    p\_value }\OtherTok{\textless{}{-}} \FunctionTok{xBalance}\NormalTok{(}\AttributeTok{fmla =}\NormalTok{ bal\_fmla, }\AttributeTok{data =}\NormalTok{ data, }\AttributeTok{report =} \StringTok{"chisquare.test"}\NormalTok{)}\SpecialCharTok{$}\NormalTok{overall[[}\DecValTok{3}\NormalTok{]]}
+
+\NormalTok{    bands }\OtherTok{\textless{}{-}} \FunctionTok{cbind}\NormalTok{(ess, p\_value, lb, ub)}
+
+    \FunctionTok{return}\NormalTok{(bands)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\normalsize
+
+Now use the function:
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lbs }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\AttributeTok{from =} \SpecialCharTok{{-}}\FloatTok{0.5}\NormalTok{, }\AttributeTok{to =} \SpecialCharTok{{-}}\FloatTok{0.1}\NormalTok{, }\AttributeTok{by =} \FloatTok{0.1}\NormalTok{)}
+\NormalTok{ubs }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\AttributeTok{from =} \FloatTok{0.5}\NormalTok{, }\AttributeTok{to =} \FloatTok{0.1}\NormalTok{, }\AttributeTok{by =} \SpecialCharTok{{-}}\FloatTok{0.01}\NormalTok{)}
+
+\NormalTok{band\_df }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\FunctionTok{t}\NormalTok{(}\FunctionTok{sapply}\NormalTok{(}\AttributeTok{X =} \DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(lbs), }\AttributeTok{FUN =} \ControlFlowTok{function}\NormalTok{(x) \{}
+    \FunctionTok{chi\_squared\_balance}\NormalTok{(}\AttributeTok{lb =}\NormalTok{ lbs[x], }\AttributeTok{ub =}\NormalTok{ ubs[x], }\AttributeTok{running\_var =}\NormalTok{ rdd\_data}\SpecialCharTok{$}\NormalTok{DifDPct,}
+        \AttributeTok{bal\_fmla =}\NormalTok{ bal\_fmla, }\AttributeTok{data =}\NormalTok{ rdd\_data)}
+\NormalTok{\}))) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{rename}\NormalTok{(}\AttributeTok{ess =}\NormalTok{ X1, }\AttributeTok{p\_value =}\NormalTok{ X2)}
+
+\FunctionTok{kable}\NormalTok{(band\_df)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}rrrr@{}}
+\toprule\noalign{}
+ess & p\_value & X3 & X4 \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+85 & 0.3693273 & -0.5 & 0.50 \\
+76 & 0.5882135 & -0.4 & 0.49 \\
+65 & 0.3450826 & -0.3 & 0.48 \\
+55 & 0.4195984 & -0.2 & 0.47 \\
+48 & 0.5330565 & -0.1 & 0.46 \\
+\end{longtable}
+
+\normalsize
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{g }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ rdd\_data, }\AttributeTok{mapping =} \FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ DifDPct, }\AttributeTok{y =}\NormalTok{ DPctNxt, }\AttributeTok{color =}\NormalTok{ DemWin)) }\SpecialCharTok{+}
+    \FunctionTok{geom\_point}\NormalTok{()}
+\NormalTok{g }\SpecialCharTok{+} \FunctionTok{xlim}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.4}\NormalTok{, }\FloatTok{0.4}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{rdd_worksheet_files/figure-latex/unnamed-chunk-11-1.pdf}
+\normalsize
+
+\subsection{Outcome analysis}
+
+We could also perform permutation inference within the window around the
+cutpoint under the assumption that local randomization holds (useful
+especially if the window contains relatively few observations, skewed
+outcomes, etc..):
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rdd\_data47 }\OtherTok{\textless{}{-}}\NormalTok{ rdd\_data }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(DifDPct }\SpecialCharTok{\textgreater{}}\NormalTok{ lower\_bound[}\DecValTok{47}\NormalTok{] }\SpecialCharTok{\&}\NormalTok{ DifDPct }\SpecialCharTok{\textless{}}\NormalTok{ upper\_bound[}\DecValTok{47}\NormalTok{])}
+
+\NormalTok{rdd\_data47 }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{nrow}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 70
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\DecValTok{5}\NormalTok{)}
+\NormalTok{sharp\_null\_dist }\OtherTok{\textless{}{-}} \FunctionTok{replicate}\NormalTok{(}\AttributeTok{n =} \DecValTok{10}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{, }\AttributeTok{expr =} \FunctionTok{coef}\NormalTok{(}\FunctionTok{lm}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ DPctNxt }\SpecialCharTok{\textasciitilde{}} \FunctionTok{sample}\NormalTok{(DemWin),}
+    \AttributeTok{data =}\NormalTok{ rdd\_data47))[[}\DecValTok{2}\NormalTok{]])}
+
+\NormalTok{obsstat }\OtherTok{\textless{}{-}} \FunctionTok{coef}\NormalTok{(}\FunctionTok{lm}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ DPctNxt }\SpecialCharTok{\textasciitilde{}}\NormalTok{ DemWin, }\AttributeTok{data =}\NormalTok{ rdd\_data47))[[}\StringTok{"DemWin"}\NormalTok{]]}
+
+\NormalTok{upper\_p\_val }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(sharp\_null\_dist }\SpecialCharTok{\textgreater{}=}\NormalTok{ obsstat)}
+\NormalTok{lower\_p\_val }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(sharp\_null\_dist }\SpecialCharTok{\textless{}=}\NormalTok{ obsstat)}
+\NormalTok{two\_sided\_p\_val }\OtherTok{\textless{}{-}} \FunctionTok{min}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{2} \SpecialCharTok{*} \FunctionTok{min}\NormalTok{(upper\_p\_val, lower\_p\_val))}
+
+\NormalTok{two\_sided\_p\_val}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 0
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rdd\_data47}\SpecialCharTok{$}\NormalTok{DemWinF }\OtherTok{\textless{}{-}} \FunctionTok{factor}\NormalTok{(rdd\_data47}\SpecialCharTok{$}\NormalTok{DemWin)}
+\end{Highlighting}
+\end{Shaded}
+
+\normalsize
+
+We can now perform outcome analysis on the detrended outcome variable:
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tmp\_lm }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(DPctNxt }\SpecialCharTok{\textasciitilde{}}\NormalTok{ DifDPct, }\AttributeTok{data =}\NormalTok{ rdd\_data47)}
+
+\NormalTok{rdd\_data47 }\SpecialCharTok{\%\textless{}\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{resid\_DPctNxt =} \FunctionTok{resid}\NormalTok{(tmp\_lm))}
+
+\FunctionTok{lm\_robust}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ resid\_DPctNxt }\SpecialCharTok{\textasciitilde{}}\NormalTok{ DemWin, }\AttributeTok{data =}\NormalTok{ rdd\_data47)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+             Estimate Std. Error    t value  Pr(>|t|)  CI Lower  CI Upper DF
+(Intercept) -2.285391   2.569980 -0.8892638 0.3769964 -7.413706  2.842925 68
+DemWin       4.570781   3.613191  1.2650262 0.2101800 -2.639229 11.780791 68
+\end{verbatim}
+
+\normalsize
+
+\citet{saleshansen2020}, however, propose robust regression, which is
+less sensitive to violations of the regression model's assumptions ---
+still removing linear trend here.
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tmp\_rlm }\OtherTok{\textless{}{-}} \FunctionTok{rlm}\NormalTok{(DPctNxt }\SpecialCharTok{\textasciitilde{}}\NormalTok{ DifDPct, }\AttributeTok{data =}\NormalTok{ rdd\_data47)}
+\NormalTok{rdd\_data47 }\SpecialCharTok{\%\textless{}\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{rlm\_resid\_DPctNxt =} \FunctionTok{resid}\NormalTok{(tmp\_rlm))}
+\FunctionTok{lm\_robust}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ rlm\_resid\_DPctNxt }\SpecialCharTok{\textasciitilde{}}\NormalTok{ DemWin, }\AttributeTok{data =}\NormalTok{ rdd\_data47)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+             Estimate Std. Error   t value   Pr(>|t|)  CI Lower   CI Upper DF
+(Intercept) -4.477620   2.544731 -1.759565 0.08297946 -9.555552  0.6003131 68
+DemWin       5.865897   3.590151  1.633886 0.10690469 -1.298138 13.0299312 68
+\end{verbatim}
+
+\normalsize
+
+We don't actually need to know the true form of
+\(\E[\left[Y | R =r\right]\). Instead, we can use methods, such as local
+regression, to approximate the function of \(\E[\left[Y | R = r\right]\)
+at values of \(R\) below and above the cutpoint.
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rdd\_data }\SpecialCharTok{\%\textless{}\textgreater{}\%}
+    \FunctionTok{arrange}\NormalTok{(DifDPct)}
+
+\NormalTok{rdd\_data\_cp }\OtherTok{\textless{}{-}}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}\AttributeTok{.data =}\NormalTok{ rdd\_data, DifDPct, DPctNxt, DemWin) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{cp =} \FunctionTok{ifelse}\NormalTok{(}\AttributeTok{test =}\NormalTok{ DifDPct }\SpecialCharTok{\textless{}} \DecValTok{0}\NormalTok{, }\AttributeTok{yes =} \StringTok{"Below Cutpoint"}\NormalTok{, }\AttributeTok{no =} \StringTok{"Above Cutpoint"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\normalsize
+
+\scriptsize
+
+\includegraphics{rdd_worksheet_files/figure-latex/unnamed-chunk-16-1.pdf}
+\normalsize
+
+\section{Continuity in Potential Outcomes}
+
+Let's first use a simple linear model to estimate the relationship on
+both sides of the cutpoint. Here we are not using a window.
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm\_predict\_below }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(}\AttributeTok{object =} \FunctionTok{lm}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ DPctNxt }\SpecialCharTok{\textasciitilde{}}\NormalTok{ DifDPct, }\AttributeTok{data =}\NormalTok{ rdd\_data,}
+    \AttributeTok{subset =}\NormalTok{ DifDPct }\SpecialCharTok{\textless{}} \DecValTok{0}\NormalTok{), }\AttributeTok{newdata =} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{DifDPct =} \DecValTok{0}\NormalTok{))}
+
+\NormalTok{lm\_predict\_above }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(}\AttributeTok{object =} \FunctionTok{lm}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ DPctNxt }\SpecialCharTok{\textasciitilde{}}\NormalTok{ DifDPct, }\AttributeTok{data =}\NormalTok{ rdd\_data,}
+    \AttributeTok{subset =}\NormalTok{ DifDPct }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{), }\AttributeTok{newdata =} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{DifDPct =} \DecValTok{0}\NormalTok{))}
+
+\NormalTok{lm\_predict\_above }\SpecialCharTok{{-}}\NormalTok{ lm\_predict\_below}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+       1 
+11.74521 
+\end{verbatim}
+
+\normalsize
+
+We could also do the same thing with LOESS regression:
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{loess\_predict\_below }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(}\AttributeTok{object =} \FunctionTok{loess}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ DPctNxt }\SpecialCharTok{\textasciitilde{}}\NormalTok{ DifDPct, }\AttributeTok{data =}\NormalTok{ rdd\_data,}
+    \AttributeTok{subset =}\NormalTok{ DifDPct }\SpecialCharTok{\textless{}} \DecValTok{0}\NormalTok{, }\AttributeTok{surface =} \StringTok{"direct"}\NormalTok{), }\AttributeTok{newdata =} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{DifDPct =} \DecValTok{0}\NormalTok{))}
+
+\NormalTok{loess\_predict\_above }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(}\AttributeTok{object =} \FunctionTok{loess}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ DPctNxt }\SpecialCharTok{\textasciitilde{}}\NormalTok{ DifDPct, }\AttributeTok{data =}\NormalTok{ rdd\_data,}
+    \AttributeTok{subset =}\NormalTok{ DifDPct }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{, }\AttributeTok{surface =} \StringTok{"direct"}\NormalTok{), }\AttributeTok{newdata =} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{DifDPct =} \DecValTok{0}\NormalTok{))}
+
+\NormalTok{loess\_predict\_above }\SpecialCharTok{{-}}\NormalTok{ loess\_predict\_below}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+       1 
+9.721584 
+\end{verbatim}
+
+\normalsize
+
+We could also use a \(p\)th order polynomial. For example:
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm\_poly\_predict\_below }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(}\AttributeTok{object =} \FunctionTok{lm}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ DPctNxt }\SpecialCharTok{\textasciitilde{}} \FunctionTok{I}\NormalTok{(DifDPct}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(DifDPct}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+}
+\NormalTok{    DifDPct, }\AttributeTok{data =}\NormalTok{ rdd\_data, }\AttributeTok{subset =}\NormalTok{ DifDPct }\SpecialCharTok{\textless{}} \DecValTok{0}\NormalTok{), }\AttributeTok{newdata =} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{DifDPct =} \DecValTok{0}\NormalTok{))}
+
+\NormalTok{lm\_poly\_predict\_above }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(}\AttributeTok{object =} \FunctionTok{lm}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ DPctNxt }\SpecialCharTok{\textasciitilde{}} \FunctionTok{I}\NormalTok{(DifDPct}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(DifDPct}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+}
+\NormalTok{    DifDPct, }\AttributeTok{data =}\NormalTok{ rdd\_data, }\AttributeTok{subset =}\NormalTok{ DifDPct }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{), }\AttributeTok{newdata =} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{DifDPct =} \DecValTok{0}\NormalTok{))}
+
+\NormalTok{lm\_poly\_predict\_above }\SpecialCharTok{{-}}\NormalTok{ lm\_poly\_predict\_below}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+       1 
+10.63556 
+\end{verbatim}
+
+\normalsize
+
+This next calculates a bandwidth and then does what we just did above
+(all in one step):
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rdest1 }\OtherTok{\textless{}{-}} \FunctionTok{RDestimate}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ DPctNxt }\SpecialCharTok{\textasciitilde{}}\NormalTok{ DifDPct, }\AttributeTok{data =}\NormalTok{ rdd\_data, }\AttributeTok{se.type =} \StringTok{"HC3"}\NormalTok{)}
+\FunctionTok{summary}\NormalTok{(rdest1)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+
+Call:
+RDestimate(formula = DPctNxt ~ DifDPct, data = rdd_data, se.type = "HC3")
+
+Type:
+sharp 
+
+Estimates:
+           Bandwidth  Observations  Estimate  Std. Error  z value  Pr(>|z|) 
+LATE        6.624     1048           9.531    1.586       6.008    1.877e-09
+Half-BW     3.312      523          11.023    2.470       4.463    8.100e-06
+Double-BW  13.249     2013           9.249    1.064       8.692    3.556e-18
+              
+LATE       ***
+Half-BW    ***
+Double-BW  ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+F-statistics:
+           F       Num. DoF  Denom. DoF  p
+LATE        86.05  3         1044        0
+Half-BW     38.33  3          519        0
+Double-BW  218.56  3         2009        0
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(rdest1)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{rdd_worksheet_files/figure-latex/unnamed-chunk-20-1.pdf}
+\normalsize
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rdrest1 }\OtherTok{\textless{}{-}} \FunctionTok{rdrobust}\NormalTok{(}\AttributeTok{y =}\NormalTok{ rdd\_data}\SpecialCharTok{$}\NormalTok{DPctNxt, }\AttributeTok{x =}\NormalTok{ rdd\_data}\SpecialCharTok{$}\NormalTok{DifDPct)}
+\FunctionTok{summary}\NormalTok{(rdrest1)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+Sharp RD estimates using local polynomial regression.
+
+Number of Obs.                 8594
+BW type                       mserd
+Kernel                   Triangular
+VCE method                       NN
+
+Number of Obs.                 3708         4886
+Eff. Number of Obs.            1697         1435
+Order est. (p)                    1            1
+Order bias  (q)                   2            2
+BW est. (h)                  21.156       21.156
+BW bias (b)                  35.032       35.032
+rho (h/b)                     0.604        0.604
+Unique Obs.                    3576         4098
+
+=============================================================================
+        Method     Coef. Std. Err.         z     P>|z|      [ 95% C.I. ]       
+=============================================================================
+  Conventional     9.381     0.847    11.080     0.000     [7.722 , 11.041]    
+        Robust         -         -     9.710     0.000     [7.676 , 11.559]    
+=============================================================================
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{rdplot}\NormalTok{(}\AttributeTok{y =}\NormalTok{ rdd\_data}\SpecialCharTok{$}\NormalTok{DPctNxt, }\AttributeTok{x =}\NormalTok{ rdd\_data}\SpecialCharTok{$}\NormalTok{DifDPct)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{rdd_worksheet_files/figure-latex/unnamed-chunk-21-1.pdf}
+\normalsize
+
+\newpage
+
+\renewcommand\refname{References}
+  \bibliography{rddbibliography.bib}
+
+\end{document}
