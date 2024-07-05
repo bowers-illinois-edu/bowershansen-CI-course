@@ -1,0 +1,363 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%------------------------------------------------------------------------------------------------
+%	PACKAGES AND THEMES
+%------------------------------------------------------------------------------------------------
+
+\documentclass[table, xcolor = {dvipsnames}, 9pt]{beamer}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{external}
+\mode<presentation> {
+
+% The Beamer class comes with a number of default slide themes
+% which change the colors and layouts of slides. Below this is a list
+% of all the themes, uncomment each in turn to see what they look like.
+
+\usetheme{default}
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Dresden}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+%\usetheme{Madrid}
+\usetheme{metropolis}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+% As well as themes, the Beamer class has a number of color themes
+% for any slide theme. Uncomment each of these in turn to see how it
+% changes the colors of your current slide theme.
+
+%\usecolortheme{albatross}
+%\usecolortheme{beaver}
+%\usecolortheme{beetle}
+%\usecolortheme{crane}
+%\usecolortheme{dolphin}
+%\usecolortheme{dove}
+%\usecolortheme{fly}
+%\usecolortheme{lily}
+%\usecolortheme{orchid}
+%\usecolortheme{rose}
+\usecolortheme{seagull}
+%\usecolortheme{seahorse}
+%\usecolortheme{whale}
+%\usecolortheme{wolverine}
+\usefonttheme{professionalfonts}
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{diagbox}
+\usepackage{makecell}
+\usepackage{xparse}
+\usepackage{subfig}
+\usepackage{amsmath}
+\usepackage{amsfonts,amsthm,amsmath,amssymb}    
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{empheq}
+\usepackage{pgfplots}
+\usepackage{animate}
+\usepgfplotslibrary{colorbrewer}
+
+\newcommand\mybox[2][]{\tikz[overlay]\node[fill=lightgray,inner sep=2pt, anchor=text, rectangle, rounded corners=1mm,#1] {#2};\phantom{#2}}
+\hypersetup{unicode=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1}}
+\usepackage{xcolor}
+\newcommand\myheading[1]{%
+  \par\bigskip
+  {\Large\bfseries#1}\par\smallskip}
+\newcommand\given[1][]{\:#1\vert\:}
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}{Proposition\thisthmnumber}
+\newtheorem{lem}{Lemma\thisthmnumber}
+\newtheorem{cor}{Corollary}
+\newtheorem{defin}{Definition}
+\newtheorem{algo}{Algorithm}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand{\thisthmnumber}{}
+\newcommand{\tikzmark}[1]{\tikz[baseline,remember picture] \coordinate (#1) {};}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\rm{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\N}{\mathbb{N}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\Supp}{\rm{Supp}}
+\DeclareMathOperator{\e}{\rm{e}}
+\DeclareMathOperator{\F}{\mathcal{F}}
+\DeclareMathOperator{\Z}{\mathcal{Z}}
+\DeclareMathOperator{\logit}{\rm{logit}}
+\DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+%\DeclareMathOperator{\Pr}{\rm{Pr}}
+%------------------------------------------------------------------------
+%	TITLE PAGE
+%-----------------------------------------------------------------------
+\pagestyle{empty}
+\title[]{Sensitivity Analysis for Weak Nulls} % The short title appears at the bottom of every slide, the full title is only on the title page
+
+\author{Thomas Leavitt} % Your name
+\institute[] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{ % Your institution for the title page
+\medskip
+\textit{} % Your email address
+}
+\date{July 5, 2024} % Date, can be changed to a custom date
+
+\NewDocumentEnvironment{statement}{mo}
+ {%
+  \IfValueT{#2}{\renewcommand{\thisthmnumber}{ #2}}\begin{#1}%
+ }
+ {\end{#1}}
+
+\begin{document}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+%\begin{frame}
+%\frametitle{Overview} % Table of contents slide, comment this block out to remove it
+%\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+%\end{frame}
+
+%------------------------------------------------------------------------
+%	PRESENTATION SLIDES
+%----------------------------------------------------------------
+\section{Review of Neymanian Hypothesis Testing}
+\begin{frame}{Hypothesis tests of the weak null} \vfill
+\begin{itemize} \vfill
+\item Finite population CLT $\rightarrow$ \vfill
+\begin{align*}
+\cfrac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \E\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}{\sqrt{\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}} & \overset{d}{\to} \mathcal{N}\left(0, 1\right)
+\end{align*} \vfill
+\item Diff-in-Means unbiased for $\tau$, so  \vfill
+\begin{align*}
+\cfrac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau}{\sqrt{\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}} & \overset{d}{\to} \mathcal{N}\left(0, 1\right)
+\end{align*} \vfill
+\item Finite population CLT is asymptotic result as $N \to \infty$ \vfill
+\item Add.~theory $\implies$ bound on error of Normal approximation for fixed $N$ \vfill
+\begin{itemize} \vfill
+\item Experiments w/ at least moderate size and outcomes not too skewed or w/ extreme outliers \vfill
+\begin{align*}
+\cfrac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau}{\sqrt{\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}} & \overset{\text{approx.}}{\sim} \mathcal{N}\left(0, 1\right)
+\end{align*} \vfill
+\end{itemize} \vfill
+\item Justifies standard Normal dist.~for hypothesis tests \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}{Hypothesis tests of the weak null} \vfill
+\begin{itemize} \vfill
+\item Test of null relative to alternative \vfill
+\begin{align*}
+H_0: & \, \tau = \tau_0 \text{ versus } \\
+H_A: & \, \tau > \tau_0 \text{ or } H_A: \tau < \tau_0
+\end{align*} \vfill
+\item Upper(u) or lower(l) $p$-value \vfill
+\begin{align*}
+p_u & =  1 - \Phi\left(\frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0}{\sqrt{\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}}\right) \\
+p_l & =  \Phi\left(\frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0}{\sqrt{\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}}\right)
+\end{align*} \vfill
+\item If p-value is less than size ($\alpha$-level) of test, reject; otherwise, don't \vfill
+\item We don't know $\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]$, so plug-in $\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]$ \vfill
+\item[] $\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]$ is conservative \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}{Hypothesis tests of the weak null} \vfill
+\begin{itemize} \vfill
+\item Recall ACORN GOTV experiment \citep{arceneaux2005} from Week 1 \vfill
+\item Estimated ATE $\approx 0.0363$ \vfill
+\item Conservatively estimated variance $\approx 0.0083$ \vfill
+\item So, test-stat for test of weak null of no effect is $\approx 0.3978$ \vfill
+\vspace{1em}
+\begin{figure}
+\includegraphics[width = 0.9\linewidth]{acorn_stand_norm_null.pdf}
+\end{figure} \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\section{Sensitivity Analysis for weak nulls}
+\begin{frame}
+\frametitle{Sensitivity analysis for weak nulls} 
+\vfill
+\begin{itemize} \vfill
+\item Denote estimator of ATE in block $b$ by $\hat{\tau}_b$ \vfill
+\item Unbiased estimator of the ATE is $\hat{\tau} = \sum \limits_{b = 1}^B (n_b/N)\hat{\tau}_b$ \vfill
+\item Suppose Rosenbaum's sensitivity analysis model: \vfill
+\begin{align*}
+\dfrac{1}{\Gamma} \leq \dfrac{\pi_{bi}/(1 - \pi_{bi})}{\pi_{bj} / (1 - \pi_{bj})} \leq \Gamma \text{ for all } i = 1, \ldots , n_b \text{ and } b = 1, \ldots , B 
+\end{align*} \vfill
+\item How to test $H_0: \tau = \tau_0$ under violations of random assignment? \vfill
+\end{itemize}  
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Sensitivity analysis for weak nulls} 
+\vfill
+\begin{itemize} \vfill
+\item Under random assignment, $\Gamma = 1$, test-stat is \vfill
+\begin{align*}
+\frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0}{\sqrt{\widehat{\Var}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}}
+\end{align*} \vfill
+\item Under violations of random assignment, $\E\left[\hat{\tau}\right]$ not necessarily equal to $\tau_0$ when null is true \vfill
+\begin{align} \label{eq: test stat nonrandom}
+\frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \E_{\bm{u}}\left[\hat{\tau}\right]}{\sqrt{\widehat{\Var}_{\bm{u}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}}
+\end{align} \vfill
+\item Ideally, compare \eqref{eq: test stat nonrandom} to standard Normal \vfill
+\item But $\E_{\bm{u}}\left[\hat{\tau}\right]$ and $\widehat{\Var}_{\bm{u}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]$ depend on unknown $\bm{u}$ and unknown potential outcomes
+\end{itemize}  
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Sensitivity analysis for weak nulls} 
+\vfill
+\begin{itemize} \vfill
+\item In principle, for test against $H_A: \, \tau > \tau_0$, could use
+\begin{equation}
+\dfrac{\hat{\tau} - \max_{\bm{u} \in \mathcal{U}} \E_{\bm{u}}\left[\hat{\tau}\right]}{\sqrt{\widehat{\Var}_{\bm{u}}\left[\hat{\tau}\right]}}
+\end{equation} \vfill
+\item Conservative because larger $\E_{\bm{u}}\left[\hat{\tau}\right] \implies $ smaller standardized test statistic $\implies$ higher p-value \vfill
+\item Finding $\max \limits_{\bm{u} \in \mathcal{U}} \E\left[\hat{\tau}\right]$ requires knowledge of potential outcomes \vfill
+\begin{itemize} \vfill
+\item[$\star$] \textcolor{magenta}{Unlike sharp null, weak null does not imply all missing POs} \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Sensitivity analysis for weak nulls} 
+\vfill
+\begin{itemize} \vfill
+\item \citet{fogarty2023} proposes test-stat in which, under the null,
+\begin{equation*}
+\max \limits_{\bm{u} \in \mathcal{U}} \E_{\bm{u}}\left[t(\cdot, \cdot)\right] \leq \tau_0
+\end{equation*} \vfill
+\item So we use
+\begin{equation}
+\dfrac{t(\cdot, \cdot) - \tau_0}{\sqrt{\widehat{\Var}_{\bm{u}}\left[t(\cdot, \cdot)\right]}},
+\end{equation} \vfill
+which is conservative \vfill
+\end{itemize}  
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{Worst-case inverse probability weighted (IPW) test-stat}
+\frametitle{} 
+\vfill
+\begin{itemize} \vfill
+\item Test statistic \citet{fogarty2023} proposes is ``worst-case IPW estimator'' \vfill
+\item To unpack ``worst-case IPW estimator'', usual IPW estimator is
+\begin{align} \label{eq: strat IPW}
+\left(\dfrac{1}{\abs{\Omega_k}}\right) \left(\dfrac{\hat{\tau}_k}{p(\bm{z}_k)}\right),
+\end{align}
+where $p(\bm{z}_k)$ is prob.~of $\bm{z}_k$, for all $\bm{z}_k \in \Omega_k$ \vfill
+\item Bounds of $\Pr\left(\bm{Z}_b = \bm{z}\right)$ for any given $\Gamma$ are  \vfill
+\begin{equation*}
+\dfrac{1}{\Gamma(n_b - 1) + 1} \leq \Pr(\bm{Z}_b = \bm{z}) \leq \dfrac{\Gamma}{(n_b - 1) + \Gamma}
+\end{equation*} \vfill
+for sets with one treated unit or one control unit
+\vfill
+\end{itemize}  
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{Worst-case inverse probability weighted (IPW) test-stat}
+\frametitle{} 
+\vfill
+\begin{itemize} \vfill
+\item Then, ``worst case IPW estimator'' against $H_A: \, \tau > \tau_0$ is \vfill
+\small
+\begin{equation*}
+\widetilde{W}_b = \dfrac{1}{\left\lvert \Omega_b \right \rvert}\left(\dfrac{\hat{\tau}_b}{\underbrace{\Gamma / \left(n_b - 1 + \Gamma\right)}_{\text{upper bound}} 1\left\{\hat{\tau}_b \geq 0\right\} + \underbrace{1 / \left(\Gamma(n_b - 1) + 1\right)}_{\text{lower bound}}1\left\{\tau_b < 0\right\}}\right)
+\end{equation*} \normalsize \vfill
+\normalsize
+\begin{itemize} \vfill
+\item Weight by largest possible prob.~when $\hat{\tau}_b \geq 0$ and least possible prob.~when $\hat{\tau}_b < 0$ \vfill
+\end{itemize} \vfill
+\item Then aggregate over matched sets, \vfill
+\begin{equation*} 
+\widetilde{W} \coloneqq \sum \limits_{b = 1}^B (n_b/N) \widetilde{W}_b.
+\end{equation*}
+\item Expectation of $\widetilde{W}$ always less than or equal to $\tau$ \vfill
+\item With asymptotically conservative variance estimator \citep{fogarty2018,fogarty2023}, we have asymptotically valid tests for any $\Gamma \geq 1$ \vfill
+\end{itemize}  
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Sensitivity analysis for weak nulls} 
+\vfill
+\begin{itemize} \vfill
+\item But what about the variance? It still depends on unknowable $\bm{u}$ . . .  \vfill
+\item \citet{fogarty2018} provides conservative variance estimator that converges in probability to value greater than or equal to true variance \vfill
+\item We do not need to know missing POs or unknown confounder $\bm{u}$ to implement this var.~estimator \vfill
+\end{itemize}  
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[allowframebreaks]
+\frametitle{References} 
+\scriptsize
+\bibliographystyle{chicago}
+\bibliography{bibliography}    % name your BibTeX data base
+\end{frame}
+%----------------------------------------------------------------
+%----------------------------------------------------------------
+\end{document}
