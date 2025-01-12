@@ -9,7 +9,7 @@ if (!exists("saveplots_")) saveplots_ <- FALSE
 
 ##' <!-- If running interactively in RStudio, may set this eval to TRUE -> 
 ##+ eval=FALSE
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+## setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 rm(list = ls())
 
 ##' Complete random assignment
