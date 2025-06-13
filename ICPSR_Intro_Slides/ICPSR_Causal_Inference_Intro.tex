@@ -167,7 +167,7 @@
 \pagestyle{empty}
 \title[]{Causal Inference for the Social Sciences I} % The short title appears at the bottom of every slide, the full title is only on the title page
 
-\author{Ben B. Hansen and Thomas Leavitt}
+\author{Jake Bowers and Ben B. Hansen}
 \institute[]
 {
 
@@ -241,6 +241,14 @@
 \frametitle{Course outline}
 \vfill
 \begin{enumerate} \vfill
+\item[] We cover methods including  \vfill
+  \begin{itemize}\vfill
+    \item Randomization-based analysis for experiments, in Fisher's or
+      Neyman's style\vfill
+  \item Instrumental variables \& principal stratification  \vfill
+  \item Propensity scores and matching  \vfill
+  \item Omitted variable sensitivity analysis  \vfill
+  \end{itemize}\vfill 
 \item[] \textcolor{magenta}{Part 1: The randomized experimental ideal} \vfill
 \begin{itemize} \vfill
 \item Introduction to potential outcomes and random assignment \vfill
@@ -280,37 +288,7 @@
 \vfill
 \end{frame}
 %-------------------------------------------------------------------------------------
-\section{Course Goals}
-\begin{frame}[t]
-\frametitle{Course goals}
-\vfill
-\begin{itemize} \vfill
-\item We'll study methods including:  \vfill
-  \begin{enumerate}
-    \item Randomization-based analysis for experiments, in Fisher's or
-      Neyman's style\vfill
-  \item Instrumental variables \& principal stratification  \vfill
-  \item Propensity scores and matching  \vfill
-  \item Omitted variable sensitivity analysis  \vfill
-  \end{enumerate}
-\item Students will learn to:
-\begin{enumerate} \vfill
-\item Distinguish, apply and evaluate needs for causal inference
-  assumptions flowing research design.  \vfill
-\item Perform randomization inferences for randomized trials in R,
-  including those with clustered or stratified treatment allocation
-  and/or imperfect compliance. Appropriately adapt these inference
-  strategies to observational studies, and to diagnostics including
-  covariate balance.\vfill
-\item Perform or critique statistical adjustments for
-  observational studies with the linear model and/or matching.\vfill
- \item Implement testing, estimation, and adjustment methods covered in the course using R, in replicable scripts combining R and markdown.
-\end{enumerate} \vfill
-\end{itemize} \vfill
-\vfill
-\end{frame}
-%-------------------------------------------------------------------------------------
-\section{Audience and Prerequisites}
+\section{Objectives, Audience, Prerequisites \& Materials}
 \begin{frame}[t]
 \frametitle{Audience and Prerequisites}
 \vfill
@@ -325,9 +303,27 @@
 \vfill
 \end{frame}
 %-------------------------------------------------------------------------------------
-\section{Textbooks and assignments}
 \begin{frame}[t]
-\frametitle{Audience and Prerequisites}
+\frametitle{Learning objectives}
+\vfill
+Students will learn to:
+\begin{enumerate} \vfill
+\item Distinguish, apply and evaluate needs for causal inference
+  assumptions flowing research design.  \vfill
+\item Perform randomization inferences for randomized trials in R,
+  including those with clustered or stratified treatment allocation
+  and/or imperfect compliance. Appropriately adapt these inference
+  strategies to observational studies, and to diagnostics including
+  covariate balance.\vfill
+\item Perform or critique statistical adjustments for
+  observational studies with the linear model and/or matching.\vfill
+ \item Implement testing, estimation, and adjustment methods covered in the course using R, in replicable scripts combining R and markdown.
+\end{enumerate} \vfill
+\vfill
+\end{frame}
+%-------------------------------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Textbooks and assignments}
 \vfill
 \begin{itemize} \vfill
 \item Primary textbook: \citet{rosenbaum2017} \vfill
@@ -340,13 +336,13 @@
 \end{itemize} \vfill
 \end{itemize} \vfill
 \vfill
-\end{frame}
-%-------------------------------------------------------------------------------------
-\begin{frame}
-\frametitle{References}
-\scriptsize
+\begin{block}{}
+{\scriptsize
 \bibliographystyle{chicago}
 \bibliography{bibliography}   % name your BibTeX data base
+}
+  \end{block}
 \end{frame}
+%-------------------------------------------------------------------------------------
 %---------------------------------------------------------------
 \end{document}
