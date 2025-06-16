@@ -33,14 +33,7 @@ Randomized experiments and causal inference
 
 "Lady tasting tea" experiment of @fisher1935a [p. 11]: 
 
-:::::: {.columns}
-::: {.column width="50%"}
-![fisher35text](images/fisher_lady_tasting_tea_text.png){width="80%"}
-:::
-::: {.column width="50%"}
-![statswaterdispenser](images/umstats_culligan_dispenser.jpg){width="80%"}
-:::
-::::::
+![fisher35text](images/fisher_lady_tasting_tea_text.png){width="50%"}
 
 ### Random assignment
 \fontsize{11pt}{11pt}\selectfont
