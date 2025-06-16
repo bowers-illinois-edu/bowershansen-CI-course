@@ -31,10 +31,16 @@ Randomized experiments and causal inference
 
 ### Example: Fisher's "Lady Tasting Tea"
 
-@fisher1935a [p. 11] describes
-"lady tasting tea" experiment as follows:
+"Lady tasting tea" experiment of @fisher1935a [p. 11]: 
 
-![image](images/fisher_lady_tasting_tea_text.png){width="50%"}
+:::::: {.columns}
+::: {.column width="50%"}
+![fisher35text](images/fisher_lady_tasting_tea_text.png){width="80%"}
+:::
+::: {.column width="50%"}
+![statswaterdispenser](images/umstats_culligan_dispenser.jpg){width="80%"}
+:::
+::::::
 
 ### Random assignment
 \fontsize{11pt}{11pt}\selectfont

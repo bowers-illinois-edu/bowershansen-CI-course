@@ -1,8 +1,8 @@
 ---
 title: Exercises for day 1
 author: |
-  | ICPSR 2024 Session 1
-  | Tom Leavitt \& Ben Hansen
+  | ICPSR 2025 Session 1
+  | Jake Bowers \& Ben Hansen
 date: '\today'
 pdf_document:
     keep_tex: true
