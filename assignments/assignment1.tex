@@ -4,8 +4,7 @@
 
 \title{Causal Inference Assignment 1}
 \input{../courseedition}
-\author{Due \st{Monday 6/24} Saturday 6/22\footnote{Extendable to
-    Monday by special arrangement.}}
+\author{Due  noon Saturday 6/21}
 \usepackage{../icpsr-classwork}
 
 
@@ -102,15 +101,20 @@ member of each pair.
   \begin{itemize}
  \item[f] For which of the methods does $\EE
   \big[\big(\mathbf{Z}'\mathbf{1} -\EE [\mathbf{Z}'\mathbf{1}]\big)^{2}\big] =
-  0$?\footnote{I.e., for which does
-    $\mathrm{Var}[\mathbf{Z}'\mathbf{1}] = 0$?  (In general,
-    $\mathrm{Var}[V] = \EE \big[V - \EE[V] \big]^{2} $.)}
-\item[h] For two of the three methods, algebraic principles we've seen
-  entail that
+  0$?\footnotemark[1] 
+\item[h] For two of the three methods, the linearity property of expected value%
+  \footnotemark[2]
+  entails that
   $\EE [\frac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}}] = (x_{1}
   + x_{2}+ \ldots + x_{6})/6$.  Which two are
   these, and why doesn't the argument work for the third?
 \end{itemize}
 \end{minipage}
 \end{enumerate}
+\footnotetext[1]{I.e., for which does
+    $\mathrm{Var}[\mathbf{Z}'\mathbf{1}] = 0$?  (In general,
+    $\mathrm{Var}[V] = \EE \big[V - \EE[V] \big]^{2} $.)}
+\footnotetext[2]{For constant $\alpha$ and $\beta$, $\EE(\alpha + \beta Y)
+    = \alpha + \beta \EE(X)$. Also $\EE(\alpha X + \beta Y)
+    = \alpha\EE(Y) + \beta \EE(X)$.}
 \end{document}

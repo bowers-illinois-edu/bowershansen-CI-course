@@ -504,7 +504,8 @@ For Normal-theory approximate *p*-values, the data and the strict null are combi
 - By def., $\bm{Z}^{\top}\bm{y} = \sum_{i=1}^n Z_i y_i$. So $\EE[\bm{Z}^{\top}\bm{y}] = \sum_{i=1}^n y_i \PP(Z_i=1)$. ($y$ isn't random, $Z$ is.)
 - Under complete randomization, $\PP(Z_i=1) = n_1/n$.
 - In consequence, $\EE[\bm{Z}^{\top}\bm{y}] = \sum_{i=1}^n y_i \cdot (n_1/n) = (n_1/n)\sum_{i=1}^n y_i = n_1\bar{y}$.
-- Similar algebra gives $\EE[t(\bm{Z}, \bm{y})]$, e.g. $t(\bm{Z}, \bm{y}) = \bm{Z}^{\top}\bm{y}$. (But not all $t()$.  If $t(\bm{Z}, \bm{y}) = f(\bm{Z}, \bm{y})g(\bm{Z}, \bm{y})$, linearity does **not** give $\EE[t(\bm{Z}, \bm{y})] = \EE[f(\bm{Z}, \bm{y})]\EE[g(\bm{Z}, \bm{y})]$ -- one factor has to be nonrandom.)
+- Similar analysis gives $\EE[t(\bm{Z}, \bm{y})]$ for many test statistics $t(\bm{Z}, \bm{y})$. (E.g. $t(\bm{Z}, \bm{y}) = n_1^{-1}\bm{Z}^{\top}\bm{y}$, a.k.a. treatment group mean.) Formulas for $\var_{H_0}[t(\bm{Z}, \bm{y})]$ are often available in the literature.
+ <!--(But not all $t()$.  If $t(\bm{Z}, \bm{y}) = f(\bm{Z}, \bm{y})g(\bm{Z}, \bm{y})$, linearity does **not** give $\EE[t(\bm{Z}, \bm{y})] = \EE[f(\bm{Z}, \bm{y})]\EE[g(\bm{Z}, \bm{y})]$ -- one factor has to be nonrandom.)-->
 
 \note{Now continue normal theory part of exercises}
 

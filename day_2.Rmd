@@ -1,7 +1,7 @@
 ---
 title: |
  | Randomized experiments: Potential outcome schedules
- | \& estimation of causal effects
+ | \& tests of hypotheses about non-zero effects
 bibliography:
  - 'BIB/MasterBibliography.bib'
 ---
@@ -17,6 +17,43 @@ bibliography:
     2.  Fisherian hypothesis testing, using distributions derived from random assignment as a basis the test
 
 -   Today we will introduce potential outcomes schedules, the missing ingredient to use Fisherian hypothesis testing to learn about causal effects
+
+-  First, however, let's wrap up a topic from yesterday - finding $E_{H_0}(\bm{Z}^{\top}\bm{y})$ for Fisher's test.
+
+### Recap:  $\bm{Z}^{\top}\bm{y}$ under Fisher's $H_0$, tea and dolphins examples 
+\fontsize{11pt}{11pt}\selectfont
+
+```{r fig.height=5, echo=FALSE}
+allones <- c(teatasting=4, dolphins=13)
+allzeroes <- c(teatasting=4, dolphins=17)
+n_t <- c(teatasting=4, dolphins=15)
+
+plot_dens <- function(expt){
+plot(0:n_t[expt],
+     dhyper(0:n_t[expt], m=allones[expt],
+            n=allzeroes[expt], k=n_t[expt]),
+      type="h", xlab="Test statistic", ylab="Probability",
+      main=expt)
+	    }
+
+par(mfrow=c(2,1))
+plot_dens("teatasting")
+plot_dens("dolphins")
+par(mfrow=c(1,1))
+```
+As $n$ grows -- and $\bar{Z}$, $\bar{y}$ stay away from 0 or 1 -- the histogram tends to Normality.
+
+###  Expected value of random variables {.build}
+
+For Normal-theory approximate *p*-values, the data and the strict null are combined to figure $\EE_{H_0}[\bm{Z}^{\top}\bm{y}]$ and $\var \bm{Z}^{\top}\bm{y}$.  Here we consider only the first.
+
+- In general, $\EE(aX + bY) = a\EE(X) + b\EE(Y)$.  (*Linearity* of expected value.  $X$, $Y$ don't have to be independent.)
+- By def., $\bm{Z}^{\top}\bm{y} = \sum_{i=1}^n Z_i y_i$. So $\EE[\bm{Z}^{\top}\bm{y}] = \sum_{i=1}^n y_i \PP(Z_i=1)$. ($y$ isn't random, $Z$ is.)
+- Under complete randomization, $\PP(Z_i=1) = n_1/n$.
+- In consequence, $\EE[\bm{Z}^{\top}\bm{y}] = \sum_{i=1}^n y_i \cdot (n_1/n) = (n_1/n)\sum_{i=1}^n y_i = n_1\bar{y}$.
+- Similar algebra gives $\EE_{H_0}[t(\bm{Z}, \bm{y})]$ for many test statistics $t(\cdot, \cdot)$. (E.g. $t(\bm{Z}, \bm{y}) = n_1^{-1}\bm{Z}^{\top}\bm{y}$, a.k.a. treatment group mean.) Formulas for $\var_{H_0}[t(\bm{Z}, \bm{y})]$ are often available in the literature.
+
+\note{Now open the acorn data set in Rstudio. Note that it will figure in HW.  Demonstrate calculation of $n_1$, $n$ and $\bar{y}$.}
 
 # Potential Outcomes
 
@@ -135,7 +172,7 @@ bibliography:
             \end{array}
           \right.$$
 
--   Definition: \bh{Potential Outcomes}  (assuming "SUTVA")
+-   Definition: \bh{Potential Outcomes}  (assuming no "interference")
 
 -   $y_i(1)$ or $y_i(0)$: Fixed value of the outcome for unit $i$ if it
     were to receive treatment or control
@@ -154,7 +191,7 @@ bibliography:
     \tau_i & = & y_i(1) - y_i(0)
     \end{aligned}$$
 
-    (Again, assumes "SUTVA").
+    (Again, assumes no interference).
     
 -   Other functions of of individual potential outcomes possible, e.g.,
     $\dfrac{y_i(1)}{y_i(0)}$
@@ -209,19 +246,15 @@ $$\begin{aligned}
 -   Intuitively, a listing of how each unit would respond to any
     $\bm{z} \in \left\{0, 1\right\}^N$
 
--   We often consider potential outcome schedules that satisfy Stable
+-   We often consider p.o. schedules that satisfy _no interference_ [@cox1958a]: $y_i(\bm{z})$ is determined by $z_i$ alone; what's allocated to any other unit has no bearing. (For distinct allocations $\bm{z}$, $\bm{z}'$, $y_i(\bm{z}) = y_i(\bm{z}')$ provided only that $z_i = z_i'$.) 
+
+-   The Stable
     Unit Treatment Value Assumption (SUTVA)
-    [@rubin1980b; @rubin1986]
+    [@rubin1980b; @rubin1986] is stronger. It says:
 
--   SUTVA means that
+    1.  There is no interference.
 
-    1.  Units in experiment respond to only treatment condition to which
-        each unit is individually assigned (no "interference"; @cox1958a)
-
-    2.  Treatment condition is actually the same treatment for all units
-        assigned to treatment and control condition is the same for all
-        units assigned to control
-
+    2.  Our conceptualization of "treatment" and "control" is s.t. there is no more than one version of the treatment condition, and no more than one version of the control condition. 
 
 
 ### Potential outcome schedules
@@ -238,8 +271,8 @@ $$\begin{aligned}
         or $y_i(0)$.
     -   $\rightarrow$ summarize $2^n$ p.o. schedules w/ one $n \times 2$ table, as done above for the Village heads study
 
-### SUTVA 
-\fontsize{8pt}{8pt}\selectfont
+### No interference
+\fontsize{8pt}{7pt}\selectfont
 
 -   Both no discrimination and perfect discrimination satisfy SUTVA
 
@@ -401,7 +434,7 @@ $$\begin{aligned}
     1 & 1  
     \end{tabular}
 \end{table}
-
+\note{Now break \& do rest of day 1 worksheet}
 
 # Tests of general sharp null hypotheses
 
@@ -441,7 +474,7 @@ $$\begin{aligned}
     -   E.g., Diff-in-Means
         $t\left(\bm{z}, \bm{y}\right) = n_T^{-1} \bm{z}^{\top}\bm{y} - n_C^{-1} \left(1 - \bm{z}\right)^{\top} \bm{y}$
 
-    -   \mh{Note this test-stat is not same as one in Fisher's "Lady
+    -   \mh{Note this test-stat is not same as the one in Fisher's "Lady
         Tasting Tea", $\bm{z}^{\top}\bm{y}$}
 
 -   Finally, calculate p-value
