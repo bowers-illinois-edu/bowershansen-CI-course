@@ -1,25 +1,157 @@
 ---
 title: |
- | Uncertainty, consistency 
- | \& hypothesis testing
+ | Neyman's way: differences of means to
+ | infer average causal effects
 bibliography:
  - 'BIB/MasterBibliography.bib'
 ---
 
-::: frame
+# Difference-in-Means estimator
+
+### Review: setup for randomized experiments
+\fontsize{12pt}{11pt}\selectfont
+
+-   Units: $i = 1, \ldots, N$
+
+-   Treatment: $Z_i = 0$ or $Z_i = 1$ is randomly assigned
+
+-   Potential outcomes: $y_i(0)$ and $y_i(1)$
+
+-   Observed outcome: $Y_i = Z_i y_i(1) + (1 - Z_i) y_i(0)$
+
+-   Treatment Assignment Mechanism
+
+-   \(1\) \mh{Bernoulli (simple) randomization}: Each unit is independently assigned to treatment with
+    probability $p$
+
+-   \(2\) \mh{Complete randomization}: Exactly $n_1$ units are treated and $N - n_1 = n_0$ units
+    are untreated
+
+-   \(3\) In practice, we can treat (1)'s as (2)'s, by
+    conditioning on $\{\sum_{i=1}^{N} Z_i = \sum_{i=1}^{N} z_i\}$ (fixing $n_1$ at its observed value)
+
+-   Under complete or simple (conditioning on observed $n_1$)
+    randomization
+    $$\mathop{\mathrm{\rm{E}}}\left[Z_i\right] = \dfrac{n_1}{N}$$
+
+-   Today's discussion (& Neyman-type c.i. in general) assumes no interference. 
+
+### Jerzy Neyman (b. 1891, Moldova; d. 1981, California)
+\fontsize{11pt}{11pt}\selectfont
+
+:::::: {.columns}
+::: {.column width="30%"}
+```{asis, echo=!handout_}
+![neyman_offering_a_toast](images/neyman_offering_a_toast.jpg)
+```
 :::
-
-# Variance of Difference-in-Means
-
-::: frame
-### Variance of Difference-in-Means estimator
-
--   Yesterday we showed that an example based on the village
-    heads study, the Difference-in-Means estimator is distributed as\
-    ![image](images/cra_est_dist_plot.pdf){width="0.75\\linewidth"}
-    
--   \pause What is the variance of this estimator? \pause (And why do we care?)
+::: {.column width="70%"}
+"Neyman and Fisher disagreed vehemently.... Neyman was also the opposite to Fisher in his political viewpoints.... He was fiercely against discrimination.... In 1941 at UC Berkeley he hired women... In 1942, Neyman examined the possibility of hiring David Blackwell, a Black statistician....
 :::
+::::::
+
+> He is able to get Blackwell to Berkeley in 1953 as a visiting professor, and offers him a tenured job in 1954, making David Blackwell the first tenured faculty member....
+\pause 
+> He wrote a letter to his friend Harald Cramér that \mh{he believed Martin Luther King, Jr. deserved a Nobel Peace Prize} (which Cramér forwarded to the chairman of the Nobel Committee, and which he believed \mh{might have contributed} [to King's winning the prize])" (D. Lakens, 2021)
+
+\note{(From Daniel Lakens blog post of Sept 20, 2021, ``Jerzy Neyman: A Positive Role Model in the History of Frequentist Statistics.''}
+
+## (Un)bias of Difference-in-Means in simply randomized designs 
+
+###  Unbiasedness of Difference-in-Means: Proof
+\fontsize{10pt}{10pt}\selectfont
+
+-  \mh{Difference-in-Means estimator} $$\begin{aligned}
+          \hat{\tau}\left(\bm{Z}, \bm{Y}\right) & = n_1^{-1} \bm{Z}^{\top} \bm{Y} - n_0^{-1} \left(\bm{1} - \bm{Z}\right)^{\top}\bm{Y} \\ 
+          & = \frac{1}{n_1} \sum_{i=1}^N Z_i Y_i - \frac{1}{n_0} \sum_{i = 1}^N (1 - Z_i) Y_i
+    \end{aligned}$$
+
+-   \mh{Unbiased} for the ATE under complete randomization \pause
+
+-   $$\begin{aligned}
+            \hspace{-0.4in} \mathop{\mathrm{\rm{E}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] & = \mathop{\mathrm{\rm{E}}}\left[\frac{1}{n_1} \sum_{i=1}^N Z_i Y_i - \frac{1}{n_0} \sum_{i = 1}^N (1 - Z_i) Y_i\right]\\
+            \hspace{-0.4in} & =  \frac{1}{n_1} \sum_{i=1}^N \mathop{\mathrm{\rm{E}}}\left[Z_i Y_i\right]
+                                  - \frac{1}{n_0} \sum_{i=1}^N \mathop{\mathrm{\rm{E}}}\left[(1 - Z_i) Y_i\right] \hspace{0.1in}
+                                  \mbox{($\because$ Linearity of $\mathop{\mathrm{\rm{E}}}$)}\\ 
+            \hspace{-0.4in} & =  \frac{1}{n_1} \sum_{i=1}^N \mathop{\mathrm{\rm{E}}}\left[Z_i y_i(1)\right]
+                                  - \frac{1}{n_0} \sum_{i=1}^N \mathop{\mathrm{\rm{E}}}\left[(1 - Z_i) y_i(0) \right] \hspace{0.1in}
+                                  \mbox{($\because$ Definition of POs)}\\ 
+            \hspace{-0.4in} & =  \frac{1}{n_1} \sum_{i=1}^N y_i(1) \mathop{\mathrm{\rm{E}}}\left[Z_i\right]
+                                  - \frac{1}{n_0} \sum_{i=1}^N y_i(0) \mathop{\mathrm{\rm{E}}}\left[1 - Z_i\right] \hspace{0.1in}
+                                  \mbox{($\because$ POs are fixed)}\\ 
+             \hspace{-0.4in} & =  \frac{1}{n_1} \sum_{i=1}^N y_i(1) \left(\frac{n_1}{N}\right)
+                                  - \frac{1}{n_0} \sum_{i=1}^N y_i(0) \left(\frac{n_0}{N}\right) \hspace{0.1in}
+                                  \mbox{($\because$ complete randomization)}\\ 
+              \hspace{-0.4in} & =  \frac{1}{N} \sum_{i=1}^N y_i(1)
+                                  - \frac{1}{N} \sum_{i=1}^N y_i(0)
+    \end{aligned}$$
+
+
+###  Unbiasedness of Difference-in-Means: Example
+
+::::::{.columns}
+:::{.column width="47%"}
+  $\bm{z}_1$   $\bm{y}(\bm{0})$   $\bm{y}(\bm{1})$   $\bm{y}_1$
+  ------------ ------------------ ------------------ ------------
+  1            ?                  15                 15
+  1            ?                  15                 15
+  0            20                 ?                  20
+  0            20                 ?                  20
+  0            10                 ?                  10
+  0            15                 ?                  15
+  0            15                 ?                  15
+:::
+::: {.column width="6%"}
+\vspace{.35\textheight}
+\ldots
+:::
+::: {.column width="47\%"}
+  $\bm{z}_{21}$   $\bm{y}(\bm{0})$   $\bm{y}(\bm{1})$   $\bm{y}_{21}$
+  --------------- ------------------ ------------------ ---------------
+  0               10                 ?                  10
+  0               15                 ?                  15
+  0               20                 ?                  20
+  0               20                 ?                  20
+  0               10                 ?                  10
+  1               ?                  15                 15
+  1               ?                  30                 30
+:::
+::::::
+
+-   Random vectors $\bm{Z}$ and $\bm{Y}$ can take on any
+    $\left(\bm{z}_1, \bm{y}_1\right), \cdots , \left(\bm{z}_{21}, \bm{y}_{21}\right)$
+
+-   Applying Diff-in-Means estimator to all $21$ possible realizations
+    of data $\implies$ $21$ estimates:
+    $\hat{\tau}\left(\bm{z}_1, \bm{y}_1\right) = -1$, $\hat{\tau}\left(\bm{z}_2, \bm{y}_2\right) = 7.5$,\ldots $\hat{\tau}\left(\bm{z}_{21}, \bm{y}_{21}\right) = 7.5$.
+
+### Example cont'd
+
+-   Expected value of Diff-in-Means estimator:
+    $$\mathop{\mathrm{\rm{E}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \hat{\tau}\left(\bm{z}_1, \bm{y}_1\right)\Pr\left(\bm{Z} = \bm{z}_1\right) + \ldots + \hat{\tau}\left(\bm{z}_{21}, \bm{y}_{21}\right)\Pr\left(\bm{Z} = \bm{z}_{21}\right)$$
+
+-   So, in "village heads" example
+    $$\mathop{\mathrm{\rm{E}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = (-1) \left(1/21\right) + (7.5) \left(1/21\right) + \ldots + (7.5) \left(1/21\right) = 5$$
+    Which happens to be the ACE, $\frac{1}{7}\sum_{i=1}^7 [y_i(1) - y_i(0)]$.
+
+###  Unbiasedness of Difference-in-Means: Example
+
+-   Diff-in-Means estimator under complete random assignment
+
+-   ![Difference-in-Means estimator in "Village heads"
+    example](images/cra_est_dist_plot.pdf){width="\\linewidth"}
+
+###  Next steps
+
+-   What happens when the size of our experiment grows large?
+
+-   Consistency of Difference-in-Means estimator for ATE
+
+-   Asymptotic validity of hypothesis tests about ATE
+
+
+
+## Variance of Difference-in-Means
 
 ### Variance of Difference-in-Means estimator {.build}
 
@@ -116,7 +248,7 @@ ${\color{magenta}{S_{\tau}}}$ depend on unknown potential outcomes
     $\mathop{\mathrm{\rm{Var}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]$
 :::
 
-# Variance estimation
+## Variance estimation
 
 ::: frame
 ### Variance estimation
@@ -151,6 +283,7 @@ $$\mathop{\mathrm{\rm{Var}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] =
 
 ::: frame
 ### Conservative variance estimator
+\fontsize{11pt}{11pt}\selectfont
 
 $$\mathop{\mathrm{\rm{Var}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{1}{N - 1}\left(\frac{n_1 {\color{blue}{\sigma^2_{\bm{y}(\bm{0})}}}}{n_0} + \frac{n_0 {\color{blue}{\sigma^2_{\bm{y}(\bm{1})}}}}{n_1} + 2{\color{magenta}{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}}\right)$$
 
@@ -173,9 +306,6 @@ $$\mathop{\mathrm{\rm{Var}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] =
     ${\color{blue}{\sigma^2_{\bm{y}(\bm{0})}}}$ and
     ${\color{blue}{\sigma^2_{\bm{y}(\bm{1})}}}$
     $$\widehat{\mathop{\mathrm{\rm{Var}}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{N}{N - 1}\left(\frac{\hat{\sigma}^2_{\bm{y}(\bm{0})}}{n_0} + \frac{\hat{\sigma}^2_{\bm{y}(\bm{1})}}{n_1} \right)$$
-
--   For exact expressions of $\hat{\sigma}^2_{\bm{y}(\bm{0})}$ and
-    $\hat{\sigma}^2_{\bm{y}(\bm{1})}$, see [](#Variance estimators)
 :::
 
 ::: frame
@@ -192,7 +322,9 @@ $$\mathop{\mathrm{\rm{Var}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] =
     i.e. $\mathop{\mathrm{\rm{E}}}\left[\widehat{\mathop{\mathrm{\rm{Var}}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]\right]$
 :::
 
-# Asymptotic properties
+# Differences of means in large samples
+
+## Asymptotic properties
 
 ::: frame
 Asymptotics
@@ -219,7 +351,7 @@ Asymptotics
     fixed, but large $N$
 :::
 
-# Consistent estimation
+## Consistent estimation
 
 ::: frame
 ### Consistent estimation
@@ -248,7 +380,7 @@ Asymptotics
     ![image](images/asymp_ests_plot.pdf){width="\\linewidth"}
 :::
 
-# Hypothesis testing
+## Hypothesis testing
 
 ::: frame
 Hypothesis tests of the weak null
@@ -357,8 +489,8 @@ Consider two-sided confidence interval, $\mathcal{C}_t$: $$\begin{split}
 \end{split}$$
 :::
 
-::: frame
-### Appendix: Estimator of Difference-in-Means estimator's variance
+<!-- ::: frame
+     ### Appendix: Estimator of Difference-in-Means estimator's variance
 
 Neyman's conservative estimator of the Difference-in-Means estimator's
 variance is
@@ -369,5 +501,5 @@ where $$\begin{aligned}
 \hat{\mu}_{\bm{y}(\bm{0})} & = \left(\frac{1}{n_0}\right) \sum \limits_{i = 1}^N \left(1 - Z_i\right)y_i(0) \\
 \hat{\mu}_{\bm{y}(\bm{1})} & = \left(\frac{1}{n_1}\right) Z_i y_i(1)
 \end{aligned}$$
-:::
-
+    :::
+--> 
