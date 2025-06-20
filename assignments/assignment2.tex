@@ -1,10 +1,10 @@
 \documentclass{article}
 \usepackage{natbib}
+\usepackage{soul}
 \usepackage{wrapfig}
 \title{Assignment 2}
-\input{courseedition}
-\author{Due Mon July 1}
-
+\input{../courseedition}
+\author{Due noon Saturday 6/28}
 \usepackage{../icpsr-classwork}
 
 \begin{document}
@@ -27,7 +27,7 @@ The table at right comes from Albertson and Lawrence's (2009, \textit{Amer. Pol.
 \end{itemize}
 
 \end{minipage}
-\vspace{4ex}
+\vspace{2ex}
 
 \begin{enumerate}
 \item \label{item:1}Assuming (for this question) that the IV assumptions are
@@ -55,21 +55,22 @@ The table at right comes from Albertson and Lawrence's (2009, \textit{Amer. Pol.
      \begin{enumerate}
 
   \item Despite proper use of random assignment procedures during Round 1, the
-	  possibility that, for many individuals, $r_{T}=1$ (would respond if
-	  assigned treatment) while $r_{C}=0$ (would not respond if assigned
-	  control) poses a threat to inference among \textit{Round 2}
-	  respondents. We can see that the total number of valid observations
-	  for Table 3 and Table 4 differ somewhat from the total number of
-	  those assigned to treatment and control. The authors do not drop
-	  observations based on missing covariates (as they explain in a
-	  footnote about using dummy variables for missingness on covariates).
-	  So, these differences in numbers reflect missing outcomes rather than
-	  a simple average of unobserved potential outcomes. Explain why. (It
-	  might help to think about how the ITT is defined as a difference
-	  between average potential outcomes among those assigned treatment
-	  versus among those assigned control, and how  "Always-Reporters" and
-	  "If Treated Reporters" might differ from each other in regards
-	  potential outcomes.)
+       possibility that, for many individuals, $r_{T}=1$ (would respond if
+               assigned treatment) while $r_{C}=0$ (would not respond if
+               assigned control) poses a threat to inference among
+               \textit{Round 2} respondents. We can see that the total number
+               of valid observations for Table 3 and Table 4 differ somewhat
+               from the total number of those assigned to treatment and
+               control. The authors do not drop observations based on missing
+               covariates (as they explain in a footnote about using dummy
+               variables for missingness on covariates). So, these differences
+               in numbers reflect missing outcomes rather than a simple average
+               of unobserved potential outcomes. Explain why. (It might help to
+               think about how the ITT is defined as a difference between
+               average potential outcomes among those assigned treatment versus
+               among those assigned control, and how  "Always-Reporters" and
+               "If Treated Reporters" might differ from each other in regards
+               potential outcomes.)
 
   \item Conversely, explain how for a study population of Round 2 respondents,
        random assignment at round 1 plus the additional assumption that $r_{Ti}

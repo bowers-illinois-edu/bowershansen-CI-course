@@ -1,8 +1,8 @@
 %\usepackage{tgtermes}
 \usepackage{amsmath,parskip,url,fancyvrb,graphicx,float,ulem}
-\usepackage[letterpaper,bottom=.75in,top=.75in,right=.75in,left=.5in,includemp=FALSE]{geometry}
+\usepackage[letterpaper,bottom=.5in,top=.75in,right=.75in,left=.5in,includemp=FALSE]{geometry}
 \usepackage{textcomp} % helps pdflatex recognize/format backticks and
-                      % single quotes, at least after using Sweave to generate .tex file 
+                      % single quotes, at least after using Sweave to generate .tex file
 %\usepackage{sometexdefs} Instead these defs below to make package self-contained
 
 \setcounter{secnumdepth}{0}
@@ -13,7 +13,7 @@
 % \titleformat{\subsubsection}[leftmargin]{\footnotesize\filleft}{\thesubsubsection}{.5em}{}{}
 \titleformat{\subsubsection}[hang]{\small\raggedright\bfseries}{\thesubsubsection}{.5em}{\hspace{0in}}[\vspace{-.2\baselineskip}]
 \titleformat{\paragraph}[runin]{\itshape}{\theparagraph}{1ex}{}{\vspace{-.5\baselineskip}}
-% \titlespacing{\subsubsection}{6pc}{1.5ex plus .1ex minus .2ex}{1pc} 
+% \titlespacing{\subsubsection}{6pc}{1.5ex plus .1ex minus .2ex}{1pc}
 
 
 
@@ -38,7 +38,7 @@
 \makeatother
 
 \usepackage{fancyhdr}
-% \renewcommand{\sectionmark}[1]{\markright{#1}{}}  
+% \renewcommand{\sectionmark}[1]{\markright{#1}{}}
 \fancypagestyle{myfancy}{%
   \fancyhf{}
   % \fancyhead[R]{\small{Page~\thepage}}
@@ -67,7 +67,7 @@
 \renewcommand\floatpagefraction{.9}
 \renewcommand\topfraction{.9}
 \renewcommand\bottomfraction{.9}
-\renewcommand\textfraction{.1}   
+\renewcommand\textfraction{.1}
 \setcounter{totalnumber}{50}
 \setcounter{topnumber}{50}
 \setcounter{bottomnumber}{50}
@@ -75,14 +75,14 @@
 \setlength{\floatsep}{2ex}
 \setlength{\textfloatsep}{2ex}
 
-% \DefineShortVerb{\+} 
+% \DefineShortVerb{\+}
 % \usepackage{comment}
 % \specialcomment{com}{\begingroup\sffamily\small}{\endgroup}
 % \excludecomment{com}
 
 \usepackage{versions}
 \makeatletter
-\renewcommand*\versionmessage[2]{\typeout{*** `#1' #2. ***}} 
+\renewcommand*\versionmessage[2]{\typeout{*** `#1' #2. ***}}
 %\renewcommand*\beginmarkversion{\@Vs@sffbox{\@currenvir$>$}\sffamily}
 %\renewcommand*\endmarkversion{\@Vs@sffbox{$<$\@currenvir}}
 \renewcommand*\beginmarkversion{\sffamily}
@@ -130,9 +130,9 @@
 \def\newblock{\hskip .11em plus .33em minus .07em}
 
 
-\newcommand{\pr}{\text{Pr}}                                                                            
-\newcommand{\rank}{\text{rank}}                                                                            
-          
+\newcommand{\pr}{\text{Pr}}
+\newcommand{\rank}{\text{rank}}
+
 \newcommand{\Dt}{\Delta t}
 \newcommand{\by}{\mathbf{y}}
 \newcommand{\bY}{\mathbf{Y}}
