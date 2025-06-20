@@ -1,0 +1,418 @@
+---
+title: Covariance adjustment in randomized experiments
+bibliography:
+ - 'BIB/MasterBibliography.bib'
+---
+
+### Covariance adjustment in randomized experiments {.build}
+
+- We often have information contained in baseline covariates
+
+  - I.e., variables measured **before** treatment assignment
+
+- The uninitiated may think it necessary to adjust, or "control," for likely causes or proxies of causes of the outcome, in order to limit bias.  We know better.[^1] 
+
+- Rather, we use covariates to increase
+
+  1.  Precision of estimators
+
+  2.  Power of tests
+
+  We will need these covariates to associate with the POs[^2].
+
+[^1]: Given a randomized experiment, we have unbiased estimation, exact p-values w/o controlling for anything.
+[^2]: That is, $\bm{y}(1)$ and/or $\bm{y}(0)$.
+
+### Covariance adjustment in randomized experiments
+
+- Two primary approaches to covariate adjustment
+
+  1.  Random assignment within blocks of units similar in covariates
+
+  2.  Analyze gains (pre-post differences/residualized or "rescaled" outcomes) to make $y$-variances smaller
+
+
+# Block random assignment
+
+### Block random assignment
+
+- Construct blocks of units similar in baseline covariates related to
+  POs
+
+- By blocking we reduce number of possible assignments
+
+  - Goal is to exclude assignments yielding estimates far from truth\
+    so that estimator will be closer to truth, on average
+
+
+### Block random assignment: Example
+\fontsize{11pt}{11pt}\selectfont
+
+\mh{Example}: Experiment with $N = 6$ units, $n_1 = 3$ and $n_0= 3$
+
+  $\bm{y}(\bm{0})$   $\bm{y}(\bm{0})$   $\bm{\tau}$   $\bm{x}$
+  ------------------ ------------------ ------------- ----------
+  20                 22                 2             1
+  8                  12                 4             1
+  11                 11                 0             0
+  10                 15                 5             1
+  14                 18                 4             1
+  1                  4                  3             0
+
+\begin{center}\small\emph{True values of $\bm{y}(\bm{0})$, $\bm{y}(\bm{0})$, $\bm{\tau}$ and  baseline covariate $\bm{x}$}\end{center}
+
+
+Stratify on $\bm{x}$ and assign half of units to treatment within strata
+
+In this case, instead of $\binom{6}{3} = 20$ assignments, we have
+$\prod \limits_{b = 1}^B \binom{N_b}{n_{1,b}} = 12$ assignments, where
+$b = 1, \ldots , B$ indexes the blocks
+
+
+### Block random assignment: Example
+
+- Set of assignments under block random assignment
+
+- Units with \mh{$x_i = 1$}; units with \bh{$x_i = 0$}
+
+$$\Omega =
+\left\{
+\begin{bmatrix} {\mh{1}} \\ {\mh{1}} \\ {\bh{1}} \\ {\mh{0}} \\ {\mh{0}} \\ {\bh{0}} \end{bmatrix},
+\begin{bmatrix} {\mh{1}} \\ {\mh{1}} \\ {\bh{0}} \\ {\mh{0}} \\ {\mh{0}} \\ {\bh{1}} \end{bmatrix},
+\begin{bmatrix} {\mh{1}} \\ {\mh{0}} \\ {\bh{1}} \\ {\mh{1}} \\ {\mh{0}} \\ {\bh{0}} \end{bmatrix},
+\begin{bmatrix} {\mh{1}} \\ {\mh{0}} \\ {\bh{1}} \\ {\mh{0}} \\ {\mh{1}} \\ {\bh{0}} \end{bmatrix},
+\begin{bmatrix} {\mh{1}} \\ {\mh{0}} \\ {\bh{0}} \\ {\mh{1}} \\ {\mh{0}} \\ {\bh{1}} \end{bmatrix},
+\begin{bmatrix} {\mh{1}} \\ {\mh{0}} \\ {\bh{0}} \\ {\mh{0}} \\ {\mh{1}} \\ {\bh{1}} \end{bmatrix},
+\begin{bmatrix} {\mh{0}} \\ {\mh{1}} \\ {\bh{1}} \\ {\mh{1}} \\ {\mh{0}} \\ {\bh{0}} \end{bmatrix},
+\begin{bmatrix} {\mh{0}} \\ {\mh{1}} \\ {\bh{1}} \\ {\mh{0}} \\ {\mh{1}} \\ {\bh{0}} \end{bmatrix},
+\begin{bmatrix} {\mh{0}} \\ {\mh{1}} \\ {\bh{0}} \\ {\mh{1}} \\ {\mh{0}} \\ {\bh{1}} \end{bmatrix},
+\begin{bmatrix} {\mh{0}} \\ {\mh{1}} \\ {\bh{0}} \\ {\mh{0}} \\ {\mh{1}} \\ {\bh{1}} \end{bmatrix},
+\begin{bmatrix} {\mh{0}} \\ {\mh{0}} \\ {\bh{1}} \\ {\mh{1}} \\ {\mh{1}} \\ {\bh{0}} \end{bmatrix},
+\begin{bmatrix} {\mh{0}} \\ {\mh{0}} \\ {\bh{0}} \\ {\mh{1}} \\ {\mh{1}} \\ {\bh{1}} \end{bmatrix}
+\right\}.
+\label{eq: example block omega}$$
+
+- Only $12$ assignments (instead of 20) because half of units w/
+  ${\mh{x_i = 1}}$ treated and half of units w/
+  ${\bh{x_i = 0}}$ treated
+
+### Block random assignment: Example
+
+![Difference-in-Means distribution under unblocked and blocked
+assignment](images/blocked_assign_plot.jpg){width="\\linewidth"}
+
+\begin{center}\small\emph{Difference-in-Means distribution under unblocked and blocked assignment}\end{center}
+
+# Fisher-type analysis with elaborations including covariates
+
+## Fisher randomization $t(\bm{z}, \bm{y})$'s beyond diff-of-means
+
+### Background: permutation tests vs parametric tests
+
+To compare 2 (or more) groups, one chooses between permutation and
+parametric tests. E.g., `fisher.test()` vs. `chisq.test()`.
+
+- both begin by computing a test statistic
+
+- they differ in terms of what they compare the statistic to in order to
+  get a p-value
+
+- parametric tests posit a model for $Y| \mathrm{group}$
+
+- W/ random assignment, permutation tests don't have to assume any model
+  for $Y| \mathrm{group}$.
+
+- However, hunches about $Y| \mathrm{group}$ are sometimes used to
+  select the test statistic.
+
+\note{Example for test statistic point: $Y| G=g \sim \mathcal{N}(\mu_{g}, \sigma^{2})
+  \Rightarrow $ $t(\mathbf{z}, \mathbf{y}) =$ difference of means statistic; $Y| G=g \sim \mathrm{Logistic}(\mu_{g}, s)
+  \Rightarrow $ $t(\mathbf{z}, \mathbf{y}) =$  rank sum statistic.}
+
+### Background: non-Normality robustness; choice of $t(\mathbf{z}, \mathbf{y})$
+
+Stepping back from causal inference specifically,
+consider the model
+$$Y = \mu + Z\tau + \epsilon,\, \mathbf{E}(\epsilon) = 0.$$
+
+Suppose the goal is to test the hypothesis that $\tau = 0$.
+
+- If $\epsilon \sim \mathcal{N}(0, \sigma^{2})$, some $\sigma >0$,
+  regardless of whether $Z=1$ or 0, the difference of means is optimal
+  as an estimator of $\tau$. By extension, using diff-of-means
+  as test stat is favorable for power.
+
+- True both for parametric tests (t-test) and permutation tests.
+
+- If $\epsilon$ follows some other distribution, parametric $t$-test's
+  $\alpha$ level is only approximate. (To fix, use permutation
+  $t$-test.)
+
+- For *both* versions, power suffers. ($\bar{Y}$ reacts so strongly to
+  outliers unrelated to treatment that $\mu$ becomes hard to see.)
+
+- To fix, select a test statistic with built-in outlier protection ---
+  e.g. difference of *medians*.
+
+
+## Models of effects
+
+### A simple model of effects for the Acorn GOTV experiment
+
+One simple model is that the GOTV campaign increases voter turnout by
+$p$ percentage points per precinct.
+
+::: center
+               GOTV?   vote03(%)    $y_c$    $y_t$
+  ---------- ------- ----------- -------- --------
+           1       0          38       38   $38+p$
+    $\vdots$                              
+          13       0          19       19   $19+p$
+          14       0          34       34   $34+p$
+          15       1          49   $49-p$       49
+          16       1          38   $38-p$       38
+    $\vdots$                              
+          28       1          29   $29-p$       29
+:::
+
+The family of $H_0$s, w/ arbitrary $p$, is a *model of effects*.
+
+### Testing simple models other than the no-effect model
+
+\begin{columns}
+\begin{column}{.4\linewidth}
+\begin{itemize}
+\item At right: 3 models/hypotheses
+\item You can decide how to test:
+  \begin{itemize}
+  \item $t(\cdot, \cdot)$
+  \item one-sided or 2? 
+  \item \ldots
+  \end{itemize}
+\item Relative to the model that assignment to GOTV increases turnout by
+  $p$, and to designated $t(\cdot, \cdot)$ ---  
+\end{itemize}
+\end{column}
+\begin{column}{.6\linewidth}    
+{\small
+\addtolength{\tabcolsep}{-.2mm} 
+  \begin{tabular}{r|rr|rr|rrr}
+  \hline
+  &       &                           &           &         &
+                                                              \multicolumn{3}{c}{$\tilde{y}_{h}$, given $p=$} \\
+ & $z$ & $y_{\mathrm{obs}}$ & $y_C$ & $y_T$ & $-10$\% & 0\% & 10\% \\
+  \hline
+1 & 0 & 38 & 38 & $38+p$ & 38 & 38 & 38\\
+$\vdots$& & & & & &  &\\
+13 & 0 & 19 & 19& $19+p$ & 19 & 19 & 19\\
+14 & 0 & 34 & 34& $34+p$& 34 & 34 & 34 \\
+15 & 1 & 49 & $49-p$& 49 & 59 & 49 & 39 \\
+16 & 1 & 38 & $38-p$& 38 & 48 & 38 & 28 \\
+$\vdots$& & & & & & &\\
+28 & 1 & 29 & $29-p$& 29 & 39 & 29 & 19 \\
+   \hline
+\end{tabular}
+}
+\end{column}
+\end{columns}
+  \vfill 
+\begin{quote}
+$1-\alpha$ confidence set for $p$ $\equiv $ \{$p$: $H_{p}$ not rejected at
+  level $\alpha$\} .  
+\end{quote}
+
+### A more nuanced model for the Acorn GOTV experiment
+
+Recall that a *response schedule* is a complete specification of
+unit-level responses to the experiment under every possible random
+assigment.
+
+It's often more natural to hypothesize only about how treated units
+would have responded to control, not also how controls would have
+responded to treatment. For example, here are 3 competing models of the
+effects of the Acorn GOTV campaign:
+
+- says there was no effect (`RS0`)
+
+- says the GOTV campaign generated 1 vote for every 10 contacts (`RS1`)
+
+- says the GOTV campaign generated 1 vote for every 5 contacts (`RS2`)
+
+Note that these models don't specify $y_{t}$ for precincts we only got
+to observe under control, $z=0$ --- they leave "blanks" in the potential
+schedule. That's OK.
+
+\note{Demo construction of $\tilde{y}$ w/ acorn dataset.}
+
+## Randomization tests with covariance adjustment
+
+### Randomization tests incorporating covariance adjustment
+
+Given $t(\cdot, \cdot)$ and a m.o.e., under corresponding $H_{0}$ we can
+calculate $t(\bm{z}', \tilde{\bm{y}}_{h})$, each $\bm{z}' \in \Omega$.
+That's how we can calculate or approximate the Fisherian p-value
+
+$$\Pr\left(t\left(\bm{Z},\tilde{\bm{y}}_{h}\right) \geq t^{\text{obs}}\right) = \sum \limits_{\bm{z}\in \Omega} \mathbbm{1}\left\{t\left(\bm{z}, \tilde{\bm{y}}_{h}\right) \geq t^{\text{obs}}\right\} \Pr\left(\bm{Z} = \bm{z}\right)$$
+
+Suppose $t(\cdot)$ also depend on variables $\bm{x}_{(1)}$, ...,
+$\bm{x}_{(k)}$. Provided they're not affected by treatment assignment,
+for each $\bm{z}' \in \Omega$ we may determine
+$t(\bm{z}', \tilde{\bm{y}}_{h}, \bm{x})$. So we can
+calculate/approximate p-values
+$\Pr\left(t\left(\bm{Z},\tilde{\bm{y}}_{h}, \bm{x}\right) \geq t^{\text{obs}}\right)$.
+
+Examples:
+
+- $z$-coefficient from `lm(y ~z + x)`
+
+- $t$-statistic reported for above coeff.
+
+- $z$-coefficient from `lm(y ~z + z:x)`
+
+- $z$-coef. from `glm(y ~z + x, family=binomial)`
+
+
+
+# Neyman-type analysis with covariates
+
+## pre-post gain outcomes
+
+### Pre-post gains & other residualized outcomes
+
+- Variance of Diff-in-Means
+  $$\mathop{\mathrm{\rm{Var}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{1}{N - 1}\left(\frac{n_1 {\mh{\sigma^2_{\bm{y}(\bm{0})}}}}{n_0} + \frac{n_0{\mh{\sigma^2_{\bm{y}(\bm{1})}}}}{n_1} + 2{\mh{\sigma_{\bm{y}(\bm{0}), \bm{y}(\bm{1})}}}\right)$$
+
+- Can we substitute a transformed ("rescaled") outcome s.t.
+  ${\mh{\sigma^2_{\bm{y}(\bm{0})}}}$ and
+  ${\mh{\sigma^2_{\bm{y}(\bm{1})}}}$ are smaller, while $\EE$(Diff-in-Means) is unchanged?
+
+- Transformation should not alter individual treatment effects
+  $$\begin{aligned}
+  y_{i}(1) - f(\bm{x}_i) - \left[y_{i}(0) - f(\bm{x}_i)\right] & = y_{i}(1) - f(\bm{x}_i) - y_{i}(0) + f(\bm{x}_i) \\ 
+  & = y_{i}(1) - y_{i}(0) \\ 
+  & = \tau_i,
+  \end{aligned}$$ where $f(\cdot)$ is function that predicts outcome
+  from $\bm{x}_i \in \mathop{\mathrm{\mathbb{R}}}^K$\
+  [@rosenbaum2002c]
+
+- If $f(\cdot)$ is prediction from a regression, we suppose it was fit to historical data or a set-aside sample.
+
+### Residualized outcomes
+
+- \mh{Example}: Acorn GOTV experiment
+  [@arceneaux2005]
+
+::: {.center}
+                  GOTV?   vote03 (%)   vote03 - vote02 (%)
+  ---------- ---------- ------------ ---------------------
+           1          0           38                   -36
+    $\vdots$   $\vdots$     $\vdots$              $\vdots$
+          13          0           19                   -38
+          14          0           34                   -27
+          15          1           49                   -25
+          16          1           38                   -28
+    $\vdots$   $\vdots$     $\vdots$ 
+          28          1           29                   -32
+:::
+
+Conduct analysis on pre-post gain outcome, vote03 - vote02 (%)
+
+
+### Residualized outcomes
+
+![Difference-in-Means under sharp null on original and gain
+outcomes](images/null_dist_mean_diff_vs_mean_gain_diff.jpg){width=".8\\linewidth"}
+
+\begin{center}\small\emph{Difference-in-Means under sharp null on original and pre-post gain outcomes}\end{center}
+
+## Regression adjustment
+
+### Linear regression
+
+- Common tool for incorporating info from covariates
+
+- Usual regression assumptions
+
+  - Independent and identically distributed observations
+
+  - Outcome conditional on predictors, $Y \:\vert\:X$, is Normally
+    distributed
+
+- In our setting,
+
+  - Potential outcomes fixed (non-random) quantities
+
+  - Experimental subjects **not** sampled from superpopulation
+
+  - Randomness due only to assignment process
+
+- \mh{Is regression w/out standard assumptions still useful?}
+
+### Regression: No covariate adjustment
+
+- Suppose only SUTVA and complete random assignment\
+  (not the usual regression assumptions)
+
+  - W/out covariate adjustment, $\bm{z}$'s estimated coeff equivalent to
+    Diff-in-Means
+
+  - `coef(lm(formula = y `$\sim$` z, data = data))["z"]`
+
+  - HC2 standard error equivalent to Neyman's conservative variance
+    estimator
+
+  - `library(sandwich)`\
+
+  - `diag(vcovHC(x = mod, type = "HC2"))["z"]`
+
+- \mh{How does regression perform with covariate
+  adjustment?}\
+  [@freedman2008a; @freedman2008b; @lin2013; @cohenfogarty2023]
+
+### Regression: With covariate adjustment
+
+![Freedman (2008), p. 180](images/Freedman_2008.png){width="90%"}
+
+### Regression
+
+![Lin (2013), p. 295](images/Lin_2013.png){width="90%"}
+
+### Linear regression
+
+- @lin2013 shows regression w/ full set of treatment-covariate
+  interactions
+
+  - Consistent for average treatment effect\
+    (but may have bias in small experiments)
+
+  - Asymptotic analysis establishes a "do-no-harm" property:
+
+    - W/ large $N$ (but small $k$), regression cannot make variance larger than
+      Diff-in-Means' variance\
+      (Usually regression will decrease variance)
+
+- To implement Lin estimator in `R`
+
+- `library(estimatr)`
+
+- `lm_lin(y `$\sim$` z, covariates = x_1 + x_2, data = data)`
+
+- Equivalent to
+
+- `lm(formula = y `$\sim$` z + x_1_cent + x_2_cent + z * x_1_cent + z * x_2_cent, data = data)`
+
+### Nonlinear regression
+
+- "The logit model is often used to analyze experimental data. However,
+  randomization does not justify the model" [@freedman2008b p. 237].
+
+- Argument analogous to @lin2013 applies for nonlinear covariate
+  adjustment
+
+  - E.g., logistic regression, Poisson regression, etc.
+
+- See @cohenfogarty2023 for details
+
+
+### References
+
