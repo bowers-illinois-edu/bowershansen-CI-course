@@ -1,0 +1,72 @@
+<!-- Previously a segment of Jake's day6_noncompliance_attrition.Rmd,
+     dating to 2023 (I think).  Then it came between slides labeled
+     "Variance of IV estimator" and
+     "Summary of Encouragement/Complier/Dose oriented designs". May
+     have dependencies on earlier code chunks in that file, eg
+     `simivdesign`. -->
+
+## How do our estimators perform?
+
+First, setup estimands and estimators:
+
+```{r, echo=TRUE, warning=FALSE}
+
+estimands <- declare_inquiry(
+    CACE =     mean(Y_D_1[type=="Complier"] - Y_D_0[type=="Complier"]),
+    ITT_y =    mean(  ( (Y_D_1_Z_1 + Y_D_0_Z_1)/2 )  - ( (Y_D_1_Z_0 + Y_D_0_Z_0)/2 ) ),
+    ITT_d= mean(D_Z_1) - mean(D_Z_0))
+
+estimator_cace <- declare_estimator(Y ~ D | Z, .method=iv_robust,inquiry=c("CACE"), label="iv_robust")
+estimator_itt_y <- declare_estimator(Y ~ Z, inquiry = "ITT_y", .method = lm_robust, label =  "diff means ITT")
+estimator_pp <- declare_estimator(Y ~ D, inquiry = "CACE", .method = lm_robust, label =  "per-protocol")
+estimator_itt_d <- declare_estimator(D ~ Z, inquiry = "ITT_d", .method = lm_robust, label =  "diff means ITT_D")
+
+
+full_design <- base_design + estimands+
+    estimator_cace + estimator_itt_y + estimator_itt_d + estimator_pp
+
+draw_estimands(full_design)
+draw_estimates(full_design)[,c("estimator","term","estimate","std.error","outcome","inquiry")]
+
+```
+
+
+## How do our estimators perform?
+
+Then repeat the design many times:
+
+```{r diagnoses, echo=TRUE, cache=TRUE, warning=FALSE}
+full_designs_by_size <-
+    redesign(full_design,N=c(50,100,200,1000),prop_comply=c(.2,.5,.8))
+
+dat_n20 <- draw_data(full_designs_by_size[["design_1"]])
+
+my_diagnosands <-
+    declare_diagnosands(
+        mean_estimand = mean(estimand),
+        mean_estimate = mean(estimate),
+        bias = mean(estimate - estimand),
+        rmse = sqrt(mean((estimate - estimand) ^ 2)),
+        ## power = mean(p.value <= alpha),
+        coverage = mean(estimand <= conf.high & estimand >= conf.low),
+        sd_estimate = sqrt(pop.var(estimate)),
+        mean_se = mean(std.error)
+       )
+
+library(future)
+library(future.apply)
+plan(strategy="multicore") ## won't work on Windows
+which_to_sim <- rep(1,length=length(full_design))
+names(which_to_sim) <- names(full_design)
+which_to_sim["the_assign"] <- 1000
+set.seed(12345)
+results <- diagnose_design(full_designs_by_size,bootstrap_sims=0,
+    sims = 1000, #which_to_sim,
+    diagnosands = my_diagnosands)
+plan("sequential")
+reshape_diagnosis(results) %>% select(N,Inquiry,Estimator,Outcome,Term,Bias,"SD Estimate","Mean Se",Coverage)
+## Focus on the 2SLS estimator
+reshape_diagnosis(results) %>% filter(Estimator=="iv_robust") %>% select(N,prop_comply,Inquiry,Estimator,Outcome,Term,Bias,"SD Estimate","Mean Se",Coverage)
+
+reshape_diagnosis(results) %>% filter(Estimator=="diff means ITT") %>% select(N,prop_comply,Inquiry,Estimator,Outcome,Term,Bias,"SD Estimate","Mean Se",Coverage)
+```

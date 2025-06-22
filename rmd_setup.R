@@ -1,6 +1,6 @@
 # Some customization.  You can alter or delete as desired (if you know what you are doing).
 # knitr settings to control how R chunks work.
-rm(list = ls())
+ rm(list = setdiff(ls(), c("handout_", "solutions_")))
 
 require(knitr)
 ## Setup for most r markdown files

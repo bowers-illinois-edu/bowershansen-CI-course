@@ -4,7 +4,7 @@ title: |
  |  Noncompliance and Missing Data"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2023 Session 1
+  | ICPSR 2025 Session 1
   | Jake Bowers, Ben Hansen \& Tom Leavitt
 bibliography:
  - "BIB/MasterBibliography.bib"
@@ -263,7 +263,7 @@ set of $x$'s).
 
 ## How to calculate the ITT and CACE/LATE I
 
-```{r simivdesign, echo=FALSE}
+```{r simivdesign, echo=if (handout_) TRUE else if (solutions_) 1L:3L}
 prob_comply <- .5
 tau <- .5
 N <- 100
@@ -311,6 +311,9 @@ base_design <- the_pop + d_po + y_po_d + y_po_z + the_assign +  d_reveal + y_rev
 
 dat0 <- draw_data(base_design)
 ```
+```{asis echo=!handout_&solutions_}
+...
+```
 
 Some example data (where we know all potential outcomes):
 
@@ -337,16 +340,17 @@ itt_d
 
 ## How to calculate the ITT and CACE/LATE III
 
-All together (the version dividing an unbiased estimator of ITT by an unbiased estimator of Proportion Compliers is often called Bloom's method from Bloom (1984)):^[works when $Z \rightarrow D$ is not weak see @imbensrosenbaum2005 for a cautionary tale]
+All together (the version dividing an unbiased estimator of ITT by an unbiased estimator of Proportion Compliers is often called Bloom's method from Bloom (1984)):^[User beware: this estimator is know *not* to be robust, particularly when faced with a "weak instrument" (weak $Z \rightarrow D$ relationship). See @bound1995piv, @imbensrosenbaum2005 and others. ("`robust`" is in reference to its SE, but it's quite questionable there too).]
 
 ```{r echo=TRUE}
-cace_est <- iv_robust(Y ~ D | Z, data = dat0)
+cace_est <- estimatr::iv_robust(Y ~ D | Z, data = dat0)
 cace_est
 ## Notice same as below:
 coef(itt_y)[["Z"]] / coef(itt_d)[["Z"]]
 ```
 
 ## Variance of IV estimator
+
 \begin{itemize}
 \item Recall that there exist analytic expressions for $\Var\left[\widehat{\text{ITT}}_Y\right]$ and $\Var\left[\widehat{\text{ITT}}_D\right]$
 \item  We can conservatively estimate $\Var\left[\widehat{\text{ITT}}_Y\right]$ and $\Var\left[\widehat{\text{ITT}}_D\right]$ via $\widehat{\Var}\left[\widehat{\text{ITT}}_Y\right]$ and $\widehat{\Var}\left[\widehat{\text{ITT}}_D\right]$
@@ -356,73 +360,8 @@ coef(itt_y)[["Z"]] / coef(itt_d)[["Z"]]
 \item  Others use Delta method (Taylor series approximation), e.g., in \texttt{AER} or \texttt{estimatr} package in \texttt{R}
 \end{itemize}
 
-
-## How do our estimators perform?
-
-First, setup estimands and estimators:
-
-```{r, echo=TRUE, warning=FALSE}
-
-estimands <- declare_inquiry(
-    CACE =     mean(Y_D_1[type=="Complier"] - Y_D_0[type=="Complier"]),
-    ITT_y =    mean(  ( (Y_D_1_Z_1 + Y_D_0_Z_1)/2 )  - ( (Y_D_1_Z_0 + Y_D_0_Z_0)/2 ) ),
-    ITT_d= mean(D_Z_1) - mean(D_Z_0))
-
-estimator_cace <- declare_estimator(Y ~ D | Z, .method=iv_robust,inquiry=c("CACE"), label="iv_robust")
-estimator_itt_y <- declare_estimator(Y ~ Z, inquiry = "ITT_y", .method = lm_robust, label =  "diff means ITT")
-estimator_pp <- declare_estimator(Y ~ D, inquiry = "CACE", .method = lm_robust, label =  "per-protocol")
-estimator_itt_d <- declare_estimator(D ~ Z, inquiry = "ITT_d", .method = lm_robust, label =  "diff means ITT_D")
-
-
-full_design <- base_design + estimands+
-    estimator_cace + estimator_itt_y + estimator_itt_d + estimator_pp
-
-draw_estimands(full_design)
-draw_estimates(full_design)[,c("estimator","term","estimate","std.error","outcome","inquiry")]
-
+```{r child="child_files/noncompliance_attrition_estimator_performance.Rmd"}
 ```
-
-
-## How do our estimators perform?
-
-Then repeat the design many times:
-
-```{r diagnoses, echo=TRUE, cache=TRUE, warning=FALSE}
-full_designs_by_size <-
-    redesign(full_design,N=c(50,100,200,1000),prop_comply=c(.2,.5,.8))
-
-dat_n20 <- draw_data(full_designs_by_size[["design_1"]])
-
-my_diagnosands <-
-    declare_diagnosands(
-        mean_estimand = mean(estimand),
-        mean_estimate = mean(estimate),
-        bias = mean(estimate - estimand),
-        rmse = sqrt(mean((estimate - estimand) ^ 2)),
-        ## power = mean(p.value <= alpha),
-        coverage = mean(estimand <= conf.high & estimand >= conf.low),
-        sd_estimate = sqrt(pop.var(estimate)),
-        mean_se = mean(std.error)
-       )
-
-library(future)
-library(future.apply)
-plan(strategy="multicore") ## won't work on Windows
-which_to_sim <- rep(1,length=length(full_design))
-names(which_to_sim) <- names(full_design)
-which_to_sim["the_assign"] <- 1000
-set.seed(12345)
-results <- diagnose_design(full_designs_by_size,bootstrap_sims=0,
-    sims = 1000, #which_to_sim,
-    diagnosands = my_diagnosands)
-plan("sequential")
-reshape_diagnosis(results) %>% select(N,Inquiry,Estimator,Outcome,Term,Bias,"SD Estimate","Mean Se",Coverage)
-## Focus on the 2SLS estimator
-reshape_diagnosis(results) %>% filter(Estimator=="iv_robust") %>% select(N,prop_comply,Inquiry,Estimator,Outcome,Term,Bias,"SD Estimate","Mean Se",Coverage)
-
-reshape_diagnosis(results) %>% filter(Estimator=="diff means ITT") %>% select(N,prop_comply,Inquiry,Estimator,Outcome,Term,Bias,"SD Estimate","Mean Se",Coverage)
-```
-
 
 ## Summary of Encouragement/Complier/Dose oriented designs:
 
