@@ -19,7 +19,7 @@ output:
     keep_tex: true
     latex_engine: xelatex
     citation_package: biblatex
-    template: icpsr.beamer
+    template: styles/icpsr-beamer-template
     incremental: true
     includes:
         in_header:
