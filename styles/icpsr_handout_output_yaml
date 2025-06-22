@@ -1,0 +1,9 @@
+pdf_document:
+    keep_tex: true
+    latex_engine: pdflatex
+    includes:
+       in_header:
+          - defs-all.sty
+          - styles/handout-preamble.tex
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]

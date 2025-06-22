@@ -15,19 +15,6 @@ biblio-style: authoryear-comp
 biblatexoptions:
   - natbib=true
 colorlinks: true
-output:
-  beamer_presentation:
-    slide_level: 2
-    keep_tex: true
-    latex_engine: xelatex
-    citation_package: biblatex
-    template: styles/icpsr-beamer-template
-    incremental: true
-    includes:
-        in_header:
-           - defs-all.sty
-    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
-    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
 ---
 
 <!-- Make this document using library(rmarkdown); render("day12.Rmd") -->
