@@ -42,7 +42,7 @@ bibliography:
 :::::: {.columns}
 ::: {.column width="30%"}
 ```{asis, echo=!handout_}
-![neyman_offering_a_toast](images/neyman_offering_a_toast.jpg)
+![neyman_offering_a_toast](neyman_offering_a_toast.jpg)
 ```
 :::
 ::: {.column width="70%"}
@@ -139,7 +139,7 @@ bibliography:
 -   Diff-in-Means estimator under complete random assignment
 
 -   ![Difference-in-Means estimator in "Village heads"
-    example](images/cra_est_dist_plot.pdf){width="\\linewidth"}
+    example](cra_est_dist_plot.pdf){width="\\linewidth"}
 
 ###  Next steps
 
@@ -313,7 +313,7 @@ $$\mathop{\mathrm{\rm{Var}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] =
 \fontsize{9pt}{9pt}\selectfont
 
 -   Here is the conservative variance estimator for "village heads":\
-    ![image](images/cra_var_est_dist_plot.pdf){width="0.8\\linewidth"}
+    ![image](cra_var_est_dist_plot.pdf){width="0.8\\linewidth"}
 
 -   **Solid** line is true variance of Diff-in-Means,
     $\mathop{\mathrm{\rm{Var}}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]$
@@ -377,7 +377,7 @@ Asymptotics
 
 -   "Village heads" example:
 
-    ![image](images/asymp_ests_plot.pdf){width="\\linewidth"}
+    ![image](asymp_ests_plot.pdf){width="\\linewidth"}
 :::
 
 ## Hypothesis testing
@@ -411,7 +411,7 @@ Hypothesis tests of the weak null
 
 -   "Village heads" example:
 
-    ![image](images/asymp_stand_ests_plot.pdf){width="\\linewidth"}
+    ![image](asymp_stand_ests_plot.pdf){width="\\linewidth"}
 :::
 
 ::: frame

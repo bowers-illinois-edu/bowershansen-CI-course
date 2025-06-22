@@ -5,10 +5,12 @@
 \usepackage{empheq}
 \usepackage{booktabs} % Allows the use of \toprule, \midrule and
 % \bottomrule in tables
+\usepackage{multirow}
 \usepackage{float}
 \usepackage{graphicx}
+\graphicspath{{.}{./images/}} 
 \usepackage{listings}
-\newcommand{\codechunk}[1]{\lstinputlisting{R/#1}}
+\providecommand{\codechunk}[1]{\lstinputlisting{R/#1}}
 \lstset{%
   language=R,                     % the language of the code
   basicstyle=\ttfamily, % the size of the fonts that are used for the code
@@ -17,38 +19,46 @@
   stepnumber=5}
 \usepackage{soul} % for strikethrough
 \usepackage{tikz}
+\usepackage{tikz-cd}
 \usepackage{soul} % for strikethrough
 \usepackage{awesomebox}
 \usepackage{colonequals}
 \newcounter{tempcounter}
-\newcommand{\note}[2][]{}
-\newcommand{\itnote}[2][]{}
-\newcommand{\igrphx}[2][width=.7\linewidth]{\includegraphics[#1]{images/#2}}
-\newcommand{\frametitle}[1]{\emph{#1}}
-\newcommand{\framesubtitle}[1]{\textit{#1}}
-\newcommand{\Exercise}[2][]{ \mbox{ }\\[-10ex] }
-\newcommand{\Answer}[2][]{}
-\newcommand{\Answers}[2][]{}
+\providecommand{\note}[2][]{}
+\providecommand{\itnote}[2][]{}
+\providecommand{\igrphx}[2][width=.7\linewidth]{\includegraphics[#1]{#2}}
+\providecommand{\frametitle}[1]{\emph{#1}}
+\providecommand{\framesubtitle}[1]{\textit{#1}}
+\providecommand{\Exercise}[2][]{ \mbox{ }\\[-10ex] }
+\providecommand{\Answer}[2][]{}
+\providecommand{\Answers}[2][]{}
 
-\newcommand{\pause}{}
-\newcommand{\alert}{}
+\providecommand{\pause}{}
+\providecommand{\alert}{}
 \newenvironment{semiverbatim}{}
 
-\newcommand{\EE}{\ensuremath{\mathbf{E}}}
-\newcommand{\PP}{\ensuremath{\mathbf{Pr}}}
-\DeclareMathOperator{\var}{Var}
-\DeclareMathOperator{\cov}{Cov}
-\DeclareMathOperator{\avg}{avg}
+\providecommand{\EE}{\ensuremath{\mathbf{E}}}
+\providecommand{\PP}{\ensuremath{\mathbf{Pr}}}
+\providecommand{\var}{\operatorname{Var}}
+\providecommand{\cov}{\operatorname{Cov}}
+\providecommand{\avg}{\operatorname{avg}}
 
-\newcommand{\hatvar}{\ensuremath{\widehat{\mathrm{Var}}}}
-\newcommand{\hatcov}{\ensuremath{\widehat{\mathrm{Cov}}}}
-
-\newenvironment{columns}{\noindent\begin{minipage}{\textwidth}
-}{\end{minipage}}
+\providecommand{\hatvar}{\ensuremath{\widehat{\mathrm{Var}}}}
+\providecommand{\hatcov}{\ensuremath{\widehat{\mathrm{Cov}}}}
 \newlength\Colsep
 \setlength\Colsep{10pt}
-\newenvironment{column}[1]{\begin{minipage}{#1}}{\end{minipage}}
-\newenvironment{Column}[1][.5\textwidth]{\begin{minipage}{#1}}{\end{minipage}}
-\newcommand{\tcw}[1]{\underline{\textcolor{white}{#1}}}
-\newcommand{\bh}[1]{{\color{blue}{#1}}}
-\newcommand{\mh}[1]{{\color{magenta}{#1}}}
+\makeatletter
+\@ifundefined{columns}{%
+  \newenvironment{columns}{\noindent\begin{minipage}{\textwidth}}{\end{minipage}}
+%
+}{}
+\@ifundefined{column}{%    
+\newenvironment{column}[1]{\begin{minipage}{#1}}{\end{minipage}}%
+}{}
+  \@ifundefined{Column}{%
+  \newenvironment{Column}[1][.5\textwidth]{\begin{minipage}{#1}}{\end{minipage}}%
+  }{}
+\makeatother
+\providecommand{\tcw}[1]{\underline{\textcolor{white}{#1}}}
+\providecommand{\bh}[1]{{\color{blue}{#1}}}
+\providecommand{\mh}[1]{{\color{magenta}{#1}}}

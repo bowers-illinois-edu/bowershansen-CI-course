@@ -157,7 +157,7 @@ For Normal-theory approximate *p*-values, the data and the strict null are combi
 
 ### Potential outcomes
 
-![image](images/null_dists_discrim_plot.pdf){width="100%"}
+![image](null_dists_discrim_plot.pdf){width="100%"}
 
 
 ### Causality with Potential Outcomes
@@ -484,7 +484,7 @@ $$\begin{aligned}
 ### Distribution of test-stat under sharp null of no effect
 
 ![Distribution of the Difference-in-Means test-stat under the sharp null
-of no effect](images/null_dist_no_effect_plot.pdf){width="90%"}
+of no effect](null_dist_no_effect_plot.pdf){width="90%"}
 
 
 ### Hypothesis tests in adjusted outcomes
@@ -565,7 +565,7 @@ $\vdots$& & & & & & \\
 
 ### Hypothesis tests in adjusted outcomes
 
-![image](images/null_unif_plot.pdf){width="90%"}
+![image](null_unif_plot.pdf){width="90%"}
 
 
 ### Confidence sets
@@ -687,7 +687,7 @@ $\cdots$
 -   Diff-in-Means estimator under complete random assignment
 
 -   ![Difference-in-Means estimator in "Village heads"
-    example](images/cra_est_dist_plot.pdf){width="\\linewidth"}
+    example](cra_est_dist_plot.pdf){width="\\linewidth"}
 
 ###  Next steps
 

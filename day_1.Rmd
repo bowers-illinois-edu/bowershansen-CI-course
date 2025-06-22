@@ -33,7 +33,7 @@ Randomized experiments and causal inference
 
 "Lady tasting tea" experiment of @fisher1935a [p. 11]: 
 
-![fisher35text](images/fisher_lady_tasting_tea_text.png){width="50%"}
+![fisher35text](fisher_lady_tasting_tea_text.png){width="50%"}
 
 ### Random assignment
 \fontsize{11pt}{11pt}\selectfont
@@ -240,7 +240,7 @@ $8$ & $0$ & $0$
     $\bm{Z}^{\top} \bm{y}$, if "lady" could not discriminate between
     milk-first and tea-first cups
 
-- ![distribution of summary measure if no discrimination](images/null_dist_no_discrim_plot.pdf){width="90%"}
+- ![distribution of summary measure if no discrimination](null_dist_no_discrim_plot.pdf){width="90%"}
 
 
 ## Potential Outcomes
@@ -437,7 +437,7 @@ We'll return to our explanation of `fisher.test()` after starting some R exercis
 ### "Lady Tasting Tea" Example
 
 -   ![Distribution of test-stat over assignments under sharp null of no
-    effects](images/null_dist_no_discrim_plot.pdf){width="90%"}
+    effects](null_dist_no_discrim_plot.pdf){width="90%"}
 
 -   Upper $p$-value is $(1/70) \approx 0.0143$
 
@@ -459,7 +459,7 @@ We'll return to our explanation of `fisher.test()` after starting some R exercis
 ### "Lady Tasting Tea" Example
 
 -   ![Distribution of test-stat over assignments under two sharp causal
-    effects](images/perfect_discrim_test_stat_plot.pdf){width="90%"}
+    effects](perfect_discrim_test_stat_plot.pdf){width="90%"}
 
 -   Imagine that we test sharp null of no effects when (unbeknownst to
     us) true effect is that of perfect discrimination. What is power of

@@ -5,9 +5,11 @@
 \usepackage{bbm}
 \usepackage{bm}
 \usepackage{empheq}
-\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and
+% \bottomrule in tables
+\usepackage{multirow}
 \usepackage{listings}
-\newcommand{\codechunk}[1]{\lstinputlisting{R/#1}}
+\providecommand{\codechunk}[1]{\lstinputlisting{R/#1}}
 \lstset{%
   language=R,                     % the language of the code
   basicstyle=\ttfamily, % the size of the fonts that are used for the code
@@ -29,26 +31,30 @@
 \setlength{\tabcolsepadj}{1.3mm}
 \addtolength{\tabcolsep}{-\tabcolsepadj} 
 
-\newcommand{\EE}{\ensuremath{\mathbf{E}}}
-\newcommand{\PP}{\ensuremath{\mathbf{Pr}}}
+\providecommand{\EE}{\ensuremath{\mathbf{E}}}
+\providecommand{\PP}{\ensuremath{\mathbf{Pr}}}
 \DeclareMathOperator{\var}{Var}
 \DeclareMathOperator{\cov}{Cov}
 \DeclareMathOperator{\avg}{avg}
 
-\newcommand{\hatvar}{\ensuremath{\widehat{\mathrm{Var}}}}
-\newcommand{\hatcov}{\ensuremath{\widehat{\mathrm{Cov}}}}
+\providecommand{\hatvar}{\ensuremath{\widehat{\mathrm{Var}}}}
+\providecommand{\hatcov}{\ensuremath{\widehat{\mathrm{Cov}}}}
 
-\newcommand{\sehat}{\ensuremath{\widehat{\mathrm{se}}}}
+\providecommand{\sehat}{\ensuremath{\widehat{\mathrm{se}}}}
 
-\newcommand{\vfillPrintout}{}
-\newcommand{\igrphx}[2][width=\linewidth]{\includegraphics[#1]{images/#2}}
+\providecommand{\vfillPrintout}{}
+\graphicspath{{.}{./images/}} % make it easier to find the logos
+\providecommand{\igrphx}[2][width=\linewidth]{\includegraphics[#1]{#2}}
 \renewcommand{\note}[2][]{}
-\newcommand{\itnote}[2][]{}%{\note{\begin{itemize} #2 \end{itemize}}}
-\newcommand{\Exercise}[2][\frametitle{Exercise}]{#1   #2}
-\newcommand{\Answer}[2][]{\vfill}
-\newcommand{\Answers}[2][]{\vfill}
-
-\newenvironment{Column}[1][.5\linewidth]{\begin{column}{#1}}{\end{column}}
-\newcommand{\tcw}{\textcolor{black}}
-\newcommand{\bh}[1]{{\color{blue}{#1}}}
-\newcommand{\mh}[1]{{\color{magenta}{#1}}}
+\providecommand{\itnote}[2][]{}%{\note{\begin{itemize} #2 \end{itemize}}}
+\providecommand{\Exercise}[2][\frametitle{Exercise}]{#1   #2}
+\providecommand{\Answer}[2][]{\vfill}
+\providecommand{\Answers}[2][]{\vfill}
+\makeatletter
+\@ifundefined{Column}{%
+  \newenvironment{Column}[1][.5\textwidth]{\begin{minipage}{#1}}{\end{minipage}}%
+  }{}
+\makeatother
+\providecommand{\tcw}{\textcolor{black}}
+\providecommand{\bh}[1]{{\color{blue}{#1}}}
+\providecommand{\mh}[1]{{\color{magenta}{#1}}}

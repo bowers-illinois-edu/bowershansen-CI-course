@@ -99,7 +99,7 @@ $$\Omega =
 ### Block random assignment: Example
 
 ![Difference-in-Means distribution under unblocked and blocked
-assignment](images/blocked_assign_plot.jpg){width="\\linewidth"}
+assignment](blocked_assign_plot.jpg){width="\\linewidth"}
 
 \begin{center}\small\emph{Difference-in-Means distribution under unblocked and blocked assignment}\end{center}
 
@@ -321,7 +321,7 @@ Conduct analysis on pre-post gain outcome, vote03 - vote02 (%)
 ### Residualized outcomes
 
 ![Difference-in-Means under sharp null on original and gain
-outcomes](images/null_dist_mean_diff_vs_mean_gain_diff.jpg){width=".8\\linewidth"}
+outcomes](null_dist_mean_diff_vs_mean_gain_diff.jpg){width=".8\\linewidth"}
 
 \begin{center}\small\emph{Difference-in-Means under sharp null on original and pre-post gain outcomes}\end{center}
 
@@ -371,11 +371,11 @@ outcomes](images/null_dist_mean_diff_vs_mean_gain_diff.jpg){width=".8\\linewidth
 
 ### Regression: With covariate adjustment
 
-![Freedman (2008), p. 180](images/Freedman_2008.png){width="90%"}
+![Freedman (2008), p. 180](Freedman_2008.png){width="90%"}
 
 ### Regression
 
-![Lin (2013), p. 295](images/Lin_2013.png){width="90%"}
+![Lin (2013), p. 295](Lin_2013.png){width="90%"}
 
 ### Linear regression
 
