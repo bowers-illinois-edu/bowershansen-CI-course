@@ -354,13 +354,13 @@ coef(itt_y)[["Z"]] / coef(itt_d)[["Z"]]
 \begin{itemize}
 \item Recall that there exist analytic expressions for $\Var\left[\widehat{\text{ITT}}_Y\right]$ and $\Var\left[\widehat{\text{ITT}}_D\right]$
 \item  We can conservatively estimate $\Var\left[\widehat{\text{ITT}}_Y\right]$ and $\Var\left[\widehat{\text{ITT}}_D\right]$ via $\widehat{\Var}\left[\widehat{\text{ITT}}_Y\right]$ and $\widehat{\Var}\left[\widehat{\text{ITT}}_D\right]$
-\item  However, in general, there is no closed-form analytic expression for the variance of a random ratio
-\item  We do not have an estimator for $\Var\left[\cfrac{\widehat{\text{ITT}}_Y}{\widehat{\text{ITT}}_D}\right]$ that is known to be unbiased, consistent or conservative
-\item  Bloom (1984) proposed treating $\widehat{\text{ITT}}_D$ as fixed
-\item  Others use Delta method (Taylor series approximation), e.g., in \texttt{AER} or \texttt{estimatr} package in \texttt{R}
+\item  But these don't translate to conservative estimates for $\Var\left[\cfrac{\widehat{\text{ITT}}_Y}{\widehat{\text{ITT}}_D}\right]$! (There is no closed-form expression for $\Var(A/B)$ in terms of $\EE(A)$, $\EE(B)$, $\Var(A)$, $\Var(B)$ and/or $\Cov(A,B)$.)
+\item  There are approximations, and $\widehat{\Var}\left[\cfrac{\widehat{\text{ITT}}_Y}{\widehat{\text{ITT}}_D}\right]$'s that are consistent provided $\EE \widehat{\text{ITT}}_D>0$.  But they're all quite delicate in finite samples.\ldots 
 \end{itemize}
 
-```{r child="child_files/noncompliance_attrition_estimator_performance.Rmd"}
+```{r child="child_files_/noncompliance_attrition_estimator_performance.Rmd", eval=FALSE}
+```
+```{r child="child_files_/ivmodel_and_weak_instruments.Rmd"}
 ```
 
 ## Summary of Encouragement/Complier/Dose oriented designs:

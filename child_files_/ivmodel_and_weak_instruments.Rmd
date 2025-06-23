@@ -1,0 +1,32 @@
+## The problem with weak instruments
+
+The Bloom IV estimator (and most others) take the form 
+$$\frac{\widehat{\text{ITT}}_Y}{\widehat{\text{ITT}}_D}.$$
+
+>- If both $\widehat{\text{ITT}}$'s are consistent and $\text{ITT}_D >0$, then 
+$\frac{\widehat{\text{ITT}}_Y}{\widehat{\text{ITT}}_D}$ is consistent too.
+>- However, all that is consistent with $\PP(\widehat{\text{ITT}}_D \approx 0) > 0$ in finite samples.  A potentially big problem [@bound1995piv]!
+
+## Diagnosing weak instruments
+
+The canonical measurement of instrument strength is
+the F-statistic attaching to "the first stage regression,"
+```{r eval=FALSE, echo=TRUE}
+difference_in_means(D ~ Z, data=dat0)
+lm(D ~ Z, data=dat0)
+```
+
+Instead of thinking of this as an F-test, we check whether the F
+exceeds 10 [@stai:stoc:97]. (Or 20: @keaneNeal24.)
+
+
+## Addressing weak instruments
+
+Most IV software steers you to a robust-to-weak-instruments method only when the F-statistic criterion is not met. (E.g. `ivmodel::ivmodel()`.)
+
+- Anderson-Rubin is the oldest of these; it also commits you to the least in the way of additional assumptions.  Newer methods (LIML, conditional likelihood ratio, ...) may offer more power if their assumptions are met.
+
+- Anderson-Rubin closely related to the Fisherian method we'll discuss next. @keaneNeal24 argue that Anderson-Rubin should be the default, regardless of instrument strength.
+
+- Stata seems to offer Anderson-Rubin with heteroskedasticity-consistent SEs -- a.k.a. "Huber-Eicker-White", "sandwich", or "robust" SEs. I'm not aware of prefab versions of this for R. 
+
