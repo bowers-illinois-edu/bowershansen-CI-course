@@ -1,0 +1,150 @@
+# Per-protocol, intention-to-treat and the CIA
+
+## The two trials of the Salk vaccine, 1
+
+\medskip
+\includegraphics[width=.8\linewidth]{SalkVtable-full.jpg}
+\note{
+\begin{itemize}
+\item The Salk vaccine and its two trials.
+\item Long a staple of intro stats courses. Moral: RCTS good, observational studies bad.
+\item Indeed, observational studies do have a greater potential to mislead, as the example will show.
+\item It's an unusually nice, RCT with double-blinding, a placebo, and informed consent in advance of random assignment.
+\item The observational study nicely addressed regional variation in polio rates, but didn't have a remedy for systematic differences in who would participate.
+\end{itemize}}
+
+:::::: {.columns}
+:::{.column width="40\%"}
+- "Placebo control" ~ UM study -- an r.c.t. 
+- "Observed control" ~ no randomization
+\pause
+:::
+:::{.column width="60\%"}
+- Study 1's difference of rates estimates its a.c.e., $\bar{y}_T - \bar{y}_C$.
+- The two studies' ACEs should be about the same. What is Study 2 estimating?
+:::
+::::::
+
+##  Independence vs selection bias in the two vaccine studies 
+
+In Study 1, randomization secures the independence assumption
+$$[Y_{T}, Y_{C}] \perp Z.$$
+The advance consent design meant that $Z \equiv D$ (dose), more or less, so:
+$$[Y_{T}, Y_{C}] \perp D.$$
+Thus $\EE[\bar{y}_{\{i:D=1\}} - \bar{y}_{\{i:D=0\}}] = \bar{y}_{T} - \bar{y}_C.$ 
+
+In 1950s America, openness to vaccination ($O$) correlated with social class ($C$), which in turn correlated with polio susceptibility ($P$).  As $O$ predicts $D$, a $D$-$P$ correlation is induced. As a result, in Study 2 
+$$(Y_{T}, Y_{C}) \not\perp D.$$
+The $D$-$S$ correlation would exist within schools ($S$), also preventing _conditional independence_:
+$$(Y_{T}, Y_{C}) \not\perp D \mid S.$$
+So in Study 2, $\EE[\bar{y}_{\{i:D=1\}} - \bar{y}_{\{i:D=0\}}] \neq \bar{y}_{T} - \bar{y}_C$.
+
+## Statistical morality tale 2: 1980 GOTV experiment
+
+Adams & Smith's (1980) telephone GOTV experiment & analysis were marred by their use of per-protocol analysis.
+
+  \begin{columns}
+    \begin{column}{0.6\linewidth}
+      \begin{tabular}{r@{\hspace{.5em}}rr} \hline
+%  \multicolumn{2}{l}{Status} & $n$ \\
+% \hline
+\multicolumn{3}{l}{\underline{Contacted by caller}} \\
+ & Voted & 310 \\
+ & No vote & 640 \\
+ & all & 950 \\ \hline
+\multicolumn{3}{l}{\underline{Not contacted}} \\
+ & Voted & 397 \\
+ & No vote & 1303 \\
+ & all & 1700 \\  \hline
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.4\linewidth}
+      \igrphx{70srotaryphone}
+    \end{column}
+  \end{columns}
+
+$Y$= voted, $D$ = contacted, $Z$ not shown. Adams & Smith reported $\bar{y}_{\{i:D=1\}} - \bar{y}_{\{i:D=0\}}$, or $0.326 - 0.234 = +9$\% -- a "per protocol" analysis.  Unfortunately, a closer look at the data doesn't support
+$$(Y_{T}, Y_{C}) \perp D.$$ 
+
+## Results of the Adams-Smith experiment
+
+\includegraphics[height=.9\textheight]{images/ASdesign2edited}
+
+## ITT analysis of the Adams-Smith experiment
+
+  \begin{columns}
+    \begin{column}{0.5\linewidth}
+      \begin{tabular}{r@{\hspace{.5em}}rr} \hline
+%  \multicolumn{2}{l}{Status} & $n$ \\
+% \hline
+\multicolumn{3}{l}{\underline{Telephone group}} \\
+ & Contacted & 950 \\
+ & No contact & 375 \\
+ & all & 1325 \\ \hline
+\multicolumn{3}{l}{\underline{Control group}} \\
+ & Contacted & 0 \\
+ & No contact & 1325 \\
+ & all & 1325 \\  \hline
+      \end{tabular}
+\mh{$\hat{\text{ITT}}_{D} = 0.717-0=71.7\%$}
+\end{column}
+    \begin{column}{0.5\linewidth}
+      \begin{tabular}{r@{\hspace{.5em}}rr} \hline
+%  \multicolumn{2}{l}{Status} & $n$ \\
+% \hline
+\multicolumn{3}{l}{\underline{Telephone group}} \\
+ & Voted &  392 \\
+ & No vote &  \\
+ & all & 1325 \\ \hline
+\multicolumn{3}{l}{\underline{Control group}} \\
+ & Voted &  315 \\
+ & No vote &  \\
+ & all & 1325 \\  \hline
+      \end{tabular}
+ \mh{$\hat{\text{ITT}}_{Y} = 0.296 - 0.238 = 5.8\%$}
+    \end{column}
+  \end{columns}
+
+These estimates eschew the questionable assumption $(Y_{T}, Y_{C}) \perp D$ in favor of
+$$(Y_{T}, Y_{C}) \perp Z,$$
+which there is every reason to believe.
+
+\note{The Bloom ratio is 8.1\%, a bit less that A \& S's 9\%.}
+
+## A second look at Salk study 2
+
+The per-protocol analysis of the Salk study required that $(Y_{T}, Y_{C}) \perp D$. If we *conceptualize*
+$$Z = \begin{cases} 1,& \text{grade 2}\\
+0,& \text{grades 1 \& 3} \end{cases}$$
+then the conditional independence assumption
+$$(Y_{T}, Y_{C}) \perp Z \mid S$$
+seems plausible. (A.k.a. CIA; strong ignorability; no unmeasured confounding assumption.) If we believe this, it's a small additional leap to imagine the study as a stratified r.c.t..
+
+
+## Exercises
+
+When $\PP(Z=1|S=s)$ is the same for all $s$, the CIA $(Y_{T}, Y_{C}) \perp Z \mid S$ entails the independence^[In general neither this independence assumption nor the C.I.A. entails the other.]
+$$(Y_{T}, Y_{C}) \perp Z,$$
+which we'll ask you to provisionally assume for the following exercises.
+
+"Vaccinated" and "Grade 2 not innoculated" are 2nd graders; "Controls," 1st and 3rd graders. Columns are \# subjects, \# polio cases, polio rates.
+  \begin{columns}
+    \begin{column}{0.4\linewidth}
+\begin{enumerate}
+      \item Estimate the $\text{ITT}_Y$.
+      \item Estimate $\text{ITT}_D$.
+      \item Were there/could there have been ``Never-takers''?
+      \item Were there/could there have been ``defiers''?
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.6\linewidth}
+      \igrphx{SalkVtable-observedonly.jpg}
+    \end{column}
+  \end{columns}
+      \begin{enumerate} \addtocounter{enumi}{3}
+      \item Were there/could there have been ``always-takers''?  
+      \item Use Bloom's method to estimate the CACE.  How does your answer compare to the
+        RCT's estimate of the ACE, $(41 -81) = -40$ cases per 100K
+        innoculations?
+      \end{enumerate}
+
