@@ -1,0 +1,207 @@
+---
+title: "Causal Inference I Day 2 In-Class Exercise"
+author: "Tyler Rongxuan Chen"
+date: "2025-06-24"
+output: pdf_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+acorn <- read.csv("acorn03.csv")
+```
+
+```{r}
+library("MASS")
+library("sandwich")
+library("lmtest")
+
+options(digits = 3)
+```
+
+Let's start with our original model:
+
+```{r}
+model <- lm(vote03 ~ z, data = acorn)
+summary(model)
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(acorn, aes(x = as.factor(z), y = vote03, color = as.factor(z))) +
+  geom_jitter(width = 0.2, alpha = 0.5) +
+  geom_boxplot(alpha = 0.2, outlier.shape = NA) +
+  labs(
+    x = "Treatment (z: 0 = control, 1 = treated)",
+    y = "Observed Turnout (vote03)",
+    color = "Treatment",
+    title = "Observed Turnout by Treatment Group"
+  ) +
+  theme_minimal()
+
+```
+
+What we have seen in previous classes is regressing directly on z, as shown above. This gives us the observed difference in average turnout between the treatment (z = 1) and control (z = 0) groups.
+
+It answers: “Did the treatment group have higher turnout than the control group?”
+
+BUT: This only tests whether there’s a difference, it does not test if a specific hypothesized effect size fits the data.
+
+Here, we created some new versions of the outcome variable (yc_moe0, yc_moe1, yc_moe2) for each model of effect (MOE).
+
+Each transformation answers: “If the effect of treatment were exactly what this model assumes, what would the data look like after we 'remove' that effect from the treated units?”
+
+After applying the transformation, if the assumed effect is correct, the treated and control groups should look similar—there should be no systematic difference left.
+
+If there is still a difference (especially in the “wrong” direction), our model of the effect is not supported by the data.
+
+With this mindset, let's look at the exercise.
+
+```{r}
+acorn_e <- transform(acorn, 
+                     yc_moe0 = vote03, 
+                     yc_moe1 = vote03 - contact/10,
+                     yc_moe2 = vote03 - contact/5)
+```
+
+# Exercise 1
+
+Since we already have three different model of effect above, we are now heading to the fourth model.
+
+Let’s say our new model assumes the effect is proportional to the square root of contacts (maybe: more contacts, but with diminishing returns). Here’s an example formula:
+
+*Model:* Each contact increases votes by 0.3 times the square root of contacts (rounded, as an example).
+
+```{r}
+acorn_e <- transform(acorn_e,
+  yc_moe3 = vote03 - 0.3 * sqrt(contact)
+)
+```
+
+Let's take a look at what is happening here:
+
+```{r}
+library(tidyr)
+
+acorn_long <- acorn_e |>
+  pivot_longer(
+    cols = starts_with("yc_moe"),
+    names_to = "model",
+    values_to = "yc"
+  )
+
+ggplot(acorn_long, aes(x = as.factor(z), y = yc, color = as.factor(z))) +
+  geom_jitter(width = 0.2, alpha = 0.5) +
+  geom_boxplot(alpha = 0.2, outlier.shape = NA) +
+  facet_wrap(~ model, ncol = 2) +
+  labs(
+    x = "Treatment (z: 0 = control, 1 = treated)",
+    y = "Reconstructed Outcome (yc)",
+    color = "Treatment",
+    title = "Scatter plots by Model of Effect"
+  ) +
+  theme_minimal()
+
+```
+
+------------------------------------------------------------------------
+
+## What This Plot Shows
+
+-   **Each panel** represents one hypothesis about the treatment’s effect (the four different `yc_moe*` variables).
+-   **X-axis:** `z` (Treatment assignment: 0 = control, 1 = treated)
+-   **Y-axis:** The reconstructed outcome (`yc`) under each hypothesis/model.
+-   **Points:** Each precinct's reconstructed outcome.
+-   **Boxplot:** Summary (median, quartiles) of reconstructed outcomes for treated vs. control.
+-   **Facets:** Each hypothesis/model.
+
+------------------------------------------------------------------------
+
+### **(1) `yc_moe0` ("No Effect" Model)**
+
+The treated group (1) is slightly higher than control (0), but the boxplots overlap.
+
+This implies that there is Some, but not strong, difference between treated and control.
+
+Statistically, this model suggests little evidence for a large treatment effect.
+
+------------------------------------------------------------------------
+
+### **(2) `yc_moe1` ("1 Vote Per 10 Contacts" Model)**
+
+The model assumes too much effect. If this were the real effect, treated and control should look the same. Instead, treated is lower, so this model probably overestimates the effect.
+
+Statistically, this model is not supported.
+
+------------------------------------------------------------------------
+
+### **(3) `yc_moe2` ("1 Vote Per 5 Contacts" Model)**
+
+This is way too much adjustment—the data do not support this strong an effect.
+
+The difference is significant, but in the wrong direction: this model "over-removes" the effect, suggesting it is too aggressive.
+
+------------------------------------------------------------------------
+
+### **(4) `yc_moe3` (Our Custom Model, e.g., Proportional to sqrt(contact))**
+
+Now the treated group is much, much lower than control, almost all the values for treated are below those for control.
+
+This model over-adjusts more than any other.
+
+If this were the true effect, the treated and control should have the same distribution. But now, treated is dramatically lower, and clearly, the model is not supported by the data.
+
+------------------------------------------------------------------------
+
+# Exercise 2
+
+```{r}
+t.test(yc_moe0 ~ z, data = acorn_e)
+t.test(yc_moe1 ~ z, data = acorn_e)
+t.test(yc_moe2 ~ z, data = acorn_e)
+t.test(yc_moe3 ~ z, data = acorn_e)
+```
+
+\begin{table}
+\centering
+\begin{tabular}{lcccccc}
+\hline
+\textbf{Model} & \textbf{Mean (Control)} & \textbf{Mean (Treated)} & \textbf{t-stat} & \textbf{df} & \textbf{p-value} & \textbf{Interpretation} \\
+\hline
+yc\_moe0 & 0.289 & 0.325 & -1.0 & 26 & 0.10 & Reasonable\\
+yc\_moe1 & 0.289 & 0.269 & 0.9 & 25 & 0.40 & Reasonable\\
+yc\_moe2 & 0.289 & 0.213 & 4.0 & 24 & 0.002 & Over-adjusted\\
+yc\_moe3 & 0.289 & 0.106 & 8.0 & 25 & $\ll$0.001 & Severely over-adjusted \\
+\hline
+\end{tabular}
+\caption{Welch Two Sample t-tests for Different Models of Effect.}
+\end{table}
+
+```{r}
+model0 <- lm(yc_moe0 ~ z, data = acorn_e)
+lmtest::coeftest(model0, sandwich::vcovHC, type = "HC2")
+model1 <- lm(yc_moe1 ~ z, data = acorn_e)
+lmtest::coeftest(model1, sandwich::vcovHC, type = "HC2")
+model2 <- lm(yc_moe2 ~ z, data = acorn_e)
+lmtest::coeftest(model2, sandwich::vcovHC, type = "HC2")
+model3 <- lm(yc_moe3 ~ z, data = acorn_e)
+lmtest::coeftest(model3, sandwich::vcovHC, type = "HC2")
+```
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lcccccl}
+\hline
+\textbf{Model} & \textbf{Estimate} & \textbf{Std. Error} & \textbf{t value} & \textbf{p-value} & \textbf{Interpretation} \\
+\hline
+yc\_moe0 & 0.0363 & 0.0244 & 1.49 & 0.15 & Reasonable\\
+yc\_moe1 & -0.0194 & 0.0222 & -0.88 & 0.39 & Reasonable \\
+yc\_moe2 & -0.0751 & 0.0212 & -3.54 & 0.0015 & Over-adjusted \\
+yc\_moe3 & -0.1823 & 0.0215 & -8.48 & $5.8 \times 10^{-9}$ & Severely over-adjusted \\
+\hline
+\end{tabular}
+\caption{Regression Estimates of Treatment Effect ($z$) for Different Models of Effect.}
+\end{table}

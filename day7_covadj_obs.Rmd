@@ -1,10 +1,10 @@
 ---
 title: |
-  | Linear Regression in Observational Studies
+  | Linear Regression and Stratification in Observational Studies
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2023 Session 1
-  | Jake Bowers \& Tom Leavitt
+  | ICPSR 2025 Session 1
+  | Ben Hansen \& Jake Bowers
 bibliography:
   - BIB/MasterBibliography.bib
 fontsize: 10pt
@@ -48,15 +48,16 @@ library(kableExtra)
 ## Today
 
  1. Agenda:
-   - Recap: Modes of statistical inference for causal effects, Learning about
-     the causal effect of treatment **receipt** (or a **dose** of treatment) on
-     non-random groups of people using an **instrument** (that was created by
-     the researcher via randomization).
-   - Linear regression for covariance adjustment in observational studies,
-       aka "controlling for". Concerns about extrapolation, interpolation,
-       linearity, influential points, parallel slopes, and in general whether
-       we have "controlled for" enough.
- 3. Questions arising from the reading or assignments or life.
+- Recap: Modes of statistical inference for causal effects, Learning about the
+causal effect of treatment **receipt** (or a **dose** of treatment) on
+non-random groups of people using an **instrument** (that was created by the
+researcher via randomization).
+   - Linear regression for functional-form-based covariance adjustment in
+   observational studies, aka "controlling for". Concerns about extrapolation,
+   interpolation, linearity, influential points, parallel slopes, and in
+   general whether we have "controlled for" enough.
+  -  Introducing stratification for adjustment via modern matching.
+3. Questions arising from the reading or assignments or life.
 
 ## So far
 
@@ -733,8 +734,10 @@ sol1
 
 ## Summary of the Day
 
- - It is not so simple to "control for" even one covariate in an observational study let alone more than one. We worry about:
-   - Functional form dependence (including which covariates to control for and exactly how)
+ - It is not so simple to "control for" even one covariate in an observational
+ study let alone more than one. We worry about:
+   - Functional form dependence (including which covariates to control for and
+   exactly how)
    - Extrapolation
    - Interpolation (usually less of a big deal)
    - Influential points
