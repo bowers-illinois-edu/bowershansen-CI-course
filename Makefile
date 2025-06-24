@@ -40,3 +40,12 @@ day_5-wmn.pdf: day5_noncompliance_attrition.Rmd child_files_/ivmodel_and_weak_in
 
 day_5-handout.pdf: day5_noncompliance_attrition.Rmd child_files_/ivmodel_and_weak_instruments.Rmd styles/icpsr_handout_output_yaml styles/handout-preamble.tex defs-all.sty
 	cp styles/icpsr_handout_output_yaml _output.yaml && $(RSCRIPT) -e 'handout_ <- TRUE; solutions_ <- FALSE; rmarkdown::render("$<", output_file="$@")' && rm _output.yaml
+
+day_6-slides.pdf: day7_covadj_obs.Rmd child_files_/ivmodel_and_weak_instruments.Rmd child_files_/per_protocol_vs_itt_iv.Rmd styles/icpsr_beamer_output_yaml styles/icpsr-beamer-template defs-all.sty
+	cp styles/icpsr_beamer_output_yaml _output.yaml && $(RSCRIPT) -e 'handout_ <- FALSE; solutions_ <- FALSE; rmarkdown::render("$<", output_file="$@")' && rm _output.yaml
+
+day_6-wmn.pdf: day7_covadj_obs.Rmd child_files_/ivmodel_and_weak_instruments.Rmd child_files_/per_protocol_vs_itt_iv.Rmd styles/daily-announcement.tex styles/icpsr_wmn_output_yaml styles/wmn-preamble.tex defs-all.sty
+	cp styles/icpsr_wmn_output_yaml _output.yaml && $(RSCRIPT) -e 'handout_ <- FALSE; solutions_ <- TRUE; rmarkdown::render("$<", output_file="$@")' $< && rm _output.yaml  
+
+day_6-handout.pdf: day7_covadj_obs.Rmd child_files_/ivmodel_and_weak_instruments.Rmd child_files_/per_protocol_vs_itt_iv.Rmd styles/icpsr_handout_output_yaml styles/handout-preamble.tex defs-all.sty
+	cp styles/icpsr_handout_output_yaml _output.yaml && $(RSCRIPT) -e 'handout_ <- TRUE; solutions_ <- FALSE; rmarkdown::render("$<", output_file="$@")' && rm _output.yaml

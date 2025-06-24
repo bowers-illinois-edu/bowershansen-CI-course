@@ -100,9 +100,9 @@ Z  \arrow[from=1-1,to=1-2, "\text{ITT}_D \ne 0"] \arrow[from=1-1, to=1-4, bend l
        - the Rosenbaum approach `resid_Y_x ~ Z` after `resid_Y_x <- resid(lm(Y~x))`.
 
 
-```{r child="child_files_/predictive_inference_in_rcts.Rmd", eval=TRUE}
+```{r child="child_files_/predictive_inference_in_rcts.Rmd", eval=FALSE}
 ```
-```{r child="child_files_/per_protocol_vs_itt_iv.Rmd", eval=FALSE}
+```{r child="child_files_/per_protocol_vs_itt_iv.Rmd", eval=TRUE}
 ```
 
 # Observational Studies
@@ -135,7 +135,7 @@ Z  \arrow[from=1-1,to=1-2, "\text{ITT}_D \ne 0"] \arrow[from=1-1, to=1-4, bend l
 
 \bh{The whole point of covariance adjustment in experiments is precision, not adjusting away potential confounders.}
 
-# Linear Regression to "Control For Covariates" rather than "De-noise Outcomes"
+# Linear Regression to "Control For Covariates" rather than "De-noise Outcomes" (time permitting)
 
 ## What does linear regression do in an observational study?
 
@@ -222,7 +222,7 @@ Today: Let's talk about what "controlling for" means. And then let's ask "How
 would we know whether we did a good job --- did we "control for $x_1$"
 **enough**?"
 
-What does "controlling for" mean here? How can we explain it? Exercise for the class: Please explain what this means, as far as you can tell, here <https://www.menti.com/amwgborzsv>.
+What does "controlling for" mean here? How can we explain it? Exercise for the class: <!--Please explain what this means, as far as you can tell, here <https://www.menti.com/amwgborzsv>.--> 
 
  - How would we know whether we did a good job --- did we "control for $x_1$" **enough**?
 
@@ -450,6 +450,35 @@ rug(res)
 ```
 
 
+## What about modern variable selection tools? {.allowframebreaks}
+
+We could use a penalized model (like the lasso or adaptive lasso) or some other approach (like random forests) to **automatically choose** a specification.
+
+```{r glmnet1, echo=TRUE}
+## Here using the mm data with polynomials
+library(glmnet)
+cv1 <- cv.glmnet(mm[, 3:15], y = dat$Y)
+```
+
+```{r cvplot, out.width=".6\\textwidth"}
+coefs_lasso <- coef(cv1$glmnet.fit)
+coefnms <- row.names(coefs_lasso)
+plot(cv1$glmnet.fit, xvar = "lambda")
+abline(v = .743)
+text(x = rep(-4, 13), y = coefs_lasso[-1, 65], labels = coefnms)
+```
+
+```{r}
+sol1 <- coef(cv1$glmnet.fit, s = .743)
+sol1
+```
+
+ - Promising.  But, still have to justify **tuning parameter choice**. 
+ - In the context of propensity score modeling -- coming attraction! -- @ertefaieHejaziVanderLaan23 argue against tuning with cross-validation (the industry standard).
+ - Doesn't do much about omitted variables.
+
+
+# The post-stratification strategy
 
 ## How about stratification?
 
@@ -532,31 +561,9 @@ c(est_ate1, coef(est_ate1a)[["Z"]], coef(est_ate1b)[["Z"]], coef(est_ate1c)[["Z"
 c(est_ate2, coef(est_ate2a)[["Z"]], coef(est_ate2b)[["Z"]], coef(est_ate2c)[["Z"]])
 ```
 
-## Finally, what about variable selection? {.allowframebreaks}
 
-We could use a penalized model (like the lasso or adaptive lasso) or some other approach (like random forests) to **automatically choose** a specification.
 
-```{r glmnet1, echo=TRUE}
-## Here using the mm data with polynomials
-library(glmnet)
-cv1 <- cv.glmnet(mm[, 3:15], y = dat$Y)
-```
-
-```{r cvplot, out.width=".6\\textwidth"}
-coefs_lasso <- coef(cv1$glmnet.fit)
-coefnms <- row.names(coefs_lasso)
-plot(cv1$glmnet.fit, xvar = "lambda")
-abline(v = .743)
-text(x = rep(-4, 13), y = coefs_lasso[-1, 65], labels = coefnms)
-```
-
-```{r}
-sol1 <- coef(cv1$glmnet.fit, s = .743)
-sol1
-```
-
- - Of course, then we have to argue that our **tuning parameter choice** made sense.
- - And, again, we have no standard for knowing when we have done **enough**.
+# Conclusion
 
 ## Summary of the Day
 

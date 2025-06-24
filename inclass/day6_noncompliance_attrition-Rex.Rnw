@@ -105,50 +105,8 @@ to the distribution of $t(\mathbf{Z}, \mathbf{y}_c, \mathbf{x})$ under
 hypothetical re-randomizations of $\mathbf{Z}$.  
 
 \section{Tests based on differences of means}
-\subsection{Differences of simple means}
 
-For example, using
-the difference-of-means test statistic,
-$t(\mathbf{z}, \mathbf{y}, \mathbf{x}) =
-\mathbf{z}'\mathbf{y}/\mathbf{z}'\mathbf{z} - (\mathbf{1} -\mathbf{z})'\mathbf{y}/(\mathbf{1} -\mathbf{z})'(\mathbf{1} -\mathbf{z})$, the hypothesis of no effect is tested as follows.
-
-First, cross-check the new column against old  and extract just the difference of means from a linear regression object:
-<<results="show">>=
-lm(vote03~z, data=acorn_e)
-lm(yc_moe0~z, data=acorn_e) # same answer as w/ last calc?
-coef(lm(yc_moe0~z, data=acorn_e))["z"] # are we extracting the right coeff?
-@ 
-Store $t(\mathbf{z}, \mathbf{y}, \mathbf{x})$:
-<<>>=
-actualD = coef(lm(yc_moe0~z, data=acorn_e))[2]
-@ 
-This verifies that the response schedule is consistent w/ what was
-observed after the experiment.  Going on to simulate repeated trials
-of the experiment: 
-<<>>=
-simD = replicate(1000, 
-   coef(lm(yc_moe0~sample(z),
-            data=acorn_e)
-         )[2])
-@
-
-One and two-sided p-values can be calculated as follows:
-<<results="hide">>=
-mean(simD>=actualD)
-2*pmin(mean(simD>=actualD), mean(simD<=actualD))
-@ 
-(``Two sided p-value'' can be interpreted in different ways; this
-follows the interpretation $2\min\big( \mathrm{Pr}(T\leq t),
-\mathrm{Pr}(T\geq t) \big)$, which is relatively general.)  
-
-\textbf{Exercise.}
-\begin{enumerate} \setcounter{enumi}{\value{saveenumi}}
-\item Produce one- and two-sided p-values corresponding to the
-  remaining 3 hypotheses, using the difference-of-means test statistic.
-  \setcounter{saveenumi}{\value{enumi}}
-\end{enumerate}
-
-As long as our test statistic is the difference of simple means, we can also use the large-sample test based on Neyman's asymptotically conservative standard error (as an alternative to the simulation method).  In this example, we'd be hoping that our sample is just large enough for validity of the test. 
+As long as our test statistic is the difference of means, we can use the large-sample test based on Neyman's asymptotically conservative standard error (as an alternative to the simulation method).  In this example, we'd be hoping that our sample is just large enough for validity of the test. 
 
 It's effected via 
 <<>>=
@@ -163,8 +121,6 @@ lmtest::coeftest(lm0, sandwich::vcovHC, type="HC2")
 \texttt{sandwich::vcovHC} in order to specify the version of the
 Huber-White standard error possessing the not-negatively-biased
 property under the Neyman model).
-
-Since we're looking at differences of simple means, our statistic is also an unbiased estimator of the precinct-level average treatment effect, i.e. the simple mean of each precinct's difference between its potential responses to treatment and control. 
 
 
 \subsubsection{Aside: diff-in-diff and gain score analysis}
@@ -214,10 +170,10 @@ of the \texttt{z} coefficient as an estimator of the ACE, and the HC2 standard e
 Whether you prefer to pair your \texttt{lm()}-based test statistic
 with simulation-based or large-sample p-values, you're entitled to
 incorporate adjustments for prognostic covariates into your statistic.
-For example, here is a difference of weighted means with covariance
+For example, here is a difference of weighted means with Lin-type (2013, \textit{AOAS}) covariance
 adjustment for turnout rates in the prior general election:
 <<>>=
-coef(lm(yc_moe0~z+v_g2002, weights=size, data=acorn_e))[2]
+coef(lm(yc_moe0~z*v_g2002, weights=size, data=acorn_e))[2]
 @
 
 
@@ -236,22 +192,4 @@ coef(lm(yc_moe0~z+v_g2002, weights=size, data=acorn_e))[2]
 lm2_ppd <- lm(dc_moe2~ z, data=acorn_e)
 coeftest(lm2_ppd, sandwich::vcovHC, type="HC2")
 @ 
-
-\section*{Notes and references}
-
-
-R and R package versions used in this demo:
-<<>>=
-sessionInfo()
-@ 
-
-\bibliographystyle{apalike}
-% \bibliography{../../2013/BIB/master,../../2013/BIB/abbrev_long,../../2013/BIB/causalinference,../../2013/BIB/biomedicalapplications,../../2013/BIB/misc}
-% \begin{thebibliography}{1}
-
-
-% \end{thebibliography}
-
-
-
 \end{document}
