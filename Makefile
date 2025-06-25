@@ -56,3 +56,7 @@ day_7-jake-slides.pdf: day_7-jake.Rmd \
 	styles/icpsr_beamer_output_yaml styles/icpsr-beamer-template defs-all.sty
 	cp styles/icpsr_beamer_output_yaml _output.yaml && $(RSCRIPT) -e 'handout_ <- FALSE; solutions_ <- FALSE; rmarkdown::render("$<", output_file="$@")' && rm _output.yaml
 
+day_8-slides.pdf: day_8_stratification_balance.Rmd \
+	styles/icpsr_beamer_output_yaml styles/icpsr-beamer-template defs-all.sty
+	cp styles/icpsr_beamer_output_yaml _output.yaml && $(RSCRIPT) -e 'handout_ <- FALSE; solutions_ <- FALSE; rmarkdown::render("$<", output_file="$@")' && rm _output.yaml
+

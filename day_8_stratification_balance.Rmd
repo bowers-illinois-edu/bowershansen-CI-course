@@ -1,15 +1,12 @@
 ---
 title: |
- | Statistical Adjustment and Assessment of Adjustment in Observational Studies
+  | Statistical Adjustment and Assessment of Adjustment in Observational Studies and Nuts \& Bolts of Matching
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
   | ICPSR 2025 Session 1
   | Jake Bowers \& Ben Hansen \& Tom Leavitt
 bibliography:
  - 'BIB/MasterBibliography.bib'
- - 'BIB/master.bib'
- - 'BIB/misc.bib'
- - 'BIB/refs.bib'
 fontsize: 10pt
 geometry: margin=1in
 graphics: yes
@@ -50,45 +47,50 @@ library(coin)
 library(RItools)
 library(optmatch)
 ```
-## Today
+## Today: Agenda
 
-  1. Agenda: The problem of covariance adjustment to reduce "bias"/
-     confounding. **How can we answer the question about whether we have
-     adjusted enough and avoided extrapolation and dependence on functional
-     form?**
-     a. A simple approach: stratification on one categorical variable
-     (using weighted combinations of within-strata estimates for an overall
-     estimate). Justify this **design** by comparison of this stratification
-     with one or more **standards** of unconfounded designs (like an experiment
-     with treatment randomized within strata).
-     b. A more complex approach: find
-     sets that are as similar as possible in terms of a continuous variable
-     (bipartite matching). Balance assessment after stratification.
-  2. Recap: Problems of using linear (or
-     other parametric models) for **adjustment** (as well as statistical
-     inference) include justifying variables, justifying functional forms (of
-     $x_1 \rightarrow Z$ and $x_1 \rightarrow Y$ and $x_1 \rightarrow x_2$, and
-     $f(x_1,x_2) \rightarrow Y$ and $f(x_1,x_2) \rightarrow Z$ and $f(x_1,x_2)
-     \rightarrow x_3$, diagnosing extrapolation and interpolation, diagnosing
-     and confronting overly influential points, and struggling with the
-     problems of seeing the causal estimate and test results everytime you try
-     a new specification. And, basically, finding a **standard of adjustment**
-     for such models where we can answer the question "have we adjusted
-     enough"?
-  3. Questions arising from the reading or assignments or life?
+1. Agenda: The problem of covariance adjustment to reduce "bias"/ confounding.
+   **How can we answer the question about whether we have adjusted enough and
+   avoided extrapolation and dependence on functional form?**
+
+    1. A simple approach: stratification on one categorical variable (using
+       weighted combinations of within-strata estimates for an overall
+       estimate). Justify this **design** by comparison of this stratification
+       with one or more **standards** of unconfounded designs (like an
+       experiment with treatment randomized within strata).
+    2. A more complex approach: find sets that are as similar as possible in
+       terms of a continuous variable (bipartite matching). Balance assessment
+       after stratification.
+
+## Today: Recap
+
+2. Recap: Problems of using linear (or other parametric models) for
+   **adjustment** (as well as statistical inference) include justifying
+   variables, justifying functional forms (of $x_1 \rightarrow Z$ and $x_1
+   \rightarrow Y$ and $x_1 \rightarrow x_2$, and $f(x_1,x_2) \rightarrow Y$ and
+   $f(x_1,x_2) \rightarrow Z$ and $f(x_1,x_2) \rightarrow x_3$), diagnosing
+   extrapolation and interpolation, diagnosing and confronting overly
+   influential points, and struggling with the problems of multiple testing and
+   integrity arising from seeing the causal estimate and test results every
+   time you try a new specification. And, basically, finding a **standard of
+   adjustment** for such models where we can answer the question "have we
+   adjusted enough"?
+3. Questions arising from the reading or assignments or life?
 
 # Strategies for Causal Inference
 
 ## Strategies and Workflow for randomized studies
 
-### Before fielding the study
- - Plan the design for interpretability and power.
- - Pre-register your analysis plan and experimental design.
+### BEFORE fielding the study
+- Plan the design for interpretability and power.
+- Register your analysis plan (including hypotheses to be tested, estimands
+and estimates, etc.) and experimental design.
 
-### After outcome data have been collected
- - Make the case that randomization worked. (often trivial, but in field
-   experiments with long chains of responsibility, an important screening step
-   even if not dispositive of a "failed experiment").
+### AFTER outcome data have been collected
+ - Make the case that randomization worked, check attrition, compliance,
+   implementation. (Often trivial, but in field experiments with long chains of
+   responsibility, an important screening step even if not dispositive of a
+   "failed experiment").
  - Increase precision with design and test statistics (and even models of
    effects)
  - Make sure that your estimator is estimating the right thing (i.e. is not
@@ -97,52 +99,62 @@ library(optmatch)
    powerful as possible (i.e. the coverage rate of a confidence interval is
    nominal, the Type I error rate is controlled).
 
-## Strategies for Adjustment of Observational Studies
+## Some Strategies for Adjustment of Observational Studies
 
- - If you have randomized $Z$ but not $D$, then IV. (Like an observational study within an experiment.)
- - Find a discontinuity/A Natural Experiment (RDD: either natural experiment
-   or continuous forcing function)
- - Multiple controls each with different biases (i.e. "Choice as an alternative to control"
-   see [@rosenbaum:1999])
- - "Controlling For" directly in linear models, but lots of questions to answer...
- - Difference in Differences (if you have some pre- and post-outcomes)
- - Matched Stratification (approximating a block-randomized experiment)
- - Best matched subset selection (approximating a completely or simply
-   randomized experiment)
- - Weighting (the stratification approaches imply weightings, so we could try to calculate good weightings directly)
- - Direct theoretical modeling / Directed Acyclic Graphs (DAGS) to guide other
-   data modeling choices.
+- If you have randomized $Z$ but not $D$, then maybe $Z$ is an instrument for
+  $D$ (IV). (Like an observational study within an experiment.)
+- Find a discontinuity/A Natural Experiment (RDD: either natural experiment or
+  continuous forcing function)
+- Multiple controls each with different biases (i.e. "Choice as an alternative
+  to control" see [@rosenbaum:1999])
+- "Controlling For" directly in linear models, but lots of questions to
+  answer...a lot of work...
+- Difference in Differences (if you have some pre- and post-outcomes)
+- Matched Stratification (approximating a block-randomized experiment)
+- Best matched subset selection (approximating a completely or simply
+  randomized experiment)
+- Weighting (the stratification approaches imply weightings, so we could try to
+  calculate good weightings directly)
+- Direct theoretical modeling / Directed Acyclic Graphs (DAGS) to guide other
+  data modeling choices.
+- And more! See the [Society for Causal Inference
+  website](https://sci-info.org/) and the [Online Causal
+  Inference](https://sites.google.com/view/ocis/home) workshop series.
 
 # Recap
 
-## Regression is not research design {.shrink}
+## Regression is not research design
 
 What does this mean?
 
-Research design occurs **before** estimation and testing. You can try out lots
-of ideas, simulate, discuss, pre-register your planned analysis and your
-design, all before you produce the estimate or test having to do with some
-causal effect. This means (1) you are not seeing the estimates and tests when
-you are looking for a good design and (2) standards for good design are not the
-same as the standards for good estimators and tests.
+\smallskip
 
-When you present the result of a regression model after searching for a
-specification, readers wonder:
+Research design occurs **before** estimation and testing. You can try out
+of ideas, simulate, discuss, register your planned analysis and your
+design, **before** you produce the estimate or test having to do with some
+causal effect.
 
-1. is this just the best result out of
-thousands? Are most results like this? Or was this cherry picked?
-2. how many
-$p$-values were looked at before reporting this one with $p < .05$?
+\smallskip
 
-\small{Recall
-that if we reject $H_0$ when $p < .05$, we are saying that it is ok for 5% of
-tests to mislead us --- to have $p < .05$ when there is no effect (when $H_0$
-is true). So, a $p < .05$ after one test means that either have a rare testing
-error (a false positive result) or that $H_0$ is false.  But an unadjusted $p <  .05$ after 100 tests is virtually
-certain to occur (with prob of .99) when $H_0$ is true: $p < .05$ is a signal of a false positive error not of a substantive signal about $H_0$. So we
-should not reject the null even if the $p < .05$ in this case. (See
-[EGAP Guide on Multiple Comparisons](https://egap.org/resource/10-things-to-know-about-multiple-comparisons/) ).
-}
+This means you are not seeing the estimates and tests when you are looking for
+a good design. Otherwise, when you present the result of a regression model
+after searching for a specification, readers wonder:
+
+1. is this just the best result out of thousands? Are most results like this?
+   Or was this cherry picked?
+2. how many $p$-values were looked at before reporting this one with $p < .05$?
+
+## Regression is not research design: Side note on multiple testing
+
+Recall that if we pre-specify that we will  reject $H_0$ when $p < .05$, we are
+saying that it is ok up to 5\% of tests to mislead us; to have $p < .05$ when
+there is no effect (when $H_0$ is true). So, a $p < .05$ after one test
+indicates **either** a rare testing error (a false positive result) **or** that
+$H_0$ is false. But an unadjusted $p <  .05$ after 100 tests is virtually
+certain to occur (with prob of $1 - (1-.05)^100 \approx .99$) when $H_0$ is
+true: $p < .05$ is a signal of a false positive error not of a substantive
+signal about $H_0$. So we should not reject the null even if the $p < .05$ in
+this case. (See [EGAP Guide on Multiple Comparisons](https://egap.org/resource/10-things-to-know-about-multiple-comparisons/)).
 
 ## Regression is not research design
 
@@ -178,29 +190,37 @@ print(g1)
 
 ## Regression is not research design {.shrink}
 
-```{r, echo=FALSE, out.width=".8\\textwidth",warning=FALSE}
-g2 <- ggplot(dat,aes(x=x1,y=Y,color=factor(Z)))+geom_point()+
+
+:::::::::::::: {.columns}
+::: {.column}
+
+```{r, echo=FALSE, out.width=".99\\textwidth",warning=FALSE}
+g2 <- ggplot(dat,aes(x=x1,y=Y,color=factor(Z)),group=factor(Z))+geom_point()+
 	geom_abline(intercept=coef(lm2)[["(Intercept)"]],slope=coef(lm2)[["x1"]])+
 	geom_abline(intercept=(coef(lm2)[["(Intercept)"]]+coef(lm2)[["Z"]]),
 		    slope=coef(lm2)[["x1"]],color="turquoise")
 
 ##print(g2)
 library(cowplot)
-plot_grid(g1,g2)
+plot_grid(g1,g2,ncol=1)
 ```
 
-
+:::
+::: {.column}
 1. "Are we comparing $Y$ values with different $Z$ values but the same $x1$ value? Does our data fitting do the same thing as actually holding constant $x1$?" (No.)
 2. "Does fitting our mathematical model to data do the same thing as physically holding constant?" (No.)
 3. "Do predictions of $Y$ from our model for two values of $Z$ that are 1 apart differ by the same amount regardless of (a) which two values they are and (b) any value that we put in for $x$?" (Yes. This is because we decided to describe all of the relationships with a line.)
+:::
+::::::::::::::
 
-
+<!--
 ## A 3D surface
 
 Notice that the lines have the same slope as you move across the plane.
 
-```{r, fig.keep="last"}
+```{r, fig.keep="last", eval=FALSE}
 library(rgl)
+setupKnitr(autoprint = TRUE)
 n <- 20
 uniq_x <- seq(0,1,length=n)
 uniq_z <- seq(0,1,length=n)
@@ -209,6 +229,7 @@ y <- matrix((region$x + region$z), n, n)
 surface3d(x=uniq_x, y=uniq_z, z=y, back = 'line', front = 'line', col = 'red', lwd = 1.5, alpha = 0.4)
 axes3d()
 ```
+-->
 
 ## Recap summary:
 
@@ -269,7 +290,7 @@ analysis phases of a project).
 \end{columns}
 
 
-## How did we do this?
+## How did we do this? {.shrink}
 
 ```{r xb1, echo=TRUE}
 acorn <- read.csv("data/acorn03.csv", row.names = 1)
@@ -308,8 +329,16 @@ balplot1 <- ggplot(data=balplot_dat,aes(x=adj.diff*100,y=rowname)) +
 print(balplot1)
 ```
 
+## Summary of Balance Assessment
 
-## DeMystifying balanceTest
+- The design of randomized experiments imply certain known relationships with
+  covariates.
+- This provides a standard for comparison: are the covariates $\rightarrow$ $Z$
+  relationships look typical of the design? Or weird/extreme?
+- We can use $p$-values to measure "typicality" or "surprise" and randomization
+  to generate the $p$-values.
+
+## DeMystifying balanceTest {.shrink}
 
 ```{r d1, echo=TRUE}
 d_stat <- function(zz, mm, ss) {
@@ -335,7 +364,7 @@ d_stat <- function(zz, mm, ss) {
 Recall our discussion of estimation "holding constant" within strata?
 
 ```{r d1v2, echo=TRUE}
-## This is another version that might be more clear in regards what is going on.
+## This is another version that might be more clear
 d_stat_v2 <- function(zz, mm, ss) {
   ## mm is a data.frame
   dat <- cbind(mm, z = zz, s = ss)
@@ -541,7 +570,8 @@ Homicides after the stations were built.
 
 ```{r lmone, echo=TRUE}
 ## code here
-themeans <- group_by(meddat, nhTrt) %>% summarise(ybar = mean(HomRate08))
+themeans <- group_by(meddat, nhTrt) %>%
+  summarise(ybar = mean(HomRate08))
 diff(themeans$ybar)
 lmOne <- lm(HomRate08 ~ nhTrt, meddat)
 coef(lmOne)["nhTrt"]
@@ -565,6 +595,8 @@ pvalue(test4)
 ## Do we have any concerns about confounding?
 
 Sometimes people ask about "bias from observed confounding" or "bias from selection on observables".
+
+\smallskip
 
 How would we interpret the following results where `nhAboveHS` is proportion
 with more than a high school education in the neighborhood in 2003 or so and
@@ -685,9 +717,12 @@ strategies can you think of?
 
 Features of a good adjustment process:
 
-  - Blind to outcome analysis (to preserve false positive rate and deter critics). Able to be pre-registered. Perhaps even reviewed by stakeholders.
-  - Easy to interpret ("controlling for"  versus "holding constant")
-  - Easy to diagnoses (Easy to answere the question "Did we adjust enough?")
+  - Blind to outcome analysis (to preserve false positive rate and deter
+    critics). Able to be pre-registered. Perhaps even reviewed by stakeholders.
+  - Easy to interpret ("controlling for by removing linear additive
+    relationships"  versus "holding constant by comparing units with same
+    values")
+  - Easy to diagnose (Easy to answer the question "Did we adjust enough?")
 
 ## Stratification V 1.0
 
@@ -727,6 +762,12 @@ One-step stratified estimation.
 ## Weight by block size
 ate1c <- difference_in_means(HomRate08 ~ nhTrt, blocks = I(nhAboveHS >= .1), data = meddat)
 ate1c
+## Using propertee
+library(propertee)
+med_spec <- obs_spec(nhTrt~unit_of_assignment(nh03)+block(nhAboveHS >=.1),data=meddat)
+specification_table(med_spec,"treatment","blocks")
+ate1e <- lm(HomRate08~nhTrt,data=meddat,weights=ate(med_spec))
+coef(ate1e)[[2]]
 ## Weight by both block size and  proportion in treatment vs control ("harmonic weight")
 lm1c <- lm_robust(HomRate08 ~ nhTrt, fixed_effects = ~ I(nhAboveHS >= .1), data = meddat)
 coef(lm1c)["nhTrt"]
