@@ -15,6 +15,7 @@ colorlinks: true
 ---
 
 <!-- To show notes  -->
+
 <!-- https://stackoverflow.com/questions/44906264/add-speaker-notes-to-beamer-presentations-using-rmarkdown -->
 
 ```{r setup1_env, echo=FALSE, include=FALSE}
@@ -37,29 +38,22 @@ library(propertee)
 
 ## Today
 
- 1. Agenda:
-- Recap: Day 6 on instruments, the problems of per-protocol comparisons versus
-as-assigned, and estimation in block-randomized experiments.
-- Linear regression for functional-form-based covariance adjustment in
-observational studies, aka "controlling for". Concerns about extrapolation,
-interpolation, linearity, influential points, parallel slopes, and in general
-whether we have "controlled for" enough.
--  Introducing stratification for adjustment via modern matching: changing the
-question from "why did you make those groups" to "how to minimize differences
-within group"
-3. Questions arising from the reading or assignments or life.
+1.  Agenda:
 
+-   Recap: Day 6 on instruments, the problems of per-protocol comparisons versus as-assigned, and estimation in block-randomized experiments.
+-   Linear regression for functional-form-based covariance adjustment in observational studies, aka "controlling for". Concerns about extrapolation, interpolation, linearity, influential points, parallel slopes, and in general whether we have "controlled for" enough.
+-   Introducing stratification for adjustment via modern matching: changing the question from "why did you make those groups" to "how to minimize differences within group"
+
+3.  Questions arising from the reading or assignments or life.
 
 ```{r child="child_files_/linear_regression_controlling_for.Rmd", eval=TRUE}
 ```
-
 
 # The post-stratification strategy
 
 ## How about stratification?
 
-Ok. What about simplifying? When a person wants to know whether we have
-"controlled for", say, $x_4$, I suspect they are really asking for this:
+Ok. What about simplifying? When a person wants to know whether we have "controlled for", say, $x_4$, I suspect they are really asking for this:
 
 ```{r strat1, echo=TRUE}
 lm_x4_0 <- lm(Y ~ Z, data = dat, subset = x4 == 0)
@@ -68,26 +62,17 @@ coef(lm_x4_1)[["Z"]]
 coef(lm_x4_0)[["Z"]]
 ```
 
-In this case we can say that we have "held constant" $x_4$. But what is the
-**overall estimate** in this case?
+In this case we can say that we have "held constant" $x_4$. But what is the **overall estimate** in this case? \medskip
 
-Choosing an additive and linear functional form allows us to predict $Y$ for
-any given $x$ where the differences in predicted Y relate to differences in x
-in a constant way with respect to the other variables. But this an implication
-or consequence of the linearity and additivity choice.
-
+Choosing an additive and linear functional form allows us to predict $Y$ for any given $x$ where the differences in predicted Y relate to differences in x in a constant way with respect to the other variables. But this an implication or consequence of the linearity and additivity choice.
 
 ## Estimate an overall ATE with stratification {.allowframebreaks}
 
-We know how to analyze a block-randomized (or strata-randomized) experiment
-(see [@gerbergreen2012]): each block is a mini-experiment. We *estimate the ATE
-within each block* and *combine by weighting each block specific estimate*.
+We know how to analyze a block-randomized (or strata-randomized) experiment (see [@gerbergreen2012]): each block is a mini-experiment. We *estimate the ATE within each block* and *combine by weighting each block specific estimate*.
 
-The block-size weight produces an unbiased estimator in randomized experiments
---- in an observational study we don't know about the bias since we don't
-exactly know how to repeat the study.  The precision weight (aka the "fixed
-effects" weights) tends to produce smaller standard errors and confidence
-intervals but is biased in randomized experiments.
+\medskip
+
+The block-size weight produces an unbiased estimator in randomized experiments --- in an observational study we don't know about the bias since we don't exactly know how to repeat the study. The precision weight (aka the "fixed effects" weights) tends to produce smaller standard errors and confidence intervals but is biased in randomized experiments.
 
 ```{r weighting, echo=TRUE}
 dat_sets <- dat %>%
@@ -110,10 +95,10 @@ est_ate2 <- with(dat_sets, sum(ateb * prec_wt / (sum(prec_wt))))
 
 ## Estimate an overall ATE with stratification? {.allowframebreaks}
 
-Block-  or strata-level weights can also be represented at the individual level --- and this allows us to use linear models (least squares) to produce block-weighted estimates of the overall average causal effect after "holding constant" $x_4$.
+Block- or strata-level weights can also be represented at the individual level --- and this allows us to use linear models (least squares) to produce block-weighted estimates of the overall average causal effect after "holding constant" $x_4$. (see the code)
 
 ```{r echo=TRUE}
-## Now at the individual level
+## Create weights at the individual level
 dat <- dat %>%
   group_by(x4) %>%
   mutate(
@@ -121,7 +106,6 @@ dat <- dat %>%
     mb = sum(Z),
     ateb = mean(Y[Z == 1]) - mean(Y[Z == 0]),
     prob_trt = mean(Z),
-    ## Inverse probability of treatment weights:
     nbwt = (Z / prob_trt) + (1 - Z) / (1 - prob_trt),
     prec_wt = nbwt * prob_trt * (1 - prob_trt)
   ) %>%
@@ -143,29 +127,36 @@ c(est_ate1, coef(est_ate1a)[["Z"]], coef(est_ate1b)[["Z"]], coef(est_ate1c)[["Z"
 c(est_ate2, coef(est_ate2a)[["Z"]], coef(est_ate2b)[["Z"]], coef(est_ate2c)[["Z"]], coef(est_ate2d)[["Z"]])
 ```
 
-```{r}
-## from propertee
-the_design <- obs_spec(Z~unit_of_assignment(id)+block(x4),data=dat)
+## Estimate an overall ATE with stratification? {.shrink}
+
+```{r echo=TRUE}
+## from propertee: a more flexible way to wait by block size.
+the_design <- obs_spec(Z~unit_of_assignment(id)+block(x4),data=dat,na.fail=FALSE)
 est3 <- lmitt(Y~Z,specification=the_design,data=dat,weights="ate")
 coef(est3)[["Z."]]
 
-ate(the_design,data=dat)
-dat$nbwt
-
+## Notice that the ate() command creates weights.
+ate(the_design,data=dat)[1:10]
+dat$nbwt[1:10]
+stopifnot(all.equal(dat$nbwt, as.vector(ate(the_design,data=dat))))
 ```
 
 # From Subsets to Matching
 
-What if we wanted to adjust for $x_2$? 
+## Adjusting for a covariate with more than 2 values
 
-```{r}
+What if we wanted to adjust for something with more values, say, $x_2$?
+
+```{r echo=TRUE}
 summary(dat$x2)
 table(dat$x2)
 ```
 
+## Adjusting for a covariate with more than 2 values {.shrink}
+
 How about choosing two groups? (What is this code doing?)
 
-```{r}
+```{r echo=TRUE}
 ## lm_low_x2 <- lm(Y~Z,data=dat,subset=x2<=3)
 ## lm_high_x2 <- lm(Y~Z,data=dat,subset=x2>3)
 
@@ -182,15 +173,30 @@ est_adj_x2_precision <- lm_robust(Y~Z,data=dat,fixed_effects=~x2_strata)
 coef(est_adj_x2_precision)[["Z"]]
 ```
 
-We have two questions: (1) Did we adjust for $x_2$ enough? and (2) Why did we choose subsets based on $x_2=3$?
+## Adjusting for a covariate with more than 2 values
 
-## Matching instead of breakpoints
+New questions:
+
+1.  Did we adjust for $x_2$ enough?
+2.  Why did we choose subsets based on $x_2=3$?
+
+\medskip
+
+Let's focus on question #2 for today.
+
+## Matching instead of breakpoints {.shrink}
 
 The question about breakpoints leads us right back to the world of too many
 choices. How about this: We just want to make comparisons that are very similar
-in $x_2$. How do make homogeneous comparisons on $x_2$? (Answer: try modern matching)
+in $x_2$. How do make homogeneous comparisons on $x_2$? (Answer: try modern
+matching).
 
-```{r}
+\medskip
+
+To find subsets of units that are as similar as possible on $x_2$, we start with
+a **distance matrix**.
+
+```{r echo=TRUE}
 library(optmatch)
 
 x2_distance_matrix <- match_on(Z~x2,data=dat,method="euclidean")
@@ -203,44 +209,63 @@ with(dat,x2[id=="1"]-x2[id=="6"])
 with(dat,x2[id=="1"]-x2[id=="8"])
 ## Notice that the distance itself is always positive or 0?
 with(dat,x2[id=="2"]-x2[id=="4"])
-
 ```
 
-```{r}
+## What is the matching problem?
+
+We can see that we have more treated than control units here so we will either
+need to allow for sets that contain more than one treated unit or discard some
+of them.
+
+```{r echo=TRUE}
 summary(x2_distance_matrix)
 table(dat$x2_strata)
+```
+
+## Matching instead of breakpoints {.shrink}
+
+In the optmatch package `fullmatch` looks for the best configuration of 1
+treated to 1 or more controls or 1 control to 1 or more treated to minimize
+within set differences. The `pairmatch` function looks for pairs.
+
+```{r echo=TRUE}
 strat_design_1 <- fullmatch(x2_distance_matrix,data=dat)
 summary(strat_design_1)
-## How did we do?
+pair_design_1 <- pairmatch(x2_distance_matrix,data=dat)
+summary(pair_design_1)
+```
+
+
+## How did we do? Did we adjust enough? {.shrink}
+
+What is happening here?
+
+```{r echo=TRUE}
 stopifnot(all.equal(names(strat_design_1),row.names(dat)))
 dat$strata_1 <- strat_design_1
+dat$pair_1 <- pair_design_1
 
 strat_results <- dat %>% group_by(strata_1) %>% summarize(x2_diff=mean(x2[Z==1])- mean(x2[Z==0]),mean_x2=mean(x2)) %>% ungroup()
+pair_results <- dat %>% filter(!is.na(pair_1)) %>% 
+  group_by(pair_1) %>% summarize(x2_diff=mean(x2[Z==1])- mean(x2[Z==0]),mean_x2=mean(x2)) %>% ungroup()
+
 summary(strat_results$x2_diff)
 quantile(strat_results$x2_diff,seq(0,1,.1))
 summary(strat_results$mean_x2)
-
-
+summary(pair_results$x2_diff)
+quantile(pair_results$x2_diff,seq(0,1,.1))
+summary(pair_results$mean_x2)
 ```
-
-
-
-
-
-
-
 
 # Conclusion
 
 ## Summary of the Day
 
- - It is not so simple to "control for" even one covariate in an observational
- study let alone more than one. We worry about:
-   - Functional form dependence (including which covariates to control for and
-   exactly how)
-   - Extrapolation
-   - Interpolation (usually less of a big deal)
-   - Influential points
+-   It is not so simple to "control for" even one covariate in an observational study let alone more than one. We worry about:
+    -   Functional form dependence (including which covariates to control for and exactly how)
+    -   Extrapolation
+    -   Interpolation (usually less of a big deal)
+    -   Influential points
 
 Finally, we don't have a **standard** that we can use to craft an argument that we have "controlled for enough".
 
@@ -250,8 +275,12 @@ Notice also: In an observational study, we don't know how to assess bias without
 
 \medskip
 
-All is not lost: stratification based approaches will come to the rescue
-tomorrow!
+All is not lost! We can "hold constant" by "holding constant": implementing an
+old idea of stratification using modern algorithms to choose optimal strata. 
 
-## References
+\medskip
 
+Next: Nuts and Bolts, Matching on more than one variable, Estimation and Testing
+after Matching.
+
+# References

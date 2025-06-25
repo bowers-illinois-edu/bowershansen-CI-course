@@ -81,8 +81,16 @@ So, how might we try to set aside, or engage with, those alternative explanation
 A common approach looks like the following --- the "effect of $Z$ 'controlling for' $x_1$".
 
 ```{r lm1, echo=TRUE}
-lm1 <- lm_robust(Y ~ Z + x1, data = dat)
+lm1 <- lm(Y ~ Z + x1, data = dat)
 coef(lm1)["Z"]
+
+lm2 <- lm(Y~Z+x1+x2,data=dat)
+coef(lm2)[["Z"]]
+res_Y_x1_x2 <- residuals(lm(Y~x1+x2,data=dat))
+res_Z_x1_x2 <- residuals(lm(Z~x1+x2,data=dat))
+coef(lm(res_Y_x1_x2~res_Z_x1_x2))[[2]]
+
+
 ```
 
 Recall that this is the problem --- a $Z \rightarrow Y$ relationship could easily just reflect the $x_1 \rightarrow Z$ and $x_1 \rightarrow Y$ relationships and not the $Z \rightarrow Y$ relationship.
@@ -359,7 +367,8 @@ rug(res)
 
 ## What about modern variable selection tools? {.allowframebreaks}
 
-We could use a penalized model (like the lasso or adaptive lasso) or some other approach (like random forests) to **automatically choose** a specification.
+We could use a penalized model (like the lasso or adaptive lasso) or some other
+approach (like random forests) to **automatically choose** a specification.
 
 ```{r glmnet1, echo=TRUE}
 ## Here using the mm data with polynomials
@@ -381,10 +390,25 @@ sol1 <- coef(cv1$glmnet.fit, s = .743)
 sol1
 ```
 
-- Promising.  But, still have to justify **tuning parameter choice**.
-- In the context of propensity score modeling --- coming attraction! ---
-@ertefaieHejaziVanderLaan23 argue against tuning with cross-validation (the
-industry standard).
-- What about variables not included in the search?
 
+Still have to justify **tuning parameter choice** as well as **choice of terms**
+(covariates and functions of them).
 
+## Summary: "Controlling for" is hard
+
+Simple "add a control variable" works when (a) we only want to remove linear and
+additive relationships and (b) we believe that linearity and additivity hold
+everywhere (so we don't worry about extrapolation or interpolation), (c) and we
+have checked for influential points, (d) and we don't have too many control
+variables (overfitting, multicollinearity, problems for the CLT), (e) maybe we
+pre-specified the covariance adjustment specification (so there is no hint of
+fishing for a statistically significant result).
+
+\medskip
+
+It is also difficult to **know** and **communicate** that this kind of
+adjustment **adjusted enough**.
+
+\bigskip
+
+Sounds tough? What to do? (maybe switch approaches $\ldots$)
