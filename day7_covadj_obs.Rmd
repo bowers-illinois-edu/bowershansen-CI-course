@@ -1,14 +1,10 @@
 ---
 title: |
-  | Linear Regression and Stratification in Observational Studies
+  | Linear Regression and Stratification For Adjustment in Observational Studies
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
   | ICPSR 2025 Session 1
-<<<<<<< HEAD
-  | Ben Hansen \& Jake Bowers
-=======
   | Jake Bowers, Ben Hansen \& Tom Leavitt
->>>>>>> 2fe9e7ae000d93eb65e6f1ca7f44b4641696ec86
 bibliography:
   - BIB/MasterBibliography.bib
 fontsize: 10pt
