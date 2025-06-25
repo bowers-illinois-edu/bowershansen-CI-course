@@ -1,0 +1,257 @@
+---
+title: |
+  | Linear Regression and Stratification For Adjustment in Observational Studies
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: |
+  | ICPSR 2025 Session 1
+  | Jake Bowers, Ben Hansen \& Tom Leavitt
+bibliography:
+  - BIB/MasterBibliography.bib
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+colorlinks: true
+---
+
+<!-- To show notes  -->
+<!-- https://stackoverflow.com/questions/44906264/add-speaker-notes-to-beamer-presentations-using-rmarkdown -->
+
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
+```
+
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+## Load all of the libraries that we will use when we compile this file
+## We are using the renv system. So these will all be loaded from a local library directory
+library(dplyr)
+library(ggplot2)
+library(estimatr)
+library(coin)
+library(DeclareDesign)
+library(kableExtra)
+## remotes::install_github("benbhansen-stats/propertee")
+library(propertee)
+```
+
+## Today
+
+ 1. Agenda:
+- Recap: Day 6 on instruments, the problems of per-protocol comparisons versus
+as-assigned, and estimation in block-randomized experiments.
+- Linear regression for functional-form-based covariance adjustment in
+observational studies, aka "controlling for". Concerns about extrapolation,
+interpolation, linearity, influential points, parallel slopes, and in general
+whether we have "controlled for" enough.
+-  Introducing stratification for adjustment via modern matching: changing the
+question from "why did you make those groups" to "how to minimize differences
+within group"
+3. Questions arising from the reading or assignments or life.
+
+
+```{r child="child_files_/linear_regression_controlling_for.Rmd", eval=TRUE}
+```
+
+
+# The post-stratification strategy
+
+## How about stratification?
+
+Ok. What about simplifying? When a person wants to know whether we have
+"controlled for", say, $x_4$, I suspect they are really asking for this:
+
+```{r strat1, echo=TRUE}
+lm_x4_0 <- lm(Y ~ Z, data = dat, subset = x4 == 0)
+lm_x4_1 <- lm(Y ~ Z, data = dat, subset = x4 == 1)
+coef(lm_x4_1)[["Z"]]
+coef(lm_x4_0)[["Z"]]
+```
+
+In this case we can say that we have "held constant" $x_4$. But what is the
+**overall estimate** in this case?
+
+Choosing an additive and linear functional form allows us to predict $Y$ for
+any given $x$ where the differences in predicted Y relate to differences in x
+in a constant way with respect to the other variables. But this an implication
+or consequence of the linearity and additivity choice.
+
+
+## Estimate an overall ATE with stratification {.allowframebreaks}
+
+We know how to analyze a block-randomized (or strata-randomized) experiment
+(see [@gerbergreen2012]): each block is a mini-experiment. We *estimate the ATE
+within each block* and *combine by weighting each block specific estimate*.
+
+The block-size weight produces an unbiased estimator in randomized experiments
+--- in an observational study we don't know about the bias since we don't
+exactly know how to repeat the study.  The precision weight (aka the "fixed
+effects" weights) tends to produce smaller standard errors and confidence
+intervals but is biased in randomized experiments.
+
+```{r weighting, echo=TRUE}
+dat_sets <- dat %>%
+  group_by(x4) %>%
+  summarize(
+    nb = n(),
+    ateb = mean(Y[Z == 1]) - mean(Y[Z == 0]),
+    prob_trt = mean(Z),
+    nbwt = n() / nrow(dat),
+    prec_wt = nbwt * prob_trt * (1 - prob_trt),
+  )
+
+dat_sets$prec_wt_norm <- with(dat_sets, prec_wt / sum(prec_wt))
+
+print(dat_sets)
+
+est_ate1 <- with(dat_sets, sum(ateb * nbwt))
+est_ate2 <- with(dat_sets, sum(ateb * prec_wt / (sum(prec_wt))))
+```
+
+## Estimate an overall ATE with stratification? {.allowframebreaks}
+
+Block-  or strata-level weights can also be represented at the individual level --- and this allows us to use linear models (least squares) to produce block-weighted estimates of the overall average causal effect after "holding constant" $x_4$.
+
+```{r echo=TRUE}
+## Now at the individual level
+dat <- dat %>%
+  group_by(x4) %>%
+  mutate(
+    nb = n(),
+    mb = sum(Z),
+    ateb = mean(Y[Z == 1]) - mean(Y[Z == 0]),
+    prob_trt = mean(Z),
+    ## Inverse probability of treatment weights:
+    nbwt = (Z / prob_trt) + (1 - Z) / (1 - prob_trt),
+    prec_wt = nbwt * prob_trt * (1 - prob_trt)
+  ) %>%
+  ungroup()
+
+## Two ways to use the block-size weight
+est_ate1a <- difference_in_means(Y ~ Z, blocks = x4, data = dat)
+est_ate1b <- lm_robust(Y ~ Z, weights = nbwt, data = dat)
+est_ate1c <- lm(Y ~ Z, weights = nbwt, data = dat)
+
+## Three other ways to use the precision or harmonic weight
+est_ate2a <- lm_robust(Y ~ Z + x4, data = dat)
+est_ate2b <- lm_robust(Y ~ Z, fixed_effects = ~x4, data = dat)
+est_ate2c <- lm_robust(Y ~ Z, weights = prec_wt, data = dat)
+est_ate2d <- lm(Y ~ Z, weights = prec_wt, data = dat)
+
+## Notice that you can do this by hand or use packages
+c(est_ate1, coef(est_ate1a)[["Z"]], coef(est_ate1b)[["Z"]], coef(est_ate1c)[["Z"]])
+c(est_ate2, coef(est_ate2a)[["Z"]], coef(est_ate2b)[["Z"]], coef(est_ate2c)[["Z"]], coef(est_ate2d)[["Z"]])
+```
+
+```{r}
+## from propertee
+the_design <- obs_spec(Z~unit_of_assignment(id)+block(x4),data=dat)
+est3 <- lmitt(Y~Z,specification=the_design,data=dat,weights="ate")
+coef(est3)[["Z."]]
+
+ate(the_design,data=dat)
+dat$nbwt
+
+```
+
+# From Subsets to Matching
+
+What if we wanted to adjust for $x_2$? 
+
+```{r}
+summary(dat$x2)
+table(dat$x2)
+```
+
+How about choosing two groups? (What is this code doing?)
+
+```{r}
+## lm_low_x2 <- lm(Y~Z,data=dat,subset=x2<=3)
+## lm_high_x2 <- lm(Y~Z,data=dat,subset=x2>3)
+
+dat$x2_strata <- as.numeric(dat$x2<=3)
+the_design_x2 <- obs_spec(Z~unit_of_assignment(id)+block(x2_strata),data=dat)
+the_ate_weights_x2 <- ate(the_design_x2,data=dat)
+
+est_adj_x2_ate_v1 <- lmitt(Y~1,specification=the_design_x2,data=dat,weights="ate")
+est_adj_x2_ate_v2 <- lm_robust(Y~Z,,data=dat,weights=ate(the_design_x2,data=dat))
+coef(est_adj_x2_ate_v1)[["Z."]]
+coef(est_adj_x2_ate_v2)[["Z"]]
+
+est_adj_x2_precision <- lm_robust(Y~Z,data=dat,fixed_effects=~x2_strata)
+coef(est_adj_x2_precision)[["Z"]]
+```
+
+We have two questions: (1) Did we adjust for $x_2$ enough? and (2) Why did we choose subsets based on $x_2=3$?
+
+## Matching instead of breakpoints
+
+The question about breakpoints leads us right back to the world of too many
+choices. How about this: We just want to make comparisons that are very similar
+in $x_2$. How do make homogeneous comparisons on $x_2$? (Answer: try modern matching)
+
+```{r}
+library(optmatch)
+
+x2_distance_matrix <- match_on(Z~x2,data=dat,method="euclidean")
+x2_distance_matrix[1:3,1:5]
+
+dat[c("1","2","4","6","8"),c("Z","x2","id")]
+
+with(dat,x2[id=="1"]-x2[id=="4"])
+with(dat,x2[id=="1"]-x2[id=="6"])
+with(dat,x2[id=="1"]-x2[id=="8"])
+## Notice that the distance itself is always positive or 0?
+with(dat,x2[id=="2"]-x2[id=="4"])
+
+```
+
+```{r}
+summary(x2_distance_matrix)
+table(dat$x2_strata)
+strat_design_1 <- fullmatch(x2_distance_matrix,data=dat)
+summary(strat_design_1)
+## How did we do?
+stopifnot(all.equal(names(strat_design_1),row.names(dat)))
+dat$strata_1 <- strat_design_1
+
+strat_results <- dat %>% group_by(strata_1) %>% summarize(x2_diff=mean(x2[Z==1])- mean(x2[Z==0]),mean_x2=mean(x2)) %>% ungroup()
+summary(strat_results$x2_diff)
+quantile(strat_results$x2_diff,seq(0,1,.1))
+summary(strat_results$mean_x2)
+
+
+```
+
+
+
+
+
+
+
+
+# Conclusion
+
+## Summary of the Day
+
+ - It is not so simple to "control for" even one covariate in an observational
+ study let alone more than one. We worry about:
+   - Functional form dependence (including which covariates to control for and
+   exactly how)
+   - Extrapolation
+   - Interpolation (usually less of a big deal)
+   - Influential points
+
+Finally, we don't have a **standard** that we can use to craft an argument that we have "controlled for enough".
+
+\medskip
+
+Notice also: In an observational study, we don't know how to assess bias without making some kinds of claims about the design or model of the outcome.
+
+\medskip
+
+All is not lost: stratification based approaches will come to the rescue
+tomorrow!
+
+## References
+
