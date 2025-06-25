@@ -727,6 +727,7 @@ Features of a good adjustment process:
 ## Stratification V 1.0
 
 ```{r strat1, echo=TRUE}
+meddat$nh_high_hs <- as.numeric(meddat$nhAboveHS >= .1)
 lm1a <- lm(HomRate08 ~ nhTrt, data = meddat, subset = nhAboveHS >= .1)
 lm1b <- lm(HomRate08 ~ nhTrt, data = meddat, subset = nhAboveHS < .1)
 res_strat <- c(hiEd_Effect = coef(lm1a)["nhTrt"], loEd_Effect = coef(lm1b)["nhTrt"])
@@ -759,23 +760,41 @@ outcome_analysis_strat %>% summarize(ate_block_size= sum(ate_b * nbwt),
 One-step stratified estimation.
 
 ```{r strat2, echo=TRUE}
+## Create individual level weights as a check on the more convenient functions below
+meddat2 <- meddat %>% group_by(nh_high_hs) %>%
+  mutate(nb=n(),
+         prob_trt = mean(nhTrt),
+         ate_wt=nhTrt/(prob_trt) + (1-nhTrt)/(1-prob_trt)) %>% ungroup()
+
 ## Weight by block size
-ate1c <- difference_in_means(HomRate08 ~ nhTrt, blocks = I(nhAboveHS >= .1), data = meddat)
-ate1c
+ate1c <- difference_in_means(HomRate08 ~ nhTrt, blocks = nh_high_hs, data = meddat2)
+coef(ate1c)[["nhTrt"]]
 ## Using propertee
 library(propertee)
-med_spec <- obs_spec(nhTrt~unit_of_assignment(nh03)+block(nhAboveHS >=.1),data=meddat)
+med_spec <- obs_spec(nhTrt~unit_of_assignment(nh03)+block(nh_high_hs),data=meddat2)
 specification_table(med_spec,"treatment","blocks")
-ate1e <- lm(HomRate08~nhTrt,data=meddat,weights=ate(med_spec))
+ate1e <- lm(HomRate08~nhTrt,data=meddat2,weights=ate(med_spec))
 coef(ate1e)[[2]]
+ate1f <- lmitt(HomRate08~1,data=meddat2,specification=med_spec,weights="ate")
+coef(ate1f)[["nhTrt."]]
+
+ate1g <- lmitt(HomRate08~1,data=meddat2,specification=nhTrt~uoa(nh03)+block(nh_high_hs),weights="ate")
+coef(ate1g)[["nhTrt."]]
+
+## Directly weighting by probability of treatment
+ate1h <- lm(HomRate08~nhTrt,data=meddat2,weights=ate_wt)
+coef(ate1h)[["nhTrt"]]
+
+### The precision weighting versions
 ## Weight by both block size and  proportion in treatment vs control ("harmonic weight")
-lm1c <- lm_robust(HomRate08 ~ nhTrt, fixed_effects = ~ I(nhAboveHS >= .1), data = meddat)
+lm1c <- lm_robust(HomRate08 ~ nhTrt, fixed_effects = ~ nh_high_hs, data = meddat)
 coef(lm1c)["nhTrt"]
-lm1d <- lm(HomRate08 ~ nhTrt + I(nhAboveHS >= .1), data = meddat)
+## This is the least squares dummy variable version
+lm1d <- lm(HomRate08 ~ nhTrt + nh_high_hs, data = meddat)
 coef(lm1d)["nhTrt"]
 ```
 
-## Stratified adjustment V 2.0 {.allowframebreaks}
+## Stratified adjustment and Tesing V 2.0 {.allowframebreaks}
 
 One-step stratified testing
 
