@@ -15,13 +15,13 @@
 #'   \item nh03,         Neighborhood id                                                          
 #'   \item nhGroup,      Treatment (T) or Control (C)                                             
 #'   \item nhTrt,        Treatment (1) or Control (0)                                             
-#'   \item nhHom,        Mean homicide rate per 100,000 population in 2003                        
+#'   \item nhHom,        Homicide rate per 100,000 population in 2003                        
 #'   \item nhDistCenter, Distance to city center (km)                                             
 #'   \item nhLogHom,     Log Homicide (i.e. log(nhHom))
-#'   \item nhSisben,     (I forget)
-#'   \item nhPopD,       Population density(?)
-#'   \item nhMarDom,     ?
-#'   \item nhClass,      ?.  (This may read in as a numeric variable -- convert to factor!)
+#'   \item nhSisben,     Proportion receiving welfare benefits
+#'   \item nhPopD,       Population density, people/km^2
+#'   \item nhMarDom,     Marital status (Married =1)
+#'   \item nhClass,      SES,  w/ levels low_low < low < mid_low
 #'   \item \ldots
 #'  }
 #'  Outcomes (Baseline versions: nhBI03, nhCE03, nhPV03, nhQP03, nhTP03, HomCount2003, Pop2003)
@@ -38,7 +38,7 @@
            
 #' @docType data
 #'
-#' @usage data(meddata) (I think)
+#' @usage data(meddata) 
 #'
 #' @format A \code{data.frame} describing neighborhoods in Medellin, Colombia.
 #'
