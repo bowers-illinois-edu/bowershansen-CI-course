@@ -3,8 +3,8 @@ title: |
  | Statistical Adjustment and Assessment of Adjustment in Observational Studies
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2023 Session 1
-  | Jake Bowers \& Tom Leavitt
+  | ICPSR 2025 Session 1
+  | Jake Bowers \& Ben Hansen \& Tom Leavitt
 bibliography:
  - 'BIB/MasterBibliography.bib'
  - 'BIB/master.bib'

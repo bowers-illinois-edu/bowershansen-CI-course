@@ -285,6 +285,12 @@ $endif$
 \let\Begin\begin
 \let\End\end
 
+%% To wrap code lines
+%% https://stackoverflow.com/questions/26210656/in-r-markdown-in-rstudio-how-can-i-prevent-the-source-code-from-running-off-a-p
+\usepackage{fvextra}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+
+
 \begin{document}
 \tikzstyle{every picture}+=[remember picture]
 
