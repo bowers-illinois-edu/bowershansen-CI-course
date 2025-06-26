@@ -22,6 +22,7 @@ $endif$
 \usepackage{caption}
 \usepackage{amsfonts,amsthm,amssymb,amsmath,bbm,bm} % not sure if we should be using bm or unicode-math
 \usepackage{unicode-math} % for symbf among other stuff
+\setmathfont{Libertinus Math}
 \usepackage{tikz}
 \usepackage{tikz-cd}
 \usepackage{textpos}

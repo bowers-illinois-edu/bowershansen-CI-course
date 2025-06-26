@@ -104,13 +104,15 @@ and estimates, etc.) and experimental design.
 - If you have randomized $Z$ but not $D$, then maybe $Z$ is an instrument for
   $D$ (IV). (Like an observational study within an experiment.)
 - Find a discontinuity/A Natural Experiment (RDD: either natural experiment or
-  continuous forcing function)
+  continuous forcing function with assumptions about outcomes)
 - Multiple controls each with different biases (i.e. "Choice as an alternative
   to control" see [@rosenbaum:1999])
 - "Controlling For" directly in linear models, but lots of questions to
   answer...a lot of work...
-- Difference in Differences (if you have some pre- and post-outcomes)
-- Matched Stratification (approximating a block-randomized experiment)
+- Difference in Differences (if you have some pre- and post-outcomes and can
+  make assumptions about outcomes)
+- Matched Stratification (approximating a block-randomized experiment with
+  assumptions about covariates)
 - Best matched subset selection (approximating a completely or simply
   randomized experiment)
 - Weighting (the stratification approaches imply weightings, so we could try to
@@ -290,8 +292,7 @@ analysis phases of a project).
 \end{columns}
 
 
-## How did we do this? {.shrink}
-
+## How did we do this?
 ```{r xb1, echo=TRUE}
 acorn <- read.csv("data/acorn03.csv", row.names = 1)
 xb1 <- balanceTest(z ~ v_p2003 + v_m2003 + v_g2002 + v_p2002 + v_m2002 + v_s2001 +
@@ -300,8 +301,13 @@ xb1 <- balanceTest(z ~ v_p2003 + v_m2003 + v_g2002 + v_p2002 + v_m2002 + v_s2001
   v_m1996 + v_s1996 + size, p.adjust.method = "none",
 data = acorn
 )
+```
 
-xb1$results
+## How did we do this? {.shrink}
+
+
+```{r xb1_res, echo=TRUE}
+xb1$results[,,]
 ```
 
 ## How did we do this?
@@ -482,9 +488,9 @@ I suspect that $N=28$ is too small. `balanceTest` uses an asymptotic
 approximation to the randomization distribution.
 
 ```{r echo=FALSE, out.width=".8\\textwidth", cache=FALSE}
-par(mfrow = c(1, 2),pty="m",oma=rep(0,4),mgp=c(1.5,.5,0),mar=c(3,3,0,0))
-qqplot(rchisq(10000, df = 21), d2_dist)
-abline(0, 1)
+#par(mfrow = c(1, 2),pty="m",oma=rep(0,4),mgp=c(1.5,.5,0),mar=c(3,3,0,0))
+#qqplot(rchisq(10000, df = 21), d2_dist)
+#abline(0, 1)
 plot(density(d2_dist),main="",xlim=c(2,60))
 rug(d2_dist)
 lines(density(rchisq(10000, df = 21)),col="grey")
@@ -606,7 +612,7 @@ use of `balanceTest` in terms of randomization above.)
 ```{r xbmed, echo=TRUE}
 xbMed1 <- balanceTest(nhTrt ~ nhAboveHS, data = meddat)
 xbMed1$overall
-xbMed1$results
+xbMed1$results[,,]
 ```
 
 ## How would you adjust for Proportion Above HS Degree?
@@ -736,6 +742,11 @@ n_strat <- table(meddat$nhAboveHS >= .1)
 n_strat
 stopifnot(sum(n_strat) == nrow(meddat)) ## A test of code
 sum(res_strat * rev(n_strat) / 45) ## What is happening here?
+```
+
+## Stratification V 1.0
+
+```{r strat1a, echo=TRUE}
 ## Putting this together
 outcome_analysis_strat <- meddat %>% group_by(nhAboveHS>=.1) %>%
     summarize(nb=n(),nT=sum(nhTrt),nC=nb-nT,pr_trt=mean(nhTrt),bar_y_t=mean(HomRate08[nhTrt==1]),
@@ -755,7 +766,7 @@ outcome_analysis_strat %>% summarize(ate_block_size= sum(ate_b * nbwt),
 
 *But, standard errors? p-values? confidence intervals?*
 
-## Stratified adjustment V 2.0
+## Stratified adjustment V 2.0 {.allowframebreaks}
 
 One-step stratified estimation.
 
@@ -794,35 +805,37 @@ lm1d <- lm(HomRate08 ~ nhTrt + nh_high_hs, data = meddat)
 coef(lm1d)["nhTrt"]
 ```
 
-## Stratified adjustment and Tesing V 2.0 {.allowframebreaks}
+## Stratified adjustment and Testing V 2.0 {.allowframebreaks}
 
 One-step stratified testing
 
 ```{r echo=TRUE}
-xbate1 <- balanceTest(nhTrt ~ HomRate08+ strata(I(nhAboveHS >= .1)), data = meddat)
+xbate1 <- balanceTest(nhTrt ~ HomRate08+ strata(nh_high_hs), data = meddat2)
 xbate1$results[, c("adj.diff","p"), ]
 xbate1$overall
 
-## Effect of the treatment on the treated weights
+## Effect of the treatment on the treated weights (see the "adj.diff" column from balanceTest)
 outcome_analysis_strat$nTwt <- with(outcome_analysis_strat,nT/sum(nT))
 with(outcome_analysis_strat,sum(ate_b*nTwt))
+lm_ett <- lmitt(HomRate08~1,specification=med_spec,data=meddat2,weight="ett")
+coef(lm_ett)[["nhTrt."]]
 
 ## Approximating the as-if-randomized null distribution with a Normal
 ## approximation
-hstest2 <- independence_test(HomRate08~nhTrt|factor(nhAboveHS >= .1),data=meddat)
+hstest2 <- independence_test(HomRate08~nhTrt|factor(nh_high_hs),data=meddat)
 
 ## Now using the "as-if-randomized" distribution directly
 set.seed(12345)
-hstest2_perm <- independence_test(HomRate08~nhTrt|factor(nhAboveHS >= .1),data=meddat,distribution=approximate(nresample=10000))
+hstest2_perm <- independence_test(HomRate08~nhTrt|factor(nh_high_hs),data=meddat,distribution=approximate(nresample=10000))
 
 pvalue(hstest2)
 pvalue(hstest2_perm)
 
 ## Now trying different test statistics
-hstest4 <- independence_test(HomRate08~nhTrt|factor(nhAboveHS >= .1),data=meddat,ytrafo=rank_trafo)
+hstest4 <- independence_test(HomRate08~nhTrt|factor(nh_high_hs),data=meddat,ytrafo=rank_trafo)
 pvalue(hstest4)
 
-hstest5 <- wilcox_test(HomRate08~factor(nhTrt)|factor(nhAboveHS >= .1),data=meddat)
+hstest5 <- wilcox_test(HomRate08~factor(nhTrt)|factor(nh_high_hs),data=meddat)
 pvalue(hstest5)
 
 ```
@@ -832,7 +845,7 @@ pvalue(hstest5)
 Did we adjust enough? What would *enough* mean? Use the testing approach but now focus only on the covariate(s) that you are trying to adjust.
 
 ```{r xbHS1, echo=TRUE}
-xbHS1 <- balanceTest(nhTrt ~ nhAboveHS+strata(I(nhAboveHS >= .1)), data = meddat)
+xbHS1 <- balanceTest(nhTrt ~ nhAboveHS+strata(I(nh_high_hs)), data = meddat)
 xbHS1$overall
 xbHS1$results[1, c("Treatment", "Control", "adj.diff", "std.diff", "z", "p"), ] ## the covariate specific z-test
 ```
@@ -854,9 +867,9 @@ lm2x <- lm(HomRate08 ~ nhTrt + nhPopD + nhAboveHS, data = meddat)
 coef(lm2x)["nhTrt"]
 ```
 
-Maybe another plot?
+Maybe another plot? (see the 3d plots)
 
-```{r eval=FALSE}
+```{r scat3d, eval=TRUE}
 meddat$nhTrtF <- factor(meddat$nhTrt)
 library(car)
 scatter3d(HomRate08 ~ nhAboveHS + nhPopD,
@@ -876,11 +889,18 @@ scatter3d(HomRate08 ~ nhAboveHS + nhPopD,
 
 ## The Problem of Using  the Linear Model for  Adjustment
 
- - Problem of Interepretability: "Controlling for" is  "removing (additive) linear relationships" it is  not "holding constant"
- - Problem of Diagnosis and Assessment: What is the  standard against which we can compare a given linear covariance adjustment specification?
- - Problem of extrapolation and interpolation: Often known as "common support", too.
- - Problems of overly influential points and curse of  dimensionality: As dimensions increase, odds of influential  point increase (ex. bell curve in one dimension, one very influential point in 2 dimensions); also real limits on number of covariates (roughly $\sqrt{n}$ for OLS).
+ - Problem of Interepretability: "Controlling for" is  "removing (additive)
+   linear relationships" it is  not "holding constant"
+ - Problem of Diagnosis and Assessment: What is the  **standard** against which
+   we can compare a given linear covariance adjustment specification?
+ - Problem of extrapolation and interpolation: Often known as "common support",
+   too.
+ - Problems of overly influential points and curse of  dimensionality: As
+   dimensions increase, odds of influential  point increase (ex. bell curve in
+   one dimension, one very influential point in 2 dimensions); also real limits
+   on number of covariates (roughly $\sqrt{n}$ for OLS).
 
+<!--
 ## The Problem of Using  the Linear Model for  Adjustment
 
  - Problems of  bias even in randomized experiments:
@@ -907,6 +927,7 @@ What is $\beta_1$ in this case? We know the matrix representation here $(\bX^{T}
 \begin{equation}
 \hat{\beta}_1 = \frac{\var(X)\cov(Z,Y) - \cov(X,Z)\cov(X,Y)}{\var(Z)\var(X) - \cov(Z,X)^2}
 \end{equation}
+-->
 
 ## Can we improve stratified adjustment?
 
@@ -924,7 +945,7 @@ behind `optmatch` and other matching approaches.
 
 ## The optmatch workflow: The distance matrix
 
-Introduction to `optmatch` workflow. To minimize differences requires a matrix
+The `optmatch` workflow. To minimize differences requires a matrix
 of those differences (in general terms, a matrix of distances between the
 treated and control units)
 
@@ -937,6 +958,9 @@ abs(meddat$nhAboveHS[meddat$nhTrt == 1][1] - meddat$nhAboveHS[meddat$nhTrt == 0]
 ```
 
 ## Created a Stratified Research Design
+
+Then delate to an algorithm the optimization task of finding strata that
+minimize the overall within-set differences:
 
 ```{r fm1, echo=TRUE}
 fm1 <- fullmatch(absdist, data = meddat)
@@ -1006,10 +1030,7 @@ setdiffsfm1
 # quantile(setdiffs$mneddiffs, seq(0,1,.1))
 ```
 
-
-
 ## Evaluate the design: Inspect within set differences
-
 
 ```{r echo=FALSE, warnings=FALSE}
 setdiffspm1 <- meddat %>%
@@ -1068,6 +1089,504 @@ with(setmeanDiffs, sum(diffAboveHS * hwt / sum(hwt)))
 xbfm1$results[, , "fm1"]
 ```
 
+# Matching on Many Covariates: Using the Mahalnobis Distance to Scale Euclidean Distance
+
+## Dimension reduction using the Mahalanobis Distance
+
+The general idea: dimension reduction. When we convert many columns into one
+column we reduce the dimensions of the dataset (to one column). We can use the
+idea of **multivariate distance** to produce distance matrices to minimize
+**multivariate distances**.
+
+
+```{r out.width=".7\\textwidth"}
+X <- meddat[, c("nhAboveHS", "nhPopD")]
+plot(meddat$nhAboveHS, meddat$nhPopD, xlim = c(-.3, .6), ylim = c(50, 700))
+```
+
+## Dimension reduction using the Mahalanobis Distance
+
+First, let's look at Euclidean distance: $\sqrt{ (x_1 - x_2)^2 + (y_1 - y_2)^2 }$
+
+```{r echo=FALSE, out.width=".8\\textwidth"}
+par(mgp = c(1.25, .5, 0), oma = rep(0, 4), mar = c(3, 3, 0, 0))
+plot(meddat$nhAboveHS, meddat$nhPopD, xlim = c(-.3, .6), ylim = c(50, 700))
+points(mean(X[, 1]), mean(X[, 2]), pch = 19, cex = 1)
+arrows(mean(X[, 1]), mean(X[, 2]), X["407", 1], X["407", 2])
+text(.4, 200, label = round(dist(rbind(colMeans(X), X["407", ])), 2))
+text(.3,100, label="Distance from the mean of both dimensions")
+text(.3,75,bquote("(" * bar(x) * " = " * .(mean(X[,1])) * ", " *  bar(y) * " = " * .(mean(X[,2])) * ")"))
+```
+
+## Dimension reduction using the Mahalanobis Distance
+
+First, let's look at Euclidean distance: $\sqrt{ (x_1 - x_2)^2 + (y_1 - y_2)^2 }$
+
+```{r echo=FALSE, out.width=".5\\textwidth"}
+par(mgp = c(1.25, .5, 0), oma = rep(0, 4), mar = c(3, 3, 0, 0))
+plot(meddat$nhAboveHS, meddat$nhPopD, xlim = c(-.3, .6), ylim = c(50, 700))
+points(mean(X[, 1]), mean(X[, 2]), pch = 19, cex = 1)
+arrows(mean(X[, 1]), mean(X[, 2]), X["407", 1], X["407", 2])
+text(.4, 200, label = round(dist(rbind(colMeans(X), X["407", ])), 2))
+```
+
+Distance between point in middle of the plot and unit "407".
+
+```{r, echo=TRUE}
+tmp <- rbind(colMeans(X), X["407", ])
+tmp
+sqrt((tmp[1, 1] - tmp[2, 1])^2 + (tmp[1, 2] - tmp[2, 2])^2)
+```
+
+Problem: overweights variables with bigger scales (Population Density dominates here).
+
+## Dimension reduction using the Mahalanobis Distance
+
+Now the standardized Euclidean distance so neither variable is overly dominant.
+
+```{r echo=TRUE}
+Xsd <- scale(X)
+apply(Xsd, 2, sd) ## should be 1
+round(apply(Xsd, 2, mean),8) ## should be 0
+```
+
+```{r echo=FALSE,out.width=".6\\textwidth"}
+plot(Xsd[, 1], Xsd[, 2], xlab = "nhAboveHS/sd", ylab = "nhPopD/sd")
+points(mean(Xsd[, 1]), mean(Xsd[, 2]), pch = 19, cex = 1)
+arrows(mean(Xsd[, 1]), mean(Xsd[, 2]), Xsd["407", 1], Xsd["407", 2])
+text(2, -1.2, label = round(dist(rbind(colMeans(Xsd), Xsd["407", ])), 2))
+```
+
+
+## Dimension reduction using the Mahalanobis Distance
+
+The mahalanobis distance avoids the scale problem in the euclidean distance.^[For more [see here](https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance)] Here each circle are points of the same MH distance.
+
+```{r mhfig, echo=FALSE,out.width=".6\\textwidth"}
+library(chemometrics) ## for drawMahal
+library(mvtnorm)
+
+par(mgp = c(1.5, .5, 0), oma = rep(0, 4), mar = c(3, 3, 0, 0))
+mh <- mahalanobis(X, center = colMeans(X), cov = cov(X))
+drawMahal(X,
+  center = colMeans(X), covariance = cov(X),
+  quantile = c(0.975, 0.75, 0.5, 0.25)
+)
+abline(v = mean(meddat$nhAboveHS), h = mean(meddat$nhPopD))
+pts <- c("401", "407", "411", "202")
+arrows(rep(mean(X[, 1]), 4), rep(mean(X[, 2]), 4), X[pts, 1], X[pts, 2])
+text(X[pts, 1], X[pts, 2], labels = round(mh[pts], 2), pos = 1)
+```
+
+```{r}
+Xsd <- scale(X)
+tmp <- rbind(c(0, 0), Xsd["407", ])
+mahalanobis(tmp, center = c(0, 0), cov = cov(Xsd))
+## It is different from Euclidean distance
+edist <- sqrt((tmp[1, 1] - tmp[2, 1])^2 + (tmp[1, 2] - tmp[2, 2])^2)
+edist
+```
+
+
+## How is Mahalanobis distance different from Scaled Euclidean Distance?
+
+To Review: The Mahalanobis distance \citep{mahalanobis1930test}, avoids the scale and correlation problem in the euclidean distance.^[For more see <https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance>] $dist_M =  \sqrt{ (\mathbf{x} - \mathbf{\bar{x}})^T \mathbf{M}^{-1} (\mathbf{y} - \mathbf{\bar{y}}) }$ where $\mathbf{M}=\begin{bmatrix} \var(x) & \cov(x,y)  \\ \cov(x,y) & \var(y) \end{bmatrix}$
+
+
+Here, using simulated data: The contour lines show points with the same
+Mahalanobis distance and the numbers are Euclidean distance.
+
+```{r}
+set.seed(12345)
+newX <- rmvnorm(n=45,mean=colMeans(X),sigma=matrix(c(.03,-7,-7,14375),2,2))
+row.names(newX) <- row.names(X)
+#plot(newX)
+cor(newX)
+```
+
+```{r echo=FALSE, out.width=".4\\textwidth"}
+mhnew <- mahalanobis(newX,center=colMeans(newX),cov=cov(newX))
+drawMahal(newX,center=colMeans(newX),covariance=cov(newX),
+          quantile = c(0.975, 0.75, 0.5, 0.25))
+abline(v=mean(newX[,1]),h=mean(newX[,2]),col="gray")
+points(mean(newX[,1]),mean(newX[,2]),pch=19,cex=1)
+newpts <- c(3,16,17,20,22,30,42)
+row.names(newX[newpts,])
+arrows(mean(newX[,1]),mean(newX[,2]),newX[newpts,1],newX[newpts,2],length=.1)
+edist <- as.matrix(dist(rbind(centers=colMeans(newX),newX[newpts,])))
+text(newX[newpts,1]-.02,newX[newpts,2]-10,
+     label=round(edist[-1,"centers"],2),font=2)
+```
+
+## Dimension reduction using the Mahalanobis distance
+
+The contour lines show points with the same
+Mahalanobis distance, the numbers are Euclidean distance. Notice that the point with Euclidean distance of 161 is farther from the center than 250 in Mahalanobis terms.
+
+```{r echo=FALSE, results="hide", out.width=".75\\textwidth"}
+mhnew <- mahalanobis(newX,center=colMeans(newX),cov=cov(newX))
+drawMahal(newX,center=colMeans(newX),covariance=cov(newX),
+          quantile = c(0.975, 0.75, 0.5, 0.25))
+abline(v=mean(newX[,1]),h=mean(newX[,2]),col="gray")
+points(mean(newX[,1]),mean(newX[,2]),pch=19,cex=1)
+newpts <- c(3,16,17,20,22,30,42)
+row.names(newX[newpts,])
+arrows(mean(newX[,1]),mean(newX[,2]),newX[newpts,1],newX[newpts,2],length=.1)
+edist <- as.matrix(dist(rbind(centers=colMeans(newX),newX[newpts,])))
+text(newX[newpts,1]-.02,newX[newpts,2]-10,
+     label=round(edist[-1,"centers"],2),font=2)
+```
+
+
+## Dimension reduction using the Mahalanobis distance
+
+The contour lines show points with the same
+Mahalanobis distance and the numbers are Euclidean distance (**now on the
+standardized variables**). (notice that 1.63 is farther from the center in
+Mahalanobis terms than 2.11, but 2.11 is farther in Eucliean terms.)
+
+
+```{r echo=FALSE}
+newXsd <- scale(newX)
+drawMahal(newXsd,center=colMeans(newXsd),covariance=cov(newXsd),
+          quantile = c(0.975, 0.75, 0.5, 0.25))
+abline(v=mean(newXsd[,1]),h=mean(newXsd[,2]),col="gray")
+points(mean(newXsd[,1]),mean(newXsd[,2]),pch=19,cex=1)
+arrows(mean(newXsd[,1]),mean(newXsd[,2]),newXsd[newpts,1],newXsd[newpts,2],length=.1)
+edistSd <- as.matrix(dist(rbind(centers=colMeans(newXsd),newXsd[newpts,])))
+text(newXsd[newpts,1]-.1,newXsd[newpts,2]-.1,
+     label=round(edistSd[-1,"centers"],2),font=2)
+```
+
+Basic point: Mahalanobis distance standardized *both* by univariate variance *and* covariance.
+
+## Matching on the Mahalanobis Distance
+
+Here using the rank based Mahalanobis distance following DOS Chap. 8 (but comparing to the ordinary version).
+
+```{r echo=TRUE}
+mhdist <- match_on(nhTrt ~ nhPopD + nhAboveHS, data = meddat, method = "rank_mahalanobis")
+mhdist[1:3, 1:3]
+mhdist2 <- match_on(nhTrt ~ nhPopD + nhAboveHS, data = meddat)
+mhdist2[1:3, 1:3]
+mhdist2[, "407"]
+```
+
+## Matching on the Mahalanobis Distance
+
+Here using the rank based Mahalanobis distance following DOS Chap. 8 (but comparing to the ordinary version).
+
+```{r out.width=".5\\textwidth"}
+par(mgp = c(1.5, .5, 0), oma = rep(0, 4), mar = c(3, 3, 0, 0))
+drawMahal(X,
+  center = colMeans(X), covariance = cov(X),
+  quantile = c(0.975, 0.75, 0.5, 0.25)
+)
+abline(v = mean(meddat$nhAboveHS), h = mean(meddat$nhPopD))
+cpts <- c("401", "407", "411")
+tpts <- c("101", "102", "202")
+arrows(X[tpts, 1], X[tpts, 2], rep(X["407", 1]), rep(X["407", 2]))
+text(X[tpts, 1], X[tpts, 2], labels = round(mhdist2[tpts, "407"], 2), pos = 1)
+```
+
+```{r echo=TRUE}
+mhdist2[tpts, "407"]
+```
+
+## Matching on the Mahalanobis Distance
+
+```{r echo=TRUE}
+mhdist <- match_on(nhTrt ~ nhPopD + nhAboveHS, data = meddat, method = "rank_mahalanobis")
+
+fmMh <- fullmatch(mhdist, data = meddat)
+summary(fmMh, min.controls = 0, max.controls = Inf)
+summary(unlist(matched.distances(fmMh,mhdist)))
+
+quantile(as.vector(mhdist),seq(0,1,.1))
+mhdistCal1 <- mhdist + caliper(mhdist,2)
+mhdistCal1[1:5,1:5]
+fmMh1 <- fullmatch( mhdistCal1, data = meddat) #, min.controls = 1)
+summary(fmMh1, min.controls = 0, max.controls = Inf)
+summary(unlist(matched.distances(fmMh1,mhdist)))
+
+```
+
+```{r echo=TRUE}
+
+xbMh <- balanceTest(nhTrt ~ nhAboveHS + nhPopD+strata(fmMh)+strata(fmMh1),  data = meddat)
+xbMh$results[,,]
+xbMh$overall
+```
+
+
+#  Matching on Many Covariates: Using Propensity Scores
+
+
+## The propensity score
+
+Given covariates $\mathbf{x} (=(x_1, \ldots, x_k))$, and a
+treatment variable $Z$, $Z(u) \in \{0, 1\}$,  $\PP (Z \vert \mathbf{x})$ is known as the (true) \textbf{propensity score} (PS).
+$$ \phi( \mathbf{x} ) \equiv \log\left( \PP (Z=1 \vert \mathbf{x})/\PP (Z=0 \vert \mathbf{x}) \right)$$
+is also known as the PS.  In practice, one works
+with an estimated PS, $\hat{\PP} (Z \vert \mathbf{x})$ or
+$\hat{\phi}(\mathbf{x})$.
+
+Theoretically, propensity-score strata or matched sets both
+
+ 1. reduce extrapolation; and
+ 2. balance each of $x_1, \ldots, x_k$.
+
+They do this by making the comparison more "experiment-like", at least in terms of $x_1, \ldots, x_k$.
+
+Theory @rosrub83 also tells us that in the **absence of hidden bias**, such a stratification
+supports unbiased estimation of treatment effects.
+
+
+## Propensity scoring in practice
+
+ - Fitted propensity scores help identify extrapolation.
+ - In practice, stratification on $\hat{\phi}(\mathbf{x})$ helps balance each
+   of $x_1, \ldots, x_k$ compared to no stratification.
+
+
+There are \emph{lots of cases} in which adjustment with the propensity score alone fails to generate estimates that agree with those of randomized studies.
+
+There are various reasons for this, starting with:
+
+ - lots of observational studies that don't measure quite enough $x$es or the
+   right $x$es or the right $x$es in the right way
+ - **hidden biases** --- propensity scores address bias on measured variables,
+   not unmeasured ones.
+
+## Intuition about the propensity score
+
+A propensity score is the output of a function of covariates as they relate to
+$Z$ (the "treatment" or "intervention"). Why reduce the dimension of $\mathbf{x}$
+in this way rather than, say, using Mahalanobis distance?
+
+\medskip
+
+Recall that an experiment breaks the relationship between $Z$ and
+$\mathbf{x}=\{ x_1,x_2,\ldots \}$ but not between $\mathbf{x}$ and $Y$ or
+$y_1,y_0$.
+
+\includegraphics[width=.25\textwidth]{xyzdiagram.pdf}
+
+```{r tikzarrows, eval=FALSE, include=FALSE, engine='tikz', engine.opts=list(template="icpsr-tikz2pdf.tex")}
+\usetikzlibrary{arrows}
+\begin{tikzcd}[ampersand replacement=\&, column sep=small]
+  Z  \arrow[from=1-1,to=1-3] &                               & Y \\
+  &   \mathbf{x} \arrow[from=2-2,to=1-1, "\text{0 if Z rand}"] \arrow[from=2-2,to=1-3] &
+\end{tikzcd}
+```
+
+Making strata of units who are similar on the propensity score reduces (or removes)
+the relationship between $Z$ and the relevant $\mathbf{x}$ within strata (either the
+units have similar values for $\mathbf{x}$ or the particular $x$s which do not have a
+strong (linear, additive) relationship with $Z$).
+
+## Matching on the propensity score
+
+**Make the score** (Note that we will be using `brglm` or `bayesglm` in the
+future because of logit separation problems when the number of covariates
+increases.)
+
+```{r}
+theglm <- glm(nhTrt ~ nhPopD + nhAboveHS, data = meddat, family = binomial(link = "logit"))
+thepscore <- theglm$linear.predictor
+thepscore01 <- predict(theglm, type = "response")
+```
+
+We tend to match on the linear predictor rather than the version required to
+range only between 0 and 1. Recall how distance matrices required choices of
+distance metrics? We don't want to categorize two observations as "close" just
+because the logit function squashed them together near 0 or 1.
+
+```{r echo=FALSE, out.width=".7\\textwidth"}
+par(mfrow = c(1, 2), oma = rep(0, 4), mar = c(3, 3, 2, 0), mgp = c(1.5, .5, 0))
+boxplot(split(thepscore, meddat$nhTrt), main = "Linear Predictor (XB)")
+stripchart(split(thepscore, meddat$nhTrt), add = TRUE, vertical = TRUE)
+
+boxplot(split(thepscore01, meddat$nhTrt), main = "Inverse Link Function (g^-1(XB))")
+stripchart(split(thepscore01, meddat$nhTrt), add = TRUE, vertical = TRUE)
+```
+
+
+## Matching on the propensity score: What do the distance matrix entries mean?
+
+optmatch creates a scaled propensity score distance by default --- scaling by, roughly, the pooled median absolute deviation of the covariate (or here, the propensity score). So, the distance matrix entries are like standard deviations  --- standardized scores.
+
+```{r}
+## Create a distance matrix using the propensity scores
+psdist <- match_on(theglm, data = meddat)
+psdist[1:4, 1:4]
+```
+
+What do those distances mean?
+```{r}
+simpdist <- outer(thepscore, thepscore, function(x, y) {
+  abs(x - y)
+})
+mad(thepscore[meddat$nhTrt == 1])
+mad(thepscore[meddat$nhTrt == 0])
+(mad(thepscore[meddat$nhTrt == 1]) + mad(thepscore[meddat$nhTrt == 0])) / 2
+## We can see the actual R function here: optmatch:::match_on_szn_scale
+## optmatch:::match_on_szn_scale(thepscore, Tx = meddat$nhTrt)
+simpdist["101", c("401", "402", "403")]
+simpdist["101", c("401", "402", "403")] / .9137
+psdist["101", c("401", "402", "403")]
+```
+
+
+## Matching on the propensity score
+
+The following design balances the two covariates used in the creation of the
+propensity score well. It does not balance the baseline outcome well (not that
+we assumed it would, but demonstrating here that the covariates used for the
+creation of the design need not necessarily be all of those used to
+**evaluate** the design).
+
+```{r}
+fmPs <- fullmatch(psdist, data = meddat)
+summary(fmPs, min.controls = 0, max.controls = Inf,propensity.model=theglm)
+meddat$fmPs <- factor(fmPs)
+
+xb2 <- balanceTest(nhTrt ~ nhPopD + nhAboveHS+strata(fmPs), data = meddat)
+xb2$overall[, ]
+
+xb2a <- xBalance(nhTrt ~ nhPopD + nhAboveHS + HomRate03,
+  strata = list(fmPs = ~fmPs), data = meddat,
+  report = "all"
+)
+xb2a$overall[, ]
+```
+
+Compare to Mahalanobis distance:
+
+```{r}
+mh_dist <- match_on(nhTrt ~ nhPopD + nhAboveHS,
+  data = meddat,
+  method = "rank_mahalanobis"
+)
+fmMh <- fullmatch(mh_dist, data = meddat)
+summary(fmMh)
+xb3 <- xBalance(nhTrt ~ nhPopD + nhAboveHS + HomRate03,
+  strata = list(unstrat = NULL, fmPs = ~fmPs, fmMh = ~fmMh), data = meddat,
+  report = "all"
+)
+xb3$overall[, ]
+xb3$results[, "std.diff", ]
+```
+
+```{r}
+plot(xb3, ggplot = TRUE) + theme_classic()
+```
+
+# Matching Tricks of the Trade: Calipers, Exact Matching
+
+## Calipers
+
+The optmatch package allows calipers (which forbids certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we forbid comparisons which differ by more than 2 propensity score standardized distances.
+
+```{r}
+## First inspect the distance matrix itself: how are the distances distributed?
+quantile(as.vector(psdist), seq(0, 1, .1))
+## Next, apply a caliper (setting entries to Infinite)
+psdistCal <- psdist + caliper(psdist, 2)
+as.matrix(psdist)[5:10, 5:10]
+as.matrix(psdistCal)[5:10, 5:10]
+summary(psdistCal)
+```
+## Calipers
+
+The optmatch package allows calipers (which forbid certain pairs from being
+matched).^[You can implement penalties by hand.] Here, for example, we forbid
+comparisons which differ by more than 2 standard deviations on the propensity
+score. (Notice that we also use the `propensity.model` option to `summary` here
+to get a quick look at the balance test:)
+
+```{r}
+fmCal1 <- fullmatch(psdist + caliper(psdist, 2), data = meddat, tol = .00001)
+summary(fmCal1, min.controls = 0, max.controls = Inf, propensity.model = theglm)
+pmCal1 <- pairmatch(psdist + caliper(psdist, 2), data = meddat, remove.unmatchables = TRUE)
+summary(pmCal1, propensity.model = theglm)
+```
+
+## Calipers
+
+Another example: We may want to match on mahalanobis distance but disallow any
+pairs with extreme propensity distance and/or extreme differences in baseline
+homicide rates (here using many covariates all together).
+
+
+```{r}
+## Create an R formulate object from vectors of variable names
+balfmla <- reformulate(c("nhPopD", "nhAboveHS"), response = "nhTrt")
+
+## Create a mahalanobis distance matrix (of rank transformed data)
+mhdist <- match_on(balfmla, data = meddat, method = "rank_mahalanobis")
+
+## Now make a matrix recording absolute differences between neighborhoods in
+## terms of baseline homicide rate
+tmpHom03 <- meddat$HomRate03
+names(tmpHom03) <- rownames(meddat)
+absdist <- match_on(tmpHom03, z = meddat$nhTrt, data = meddat)
+absdist[1:3, 1:3]
+quantile(as.vector(absdist), seq(0, 1, .1))
+quantile(as.vector(mhdist),seq(0,1,.1))
+## Now create a new distance matrix using two calipers:
+distCal <- psdist + caliper(mhdist, 9) + caliper(absdist, 2)
+as.matrix(distCal)[5:10, 5:10]
+## Compare to:
+as.matrix(mhdist)[5:10, 5:10]
+```
+
+## Calipers
+
+Now, use this new matrix for the creation of stratified designs --- but possibly excluding some units (also showing here the `tol` argument. The version with the tighter tolerance produces a solution with smaller overall distances)
+
+```{r}
+fmCal2a <- fullmatch(distCal, data = meddat, tol = .001)
+summary(fmCal2a, min.controls = 0, max.controls = Inf)
+fmCal2b <- fullmatch(distCal, data = meddat, tol = .00001)
+summary(fmCal2b, min.controls = 0, max.controls = Inf, propensity.model=theglm)
+
+meddat$fmCal2a <- fmCal2a
+meddat$fmCal2b <- fmCal2b
+
+fmCal2a_dists <- matched.distances(fmCal2a, distCal)
+fmCal2b_dists <- matched.distances(fmCal2b, distCal)
+
+mean(unlist(fmCal2a_dists))
+mean(unlist(fmCal2b_dists))
+```
+
+## Exact Matching
+
+We often have covariates that are categorical/nominal and for which we really care about strong balance. One approach to solve this problem is match **exactly** on one or more of such covariates. If `fullmatch` or `match_on` is going slow, this is also an approach to speed things up.
+
+```{r echo=FALSE}
+meddat$classLowHi <- ifelse(meddat$nhClass %in% c(2, 3), "hi", "lo")
+```
+
+```{r}
+dist2 <- psdist + exactMatch(nhTrt ~ classLowHi, data = meddat)
+summary(dist2)
+## or mhdist <- match_on(balfmla,within=exactMatch(nhTrt~classLowHi,data=meddat),data=meddat,method="rank_mahalanobis")
+## or fmEx1 <- fullmatch(update(balfmla,.~.+strata(classLowHi)),data=meddat,method="rank_mahalanobis")
+fmEx1 <- fullmatch(dist2, data = meddat, tol = .00001)
+summary(fmEx1, min.controls = 0, max.controls = Inf, propensity.model=theglm)
+print(fmEx1, grouped = T)
+meddat$fmEx1 <- fmEx1
+```
+## Exact Matching
+
+```{r}
+ftable(Class = meddat$classLowHi, Trt = meddat$nhTrt, fmEx1, col.vars = c("Class", "Trt"))
+```
+
+# Summary
+
 ## Summary of the Day
 
  - We can assess the randomization of a randomized experiment easily using
@@ -1086,5 +1605,6 @@ xbfm1$results[, , "fm1"]
    a computer (i.e. `optmatch`) --- we can think of it as an optimization
    problem and ask the computer to optimize.
 
-## References
+
+# References
 
