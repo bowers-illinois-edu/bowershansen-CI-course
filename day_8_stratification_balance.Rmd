@@ -49,9 +49,9 @@ library(optmatch)
 ```
 ## Today: Agenda
 
-1. Agenda: The problem of covariance adjustment to reduce "bias"/ confounding.
-   **How can we answer the question about whether we have adjusted enough and
-   avoided extrapolation and dependence on functional form?**
+1. Agenda: The problem of covariance adjustment to reduce confounding. How can
+   we answer the question about **whether we have adjusted enough** while
+   avoiding extrapolation and dependence on functional form?
 
     1. A simple approach: stratification on one categorical variable (using
        weighted combinations of within-strata estimates for an overall
@@ -65,16 +65,19 @@ library(optmatch)
 ## Today: Recap
 
 2. Recap: Problems of using linear (or other parametric models) for
-   **adjustment** (as well as statistical inference) include justifying
-   variables, justifying functional forms (of $x_1 \rightarrow Z$ and $x_1
-   \rightarrow Y$ and $x_1 \rightarrow x_2$, and $f(x_1,x_2) \rightarrow Y$ and
-   $f(x_1,x_2) \rightarrow Z$ and $f(x_1,x_2) \rightarrow x_3$), diagnosing
-   extrapolation and interpolation, diagnosing and confronting overly
-   influential points, and struggling with the problems of multiple testing and
-   integrity arising from seeing the causal estimate and test results every
-   time you try a new specification. And, basically, finding a **standard of
-   adjustment** for such models where we can answer the question "have we
-   adjusted enough"?
+   **adjustment** (as well as statistical inference):
+   1. justifying variables,
+   2. justifying functional forms (of $x_1 \rightarrow Z$ and $x_1 \rightarrow
+      Y$ and $x_1 \rightarrow x_2$, and $f(x_1,x_2) \rightarrow Y$ and
+      $f(x_1,x_2) \rightarrow Z$ and $f(x_1,x_2) \rightarrow x_3$),
+   3. diagnosing and avoiding (or embracing if you believe the functional form)
+      extrapolation and interpolation,
+   4. diagnosing and confronting overly influential points,
+   4. struggling with the problems of multiple testing and integrity arising
+      from seeing the causal estimate and test results every time you try a new
+      specification.
+   5. And, basically, finding a **standard of adjustment** for such models
+      where we can answer the question "have we adjusted enough"?
 3. Questions arising from the reading or assignments or life?
 
 # Strategies for Causal Inference
@@ -83,14 +86,14 @@ library(optmatch)
 
 ### BEFORE fielding the study
 - Plan the design for interpretability and power.
-- Register your analysis plan (including hypotheses to be tested, estimands
-and estimates, etc.) and experimental design.
+- Register your analysis plan (including hypotheses to be tested, estimands and
+  estimates, etc.) and experimental design.
 
 ### AFTER outcome data have been collected
  - Make the case that randomization worked, check attrition, compliance,
-   implementation. (Often trivial, but in field experiments with long chains of
-   responsibility, an important screening step even if not dispositive of a
-   "failed experiment").
+   implementation. (In field experiments with long chains of responsibility, an
+   important screening step even if not dispositive of a "failed experiment".
+   Easier in other experiments.).
  - Increase precision with design and test statistics (and even models of
    effects)
  - Make sure that your estimator is estimating the right thing (i.e. is not
@@ -127,18 +130,14 @@ and estimates, etc.) and experimental design.
 
 ## Regression is not research design
 
-What does this mean?
-
-\smallskip
-
 Research design occurs **before** estimation and testing. You can try out
-of ideas, simulate, discuss, register your planned analysis and your
-design, **before** you produce the estimate or test having to do with some
-causal effect.
+ideas, simulate, discuss, register your planned analysis and your design,
+**before** you observe outcomes or produce the estimate or test result having to do
+with some causal effect.
 
 \smallskip
 
-This means you are not seeing the estimates and tests when you are looking for
+This means you should not see estimates and test results when you are looking for
 a good design. Otherwise, when you present the result of a regression model
 after searching for a specification, readers wonder:
 
@@ -146,17 +145,23 @@ after searching for a specification, readers wonder:
    Or was this cherry picked?
 2. how many $p$-values were looked at before reporting this one with $p < .05$?
 
-## Regression is not research design: Side note on multiple testing
+## Jelly beans do not cause acne
 
-Recall that if we pre-specify that we will  reject $H_0$ when $p < .05$, we are
-saying that it is ok up to 5\% of tests to mislead us; to have $p < .05$ when
-there is no effect (when $H_0$ is true). So, a $p < .05$ after one test
-indicates **either** a rare testing error (a false positive result) **or** that
-$H_0$ is false. But an unadjusted $p <  .05$ after 100 tests is virtually
-certain to occur (with prob of $1 - (1-.05)^100 \approx .99$) when $H_0$ is
-true: $p < .05$ is a signal of a false positive error not of a substantive
-signal about $H_0$. So we should not reject the null even if the $p < .05$ in
-this case. (See [EGAP Guide on Multiple Comparisons](https://egap.org/resource/10-things-to-know-about-multiple-comparisons/)).
+:::::::::::::: {.columns}
+::: {.column}
+
+\includegraphics[width=.95\textwidth]{xkcd_significant_part1.png}
+
+:::
+::: {.column}
+\includegraphics[width=\textwidth]{xkcd_significant_part2.png}
+Probability of at least one false positive error in 20 tests is $1 - (1-.05)^{20}=.64$ **when jelly beans do not cause acne**.
+(See [EGAP Guide on Multiple Comparisons](https://egap.org/resource/10-things-to-know-about-multiple-comparisons/)).
+
+
+:::
+::::::::::::::
+
 
 ## Regression is not research design
 
@@ -211,7 +216,7 @@ plot_grid(g1,g2,ncol=1)
 ::: {.column}
 1. "Are we comparing $Y$ values with different $Z$ values but the same $x1$ value? Does our data fitting do the same thing as actually holding constant $x1$?" (No.)
 2. "Does fitting our mathematical model to data do the same thing as physically holding constant?" (No.)
-3. "Do predictions of $Y$ from our model for two values of $Z$ that are 1 apart differ by the same amount regardless of (a) which two values they are and (b) any value that we put in for $x$?" (Yes. This is because we decided to describe all of the relationships with a line.)
+3. "Do predictions of $Y$ from our model for two values of $Z$ that are 1 apart differ by the same amount regardless of (a) which two values they are and (b) any value that we put in for $x$?" (Yes. This is because **we decided** to describe all of the relationships with a line.)
 :::
 ::::::::::::::
 
@@ -246,7 +251,7 @@ axes3d()
   mean-difference calculator) and friendly software designers provide tests of
   the weak null of no average effects by default (that are valid given
   assumptions about standard errors and CLTs).
-- Linear models are not research designs and should not be used as such.
+- \textcolor{blue}{Linear models are not research designs and should not be used as such.}
 - Using linear models for adjustment might make sense if you are not worried
   about and/or have investigated: extrapolation, interpolation, functional
   form, influential points, and you have pre-specified your specification to
@@ -749,8 +754,13 @@ sum(res_strat * rev(n_strat) / 45) ## What is happening here?
 ```{r strat1a, echo=TRUE}
 ## Putting this together
 outcome_analysis_strat <- meddat %>% group_by(nhAboveHS>=.1) %>%
-    summarize(nb=n(),nT=sum(nhTrt),nC=nb-nT,pr_trt=mean(nhTrt),bar_y_t=mean(HomRate08[nhTrt==1]),
-        bar_y_c=mean(HomRate08[nhTrt==0]),ate_b=bar_y_t - bar_y_c)
+  summarize(nb=n(),
+            nT=sum(nhTrt),
+            nC=nb-nT,
+            pr_trt=mean(nhTrt),
+            bar_y_t=mean(HomRate08[nhTrt==1]),
+            bar_y_c=mean(HomRate08[nhTrt==0]),
+            ate_b=bar_y_t - bar_y_c)
 
 outcome_analysis_strat <- outcome_analysis_strat %>% mutate(nbwt=nb/sum(nb),
     prec_wt0 = nbwt * pr_trt * (1-pr_trt))
@@ -854,38 +864,11 @@ xbHS1$results[1, c("Treatment", "Control", "adj.diff", "std.diff", "z", "p"), ] 
 
   -  (+) Easy to explain what  "controlling for" or "adjustment" means.
   -  (-) Hard to justify any particular cut-point
-  -  (-) We could probably adjust *more* --- comparing neighborhoods similar in education rather than just  within  big   strata
+  -  (-) We could probably adjust *more* on education --- comparing neighborhoods similar in
+    education rather than just  within  big   strata
+  -  (-) We might want to adjust for more than one covariate.
 
-
-## The Curse of Dimensionality and linear adjustment for one more variable.
-
-What about more than one variable? Have we controlled for both population
-density and educational attainment enough? How would we know?
-
-```{r lm2x, echo=TRUE}
-lm2x <- lm(HomRate08 ~ nhTrt + nhPopD + nhAboveHS, data = meddat)
-coef(lm2x)["nhTrt"]
-```
-
-Maybe another plot? (see the 3d plots)
-
-```{r scat3d, eval=TRUE}
-meddat$nhTrtF <- factor(meddat$nhTrt)
-library(car)
-scatter3d(HomRate08 ~ nhAboveHS + nhPopD,
-  groups = meddat$nhTrtF,
-  data = meddat, surface = TRUE,
-  fit = c("linear")
-) # additive"))
-```
-
-```{r echo=FALSE, eval=FALSE}
-scatter3d(HomRate08 ~ nhAboveHS + nhPopD,
-  groups = meddat$nhTrtF,
-  data = meddat, surface = TRUE,
-  fit = c("additive")
-)
-```
+<!--
 
 ## The Problem of Using  the Linear Model for  Adjustment
 
@@ -900,7 +883,6 @@ scatter3d(HomRate08 ~ nhAboveHS + nhPopD,
    one dimension, one very influential point in 2 dimensions); also real limits
    on number of covariates (roughly $\sqrt{n}$ for OLS).
 
-<!--
 ## The Problem of Using  the Linear Model for  Adjustment
 
  - Problems of  bias even in randomized experiments:
@@ -957,9 +939,9 @@ absdist[1:3, 1:3]
 abs(meddat$nhAboveHS[meddat$nhTrt == 1][1] - meddat$nhAboveHS[meddat$nhTrt == 0][1])
 ```
 
-## Created a Stratified Research Design
+## Created a Stratified Research Design {.shrink}
 
-Then delate to an algorithm the optimization task of finding strata that
+Then delegate to an algorithm the optimization task of finding strata that
 minimize the overall within-set differences:
 
 ```{r fm1, echo=TRUE}
@@ -1054,7 +1036,7 @@ from a randomized experiment.
 
 ```{r xbhs2, echo=TRUE}
 xbfm1 <- balanceTest(nhTrt ~ nhAboveHS+strata(fm1), data = meddat)
-xbfm1$results
+xbfm1$results[,,]
 xbfm1$overall
 ```
 
@@ -1090,6 +1072,34 @@ xbfm1$results[, , "fm1"]
 ```
 
 # Matching on Many Covariates: Using the Mahalnobis Distance to Scale Euclidean Distance
+
+## The Curse of Dimensionality and visualizing linear adjustment for one more variable.
+
+But first, look at how linear covariance adjustment would deal with multiple covariates.
+
+\smallskip
+
+What about more than one variable? Have we controlled for both population
+density and educational attainment enough? How would we know?
+
+```{r lm2x, echo=TRUE}
+lm2x <- lm(HomRate08 ~ nhTrt + nhPopD + nhAboveHS, data = meddat)
+coef(lm2x)["nhTrt"]
+```
+
+Maybe another plot? (see the 3d plots)
+
+```{r scat3d, eval=TRUE}
+meddat$nhTrtF <- factor(meddat$nhTrt)
+library(car)
+scatter3d(HomRate08 ~ nhAboveHS + nhPopD,
+  groups = meddat$nhTrtF,
+  data = meddat, surface = TRUE,
+  fit = c("linear")
+) # additive"))
+```
+
+
 
 ## Dimension reduction using the Mahalanobis Distance
 
@@ -1301,7 +1311,10 @@ mhdist <- match_on(nhTrt ~ nhPopD + nhAboveHS, data = meddat, method = "rank_mah
 fmMh <- fullmatch(mhdist, data = meddat)
 summary(fmMh, min.controls = 0, max.controls = Inf)
 summary(unlist(matched.distances(fmMh,mhdist)))
+```
 
+
+```{r intro_caliper, eval=FALSE}
 quantile(as.vector(mhdist),seq(0,1,.1))
 mhdistCal1 <- mhdist + caliper(mhdist,2)
 mhdistCal1[1:5,1:5]
@@ -1311,15 +1324,16 @@ summary(unlist(matched.distances(fmMh1,mhdist)))
 
 ```
 
-```{r echo=TRUE}
+## Matching on the Mahalanobis Distance
 
-xbMh <- balanceTest(nhTrt ~ nhAboveHS + nhPopD+strata(fmMh)+strata(fmMh1),  data = meddat)
+```{r echo=TRUE}
+xbMh <- balanceTest(nhTrt ~ nhAboveHS + nhPopD+strata(fmMh),  data = meddat)
 xbMh$results[,,]
 xbMh$overall
 ```
 
 
-#  Matching on Many Covariates: Using Propensity Scores
+#  Matching on Many Covariates: Using Propensity Scores to Summarize Covariate to Treatment Relationships
 
 
 ## The propensity score
@@ -1402,7 +1416,7 @@ range only between 0 and 1. Recall how distance matrices required choices of
 distance metrics? We don't want to categorize two observations as "close" just
 because the logit function squashed them together near 0 or 1.
 
-```{r echo=FALSE, out.width=".7\\textwidth"}
+```{r echo=FALSE, out.width=".65\\textwidth"}
 par(mfrow = c(1, 2), oma = rep(0, 4), mar = c(3, 3, 2, 0), mgp = c(1.5, .5, 0))
 boxplot(split(thepscore, meddat$nhTrt), main = "Linear Predictor (XB)")
 stripchart(split(thepscore, meddat$nhTrt), add = TRUE, vertical = TRUE)
