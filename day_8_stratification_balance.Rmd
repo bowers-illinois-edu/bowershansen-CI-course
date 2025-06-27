@@ -1430,7 +1430,7 @@ stripchart(split(thepscore01, meddat$nhTrt), add = TRUE, vertical = TRUE)
 
 optmatch creates a scaled propensity score distance by default --- scaling by, roughly, the pooled median absolute deviation of the covariate (or here, the propensity score). So, the distance matrix entries are like standard deviations  --- standardized scores.
 
-```{r}
+```{r echo=TRUE}
 ## Create a distance matrix using the propensity scores
 psdist <- match_on(theglm, data = meddat)
 psdist[1:4, 1:4]
@@ -1467,6 +1467,7 @@ meddat$fmPs <- factor(fmPs)
 
 xb2 <- balanceTest(nhTrt ~ nhPopD + nhAboveHS+strata(fmPs), data = meddat)
 xb2$overall[, ]
+xb2$results[,,]
 
 xb2a <- xBalance(nhTrt ~ nhPopD + nhAboveHS + HomRate03,
   strata = list(fmPs = ~fmPs), data = meddat,

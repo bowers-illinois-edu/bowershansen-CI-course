@@ -46,6 +46,47 @@ library(propertee)
 
 3.  Questions arising from the reading or assignments or life.
 
+## What does linear regression do in an observational study?
+
+Here is some fake data where we know the true causal effects (the
+$\tau_i$ for each person and the $y_{i,1}, y_{i,0}$, too). In real life we'd
+only observe $Y$, $x_1, \ldots, x_4$, and $Z$.
+
+```{r newdat, echo=FALSE}
+N <- 100
+tau <- .3
+set.seed(12345)
+dat <- data.frame(
+  id = 1:N,
+  x1 = rpois(n = N, lambda = 10),
+  x2 = sample(1:6, size = N, replace = TRUE)
+)
+
+dat <- mutate(dat,
+  y0 = .2 * x1 - .2 * x1^2 + .2 * (x2 < 2) + runif(n = N, min = -2 * sd(x1), max = 2 * sd(x1)),
+  y0 = round(y0 + abs(min(y0)) / max(y0)),
+  y0 = abs(ifelse(x1 < 3, 0, y0)),
+  y1 = round(y0 + tau * sd(y0) + runif(n = N, min = -2 * tau * sd(y0), max = .5 * sd(y0))),
+  x3 = rnorm(n(), mean = mean(x2), sd = sd(x2)),
+  x4 = rbinom(n(), size = 1, prob = mean(x1 > 10))
+)
+## In an experiment we would control Z
+## dat$Z <- complete_ra(N=N,m=floor(N/2))
+dat$Z <- with(dat, as.numeric((.4 * sd(x1) * x1 + runif(n = N, min = -20, max = 0)) > 0))
+## table(dat$Z)
+## boxplot(x1~Z,data=dat)
+## summary(lm(Z~x1,data=dat))$r.squared
+dat <- mutate(dat, Y = Z * y1 + (1 - Z) * y0)
+dat$tau <- with(dat, y1 - y0)
+## summary(dat$tau)
+kbl(head(dat[, c("id", "x1", "x2", "x3", "x4", "Z", "Y", "y1", "y0", "tau")]))
+##  summary(lm(y0~x1,data=dat))$r.squared
+##  blah <- lm_robust(Y~Z,data=dat); blah$p.value["Z"]
+##  blah2 <- lm_robust(Y~Z+x1,data=dat); blah2$p.value["Z"]
+##  with(dat,scatter.smooth(x1,Y,col=Z+1))
+save(dat,file=here::here("day7_dat.rda"))
+```
+
 ```{r child="child_files_/linear_regression_controlling_for.Rmd", eval=TRUE}
 ```
 

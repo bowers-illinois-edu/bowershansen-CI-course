@@ -6,8 +6,8 @@ title: |
  | Tools for improving the design
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2023 Session 1
-  | Jake Bowers \& Tom Leavitt
+  | ICPSR 2025 Session 1
+  | Jake Bowers \& Ben Hansen \& Tom Leavitt
 bibliography:
  - 'BIB/MasterBibliography.bib'
 fontsize: 10pt
@@ -79,6 +79,8 @@ meddat <- mutate(meddat,
 row.names(meddat) <- meddat$nh
 ```
 
+# Recap
+
 ## The optmatch workflow: The distance matrix
 
 To minimize overall differences `optmatch` requires a matrix
@@ -109,15 +111,16 @@ summary(pm1, min.controls = 0, max.controls = Inf)
 table(meddat$nhTrt, pm1, exclude = c())
 ```
 
-## Created a Stratified Research Design
+## Created a Stratified Research Design: Controlling the algorithm
 
 Maybe we don't want to compare any neighborhoods that differ by more than 6 pct
-points in %HS, also maybe want no more than 2 treated per control:
+points in %HS and maybe we want no more than 2 treated per control in any given set:
 
 ```{r, echo=TRUE}
 quantile(as.vector(absdist),seq(0,1,.1))
 fm2 <- fullmatch(absdist + caliper(absdist,.06), data = meddat, min.controls = .5)
 stratumStructure(fm2)
+summary(fm2)
 
 summary(unlist(matched.distances(fm1,absdist)))
 
@@ -161,8 +164,6 @@ bpfm2 <- ggplot(meddat, aes(x = fm2, y = nhAboveHS)) +
 
 grid.arrange(bpfm2, bporig, ncol = 2, layout_matrix = matrix(c(1, 1, 1, 1, 2), nrow = 1))
 ```
-
-
 
 ## Evaluate the design: Within-set differences
 Differences within sets versus raw differences.
@@ -234,7 +235,7 @@ xbfm1$overall
 ```
 
 
-## What is balanceTest doing?
+## What is balanceTest doing?:
 
 ```{r xbagain, echo=TRUE}
 setmeanDiffs_fm1 <- meddat %>%
@@ -251,7 +252,7 @@ setmeanDiffs_fm1 %>% arrange(desc(abs(diffAboveHS)))
 
 ## What is balanceTest doing with multiple sets/blocks?
 
-The test statistic is a weighted average of the set-specific differences (same
+The **test statistic** is a weighted average of the set-specific differences (same
 approach as we would use to test the null in a block-randomized experiment)
 
 ```{r wtmns, echo=TRUE}
@@ -263,9 +264,23 @@ with(setmeanDiffs_fm1, sum(diffAboveHS * hwt / sum(hwt)))
 xbfm1$results[, , "fm1"]
 ```
 
+## What is balanceTest doing with multiple sets/blocks?
+
+The test statistic is a weighted average of the set-specific differences (same
+approach as we would use to test the null in a block-randomized experiment)
+
+```{r wtmns_propertee, echo=TRUE}
+library(propertee)
+fm1_spec <- obs_spec(nhTrt~uoa(nh03)+block(fm1),data=meddat)
+## The descriptive mean difference using block-size weights
+coef(lmitt(nhAboveHS~1,specification=fm1_spec,data=meddat,weights="ett"))[["nhTrt."]]
+```
+
 ## What do we mean by "compare to a randomized experiment"?
 
-Recall that $p$-values require distributions, and distributions require processes that can be repeated (even in a Bayesian formulation). What are we repeating in an experiment? (The assignment mechanism).
+Recall that $p$-values require distributions, and distributions require
+processes that can be repeated (even in a Bayesian formulation). What are we
+repeating in an experiment? (The assignment mechanism).
 
 ```{r d1v2, echo=TRUE}
 ## The strata-adjusted difference in means
@@ -297,7 +312,9 @@ newexp <- function(zz, ss) {
 
 ## What do we mean by "compare to a randomized experiment"?
 
-Recall that $p$-values require distributions, and distributions require processes that can be repeated (even in a Bayesian formulation). What are we repeating in an experiment? (The assignment mechanism).
+Recall that $p$-values require distributions, and distributions require
+processes that can be repeated (even in a Bayesian formulation). What are we
+repeating in an experiment? (The assignment mechanism).
 
 ```{r xbdist, echo=TRUE, messages=FALSE, warning=FALSE}
 set.seed(123455)
@@ -311,7 +328,9 @@ xbfm1$results[,,"fm1"]
 
 ## What do we mean by "compare to a randomized experiment"?
 
-Recall that $p$-values require distributions, and distributions require processes that can be repeated (even in a Bayesian formulation). What are we repeating in an experiment? (The assignment mechanism).
+Recall that $p$-values require distributions, and distributions require
+processes that can be repeated (even in a Bayesian formulation). What are we
+repeating in an experiment? (The assignment mechanism).
 
 ```{r plotxbnulldist, out.width=".6\\textwidth"}
 plot(density(nulldist))
@@ -320,292 +339,10 @@ rug(nulldist)
 abline(v = obsdstat)
 ```
 
-#  Matching on Many Covariates: Using Mahalnobis Distance
-
-## Dimension reduction using the Mahalanobis Distance
-
-The general idea: dimension reduction. When we convert many columns into one
-column we reduce the dimensions of the dataset (to one column). We can use the
-idea of **multivariate distance** to produce distance matrices to minimize
-**multivariate distances**.
-
-
-```{r out.width=".7\\textwidth"}
-X <- meddat[, c("nhAboveHS", "nhPopD")]
-plot(meddat$nhAboveHS, meddat$nhPopD, xlim = c(-.3, .6), ylim = c(50, 700))
-```
-
-## Dimension reduction using the Mahalanobis Distance
-
-First, let's look at Euclidean distance: $\sqrt{ (x_1 - x_2)^2 + (y_1 - y_2)^2 }$
-
-```{r echo=FALSE, out.width=".8\\textwidth"}
-par(mgp = c(1.25, .5, 0), oma = rep(0, 4), mar = c(3, 3, 0, 0))
-plot(meddat$nhAboveHS, meddat$nhPopD, xlim = c(-.3, .6), ylim = c(50, 700))
-points(mean(X[, 1]), mean(X[, 2]), pch = 19, cex = 1)
-arrows(mean(X[, 1]), mean(X[, 2]), X["407", 1], X["407", 2])
-text(.4, 200, label = round(dist(rbind(colMeans(X), X["407", ])), 2))
-text(.3,100, label="Distance from the mean of both dimensions")
-text(.3,75,bquote("(" * bar(x) * " = " * .(mean(X[,1])) * ", " *  bar(y) * " = " * .(mean(X[,2])) * ")"))
-```
-
-## Dimension reduction using the Mahalanobis Distance
-
-First, let's look at Euclidean distance: $\sqrt{ (x_1 - x_2)^2 + (y_1 - y_2)^2 }$
-
-```{r echo=FALSE, out.width=".5\\textwidth"}
-par(mgp = c(1.25, .5, 0), oma = rep(0, 4), mar = c(3, 3, 0, 0))
-plot(meddat$nhAboveHS, meddat$nhPopD, xlim = c(-.3, .6), ylim = c(50, 700))
-points(mean(X[, 1]), mean(X[, 2]), pch = 19, cex = 1)
-arrows(mean(X[, 1]), mean(X[, 2]), X["407", 1], X["407", 2])
-text(.4, 200, label = round(dist(rbind(colMeans(X), X["407", ])), 2))
-```
-
-Distance between point in middle of the plot and unit "407".
-
-```{r, echo=TRUE}
-tmp <- rbind(colMeans(X), X["407", ])
-tmp
-sqrt((tmp[1, 1] - tmp[2, 1])^2 + (tmp[1, 2] - tmp[2, 2])^2)
-```
-
-Problem: overweights variables with bigger scales (Population Density dominates here).
-
-## Dimension reduction using the Mahalanobis Distance
-
-Now the standardized Euclidean distance so neither variable is overly dominant.
-
-```{r echo=TRUE}
-Xsd <- scale(X)
-apply(Xsd, 2, sd) ## should be 1
-round(apply(Xsd, 2, mean),8) ## should be 0
-```
-
-```{r echo=FALSE,out.width=".6\\textwidth"}
-plot(Xsd[, 1], Xsd[, 2], xlab = "nhAboveHS/sd", ylab = "nhPopD/sd")
-points(mean(Xsd[, 1]), mean(Xsd[, 2]), pch = 19, cex = 1)
-arrows(mean(Xsd[, 1]), mean(Xsd[, 2]), Xsd["407", 1], Xsd["407", 2])
-text(2, -1.2, label = round(dist(rbind(colMeans(Xsd), Xsd["407", ])), 2))
-```
-
-
-## Dimension reduction using the Mahalanobis Distance
-
-The mahalanobis distance avoids the scale problem in the euclidean distance.^[For more [see here](https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance)] Here each circle are points of the same MH distance.
-
-```{r mhfig, echo=FALSE,out.width=".6\\textwidth"}
-library(chemometrics) ## for drawMahal
-library(mvtnorm)
-
-par(mgp = c(1.5, .5, 0), oma = rep(0, 4), mar = c(3, 3, 0, 0))
-mh <- mahalanobis(X, center = colMeans(X), cov = cov(X))
-drawMahal(X,
-  center = colMeans(X), covariance = cov(X),
-  quantile = c(0.975, 0.75, 0.5, 0.25)
-)
-abline(v = mean(meddat$nhAboveHS), h = mean(meddat$nhPopD))
-pts <- c("401", "407", "411", "202")
-arrows(rep(mean(X[, 1]), 4), rep(mean(X[, 2]), 4), X[pts, 1], X[pts, 2])
-text(X[pts, 1], X[pts, 2], labels = round(mh[pts], 2), pos = 1)
-```
-
-```{r}
-Xsd <- scale(X)
-tmp <- rbind(c(0, 0), Xsd["407", ])
-mahalanobis(tmp, center = c(0, 0), cov = cov(Xsd))
-edist <- sqrt((tmp[1, 1] - tmp[2, 1])^2 + (tmp[1, 2] - tmp[2, 2])^2)
-edist
-```
-
-## Dimension reduction using the Mahalanobis Distance
-
-The standardized data
-
-```{r}
-plot(Xsd[, 1], Xsd[, 2], xlab = "nhAboveHS/sd", ylab = "nhPopD/sd")
-```
-
-## Dimension reduction using the Mahalanobis Distance
-
-With mahalanobis distance contours calculated on standardized data, but then
-applied to the raw data.
-
-```{r}
-drawMahal(X, center = colMeans(X), covariance = cov(X), quantile = c(.1, .2))
-```
-
-```{r}
-covX <- cov(X)
-newcovX <- covX
-newcovX[1, 2] <- 0
-newcovX[2, 1] <- 0
-```
-
-## Dimension reduction using the Mahalanobis Distance
-
-Using a new covariance matrix (assuming no covariance between the variables).
-
-```{r}
-drawMahal(X, center = colMeans(X), covariance = newcovX, quantile = c(.1, .2))
-```
-
-## Matching on the Mahalanobis Distance
-
-Here using the rank based Mahalanobis distance following DOS Chap. 8 (but comparing to the ordinary version).
-
-```{r echo=TRUE}
-mhdist <- match_on(nhTrt ~ nhPopD + nhAboveHS, data = meddat, method = "rank_mahalanobis")
-mhdist[1:3, 1:3]
-mhdist2 <- match_on(nhTrt ~ nhPopD + nhAboveHS, data = meddat)
-mhdist2[1:3, 1:3]
-mhdist2[, "407"]
-```
-
-## Matching on the Mahalanobis Distance
-
-Here using the rank based Mahalanobis distance following DOS Chap. 8 (but comparing to the ordinary version).
-
-```{r out.width=".5\\textwidth"}
-par(mgp = c(1.5, .5, 0), oma = rep(0, 4), mar = c(3, 3, 0, 0))
-drawMahal(X,
-  center = colMeans(X), covariance = cov(X),
-  quantile = c(0.975, 0.75, 0.5, 0.25)
-)
-abline(v = mean(meddat$nhAboveHS), h = mean(meddat$nhPopD))
-cpts <- c("401", "407", "411")
-tpts <- c("101", "102", "202")
-arrows(X[tpts, 1], X[tpts, 2], rep(X["407", 1]), rep(X["407", 2]))
-text(X[tpts, 1], X[tpts, 2], labels = round(mhdist2[tpts, "407"], 2), pos = 1)
-```
-
-```{r echo=TRUE}
-mhdist2[tpts, "407"]
-```
-
-## More on the Mahalanobis distance
-
-To Review: The Mahalanobis distance \citep{mahalanobis1930test}, avoids the scale and correlation problem in the euclidean distance.^[For more see <https://stats.stackexchange.com/questions/62092/bottom-to-top-explanation-of-the-mahalanobis-distance>] $dist_M =  \sqrt{ (\mathbf{x} - \mathbf{\bar{x}})^T \mathbf{M}^{-1} (\mathbf{y} - \mathbf{\bar{y}}) }$ where $\mathbf{M}=\begin{bmatrix} \var(x) & \cov(x,y)  \\ \cov(x,y) & \var(y) \end{bmatrix}$
-
-
-Here, using simulated data: The contour lines show points with the same
-Mahalanobis distance and the numbers are Euclidean distance.
-
-```{r}
-set.seed(12345)
-newX <- rmvnorm(n=45,mean=colMeans(X),sigma=matrix(c(.03,-7,-7,14375),2,2))
-row.names(newX) <- row.names(X)
-#plot(newX)
-cor(newX)
-```
-
-```{r echo=FALSE, out.width=".4\\textwidth"}
-mhnew <- mahalanobis(newX,center=colMeans(newX),cov=cov(newX))
-drawMahal(newX,center=colMeans(newX),covariance=cov(newX),
-          quantile = c(0.975, 0.75, 0.5, 0.25))
-abline(v=mean(newX[,1]),h=mean(newX[,2]),col="gray")
-points(mean(newX[,1]),mean(newX[,2]),pch=19,cex=1)
-newpts <- c(3,16,17,20,22,30,42)
-row.names(newX[newpts,])
-arrows(mean(newX[,1]),mean(newX[,2]),newX[newpts,1],newX[newpts,2],length=.1)
-edist <- as.matrix(dist(rbind(centers=colMeans(newX),newX[newpts,])))
-text(newX[newpts,1]-.02,newX[newpts,2]-10,
-     label=round(edist[-1,"centers"],2),font=2)
-```
-
-## Dimension reduction using the Mahalanobis distance
-
-The contour lines show points with the same
-Mahalanobis distance, the numbers are Euclidean distance. Notice that the point with Euclidean distance of 161 is farther from the center than 250 in Mahalanobis terms.
-
-```{r echo=FALSE, results="hide", out.width=".75\\textwidth"}
-mhnew <- mahalanobis(newX,center=colMeans(newX),cov=cov(newX))
-drawMahal(newX,center=colMeans(newX),covariance=cov(newX),
-          quantile = c(0.975, 0.75, 0.5, 0.25))
-abline(v=mean(newX[,1]),h=mean(newX[,2]),col="gray")
-points(mean(newX[,1]),mean(newX[,2]),pch=19,cex=1)
-newpts <- c(3,16,17,20,22,30,42)
-row.names(newX[newpts,])
-arrows(mean(newX[,1]),mean(newX[,2]),newX[newpts,1],newX[newpts,2],length=.1)
-edist <- as.matrix(dist(rbind(centers=colMeans(newX),newX[newpts,])))
-text(newX[newpts,1]-.02,newX[newpts,2]-10,
-     label=round(edist[-1,"centers"],2),font=2)
-```
-
-
-## Dimension reduction using the Mahalanobis distance
-
-The contour lines show points with the same
-Mahalanobis distance and the numbers are Euclidean distance (on the
-standardized variables). (notice that 1.63 is farther from the center in
-Mahalanobis terms than 2.11, but 2.11 is farther in Eucliean terms.)
-
-
-```{r echo=FALSE}
-newXsd <- scale(newX)
-drawMahal(newXsd,center=colMeans(newXsd),covariance=cov(newXsd),
-          quantile = c(0.975, 0.75, 0.5, 0.25))
-abline(v=mean(newXsd[,1]),h=mean(newXsd[,2]),col="gray")
-points(mean(newXsd[,1]),mean(newXsd[,2]),pch=19,cex=1)
-arrows(mean(newXsd[,1]),mean(newXsd[,2]),newXsd[newpts,1],newXsd[newpts,2],length=.1)
-edistSd <- as.matrix(dist(rbind(centers=colMeans(newXsd),newXsd[newpts,])))
-text(newXsd[newpts,1]-.1,newXsd[newpts,2]-.1,
-     label=round(edistSd[-1,"centers"],2),font=2)
-```
-
-
-## Matching on the Mahalanobis Distance
-
-```{r echo=TRUE}
-mhdist <- match_on(nhTrt ~ nhPopD + nhAboveHS, data = meddat, method = "rank_mahalanobis")
-
-fmMh <- fullmatch(mhdist, data = meddat)
-summary(fmMh, min.controls = 0, max.controls = Inf)
-summary(unlist(matched.distances(fmMh,mhdist)))
-
-quantile(as.vector(mhdist),seq(0,1,.1))
-fmMh1 <- fullmatch(mhdist + caliper(mhdist,1) , data = meddat) #, min.controls = 1)
-summary(fmMh1, min.controls = 0, max.controls = Inf)
-summary(unlist(matched.distances(fmMh1,mhdist)))
-
-```
-
-```{r echo=TRUE}
-
-xbMh <- balanceTest(nhTrt ~ nhAboveHS + nhPopD+strata(fmMh)+strata(fmMh1),  data = meddat)
-xbMh$results[,,]
-xbMh$overall
-```
-
-
-#  Matching on Many Covariates: Using Propensity Scores
-
 ## Matching on the propensity score
-
-**Make the score**^[Note that we will be using `brglm` or `bayesglm` in the
-future because of logit separation problems when the number of covariates
-increases.]
 
 ```{r echo=TRUE}
 theglm <- glm(nhTrt ~ nhPopD + nhAboveHS + HomRate03, data = meddat, family = binomial(link = "logit"))
-thepscore <- theglm$linear.predictor
-thepscore01 <- predict(theglm, type = "response")
-```
-
-We tend to match on the linear predictor rather than the version required to
-range only between 0 and 1.
-
-```{r echo=FALSE, out.width=".7\\textwidth"}
-par(mfrow = c(1, 2), oma = rep(0, 4), mar = c(3, 3, 2, 0), mgp = c(1.5, .5, 0))
-boxplot(split(thepscore, meddat$nhTrt), main = "Linear Predictor (XB)")
-stripchart(split(thepscore, meddat$nhTrt), add = TRUE, vertical = TRUE)
-
-boxplot(split(thepscore01, meddat$nhTrt), main = "Inverse Link Function (g^-1(XB)")
-stripchart(split(thepscore01, meddat$nhTrt), add = TRUE, vertical = TRUE)
-```
-
-## Matching on the propensity score
-
-```{r echo=TRUE}
 psdist <- match_on(theglm, data = meddat)
 psdist[1:4, 1:4]
 fmPs <- fullmatch(psdist, data = meddat)
@@ -614,7 +351,10 @@ summary(fmPs, min.controls = 0, max.controls = Inf)
 
 ## Why a propensity score? {.fragile}
 
-1. The Mahanobis distance weights all covariates equally (and the rank based version especially tries to do this). But, maybe not all covariates matter equally for $Z$. Or maybe we care most about covariates that drive the selection or other process by which units get $Z=1$ versus $Z=0$.
+1. The Mahanobis distance weights all covariates equally (and the rank based
+   version especially tries to do this). But, maybe not all covariates matter
+   equally for $Z$. Or maybe we care most about covariates that drive the
+   selection or other process by which units get $Z=1$ versus $Z=0$.
 
 
 \begin{center}
@@ -627,8 +367,11 @@ x_p \arrow[from=2-4,to=1-2,  "\beta_p" near start ] \arrow[from=2-4,to=1-3,grey]
 \end{tikzcd}
 \end{center}
 
-2. @rosenbaum:rubi:1983 and @rosenbaum:rubi:1984a show that if we knew the true propensity score (ex. we knew the true model and the correct covariates) then we could stratify on the p-score and have adjusted for all of the covariates. (In practice, we don't know either. But the propensity score often performs well as an ingredient in a matched design)
-
+2. @rosenbaum:rubi:1983 and @rosenbaum:rubi:1984a show that if we knew the true
+   propensity score (ex. we knew the true model and the correct covariates)
+   then we could stratify on the p-score and have adjusted for all of the
+   covariates. (In practice, we don't know either. But the propensity score
+   often performs well as an ingredient in a matched design)
 
 
 ## Matching on the propensity score: What do the distance matrix entries mean?
@@ -639,16 +382,7 @@ propensity score). So, the distance matrix entries are like standard deviations
 --- standardized scores.
 
 
-```{r glm1, echo=TRUE}
-meddat <- as.data.frame(meddat)
-row.names(meddat) <- meddat$nh
-theglm <- glm(nhTrt ~ nhPopD + nhAboveHS + HomRate03, data = meddat, family = binomial(link = "logit"))
-thepscore <- theglm$linear.predictor
-```
-
 ```{r echo=TRUE}
-## Create a distance matrix using the propensity scores
-psdist <- match_on(theglm, data = meddat)
 psdist[1:4, 1:4]
 ```
 
@@ -657,6 +391,9 @@ psdist[1:4, 1:4]
 What do those distances mean? (They are standardized absolute differences.)
 
 ```{r echo=TRUE}
+thepscore <- theglm$linear.predictor
+thepscore01 <- predict(theglm, type = "response")
+
 ## Calculate the simple absolute distances in propensity score
 simpdist <- outer(thepscore, thepscore, function(x, y) {
   abs(x - y)
@@ -686,51 +423,101 @@ simpdist["101", c("401", "402", "403")] / 1.569
 psdist["101", c("401", "402", "403")]
 ```
 
+## Inspecting the Design from a substantive perspective
 
-## What about using many covariates? The separation problem in logistic regression
+Do any of these sets look like the differences in baseline homicide rates are
+too big within the set?
+
+```{r}
+absHomMatch <- fullmatch(absdist, data = meddat)
+meddat$absHomMatch <- absHomMatch
+setdiffsHM <- meddat %>%
+  group_by(absHomMatch) %>%
+  summarize(
+    mndiffs =
+      mean(HomRate03[nhTrt == 1]) -
+        mean(HomRate03[nhTrt == 0]),
+    mnHomRate03 = mean(HomRate03),
+    minHomRate03 = min(HomRate03),
+    maxHomRate03 = max(HomRate03)
+  )
+setdiffsHM
+```
+
+## Decision Points in Creating Matched Designs
+
+ - Which covariates and their scaling and coding. (For example, exclude
+   covariates with no variation!)
+ - Which distance matrices (scalar distances for one or two important
+   variables, Mahalanobis distances (rank  transformed or not), Propensity
+   distances (using linear predictors)).
+ - (Possibly) which calipers (and how many, if any, observations to drop. Note
+   about ATT as a random quantity and ATE/ACE as fixed.)
+ - (Possibly) which exact matching or strata
+ - (Possibly) which structure of sets (how many treated per control, how many
+   controls per treated)
+ - Which remaining differences are tolerable from a substantive perspective?
+ - How well does the resulting research design compare to an equivalent
+   block-randomized study (`xBalance`)?
+ - (Possibly) How much statistical power does this design provide for the
+   quantity of interest?
+ - Other questions to ask about a research design aiming to help clarify
+   comparisons.
+
+
+# The separation problem in Logistic Regression
+
+## What about using many covariates? The separation problem in logistic regression {.shrink}
 
 What if we want to match on more than two covariates? Let's step through the following to discover a problem with logistic regression when the number of covariates is large relative to the size of the dataset.
 
 ```{r echo=TRUE}
 library(splines)
 library(arm)
-thecovs <- unique(c(names(meddat)[c(5:7, 9:24)], "HomRate03"))
-balfmla <- reformulate(thecovs, response = "nhTrt")
-psfmla <- update(balfmla, . ~ . + ns(HomRate03, 2) + ns(nhPopD, 2) + ns(nhHS, 2))
-glm0 <- glm(balfmla, data = meddat, family = binomial(link = "logit"))
-glm1 <- glm(psfmla, data = meddat, family = binomial(link = "logit"))
-bayesglm0 <- bayesglm(balfmla, data = meddat, family = binomial(link = "logit"))
-bayesglm1 <- bayesglm(psfmla, data = meddat, family = binomial(link = "logit"))
-psg1 <- predict(glm1, type = "response")
-psg0 <- predict(glm0, type = "response")
-psb1 <- predict(bayesglm1, type = "response")
-psb0 <- predict(bayesglm0, type = "response")
+thecovs <- unique(c(names(meddat)[c(5:7,9:24)],"HomRate03"))
+balfmla<-reformulate(thecovs,response="nhTrt")
+psfmla <- update(balfmla,.~.+ns(HomRate03,2)+ns(nhPopD,2)+ns(nhHS,2))
+glm0 <- glm(balfmla,data=meddat,family=binomial(link="logit"))
+glm1 <- glm(psfmla,data=meddat,family=binomial(link="logit"))
+bayesglm0 <- bayesglm(balfmla,data=meddat,family=binomial(link="logit"))
+bayesglm1 <- bayesglm(psfmla,data=meddat,family=binomial(link="logit"))
+psg1 <- predict(glm1,type="response")
+psg0 <- predict(glm0,type="response")
+psb1 <- predict(bayesglm1,type="response")
+psb0 <- predict(bayesglm0,type="response")
 ```
+
+
 ## The separation problem
 
-Logistic regression is excellent at discriminating between groups \ldots often **too excellent** for us \autocite{gelman2008weakly}. First evidence of this is big and/or missing coefficients in the propensity score model. See the coefficients below (recall that we are predicting `nhTrt` with these covariates in those models):
+Logistic regression is excellent at discriminating between groups \ldots often
+**too excellent** for us \autocite{gelman2008weakly}. First evidence of this is
+big and/or missing coefficients in the propensity score model. See the
+coefficients below (recall that we are predicting `nhTrt` with these covariates
+in those models):
 
 ```{r echo=FALSE}
-thecoefs <- rbind(
-  glm0 = coef(glm0)[1:20],
-  glm1 = coef(glm1)[1:20],
-  bayesglm0 = coef(bayesglm0)[1:20],
-  bayesglm1 = coef(bayesglm1)[1:20]
-)
-thecoefs[, 1:5]
+thecoefs <- rbind(glm0=coef(glm0)[1:20],
+      glm1=coef(glm1)[1:20],
+      bayesglm0=coef(bayesglm0)[1:20],
+      bayesglm1=coef(bayesglm1)[1:20]
+      )
+thecoefs[,1:5]
 ```
 
 ## The separation problem
 
 ```{r, echo=FALSE, out.width=".9\\textwidth"}
-par(mfrow = c(1, 2))
-matplot(t(thecoefs), axes = FALSE)
+par(mfrow=c(1,2))
+matplot(t(thecoefs),axes=FALSE)
 axis(2)
-axis(1, at = 0:19, labels = colnames(thecoefs), las = 2)
-matplot(t(thecoefs), axes = FALSE, ylim = c(-15, 10))
+axis(1,at=0:19,labels=colnames(thecoefs),las=2)
+
+matplot(t(thecoefs),axes=FALSE,ylim=c(-15,10))
 axis(2)
-axis(1, at = 0:19, labels = colnames(thecoefs), las = 2)
-legend("topright", col = 1:4, lty = 1:4, legend = c("glm0", "glm1", "bayesglm0", "bayesglm1"))
+axis(1,at=0:19,labels=colnames(thecoefs),las=2)
+
+legend("topright",col=1:4,lty=1:4,legend=c("glm0","glm1","bayesglm0","bayesglm1"))
 ```
 
 
@@ -739,17 +526,16 @@ legend("topright", col = 1:4, lty = 1:4, legend = c("glm0", "glm1", "bayesglm0",
 So, if we are interested in using the propensity score to compare observations in regards the multi-dimensional space of many covariates, we would probably prefer a dimensional reduction model like `bayesglm` over `glm`.
 
 ```{r out.width=".9\\textwidth", echo=FALSE}
-par(mfrow = c(2, 2), mar = c(3, 3, 2, .1))
-boxplot(psg0 ~ meddat$nhTrt, main = paste("Logit", length(coef(glm0)), " parms", sep = " "))
-stripchart(psg0 ~ meddat$nhTrt, vertical = TRUE, add = TRUE)
-boxplot(psg1 ~ meddat$nhTrt, main = paste("Logit", length(coef(glm1)), " parms", sep = " "))
-stripchart(psg1 ~ meddat$nhTrt, vertical = TRUE, add = TRUE)
-boxplot(psb0 ~ meddat$nhTrt, main = paste("Shrinkage Logit", length(coef(bayesglm0)), " parms", sep = " "))
-stripchart(psb0 ~ meddat$nhTrt, vertical = TRUE, add = TRUE)
-boxplot(psb1 ~ meddat$nhTrt, main = paste("Shrinkage Logit", length(coef(bayesglm1)), " parms", sep = " "))
-stripchart(psb1 ~ meddat$nhTrt, vertical = TRUE, add = TRUE)
+par(mfrow=c(2,2),mar=c(3,3,2,.1))
+boxplot(psg0~meddat$nhTrt,main=paste("Logit",length(coef(glm0))," parms",sep=" "))
+stripchart(psg0~meddat$nhTrt,vertical=TRUE,add=TRUE)
+boxplot(psg1~meddat$nhTrt,main=paste("Logit",length(coef(glm1))," parms",sep=" "))
+stripchart(psg1~meddat$nhTrt,vertical=TRUE,add=TRUE)
+boxplot(psb0~meddat$nhTrt,main=paste("Shrinkage Logit",length(coef(bayesglm0))," parms",sep=" "))
+stripchart(psb0~meddat$nhTrt,vertical=TRUE,add=TRUE)
+boxplot(psb1~meddat$nhTrt,main=paste("Shrinkage Logit",length(coef(bayesglm1))," parms",sep=" "))
+stripchart(psb1~meddat$nhTrt,vertical=TRUE,add=TRUE)
 ```
-
 
 # Major Matching modes: Briefly, Greed versus Optimal Matching
 
@@ -819,9 +605,12 @@ as.matrix(psdist)[5:10, 5:10]
 as.matrix(psdistCal)[5:10, 5:10]
 ```
 
-## Calipers
+## Calipers {.allowframebreaks}
 
-The optmatch package allows calipers (which forbid certain pairs from being matched).^[You can implement penalties by hand.] Here, for example, we forbid comparisons which differ by more than 2 standard deviations on the propensity score. (Notice that we also use the `propensity.model` option to `summary` here to get a quick look at the balance test:)
+ Here, for example, we forbid comparisons which differ by more than 2 standard
+ deviations on the propensity score. (Notice that we also use the
+ `propensity.model` option to `summary` here to get a quick look at the balance
+ test:)
 
 ```{r echo=TRUE}
 fmCal1 <- fullmatch(psdist + caliper(psdist, 2), data = meddat, tol = .00001)
@@ -830,9 +619,12 @@ pmCal1 <- pairmatch(psdist + caliper(psdist, 2), data = meddat, remove.unmatchab
 summary(pmCal1, propensity.model = theglm)
 ```
 
-## Calipers
+## Calipers {.allowframebreaks}
 
-Another example: We may want to match on propensity distance but disallow any pairs with extreme mahalnobis distance and/or extreme differences in baseline homicide rates (here using many covariates all together).
+
+Another example: We may want to match on propensity distance but disallow any
+pairs with extreme mahalnobis distance and/or extreme differences in baseline
+homicide rates (here using many covariates all together).
 
 
 ```{r echo=TRUE}
@@ -970,6 +762,94 @@ So:
 
 
 
+## Cardinality Matching Example {.allowframebreaks}
+
+Another approach to matching combines different constraints --- attempting to,
+for example minimize the sum of distances between units within set while also
+maximizing the number of units in the design. See the citations in the
+`designmatch` package for papers explaining and applying these ideas.
+
+```{r designmatchsetup, echo=TRUE, eval=TRUE, waring=FALSE, message=FALSE, cache=FALSE}
+library(designmatch)
+## library(gurobi) ## to make designmatch work faster on bigger datasets you'd want to install this
+
+balfmla <- nhTrt ~ nhClass + nhQP03 + nhPV03 +
+    nhTP03 + nhBI03 + nhCE03 + nhNB03 + nhAgeYoung +
+    nhAgeMid + nhMarDom + nhOwn +  nhEmp +
+    nhAboveHS + nhHS + HomRate03
+
+thebglm <- arm::bayesglm(balfmla, data = meddat, family = binomial(link = "logit"))
+## Let's match on the propensity score
+meddat$pscore <- thebglm$linear.predictors
+## designmatch needs the observations on the data to be in order of treatment assignment
+meddat_new <- meddat[order(meddat$nhTrt, decreasing = TRUE), ]
+z <- as.vector(meddat_new$nhTrt)
+Xmat <- model.matrix(~pscore, data = meddat_new)
+thedistmat <- distmat(z, Xmat, digits = 2)
+psdist_new <- match_on(nhTrt ~ pscore, data = meddat_new)
+distmat <- as.matrix(psdist)
+## bmatch prefers distance matrices without so many decimal places
+distmat_scaled <- round(distmat / mean(distmat), 2)
+dimnames(distmat_scaled) <- dimnames(thedistmat)
+## Minimize distances but keep HomRate03 diffs below 2 and nhAboveHS  differences below .3
+nearlist <- list(covs = as.matrix(meddat_new[,c("HomRate03","nhAboveHS")]), pairs = c(HomRate03=2,nhAboveHS=.3))
+```
+
+## Cardinality Matching Example {.allowframebreaks}
+
+
+```{r do_bmatch, echo=TRUE}
+## solverlist <- list(name='gurobi',approximate=0,t_max=2000,trace=1)
+solverlist <- list(name = "highs", approximate = 0, t_max = 1000)
+res <- bmatch(
+  t_ind = z,
+  dist_mat = thedistmat,
+  near = nearlist,
+  solver = solverlist,
+  subset_weight = 1
+)
+
+```
+
+```{r}
+#' Convert the output into a factor variable for use in analysis
+nmatch_to_df <- function(obj, origid) {
+  ## We want a factor that we can merge onto our
+  ## existing dataset. Here returning a data.frame so that
+  ## we can merge --- seems less error prone than using
+  ## rownames even if it is slower.
+  matchesdat <- data.frame(
+    bm = obj$group_id,
+    match_id = c(obj$t_id, obj$c_id)
+  )
+  matchesdat$id <- origid[matchesdat$match_id]
+  return(matchesdat)
+}
+
+## The nmatch_to_df function creates a column labeled "bm" which contains
+## indicators of match/pair membership
+res_df <- nmatch_to_df(res, origid = meddat$nh)
+res_df$nh <- res_df$id
+meddat2 <- left_join(meddat, res_df, by = "nh")
+meddat2 <- droplevels(meddat2)
+meddat2$dm1 <- meddat2$bm
+row.names(meddat2) <- row.names(meddat)
+```
+
+
+```{r designmatcheval}
+## Compare to optmatch pairmatch
+pm1 <- pairmatch(psdist, data = meddat2)
+meddat2$pm1 <- pm1
+
+bt_fmla <- update(balfmla,.~.+strata(dm1) + strata(pm1) )
+
+xbdm <- balanceTest( bt_fmla , data = meddat2, p.adjust.method="hommel")
+xbdm$overall
+
+xbdm$results[, "std.diff", ]
+xbdm$results[, "p", ]
+```
 
 
 ## Summary:
@@ -981,7 +861,7 @@ So:
    for other work (choosing the covariates, deciding which covariates should be
    closely matched-on and which not so closely).
  - Matching solves the problem of making comparisons that are transparent
-   (Question: "Did you adjust enough for X?" Ans: "Here is some evidence about
+   (Q: "Did you adjust enough for X?" A: "Here is some evidence about
    how well I did.")
  - You can adjust for one variable or more than one (if more than one, you
    need to choose one or more methods for reducing many columns to one
@@ -993,7 +873,7 @@ So:
  - We can restrict certain matches --- using calipers or exact-matching, using
    different distance matrices.
  - We can match on missing values on covariates.
- - Some choices of score creation / dimension reduction raise other questions
+ - Some choices of score creation raise other questions
    and problems (ex. Mahalanobis versus Rank-Based Mahalanobis distances;
    Propensity Score creation without overfitting.)
 
