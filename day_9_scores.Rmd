@@ -64,9 +64,8 @@ library(optmatch)
          d. (probably) improve the stratified design / iterate
       - How to do this with one variable?
       - How to do this with  more than one variable?
-      - How to create strata to clarify comparison along continuous or multi-valued
-        "treatment" variables ("non-bipartite" matching) Feel free to read
-        ahead.
+      - Effective sample size, Calipers, Exact matching, Missing Data
+      - Showing Cardinality matching (`designmatch`)
  2. Questions arising from the reading or assignments or life?
 
 
@@ -118,6 +117,9 @@ points in %HS and maybe we want no more than 2 treated per control in any given 
 
 ```{r, echo=TRUE}
 quantile(as.vector(absdist),seq(0,1,.1))
+absdist[1:5,1:6]
+newdist <- absdist + caliper(absdist,.06)
+newdist[1:5,1:6]
 fm2 <- fullmatch(absdist + caliper(absdist,.06), data = meddat, min.controls = .5)
 stratumStructure(fm2)
 summary(fm2)
@@ -223,8 +225,7 @@ setdiffspm1 %>% arrange(desc(abs(mneddiffs)))
 ## Evaluate the design: Compare to a randomized experiment. {.allowframebreaks}
 
 The observed within-set differences differ from those that would be expected
-from a randomized experiment. Here, we compare 3 designs that keep all
-observations, just organized into sets differently.
+from a randomized experiment. Here, we compare 3 designs:
 
 ```{r xbhs2, echo=TRUE}
 xbfm1 <- balanceTest(nhTrt ~ nhAboveHS + strata(fm1) + strata(fm2) + strata(pm1),
@@ -460,7 +461,6 @@ balfmla <- nhTrt ~ nhClass + nhQP03 + nhPV03 +
     nhAgeMid + nhMarDom + nhOwn +  nhEmp +
     nhAboveHS + nhHS + HomRate03
 
-
 thebglm <- arm::bayesglm(balfmla, data = meddat, family = binomial(link = "logit"))
 
 mhdist <- match_on(balfmla, data = meddat)
@@ -588,7 +588,7 @@ assuming the OLS model and homoskedastic errors.  (This is b/c the anova formula
 For matched pairs, of course, $h_{s}=1$.  Harmonic mean of 1, 2 is $4/3$. Etc.
 
 
-## Matching so as to maximize effective sample size {.allowframebreak}
+## Matching so as to maximize effective sample size {.allowframebreaks}
 
 ```{r echo=TRUE, tidy=FALSE}
 stratumStructure(fm1)
@@ -610,7 +610,13 @@ wtsfm1
 sum(wtsfm1$hwt)
 stratumStructure(fm1)
 mean(unlist(matched.distances(fm1, matchdist)))
+```
 
+
+## Matching so as to maximize effective sample size {.allowframebreaks}
+
+
+```{r echo=TRUE, tidy=FALSE}
 wtsfm0 <- meddat %>%
   filter(!is.na(fm0)) %>%
   group_by(fm0) %>%
@@ -625,7 +631,7 @@ stratumStructure(fm0)
 mean(unlist(matched.distances(fm0, matchdist)))
 ```
 
-Notice for `fm0` we weight the 12-to-1 match by `2*(1 * 11)/(11+1)=1.83` and the 1-to-16 match by `2*(16*1)/(16+1)=1.88`.
+Notice for `fm0` we weight the 1-to-9 match by `2*(1 * 9)/(9+1)=1.8` and the 5-to-1 match by `2*(5*1)/(5+1)=1.67`.
 
 In a pairmatch all of the sets have weight `2*(1*1)/(1+1) = 2/2=1`.
 
@@ -1033,7 +1039,8 @@ distmat <- as.matrix(psdist)
 distmat_scaled <- round(distmat / mean(distmat), 2)
 dimnames(distmat_scaled) <- dimnames(thedistmat)
 ## Minimize distances but keep HomRate03 diffs below 2 and nhAboveHS  differences below .3
-nearlist <- list(covs = as.matrix(meddat_new[,c("HomRate03","nhAboveHS")]), pairs = c(HomRate03=2,nhAboveHS=.3))
+nearlist <- list(covs = as.matrix(meddat_new[,c("HomRate03","nhAboveHS")]),
+                 pairs = c(HomRate03=2,nhAboveHS=.3))
 ```
 
 ## Cardinality Matching Example {.allowframebreaks}
