@@ -444,6 +444,247 @@ setdiffsHM <- meddat %>%
 setdiffsHM
 ```
 
+
+
+# Information and Balance: Matching structure and effective sample size
+
+
+## Setup
+
+Make some different stratifications:
+
+```{r setupmatches, echo=TRUE}
+
+balfmla <- nhTrt ~ nhClass + nhQP03 + nhPV03 +
+    nhTP03 + nhBI03 + nhCE03 + nhNB03 + nhAgeYoung +
+    nhAgeMid + nhMarDom + nhOwn +  nhEmp +
+    nhAboveHS + nhHS + HomRate03
+
+
+thebglm <- arm::bayesglm(balfmla, data = meddat, family = binomial(link = "logit"))
+
+mhdist <- match_on(balfmla, data = meddat)
+psdist <- match_on(thebglm, data = meddat)
+## This is just standardized and centered
+hrdist1 <- match_on(nhTrt ~ HomRate03, data = meddat)
+
+## Distance in terms of homicide rate itself
+tmp <- meddat$HomRate03
+names(tmp) <- rownames(meddat)
+hrdist2 <- match_on(tmp, z = meddat$nhTrt, data = meddat)
+
+psCal <- quantile(as.vector(psdist), .9)
+mhCal <- quantile(as.vector(mhdist), .9)
+hrCal <- quantile(as.vector(hrdist2), .9)
+
+matchdist <- psdist + caliper(psdist, psCal) + caliper(mhdist, mhCal) + caliper(hrdist2, 2)
+fm0 <- fullmatch(matchdist, data = meddat)
+summary(fm0,min.controls=0,max.controls=Inf,propensity.model=thebglm)
+fm1 <- fullmatch(matchdist, data = meddat, min.controls = 1)
+summary(fm1, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
+## Notice that mean.controls=22/23 drops observations.
+fm2a <- fullmatch(matchdist, data = meddat, min.controls = .5, mean.controls = 23 / 22)
+summary(fm2a, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
+fm3 <- fullmatch(matchdist, data = meddat, mean.controls = .9)
+summary(fm3, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
+
+## The larger the differences in psdist, mhdist, and hrdist, the worse the
+## matches (by maxdist). This is a penalized match rather than a caliper version.
+
+maxdist <- max(matchdist[!is.infinite(matchdist)])
+
+psdist01 <- psdist / max(as.matrix(psdist))
+mhdist01 <- (mhdist - min(as.matrix(mhdist))) / (max(as.matrix(mhdist)) - min(as.matrix(mhdist)))
+hrdist201 <- (hrdist2 - min(as.matrix(hrdist2))) / (max(as.matrix(hrdist2)) - min(as.matrix(hrdist2)))
+
+summary(as.vector(psdist01))
+summary(as.vector(mhdist01))
+summary(as.vector(hrdist201))
+
+matchdistPen <- psdist + psdist01 * maxdist + mhdist01 * maxdist + hrdist201 * maxdist
+fm4 <- fullmatch(matchdistPen, data = meddat)
+summary(fm4, min.controls = 0, max.controls = Inf, propensity.model = thebglm)
+
+```
+
+
+<!--
+## Showing matches
+
+Fullmatching offers us more choices:
+
+\centering
+```{r out.width=".8\\textwidth", echo=FALSE, eval=FALSE}
+## perhaps try this https://briatte.github.io/ggnet/#example-2-bipartite-network next time
+library(igraph)
+blah0 <- outer(fm0, fm0, FUN = function(x, y) {
+  as.numeric(x == y)
+})
+blah1 <- outer(fm1, fm1, FUN = function(x, y) {
+  as.numeric(x == y)
+})
+blah2 <- outer(fm2a, fm2a, FUN = function(x, y) {
+  as.numeric(x == y)
+})
+blah2a <- outer(fm3, fm3, FUN = function(x, y) {
+  as.numeric(x == y)
+})
+par(mfrow = c(2, 2), mar = c(3, 3, 3, 1))
+plot(graph_from_adjacency_matrix(blah0, mode = "undirected", diag = FALSE),
+  vertex.color = c("white", "green")[meddat$nhTrt + 1], main = "Min Ctrls=0, Max Ctrls=Inf"
+)
+plot(graph_from_adjacency_matrix(blah1, mode = "undirected", diag = FALSE),
+  vertex.color = c("white", "green")[meddat$nhTrt + 1], main = "Min Ctrls=1, Max Ctrls=Inf"
+)
+plot(graph_from_adjacency_matrix(blah2, mode = "undirected", diag = FALSE),
+  vertex.color = c("white", "green")[meddat$nhTrt + 1], main = "Penalties,Min Ctrls=.5, Mean Ctrls=23/22"
+)
+plot(graph_from_adjacency_matrix(blah2a, mode = "undirected", diag = FALSE),
+  vertex.color = c("white", "green")[meddat$nhTrt + 1], main = "Pen V 2,MinCtrls=.5, MeanCtrls=23/22"
+)
+```
+-->
+
+##  Tracking effective sample size
+
+In 2-sample comparisons, total sample size can be a misleading as a measure of information content.  Example:
+\begin{itemize}
+\item say $Y$ has same variance, $\sigma^{2}$,in the Tx and the Ctl population.
+\item Ben H. samples 10 Tx and 40 Ctls, and
+\item Jake B. samples 25 Tx and 25 Ctls
+\end{itemize}
+--- so that total sample sizes are the same.  However,
+
+\begin{eqnarray*}
+  V_{BH}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{10} + \frac{\sigma^{2}}{40}=.125\sigma^{2}\mbox{;}\\
+  V_{JB}(\bar{y}_{t} - \bar{y}_{c}) &=& \frac{\sigma^{2}}{25} + \frac{\sigma^{2}}{25}=.08\sigma^{2}.\\
+\end{eqnarray*}
+
+Similarly, a matched triple is roughly $[(\sigma^{2}/1 + \sigma^{2}/2)/(\sigma^{2}/1 + \sigma^{2}/1)]^{-1}= 1.33$ times as informative as a matched pair.
+
+## Details
+
+Use pooled 2-sample t statistic SE formula to compare 1-1 vs 1-2 matched sets' contribution to variance:
+
+$$
+\begin{array}{c|c}
+  \atob{1}{1} & \atob{1}{2} \\
+M^{-2}\sum_{m=1}^{M} (\sigma^{2}/1 + \sigma^{2}/1) & M^{-2}\sum_{m=1}^{M} (\sigma^{2}/1 + \sigma^{2}/2) \\
+\frac{2\sigma^{2}}{M} & \frac{1.5\sigma^{2}}{M} \\
+\end{array}
+$$
+
+So 20 matched pairs is comparable to 15 matched triples.
+
+(Correspondingly, h-mean of $n_{t},n_{c}$ for a pair is 1, while for a triple it's $[(1/1 + 1/2)/2]^{-1}=4/3$.)
+
+The variance of the `Z`-coeff in `y~Z + match` is
+$$
+ \frac{2 \sigma^{2}}{\sum_{s} h_{s}}, \hspace{3em} h_{s} = \left( \frac{n_{ts}^{-1} + n_{cs}^{-1} }{2}  \right)^{-1} ,
+$$
+
+assuming the OLS model and homoskedastic errors.  (This is b/c the anova formulation is equivalent to harmonic-mean weighting, under which $V(\sum_{s}w_{s}(\bar{v}_{ts} - \bar v_{cs})) = \sum_{s} w_{s}^{2}(n_{ts}^{-1} + n_{cs}^{-1}) \sigma^{2} = \sigma^{2} \sum_{s} w_{s}^{2} 2 h_{s}^{-1} = 2\sigma^{2} \sum_{s}w_{s}/\sum_{s}h_{s} = 2\sigma^{2}/\sum_{s} h_{s}$.)
+
+For matched pairs, of course, $h_{s}=1$.  Harmonic mean of 1, 2 is $4/3$. Etc.
+
+
+## Matching so as to maximize effective sample size {.allowframebreak}
+
+```{r echo=TRUE, tidy=FALSE}
+stratumStructure(fm1)
+stratumStructure(fm0)
+effectiveSampleSize(fm1)
+effectiveSampleSize(fm0)
+meddat$fm1 <- fm1
+meddat$fm0 <- fm0
+wtsfm1 <- meddat %>%
+  filter(!is.na(fm1)) %>%
+  group_by(fm1) %>%
+  summarise(
+    nb = n(),
+    nTb = sum(nhTrt),
+    nCb = nb - nTb,
+    hwt = (2 * (nCb * nTb) / (nTb + nCb))
+  )
+wtsfm1
+sum(wtsfm1$hwt)
+stratumStructure(fm1)
+mean(unlist(matched.distances(fm1, matchdist)))
+
+wtsfm0 <- meddat %>%
+  filter(!is.na(fm0)) %>%
+  group_by(fm0) %>%
+  summarise(
+    nb = n(),
+    nTb = sum(nhTrt), nCb = nb - nTb,
+    hwt = (2 * (nCb * nTb) / (nTb + nCb))
+  )
+wtsfm0
+sum(wtsfm0$hwt)
+stratumStructure(fm0)
+mean(unlist(matched.distances(fm0, matchdist)))
+```
+
+Notice for `fm0` we weight the 12-to-1 match by `2*(1 * 11)/(11+1)=1.83` and the 1-to-16 match by `2*(16*1)/(16+1)=1.88`.
+
+In a pairmatch all of the sets have weight `2*(1*1)/(1+1) = 2/2=1`.
+
+```{r}
+pm1 <- pairmatch(matchdist, data = meddat, remove.unmatchables = TRUE)
+summary(pm1, propensity.model = thebglm)
+mean(unlist(matched.distances(pm1, matchdist)))
+effectiveSampleSize(pm1)
+```
+
+## Why does it matter? {.allowframebreaks}
+
+Or see here: Higher effective sample size $\rightarrow$ lower standard error.
+
+```{r echo=TRUE}
+stratumStructure(fm1)
+stratumStructure(fm2a)
+effectiveSampleSize(fm1)
+effectiveSampleSize(fm2a)
+library(estimatr)
+library(propertee)
+
+meddat$fm2a <- fm2a
+
+fm2a_spec <-obs_spec(nhTrt~uoa(nh03)+block(fm2a),
+  data=droplevels(meddat[!is.na(meddat$fm2a),]))
+
+specification_table(fm2a_spec,"treatment","blocks")
+
+fm2a_ett_weights<-ett(fm2a_spec,data=droplevels(meddat[!is.na(meddat$fm2a),]))
+
+lm_fm2a <- lm_robust(HomRate08~nhTrt,
+  data=droplevels(meddat[!is.na(meddat$fm2a),]),
+  weights=fm2a_ett_weights,
+  se_type="HC2"
+)
+
+
+fm1_spec <-obs_spec(nhTrt~uoa(nh03)+block(fm1),
+  data=droplevels(meddat[!is.na(meddat$fm1),]))
+
+specification_table(fm1_spec,"treatment","blocks")
+
+fm1_ett_weights<-ett(fm1_spec,data=droplevels(meddat[!is.na(meddat$fm1),]))
+
+lm_fm1 <- lm_robust(HomRate08~nhTrt,
+  data=droplevels(meddat[!is.na(meddat$fm1),]),
+  weights=fm1_ett_weights,
+  se_type="HC2"
+)
+
+lm_fm1$std.error
+lm_fm2a$std.error
+
+
+```
+
+
+
 ## Decision Points in Creating Matched Designs
 
  - Which covariates and their scaling and coding. (For example, exclude
@@ -458,7 +699,7 @@ setdiffsHM
    controls per treated)
  - Which remaining differences are tolerable from a substantive perspective?
  - How well does the resulting research design compare to an equivalent
-   block-randomized study (`xBalance`)?
+   block-randomized study (`balanceTest`)?
  - (Possibly) How much statistical power does this design provide for the
    quantity of interest?
  - Other questions to ask about a research design aiming to help clarify
