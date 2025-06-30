@@ -67,8 +67,6 @@ library(slam)
 
 # But first, review
 
-Homework
-
 ## What is regression doing?
 
 Following Berk (2004)'s *Regression Analysis: A Constructive Critique*.
@@ -109,7 +107,7 @@ Following Berk (2004)'s *Regression Analysis: A Constructive Critique*.
    - The As-If-Randomized mode of statistical inference for stratified research
      designs (treat a matched design as a block-randomized experiment).
 
-## Review 2: An Adjustment Strategy to Address Alternative Explanations Effectively
+## Review 2: Adjust to Address Alternative Explanations Effectively
 
 How to strengthen evidence about the claim that Metrocable caused a decrease in crime?
 
@@ -118,9 +116,11 @@ How to strengthen evidence about the claim that Metrocable caused a decrease in 
     operationalize these explanations?
  2. **Stratify data to minimize heterogeneity within set.** If education does
     not vary within set, then we have "adjusted for" education by conditioning
-    on the set. The `optmatch` package for R finds sets that minimize the
-    weighted sum of distances across the sets. (See also `rcbalance`, `DiPs`,
-    `bigmatch`, `designmatch`, `quickmatch`).
+    on the set. If education varies within set as much as it would in a
+    randomized experiment, then we have strengthened our argument for
+    conditional independence from education. The `optmatch` package for R finds
+    sets that minimize the weighted sum of distances across the sets. (See also
+    `rcbalance`, `DiPs`, `bigmatch`, `designmatch`, `quickmatch`).
     1. Create distance matrices using `match_on` (and `caliper` and
        `exactMatch`) (Scalar distances on  especially important variables like
        baseline outcomes; Multivariate distances in terms of other covariates
@@ -167,12 +167,10 @@ meddat$nhTrtF <- factor(meddat$nhTrt)
 ```
 
 
-## An Adjustment Strategy to Address Alternative Explanations
+## Adjust to Address Alternative Explanations
 
  3. **Assess the stratification in substantive terms** If we look within the
     sets, are the differences we see substantively concerning or trivial?
-
-
 
 ```{r echo=FALSE}
 meddat[names(fm1),"fm1"] <- fm1
@@ -186,13 +184,13 @@ setmeanDiffs <- meddat %>% filter(!is.na(fm1)) %>% group_by(fm1) %>%
 	    minbaselines = min(HomRate03),
 	    maxbaseline = max(HomRate03)
             ) %>% arrange(abs(baselinediffs))
-setmeanDiffs <- setmeanDiffs %>% mutate(nbwt = nb/sum(nb), hbwt0 = nbwt * prob_trt * ( 1- prob_trt))
-setmeanDiffs$hbwt <- with(setmeanDiffs, hbwt0/sum(hbwt0))
+setmeanDiffs <- setmeanDiffs %>% mutate(nbwt = nb/sum(nb), precwt0 = nbwt * prob_trt * ( 1- prob_trt))
+setmeanDiffs$precwt <- with(setmeanDiffs, precwt0/sum(precwt0))
 
-setmeanDiffs %>% dplyr::select(fm1,ateb,nbwt,hbwt)
+setmeanDiffs %>% dplyr::select(fm1,nb,nTb,nCb,ateb,nbwt,precwt)
 ```
 
-## An Adjustment Strategy to Address Alternative Explanations
+## Adjust to Address Alternative Explanations
 
  4. **Assess the stratification by comparison to a model of a block-randomized
     experiment** Does our research design look like a block-randomized
@@ -202,14 +200,14 @@ setmeanDiffs %>% dplyr::select(fm1,ateb,nbwt,hbwt)
     calipers); (d) exact matching on subgroups; (e) reducing variation in
     set-size.
 
-## An Adjustment Strategy to Address Alternative Explanations
+## Adjust to Address Alternative Explanations {.allowframebreaks}
 
  5. **Estimate effects and test hypothesis as-if-block-randomized** Estimators
     and tests refer to the finite "population" of the study pool and the fixed
     stratification in the same way common in the analysis of block-randomized
     experiments.
 
-```{r  estandtest,  cache=TRUE, warning=FALSE}
+```{r  estandtest1,  cache=FALSE, warning=FALSE}
 meddat_new <-  meddat %>%  filter(!is.na(fm1)) %>% group_by(fm1) %>%
 	mutate(trtprob=mean(nhTrt), nbwt=nhTrt/trtprob + (1-nhTrt)/(1-trtprob))
 estate <-  lm_robust(HomRate08~nhTrt,data=meddat_new,weights=nbwt,subset=!is.na(fm1))
@@ -217,18 +215,20 @@ estate
 with(setmeanDiffs,sum(ateb*nb/sum(nb)))
 with(setmeanDiffs,sum(ateb*nbwt))
 
-with(setmeanDiffs,sum(ateb*hbwt))
-
-estate_fe <- lm_robust(HomRate08~nhTrt,fixed_effects = ~fm1, data=meddat_new,subset=!is.na(fm1))
-estate_fe
-
-estate_fe2 <- lm_robust(HomRate08~nhTrt+fm1, data=meddat_new,subset=!is.na(fm1))
-coef(estate_fe2)["nhTrt"]
+## Or
+library(propertee)
+fm1_spec <- obs_spec(nhTrt~uoa(nh03)+block(fm1),data=meddat,subset=!is.na(fm1),na.fail=FALSE)
+summary(fm1_spec)
+estate2 <- lmitt(HomRate08~1,specification=fm1_spec,weights="ate",data=meddat,subset=!is.na(fm1))
+summary(estate2)
 
 set.seed(12345)
 ranktest1  <-  wilcox_test(HomRate08~nhTrtF|fm1,data=meddat_new,
 		       distribution=approximate(nresample=1000))
-## Notice that the "99 percent confidence interval" below refers to predicted differences in the p-value across difference simulations with different seeds.
+
+## Notice that the "99 percent confidence interval" below refers to predicted
+## differences in the p-value across difference simulations with different seeds.
+
 coin::pvalue(ranktest1)
 ## Doing another 10000
 blah<- wilcox_test(HomRate08~nhTrtF|fm1,data=meddat_new,
@@ -236,7 +236,34 @@ blah<- wilcox_test(HomRate08~nhTrtF|fm1,data=meddat_new,
 coin::pvalue(blah)
 ```
 
-## An Adjustment Strategy to Address Alternative Explanations
+## Increase power using covariates/difference/change scores {.allowframebreaks}
+
+We have baseline outcomes. So we could use them within the matched sets ---
+either as direct change scores or via covariance adjustment (where the
+linearity assumption is not central to the validity of the method.) Notice here
+little change --- because sets are very homogeneous on baseline outcome that
+there is little variability to soak up in this way.
+
+```{r diffindiffs,echo=TRUE}
+meddat_new$HomRate0803 <- with(meddat_new,HomRate08-HomRate03)
+
+## Change score
+set.seed(12345)
+ranktest_did  <-  wilcox_test(HomRate0803~nhTrtF|fm1,data=meddat_new,
+		       distribution=approximate(nresample=1000))
+pvalue(ranktest_did)
+
+baseline_outcome_mod <- lm(HomRate08~HomRate03,data=meddat_new)
+est_ate_covadj <- lmitt(HomRate08~1,specification=fm1_spec,offset=cov_adj(baseline_outcome_mod),data=meddat_new,weights="ate")
+summary(est_ate_covadj)
+
+## Change score direct
+est_ate_covadj3 <- lm_robust(HomRate0803~nhTrt,data=meddat_new,weights=ate(fm1_spec,data=meddat_new))
+est_ate_covadj3
+
+```
+
+## Adjust to Address Alternative Explanations
 
  6. **Assess the sensitivity of the analysis to the assumptions of as-if-randomized** The design is not a randomized design. Is this likely to
     cause small or large changes in the substantive interpretation of our
@@ -260,10 +287,11 @@ units and focus comparisons on those units versus the focal units? (See
 Rosenbaum 2010 and 2017 on "risk-set matching".)
 
 
- - \bh{If you find it difficult to make the as-if-randomized design} If you don't want to find units which were similar up until the moment of
-treatment (say, you have few covariates), can you make other assumptions? (See
-the difference-in-differences idea of parallel trends and/or lagged DV and/or
-other assumptions in Tom's discussion.)
+ - \bh{If you find it difficult to make the as-if-randomized design} If you
+   don't want to find units which were similar up until the moment of treatment
+   (say, you have few covariates), can you make other assumptions? (See the
+   difference-in-differences idea of parallel trends and/or lagged DV and/or
+   other assumptions.)
 
 
 ## What about data with multiple observations of each unit?
@@ -613,6 +641,11 @@ rbind(est1cont=coef(est1cont)[["own_diff"]],
    values and the higher value being assigned at random within pair).
  - We can compare how $Z \rightarrow Y$ conditional on pair in a variety of
    ways: estimation and testing comparing the higher-vs-lower treatment value member of a pair or by averaging over the size of the higher-vs-lower treatment value differences (say, using OLS to focus on the linear relationship). We can also visualize the relationships to assess linearity and/or learn more.
+
+# Non-bipartite Matching: An Application with the Study of COVID attitudes
+
+## How do descriptive norms influence COVID attitudes?
+
 
 # Non-bipartite Matching: An Application with the Study of Race and Place
 
