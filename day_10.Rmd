@@ -572,6 +572,27 @@ ate0c <- lm_robust(HomRate08~nhTrt,data=meddat,weights=ate(fm0_spec,data=meddat)
 ate0c
 ```
 
+# Differences in differences: Change Scores
+
+```{r diffs, echo=TRUE}
+## A Change score
+meddat$HomRate0803 <- with(meddat,HomRate08-HomRate03)
+ate0_diffs <- lm_robust(HomRate0803~nhTrt,data=meddat,weights=ate(fm0_spec,data=meddat),se_type="HC2")
+ate0_diffs
+
+## Allows some flexibility in the pre-post difference
+ate0_diffs2 <- lm_robust(HomRate08~nhTrt+HomRate03,data=meddat,weights=ate(fm0_spec,data=meddat),se_type="HC2")
+ate0_diffs2
+
+## Using propertee (fix this)
+diff_mod <- lm(HomRate08~HomRate03,data=meddat)
+ate0_diffs3 <- lm(HomRate08~nhTrt,data=meddat,
+                         weights=ate(fm0_spec,data=meddat),
+                         offset=cov_adj(diff_mod))
+summary(ate0_diffs3)
+
+```
+
 ## Using the weights: precision weights
 
 Set-size weighting is easy to explain but may differ in terms of precision:
@@ -838,7 +859,7 @@ obsmd2 <- with(wdat, mdwt2(y = HomRate08, trt = nhTrt, b = fm0))
 
 origtab <- with(wdat, table(trt = nhTrt, b = fm0))
 testtab <- with(wdat, table(trt = newexp(trt = nhTrt, b = fm0), b = fm0))
-all.equal(origtab, testtab)
+stopifnot(all.equal(origtab, testtab))
 ```
 
 ## Testing by hand {.allowframebreaks}
@@ -867,8 +888,6 @@ var(nulldist2)
 plot(density(nulldist1))
 lines(density(nulldist2), lty = 2)
 ```
-
-
 
 ## Testing Approach: Faster
 

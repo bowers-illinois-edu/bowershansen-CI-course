@@ -67,6 +67,8 @@ library(slam)
 
 # But first, review
 
+Homework
+
 ## What is regression doing?
 
 Following Berk (2004)'s *Regression Analysis: A Constructive Critique*.
