@@ -1,10 +1,10 @@
 ---
 title: |
- | Intro to Sensitivity Analysis: Rosenbaum Style
+ | Sensitivity Analysis
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 author: |
-  | ICPSR 2023 Session 1
-  | Jake Bowers \& Tom Leavitt
+  | ICPSR 2025 Session 1
+  | Jake Bowers \& Ben Hansen \& Tom Leavitt
 bibliography:
  - 'BIB/MasterBibliography.bib'
 fontsize: 10pt
@@ -57,11 +57,11 @@ library(senstrat)
 ## Today
 
  1. Agenda: Reasoning about how departures from our "as-if randomized" approach
-    might change our substantive conclusions: sensitivity analysis, Rosenbaum
-    style.
- 2. We are now in the "Sensitivity Analysis" part of the course
-    (see the reading there).
- 3. Questions arising from the reading or assignments or life? (Bipartite matching? Non-bipartite matching? Instrumental variables? Randomized experiments?)
+    might change our substantive conclusions: sensitivity analysis. (This is
+    not "stability" or "fragility" analysis)
+ 3. Questions arising from the reading or assignments or life? (Bipartite
+    matching? Non-bipartite matching? Instrumental variables? Randomized
+    experiments?)
 
 # But first, review
 
@@ -71,14 +71,16 @@ Given a research design that (a) can be defended on substantive grounds and (b) 
 
  - Testing and estimation procedures that have good properties have
    **distributions** that we can describe and work with.
-   - Most obviously, $p$-values compare observed test stat. to the
-     **distribution** of that test stat. in a hypothesized world. (Recall
-     randomization based tests in randomized experiments).
+   - Most obviously, $p$-values compare observed test statistic to the
+     **distribution** of that test statistic in a hypothesized world. (Recall
+     randomization based tests in randomized experiments). There are no
+     $p$-values without distributions.
    - However an "unbiased estimator" is an estimator having a **distribution**
      that is centered on the truth (a "precise estimator" has a
      **distribution** that is narrow, a "consistent estimator" has a
      **distribution** that makes all individual estimates closer to the truth
-     as information increases)
+     as information increases). There are no standard errors without
+     distributions.
 
 ## Statistical Inference for Stratified Designs
 
@@ -100,35 +102,48 @@ Where can those distributions come from?
     parameters of the Likelihood function, then **Bayes Rule** gives us
     distributions.(An **outcome distribution** and functional form plus **prior
     distribution** yields distributions of test statistics and estimators
-    (versions of **posterior distributions**).
+    (versions of **posterior distributions**)).
 
 
 ## The "As-If randomized" approach
 
 
-Given a research design that (a) can be defended on substantive grounds and (b) compares favorably with a randomized experiment of the same design (i.e. in the case of fullmatching, a block randomized experiment with either 1 treated and 1 or more control units or 1 control unit and 1 or more treated units), how should we do statistical inference? (How should we choose and justify/explain our choices of estimators and tests?)
+Given a research design that (a) can be defended on substantive grounds and (b)
+compares favorably with a randomized experiment of the same design (i.e. in the
+case of fullmatching, a block randomized experiment with either 1 treated and 1
+or more control units or 1 control unit and 1 or more treated units), how
+should we do statistical inference? (How should we choose and justify/explain
+our choices of estimators and tests?)
 
-Why not treat this design **as-if it had been randomized** for the sake of argument? One can say, "If this had been an experiment, the results would be $\hat{\tau}$, $p=.02$."
+Why not treat this design **as-if it had been randomized** for the sake of
+argument? One can say, "If this had been an experiment, the results would be
+$\hat{\tau}$, $p=.02$."
 
 Advantages:
 
- - No probability model of outcomes to justify
- - No functional form/structural model of covariates and intervention/treatment to justify
- - No population and sampling needed --- inference can focus on the pool of observations available.
+ - No probability model of outcomes to justify; no $Y \sim
+   \text{Poisson}(\lambda)$
+ - No functional form/structural model of covariates and intervention/treatment
+   to justify
+ - No population and sampling needed --- inference can focus on the pool of
+   observations available.
  - No CLT required --- CLT for convenience only
- - We already showed that, for many covariates, the design compares favorably to an experiment.
+ - We already showed that, **for this design**, for many covariates, the design
+   compares favorably to an experiment.
 
 
 ## The "As-If randomized" approach
 
-
-Given a research design that (a) can be defended on substantive grounds and (b) compares favorably with a randomized experiment of the same design (i.e. in the case of fullmatching, a block randomized experiment with either 1 treated and 1 or more control units or 1 control unit and 1 or more treated units), how should we do statistical inference? (How should we choose and justify/explain our choices of estimators and tests?)
-
-Why not treat this design **as-if it had been randomized** for the sake of argument? One can say, "If this had been an experiment, the results would be $\hat{\tau}$, $p=.02$."
+Why not treat this design **as-if it had been randomized** for the sake of
+argument? One can say, "If this had been an experiment, the results would be
+$\hat{\tau}$, $p=.02$."
 
 Disadvantages:
 
- - **This is not a randomized experiment.** How might our results differ if (1) our design did not adequately capture the intervention/selection process or (2) we used a different basis for statistical inference?
+ - **This is not a randomized experiment.** How might our results differ if
+     1. the design **we created from non-randomized observations** did not
+        adequately capture the intervention/selection process or
+     2. we used a different basis for statistical inference?
 
 Sensitivity analysis aims to answer such questions --- especially question 1.
 
@@ -151,9 +166,15 @@ parallel trends assumption, our assumptions are different from those used by
 DiD approaches.)
 
 ```{r echo=TRUE}
-balfmla <- nhTrt ~ HomRate03 + nhPopD + nhHS + nhAboveHS + nhEmp + nhAgeMid + nhAgeYoung + nhMarDom + nhOwn + nhRent
+balfmla <- nhTrt ~ HomRate03 + nhHS + nhAboveHS + nhEmp + nhAgeMid + nhAgeYoung + nhMarDom + nhOwn + nhRent
 glm1 <- arm::bayesglm(balfmla, data = meddat)
-meddat <- transform(meddat, pairm = pairmatch(glm1, data = meddat))
+psdist <- match_on(glm1,data=meddat)
+psCal <- quantile(psdist[lower.tri(psdist)],.9)
+psdistCal <- psdist + caliper(psdist,psCal)
+summary(psdistCal)
+pairm <- pairmatch(psdistCal,data=meddat,remove.unmatchables=TRUE)
+summary(pairm)
+meddat$pairm <- pairm
 xb1 <- balanceTest(update(balfmla,.~.+strata(pairm)), data = meddat)
 xb1$overall
 ```
@@ -528,8 +549,8 @@ res1_lm <- lm(HomRate0803~nhTrt+pairm, data = meddat)
 sens1 <-  sensemakr(model = res1_lm, treatment = "nhTrt")
 
 summary(sens1)
-## If you have trouble using lm() and want to use lm_robust() or 
-## another least squares fitter (say, you have lots of pairs) or want 
+## If you have trouble using lm() and want to use lm_robust() or
+## another least squares fitter (say, you have lots of pairs) or want
 ## a different standard error
 ## you can do this:
 sens2 <- sensemakr(estimate = coef(lm1)[["nhTrt"]], se = lm1$std.error[["nhTrt"]], treatment = "nhTrt", dof = lm1$df.residual)
@@ -552,8 +573,8 @@ plot(sens2,sensitivity.of="t-value")
 How Violence Impacts Attitudes toward Peace among Darfurian Refugees".
 
 
- 
- 
+
+
 
 
 ## References
