@@ -158,7 +158,7 @@ meddat <- mutate(meddat,
 options(show.signif.stars = FALSE)
 ```
 
-## Make a matched design:
+## Make and briefly evaluate a matched design {.allowframebreaks}
 
 I  use a gain score approach using a pairmatch (Notice that the difference in
 the gain scores is the difference in the differences. Only here we make no
@@ -169,17 +169,28 @@ DiD approaches.)
 balfmla <- nhTrt ~ HomRate03 + nhHS + nhAboveHS + nhEmp + nhAgeMid + nhAgeYoung + nhMarDom + nhOwn + nhRent
 glm1 <- arm::bayesglm(balfmla, data = meddat)
 psdist <- match_on(glm1,data=meddat)
+hrdist <- match_on(nhTrt~HomRate03,data=meddat)
+mhdist <- match_on(balfmla,data=meddat,method="rank_mahalanobis")
+
 psCal <- quantile(psdist[lower.tri(psdist)],.9)
-psdistCal <- psdist + caliper(psdist,psCal)
-summary(psdistCal)
-pairm <- pairmatch(psdistCal,data=meddat,remove.unmatchables=TRUE)
-summary(pairm)
+hrCal <- quantile(hrdist[lower.tri(psdist)],.9)
+## Match on mahalanobis distance within propensity and baseline homocide rate calipers
+match_dist<- mhdist + caliper(psdist,psCal) + caliper(hrdist,hrCal)
+summary(match_dist)
+
+pairm <- pairmatch(match_dist,data=meddat,remove.unmatchables=TRUE)
+summary(pairm,propensity.model=glm1)
+
+meddat$pairm <- NULL
 meddat$pairm <- pairm
 xb1 <- balanceTest(update(balfmla,.~.+strata(pairm)), data = meddat)
 xb1$overall
 ```
 
-And here is an **outcome analysis** using `HomRate08 - HomRate03` as my outcome:
+## An outcome analysis {.allowframebreaks}
+
+And here is an **outcome analysis** using the difference or change score of
+`HomRate08 - HomRate03` as the outcome:
 
 ```{r echo=TRUE}
 xbtest3 <- balanceTest(nhTrt ~ HomRate0803+strata(pairm), data = meddat[matched(meddat$pairm), ])
@@ -188,6 +199,17 @@ xbtest3$results[, c("adj.diff", "z", "p"), ]
 ## OR using a different asymptotic approximation:
 lm1 <- lm_robust(HomRate0803 ~ nhTrt, fixed_effects = ~pairm, data = meddat, subset = !is.na(pairm))
 lm1
+## OR using propertee -- with pairs fixed effects/precision weights and ate weights are the same
+library(propertee)
+pairm_spec <- obs_spec(nhTrt~uoa(nh03)+block(pairm),data=meddat[!is.na(pairm),])
+lmitt1 <- lmitt(HomRate0803~1,specification=pairm_spec,data=meddat[!is.na(pairm),],weights="ate")
+summary(lmitt1)
+## OR focusing on a test rather than estimation (here using the permutation based approach)
+meddat$nhTrtF <- factor(meddat$nhTrt)
+wctest1 <- wilcox_test(HomRate0803~nhTrtF|pairm,data=meddat[!is.na(pairm),],distribution=approximate(nresample=10000))
+pvalue(wctest1)
+ttest1 <- oneway_test(HomRate0803~nhTrtF|pairm,data=meddat[!is.na(pairm),],distribution=approximate(nresample=10000))
+pvalue(ttest1)
 ```
 
 
@@ -267,12 +289,16 @@ reshape_sensitivity <- function(y, z, fm, senfm=FALSE) {
 
 ## An example of sensitivity analysis with `senmv`.
 
-
-The workflow: First, reshape the matched design into the appropriate shape (one treated unit in column 1, controls in columns 2+).^[So notice that `senmv` requires 1:K matches although K can vary. The `sensitivityfull::senfm` function allows for unrestricted `fullmatch` output (but still reorganized into a matrix).]
+The workflow: First, reshape the matched design into the appropriate shape (one
+treated unit in column 1, controls in columns 2+).^[So notice that `senmv`
+requires 1:K matches although K can vary. The `sensitivityfull::senfm` function
+allows for unrestricted `fullmatch` output (but still reorganized into a
+matrix). And `senstrat` allows more flexibilty, too.]
 
 ```{r echo=TRUE}
 respmat <- with(meddat[matched(meddat$pairm), ], reshape_sensitivity(HomRate0803, nhTrt, pairm))
 respmat[1:4, ]
+## An example using a full match
 meddat <- transform(meddat, fm = fullmatch(balfmla, data = meddat, min.controls = 1))
 respmat2 <- with(meddat[matched(meddat$fm), ], reshape_sensitivity(HomRate0803, nhTrt, fm))
 respmat2[12:18, ]
@@ -288,14 +314,20 @@ sensG1 <- senmv(-respmat, method = "t", gamma = 1)
 sensG2 <- senmv(-respmat, method = "t", gamma = 2)
 sensG1$pval
 sensG2$pval
+## Notice that method="t" and gamma=1 is our ordinary t-test one-sided
+ttest1 <- oneway_test(HomRate0803~nhTrtF|pairm,data=meddat[!is.na(pairm),],distribution=asymptotic(),alternative="greater")
+pvalue(ttest1)
 ```
 
 If we used a paired $t$-test to assess the hypothesis of no effects and:
 
- - Metrocable stations were really randomized within pair (no unobserved confounding), our $p$-value would be about `r round(sensG1$pval,2)`.
-
- - An unobserved confounder (or a function of many unobserved confounders) made neighborhoods with Metrocable stations within pair **twice as likely** to receive those stations as the neighborhoods without the stations, then our **maximum $p$-value** would be about `r round(sensG2$pval,2)`.
-
+ - Metrocable stations were really randomized within pair (no unobserved
+   confounding), our means-based $p$-value would be about `r
+   round(sensG1$pval,2)`.
+ - An unobserved confounder (or a function of many unobserved confounders) made
+   neighborhoods with Metrocable stations within pair **twice as likely** to
+   receive those stations as the neighborhoods without the stations, then our
+   **maximum $p$-value** would be about `r round(sensG2$pval,2)`.
 
 ##  Why $\Gamma$? Can we model unobserved confounding?
 
@@ -431,7 +463,7 @@ respmat3 <- with(meddat[matched(meddat$fm1), ], reshape_sensitivity(HomRate0803,
 
 ## The last column tells us whether this is a 1:K (1) versus K:1 (0) match
 respmat4 <- respmat3[,-ncol(respmat3)]
-settype <- respmat3[,10]==1
+settype <- respmat3[,9]==1
 
 res2_full <- senfm(-respmat4, treated1 = settype, gamma = 1)
 res2_full$pval
@@ -460,6 +492,13 @@ ss_y_g2 <- senstrat(meddat$HomRate0803,z=meddat$nhTrt,st=meddat$fm1,gamma=2, alt
 ss_h_g2 <- senstrat(hscores1,z=meddat$nhTrt,st=meddat$fm1,gamma=2, alternative="less")
 ss_m_g2 <- senstrat(mscores1,z=meddat$nhTrt,st=meddat$fm1,gamma=2, alternative="less")
 
+## Notice the same
+ss_y_g1
+pvalue(oneway_test(HomRate0803~nhTrtF|fm1,data=meddat,alternative="greater"))
+
+ss_y_g2
+ss_h_g2
+ss_m_g2
 ```
 
 
@@ -472,8 +511,6 @@ models)
  - https://cran.r-project.org/web/packages/sensitivityPStrat/index.html
  - See the piece "Do We Really Know the WTO Cures Cancer?"<http://www.stephenchaudoin.com/CHH_Cancer_bjps.pdf>
  - See the piece "The sensitivity of linear regression coefficients’ confidence limits to the omission of a confounder" <https://projecteuclid.org/euclid.aoas/1280842143>
-
-
 
 
 ## Confidence Intervals
@@ -535,13 +572,17 @@ plot(as.numeric(names(ampres1)), ampres1,
   main = paste("Decomposition of Gamma=", round(res1_h$root, 2))
 )
 ## Add a line for another Gamma
-## lines(as.numeric(names(ampres2)), ampres2, type = "b")
+lines(as.numeric(names(ampres2)), ampres2, type = "b")
 ```
 
 
 ## Sensitivity analysis for the weak null
 
-@cinellihazlett2020 and @hosman2010 expresse sensitivity analysis in terms more familiar to people who are using linear regression for estimation and testing of the weak null. Here is a version using the `sensemakr` package:
+@cinellihazlett2020 and @hosman2010 express sensitivity analysis in terms more
+familiar to people who are using linear regression for estimation and testing
+of the weak null (see also @fogarty2020a and @fogarty2020b for tests of the
+weak null of no average effects). Here is a version using the `sensemakr`
+package:
 
 ```{r echo=TRUE}
 library(sensemakr)
@@ -565,12 +606,20 @@ plot(sens2,sensitivity.of="t-value")
 
 ## Summary and Questions:
 
- - Formal sensitivity analysis allows us to use the as-if randomized approach to statistical inference **provisionally** (versus fearfully): we can directly ask how our distributions would change under different forms of unobserved confounding.
- - The fact that a $p<.01$ would change to $p=.051$ if $\Gamma=3$ (or if $\Lambda$=4.5 and $\Delta$=14.7) does not mean that such an unobserved covariate exists.
- - Since we are reasoning about unobserved covariates, we have a naming problem: We have to ask: What covariate could conceivably play this role?
- - See the Rabb et al (2022) piece for an example of this kind of sensitivity analysis in application.
- - See Hazlett (2020) for an application of the regression based approach: "Angry or Weary?
-How Violence Impacts Attitudes toward Peace among Darfurian Refugees".
+ - Formal sensitivity analysis allows us to use the as-if randomized approach
+   to statistical inference **provisionally** (versus fearfully): we can
+   directly ask how our distributions would change under different forms of
+   unobserved confounding.
+ - The fact that a $p<.01$ would change to $p=.051$ if $\Gamma=3$ (or if
+   $\Lambda$=4.5 and $\Delta$=14.7) does not mean that such an unobserved
+   covariate exists.
+ - Since we are reasoning about unobserved covariates, we have a naming
+   problem: We have to ask: What covariate could conceivably play this role?
+ - See the Rabb et al (2022) piece for an example of this kind of sensitivity
+   analysis in application.
+ - See Hazlett (2020) for an application of the regression based approach:
+   "Angry or Weary? How Violence Impacts Attitudes toward Peace among Darfurian
+   Refugees".
 
 
 

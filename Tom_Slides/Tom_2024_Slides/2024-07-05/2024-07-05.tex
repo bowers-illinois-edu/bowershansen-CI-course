@@ -92,7 +92,7 @@
 \usepackage{xparse}
 \usepackage{subfig}
 \usepackage{amsmath}
-\usepackage{amsfonts,amsthm,amsmath,amssymb}    
+\usepackage{amsfonts,amsthm,amsmath,amssymb}
 \usepackage{bbm}
 \usepackage{bm}
 \usepackage{empheq}
@@ -141,6 +141,7 @@
 \DeclareMathOperator{\rank}{rank}
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
+
 %\DeclareMathOperator{\Pr}{\rm{Pr}}
 %------------------------------------------------------------------------
 %	TITLE PAGE
@@ -232,22 +233,22 @@ p_l & =  \Phi\left(\frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0}{\sqrt{\
 %----------------------------------------------------------------
 \section{Sensitivity Analysis for weak nulls}
 \begin{frame}
-\frametitle{Sensitivity analysis for weak nulls} 
+\frametitle{Sensitivity analysis for weak nulls}
 \vfill
 \begin{itemize} \vfill
 \item Denote estimator of ATE in block $b$ by $\hat{\tau}_b$ \vfill
 \item Unbiased estimator of the ATE is $\hat{\tau} = \sum \limits_{b = 1}^B (n_b/N)\hat{\tau}_b$ \vfill
 \item Suppose Rosenbaum's sensitivity analysis model: \vfill
 \begin{align*}
-\dfrac{1}{\Gamma} \leq \dfrac{\pi_{bi}/(1 - \pi_{bi})}{\pi_{bj} / (1 - \pi_{bj})} \leq \Gamma \text{ for all } i = 1, \ldots , n_b \text{ and } b = 1, \ldots , B 
+\dfrac{1}{\Gamma} \leq \dfrac{\pi_{bi}/(1 - \pi_{bi})}{\pi_{bj} / (1 - \pi_{bj})} \leq \Gamma \text{ for all } i = 1, \ldots , n_b \text{ and } b = 1, \ldots , B
 \end{align*} \vfill
 \item How to test $H_0: \tau = \tau_0$ under violations of random assignment? \vfill
-\end{itemize}  
+\end{itemize}
 \vfill
 \end{frame}
 %----------------------------------------------------------------
 \begin{frame}[t]
-\frametitle{Sensitivity analysis for weak nulls} 
+\frametitle{Sensitivity analysis for weak nulls}
 \vfill
 \begin{itemize} \vfill
 \item Under random assignment, $\Gamma = 1$, test-stat is \vfill
@@ -260,12 +261,12 @@ p_l & =  \Phi\left(\frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0}{\sqrt{\
 \end{align} \vfill
 \item Ideally, compare \eqref{eq: test stat nonrandom} to standard Normal \vfill
 \item But $\E_{\bm{u}}\left[\hat{\tau}\right]$ and $\widehat{\Var}_{\bm{u}}\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]$ depend on unknown $\bm{u}$ and unknown potential outcomes
-\end{itemize}  
+\end{itemize}
 \vfill
 \end{frame}
 %----------------------------------------------------------------
 \begin{frame}[t]
-\frametitle{Sensitivity analysis for weak nulls} 
+\frametitle{Sensitivity analysis for weak nulls}
 \vfill
 \begin{itemize} \vfill
 \item In principle, for test against $H_A: \, \tau > \tau_0$, could use
@@ -282,7 +283,7 @@ p_l & =  \Phi\left(\frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0}{\sqrt{\
 \end{frame}
 %----------------------------------------------------------------
 \begin{frame}[t]
-\frametitle{Sensitivity analysis for weak nulls} 
+\frametitle{Sensitivity analysis for weak nulls}
 \vfill
 \begin{itemize} \vfill
 \item \citet{fogarty2023} proposes test-stat in which, under the null,
@@ -294,18 +295,18 @@ p_l & =  \Phi\left(\frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0}{\sqrt{\
 \dfrac{t(\cdot, \cdot) - \tau_0}{\sqrt{\widehat{\Var}_{\bm{u}}\left[t(\cdot, \cdot)\right]}},
 \end{equation} \vfill
 which is conservative \vfill
-\end{itemize}  
+\end{itemize}
 \vfill
 \end{frame}
 %----------------------------------------------------------------
 \begin{frame}[t]{Worst-case inverse probability weighted (IPW) test-stat}
-\frametitle{} 
+\frametitle{}
 \vfill
 \begin{itemize} \vfill
 \item Test statistic \citet{fogarty2023} proposes is ``worst-case IPW estimator'' \vfill
 \item To unpack ``worst-case IPW estimator'', usual IPW estimator is
 \begin{align} \label{eq: strat IPW}
-\left(\dfrac{1}{\abs{\Omega_k}}\right) \left(\dfrac{\hat{\tau}_k}{p(\bm{z}_k)}\right),
+            \left(\dfrac{1}{|\Omega_{k}|}\right) \left(\dfrac{\hat{\tau}_k}{p(\bm{z}_k)}\right),
 \end{align}
 where $p(\bm{z}_k)$ is prob.~of $\bm{z}_k$, for all $\bm{z}_k \in \Omega_k$ \vfill
 \item Bounds of $\Pr\left(\bm{Z}_b = \bm{z}\right)$ for any given $\Gamma$ are  \vfill
@@ -314,12 +315,12 @@ where $p(\bm{z}_k)$ is prob.~of $\bm{z}_k$, for all $\bm{z}_k \in \Omega_k$ \vfi
 \end{equation*} \vfill
 for sets with one treated unit or one control unit
 \vfill
-\end{itemize}  
+\end{itemize}
 \vfill
 \end{frame}
 %----------------------------------------------------------------
 \begin{frame}[t]{Worst-case inverse probability weighted (IPW) test-stat}
-\frametitle{} 
+\frametitle{}
 \vfill
 \begin{itemize} \vfill
 \item Then, ``worst case IPW estimator'' against $H_A: \, \tau > \tau_0$ is \vfill
@@ -332,28 +333,28 @@ for sets with one treated unit or one control unit
 \item Weight by largest possible prob.~when $\hat{\tau}_b \geq 0$ and least possible prob.~when $\hat{\tau}_b < 0$ \vfill
 \end{itemize} \vfill
 \item Then aggregate over matched sets, \vfill
-\begin{equation*} 
+\begin{equation*}
 \widetilde{W} \coloneqq \sum \limits_{b = 1}^B (n_b/N) \widetilde{W}_b.
 \end{equation*}
 \item Expectation of $\widetilde{W}$ always less than or equal to $\tau$ \vfill
 \item With asymptotically conservative variance estimator \citep{fogarty2018,fogarty2023}, we have asymptotically valid tests for any $\Gamma \geq 1$ \vfill
-\end{itemize}  
+\end{itemize}
 \vfill
 \end{frame}
 %----------------------------------------------------------------
 \begin{frame}[t]
-\frametitle{Sensitivity analysis for weak nulls} 
+\frametitle{Sensitivity analysis for weak nulls}
 \vfill
 \begin{itemize} \vfill
 \item But what about the variance? It still depends on unknowable $\bm{u}$ . . .  \vfill
 \item \citet{fogarty2018} provides conservative variance estimator that converges in probability to value greater than or equal to true variance \vfill
 \item We do not need to know missing POs or unknown confounder $\bm{u}$ to implement this var.~estimator \vfill
-\end{itemize}  
+\end{itemize}
 \vfill
 \end{frame}
 %----------------------------------------------------------------
 \begin{frame}[allowframebreaks]
-\frametitle{References} 
+\frametitle{References}
 \scriptsize
 \bibliographystyle{chicago}
 \bibliography{bibliography}    % name your BibTeX data base
