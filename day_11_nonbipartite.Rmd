@@ -485,11 +485,14 @@ lhs(coin_fmla) <- rhs(balfmla_new)
 meddat3$bmF <- factor(meddat3$bm)
 coin_test <- independence_test(coin_fmla,data=meddat3,teststat="quadratic")
 coin_test_perm <- independence_test(coin_fmla,data=meddat3,teststat="quadratic",distribution=approximate(nresample=1000))
+pvalue(coin_test)
+pvalue(coin_test_perm)
 ```
 
-## Outcome Analysis
+## Outcome Analysis {.allowframebreaks}
 
-Now, assuming we are happy with the design, we describe the relationships between home ownership and violence in 2008 at the neighborhood level.
+Now, assuming we are happy with the design, we describe the relationships
+between home ownership and violence in 2008 at the neighborhood level.
 
 ```{r}
 ## Ways to assess the relationship between home ownership and the outcome
@@ -510,41 +513,35 @@ pair_diffs <- meddat2 %>% filter(rank_own!=.5) %>%
     own_diff=nhOwn[rank_own==1] - nhOwn[rank_own==0],
     own_diff_raw=diff(nhOwn),
     hr_diff_raw=diff(HomRate08),.groups="drop")
+```
 
+
+## Outcome Analysis {.allowframebreaks}
+
+
+```{r}
 ## Simply the mean of the differences within pair between the higher and lower
 ## home ownership neighborhoods. We will see that this is exactly the same as
 ## the other estimates.
 est1 <- mean(pair_diffs$hr_diff)
 est1
-
+# Notice same estimates with different weighting schemes with pairs?
 est2 <- difference_in_means(HomRate08~rank_own,blocks=bm,data=meddat2,subset=rank_own!=.5)
 est3 <- lm_robust(HomRate08~rank_own,fixed_effects=~bm,data=meddat2,subset=rank_own!=.5)
 est4 <- lm_robust(HomRate08~rank_own+bmF,data=meddat2,subset=rank_own!=.5)
-## This next estimate is often called the group-mean centered or mean-deviated version
-## it is what is happening the background of the fixed_effects approach
-meddat2 <- meddat2 %>% group_by(bmF) %>%
-    mutate(hr_md = ifelse(rank_own!=.5,HomRate08- mean(HomRate08),NA),
-        rank_own_md = ifelse(rank_own!=.5,rank_own - mean(rank_own),NA))
-est5 <- lm_robust(hr_md~rank_own_md,data=meddat2)
 
 rbind(est1=est1,
     est2=coef(est2),
     est3=coef(est3),
-    est4=coef(est4)[["rank_own"]],
-    est5=coef(est5)[["rank_own_md"]])
+    est4=coef(est4)[["rank_own"]])
 
 all.equal(est1,coef(est4)[["rank_own"]])
 all.equal(est1,coef(est2)[["rank_own"]])
 all.equal(est1,coef(est3)[["rank_own"]])
-all.equal(est1,coef(est5)[["rank_own_md"]])
 ```
 
+## Outcome Analysis {.allowframebreaks}
 
-```{r}
-## More information about the mean-deviated approach to adjusting for pairs
-meddat2 %>% dplyr::select(bmF,nhOwn,rank_own, rank_own_md, HomRate08, hr_md ) %>% head()
-meddat2 %>% ungroup() %>% filter(rank_own!=.5) %>% summarize(mean(rank_own_md),mean(hr_md))
-```
 
 ```{r}
 ## Notice exactly the same as the mean outcome within each pair
@@ -581,7 +578,7 @@ meddat2 %>% filter(bmF=="1") %>% dplyr::select( rank_own, nhOwn, HomRate08) %>%
 
 This next allows us to explore the within pair differences --- here we look at how differences in proportion home ownership within pair relate to differences in homocide rate within pair.
 
-```{r}
+```{r plot_pair_level_diffs, echo=FALSE}
 ## More exploring about the pair-differences
 g1 <- ggplot(data=pair_diffs,aes(x=own_diff,y=hr_diff))+
     geom_point()+
@@ -601,7 +598,7 @@ Notice below that we have the same methods as above (only that the
 `difference_in_means` doesn't work because we don't have a binary explanatory
 variable.)
 
-## Outcome analysis 2: Size of the difference within pairs
+## Outcome analysis 2: Size of the difference within pairs  {.allowframebreaks}
 
 In each case the interpretation is about average differences in outcome for a
 one unit difference in the explanatory variable (which is really large, it is
@@ -615,17 +612,13 @@ est1cont <- lm_robust(hr_diff~own_diff-1,data=pair_diffs)
 est3cont <- lm_robust(HomRate08~nhOwn,fixed_effects=~bmF,data=meddat2,subset=rank_own!=.5)
 est4cont <- lm_robust(HomRate08~nhOwn+bmF,data=meddat2,subset=rank_own!=.5)
 
-meddat2 <- meddat2 %>% group_by(bmF) %>% mutate(own_md=nhOwn - mean(nhOwn)) %>% ungroup()
-est5cont <- lm_robust(hr_md~own_md,data=meddat2,subset=rank_own!=.5)
-
-meddat2 %>% filter(bmF=="1") %>% dplyr::select(nhOwn,rank_own,own_md,HomRate08,hr_md) %>% head()
+meddat2 %>% filter(bmF=="1") %>% dplyr::select(nhOwn,rank_own,HomRate08) %>% head()
 pair_diffs %>% filter(bmF=="1")
 
 ## Again, showing how all of these aproaches which appear different on their face are the same:
 rbind(est1cont=coef(est1cont)[["own_diff"]],
     est3cont=coef(est3cont)[["nhOwn"]],
-    est4cont=coef(est4cont)[["nhOwn"]],
-    est5cont=coef(est5cont)[["own_md"]])
+    est4cont=coef(est4cont)[["nhOwn"]])
 
 ```
 
@@ -634,18 +627,24 @@ rbind(est1cont=coef(est1cont)[["own_diff"]],
  - We can make pairs of units within which we can claim to have broken the
    relationship between many background covariates and another causal driver,
    intervention, or treatment even if that $Z$ variable has many values. This
-   is called **non-bipartite matching**.
+   is called **non-bipartite matching**. (That is, we have strengthened an
+   argument in favor of a specific conditional independence argument.)
  - We can compare these relationships to (1) our substantive and contextual
    knowledge and (2) the kind of $X \rightarrow Z$ relationships we would see
    had $Z$ been randomly assigned within pair (imagine $Z$ having multiple
    values and the higher value being assigned at random within pair).
  - We can compare how $Z \rightarrow Y$ conditional on pair in a variety of
-   ways: estimation and testing comparing the higher-vs-lower treatment value member of a pair or by averaging over the size of the higher-vs-lower treatment value differences (say, using OLS to focus on the linear relationship). We can also visualize the relationships to assess linearity and/or learn more.
+   ways: estimation and testing comparing the higher-vs-lower treatment value
+   member of a pair or by averaging over the size of the higher-vs-lower
+   treatment value differences (say, using OLS to focus on the linear
+   relationship). We can also visualize the relationships to assess linearity
+   and/or learn more.
 
 # Non-bipartite Matching: An Application with the Study of COVID attitudes
 
 ## How do descriptive norms influence COVID attitudes?
 
+See the paper by @rabb2022pnas.
 
 # Non-bipartite Matching: An Application with the Study of Race and Place
 
@@ -683,7 +682,7 @@ And here is the question people were asked (groups in random order).
 
 ## See the paper
 
-
+See @wong2025maps
 
 ## Other applications of non-bipartite matching?
 

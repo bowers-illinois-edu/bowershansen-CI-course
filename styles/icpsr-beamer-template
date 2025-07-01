@@ -85,7 +85,7 @@ $endfor$
 \definecolor{grey}{HTML}{999999}
 %\definecolor{progressbar@bgblue}{rgb}{0.92, 0.93, 0.95}
 
-%\setbeamerfont*{frametitle}{size=\small,series=\bfseries,bg=white,fg=black}
+\setbeamerfont*{frametitle}{size=\small,series=\bfseries}
 %\setbeamerfont*{frametitle}{size=\small,series=\bfseries,bg=white,fg=progressbar@bgblue!90!progressbar@fgblue}
 \setbeamerfont*{note page}{size=\scriptsize}%%footnotesize}
 \setbeamertemplate{note page}[compress]
