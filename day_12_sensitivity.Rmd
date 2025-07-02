@@ -207,9 +207,9 @@ summary(lmitt1)
 ## OR focusing on a test rather than estimation (here using the permutation based approach)
 meddat$nhTrtF <- factor(meddat$nhTrt)
 wctest1 <- wilcox_test(HomRate0803~nhTrtF|pairm,data=meddat[!is.na(pairm),],distribution=approximate(nresample=10000))
-pvalue(wctest1)
+pvalue(wctest1)[[1]]
 ttest1 <- oneway_test(HomRate0803~nhTrtF|pairm,data=meddat[!is.na(pairm),],distribution=approximate(nresample=10000))
-pvalue(ttest1)
+pvalue(ttest1)[[1]]
 ```
 
 
@@ -305,7 +305,7 @@ respmat2[12:18, ]
 ```
 
 
-## An example of sensitivity analysis: the search for Gamma
+## An example of sensitivity analysis: the search for Gamma {.shrink}
 
 The workflow: Second, assess sensitivity at different levels of $\Gamma$. (using `-respmat` here because the differences between treated and controls are negative --- stations are associated with reductions in violence.)
 
@@ -395,7 +395,7 @@ covariates (i.e. in the same matched set):
 So when $\pi_i = \pi_j$ then $\Gamma=1$: the treatment probabilities are the same for the two units --- just as we would expect in a randomized study.
 
 
-## An example of sensitivity analysis: the search for Gamma
+## An example of sensitivity analysis: the search for Gamma {.shrink}
 
 The workflow: assess sensitivity at different levels of $\Gamma$ (here
 using two different test statistics).
@@ -468,8 +468,9 @@ settype <- respmat3[,9]==1
 res2_full <- senfm(-respmat4, treated1 = settype, gamma = 1)
 res2_full$pval
 
-res2_full_g2 <- senfm(-respmat4, treated1 = settype, gamma = res1_h$root)
-res2_full_g2$pval
+res1_h$root
+res2_full_g_h_root <- senfm(-respmat4, treated1 = settype, gamma = res1_h$root)
+res2_full_g_h_root$pval
 ```
 
 ## Some other approaches: senstrat
@@ -513,7 +514,7 @@ models)
  - See the piece "The sensitivity of linear regression coefficients’ confidence limits to the omission of a confounder" <https://projecteuclid.org/euclid.aoas/1280842143>
 
 
-## Confidence Intervals
+## Confidence Intervals {.allowframebreaks}
 
 Since we have fixed size sets (i.e. all 1:1 or all 1:2...), we can also look at
 an example involving point-estimates for bias of at most $\Gamma$ and
@@ -521,12 +522,14 @@ confidence intervals assuming an additive effect of treatment. Notice also that
 that when $\Gamma$ is greater than 1, we have a range of point estimates
 consistent with that $\Gamma$.
 
-```{r cis}
+```{r cis, echo=TRUE}
 respmatPm <- with(droplevels(meddat[matched(meddat$pairm), ]), reshape_sensitivity(HomRate0803, nhTrt, pairm))
-(sensCItwosidedG1 <- senmwCI(-respmatPm, method = "t", one.sided = FALSE))
-(sensCIonesidedG1 <- senmwCI(-respmatPm, method = "t", one.sided = TRUE))
-(sensCItwosidedG2 <- senmwCI(-respmatPm, method = "t", one.sided = FALSE, gamma = 2))
-(sensCIonesidedG2 <- senmwCI(-respmatPm, method = "t", one.sided = TRUE, gamma = 2))
+# recall and compare to our estimation of the ATE
+lm1
+(sensCItwosidedG1 <- senmwCI(respmatPm, method = "t", one.sided = FALSE))
+(sensCIonesidedG1 <- senmwCI(respmatPm, method = "t", one.sided = TRUE))
+(sensCItwosidedG2 <- senmwCI(respmatPm, method = "t", one.sided = FALSE, gamma = 2))
+(sensCIonesidedG2 <- senmwCI(respmatPm, method = "t", one.sided = TRUE, gamma = 2))
 ```
 
 \note{
@@ -539,10 +542,10 @@ intervals. }
 
  As an aid to interpreting sensitivity analyses,
   @rosenbaum2009amplification propose a way decompose $\Gamma$ into two
-  pieces: one $\Delta$ gauges the relationship between an unobserved
+  pieces: $\Delta$ gauges the relationship between an unobserved
   confounder and the outcome (it records the maximum effect of the unobserved
   confounder on the odds of a positive response (imagining a binary outcome))
-  and the other $\Lambda$ gauges the maximum relationship between the unobserved
+  and $\Lambda$ gauges the maximum relationship between the unobserved
   confounder and treatment assignment.
 
 ```{r amplify}
@@ -551,7 +554,7 @@ ampres1 <- amplify(round(res1_h$root, 1), lambda = lambdas)
 ampres2 <- amplify(2, lambda = lambdas)
 ```
 
-```{r echo=FALSE, out.width=".5\\textwidth"}
+```{r echo=FALSE, out.width=".65\\textwidth"}
 par(mar = c(3, 3, 1, 1), mgp = c(1.5, .5, 0))
 plot(as.numeric(names(ampres1)), ampres1,
   xlab = "Lambda (maximum selection effect of confounder)",
@@ -564,7 +567,7 @@ plot(as.numeric(names(ampres1)), ampres1,
 
 ## Interpreting sensitivity analyses
 
-```{r echo=FALSE, out.width=".5\\textwidth"}
+```{r echo=FALSE, out.width=".9\\textwidth"}
 par(mar = c(3, 3, 1, 1), mgp = c(1.5, .5, 0))
 plot(as.numeric(names(ampres1)), ampres1,
   xlab = "Lambda (maximum selection effect of confounder)",
@@ -572,7 +575,7 @@ plot(as.numeric(names(ampres1)), ampres1,
   main = paste("Decomposition of Gamma=", round(res1_h$root, 2))
 )
 ## Add a line for another Gamma
-lines(as.numeric(names(ampres2)), ampres2, type = "b")
+## lines(as.numeric(names(ampres2)), ampres2, type = "b")
 ```
 
 
@@ -586,7 +589,10 @@ package:
 
 ```{r echo=TRUE}
 library(sensemakr)
-res1_lm <- lm(HomRate0803~nhTrt+pairm, data = meddat)
+ate_wts <- ate(pairm_spec,data=droplevels(meddat[!is.na(meddat$pairm),]))
+res1_lm <- lm(HomRate0803~nhTrt, 
+              data = meddat[!is.na(meddat$pairm),],
+              weights=ate_wts)
 sens1 <-  sensemakr(model = res1_lm, treatment = "nhTrt")
 
 summary(sens1)
@@ -594,7 +600,9 @@ summary(sens1)
 ## another least squares fitter (say, you have lots of pairs) or want
 ## a different standard error
 ## you can do this:
-sens2 <- sensemakr(estimate = coef(lm1)[["nhTrt"]], se = lm1$std.error[["nhTrt"]], treatment = "nhTrt", dof = lm1$df.residual)
+sens2 <- sensemakr(estimate = coef(lmitt1)[["nhTrt."]],
+                   se = summary(lmitt1)$coef["nhTrt.","Std. Error"], treatment = "nhTrt.",
+                   dof = lmitt1$df.residual)
 
 summary(sens2)
 ```
@@ -602,7 +610,6 @@ summary(sens2)
 ```{r}
 plot(sens2,sensitivity.of="t-value")
 ```
-
 
 ## Summary and Questions:
 
