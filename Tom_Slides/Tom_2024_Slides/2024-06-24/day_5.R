@@ -1,4 +1,6 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+library(tidyverse)
+library(magrittr)
 rm(list = ls())
 
 acorn_data <- read.csv("acorn03.csv")

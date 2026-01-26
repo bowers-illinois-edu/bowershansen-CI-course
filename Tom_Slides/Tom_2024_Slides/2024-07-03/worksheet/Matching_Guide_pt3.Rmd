@@ -1,0 +1,192 @@
+---
+title: "C.A.R.E.S. Lab Matching Guide (Part 3 of 3: How do I assess the sensitivity of my analysis?)^[This is a live document that is subject to updating at any time.]"
+author: \href{mailto:leavitt@hcp.med.harvard.edu}{Thomas Leavitt} and \href{mailto:luke_miratrix@gse.harvard.edu }{Luke Miratrix}
+date: ""
+output: 
+  pdf_document:
+    citation_package: natbib
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    highlight: tango
+    keep_tex: true
+    toc: no
+    toc_depth: 1
+    includes:
+      in_header: mystyle.sty
+fontsize: 12pt
+classoption: leqno
+geometry: margin = 1.5cm
+bibliography: Bibliography.bib
+biblio-style: apsr
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE}
+#install.packages("knitr")
+
+#install.packages("rmdformats")
+library(knitr)
+library(rmdformats)
+
+## Global options
+options(max.print = "75")
+opts_chunk$set(echo = TRUE,
+	             cache = TRUE,
+               prompt = FALSE,
+               tidy = TRUE,
+               comment = NA,
+               message = FALSE,
+               warning = FALSE)
+opts_knit$set(width = 75)
+
+source( "part_2_code.R" )
+#knitr::purl("Matching_Guide_pt3.Rmd", output = "part_3_code.R" )
+
+```
+
+# Introduction
+
+So far we have generated a matched data set, and analyzed it to estimate a causal impact.
+We next assess how robust our findings are to unobserved confounding.
+We know that matching is an imperfect science – we will never be able to match perfectly, fully guaranteeing that the units are as if randomized.
+To take this into account, we conduct a sensitivity analysis that attempts to gauge how much unobserved confounding would have to exist to undo our results.
+In particular, we ask...
+
+# How do I assess the sensitivity of my inferences to hidden bias?
+
+Thus far, we have assumed that each unit's probability of treatment assignment (in this case, each post-conflict country's probability of receiving a UN intervention) is a function of only observed covariates. Even under this assumption, we don't know units' true propensity scores, i.e., units' assignment probabilities as a function of baseline covariates. In practice, our matched design contains residual imbalances on observed covariates that determine units' true propensity scores. It is also possible that our matched design suffers from hidden bias due to unobserved covariates. It might be the case that some units in our blocks are actually more likely to be treated than others. A sensitivity analysis examines whether a found impact holds up under a series of increasingly severe distortions to the complete random assignment within blocks assumption.
+
+A powerful, design-based framework for such a sensitivity analysis is given by @rosenbaumkrieger1990 [see also @rosenbaum1993;@rosenbaum1995a; and @rosenbaum2002a]. In this framework, we will consider hidden bias (or unobserved confounding) due to a single unobserved covariate and an assumed logit model that relates this baseline covariate to units' assignment probabilities. As in our estimation and hypothesis testing above, we also condition on the realized number of treated units within blocks.
+
+<!-- In addition, notice that our sensitivity analysis does not consider a hypothetical relationship between an unobserved covariate and potential outcomes because a sharp null hypothesis implies a full schedule of potential outcomes. We therefore need to consider only the unknown probability distribution on the set of treatment assignments. -->
+
+In this sensitivity analysis model, individual units' independent treatment assignment probabilities are given by
+\begin{equation}
+\label{eq: indiv sens prob}
+\pi\left(u_{bi}\right)^{z_{bi}} \left[1 - \pi\left(u_{bi}\right)\right]^{1 - z_{bi}}, 
+\end{equation}
+where $\pi\left(u_{bi}\right) = \frac{\exp\left(\gamma u_{bi}\right)}{1 + \exp\left(\gamma u_{bi}\right)}$, $u_{bi} \in \left[0, 1\right]$ is an unobserved covariate for unit $i$ in matched set $b$ and $\gamma \geq 0$ is a sensitivity parameter. From this model of individual assignment probabilities, we can derive the probability distribution on the set of assignments, given a fixed number of treated units in each matched set. Let $\omega_b$ be the set of all $\binom{n_b}{n_{bT}}$ possible assignments in which $\sum \limits_{i = 1}^{n_b} z_{bi}$ units in block $b$ are treated. The set $\Omega$ is all possible assignments formed by concatenating $\omega_1, \dots , \omega_B$. Hence, $\Omega$ consists of $\prod \limits_{b = 1}^B \binom{n_b}{n_{bT}}$ possible assignments. The probability distribution on this set of possible assignments is given by
+\begin{equation}
+\label{eq: sens Omega probs}
+\Pr\left(\mathbf{Z} = \mathbf{z}; \gamma, \mathbf{u}\right) = \cfrac{\exp\left(\gamma \mathbf{z}^{\top} \mathbf{u}\right)}{\sum_{\mathbf{v} \in \Omega} \exp\left(\gamma\mathbf{v}^{\top}\mathbf{u}\right)} = \prod \limits_{b = 1}^B \cfrac{\exp\left(\gamma \mathbf{z}^{\top}_b \mathbf{u}_b\right)}{\sum_{\mathbf{v} \in \omega_b} \exp\left(\gamma\mathbf{v}^{\top}\mathbf{u}_b\right)},
+\end{equation}
+where $\mathbf{u}^{\top} = \begin{bmatrix} \mathbf{u}_1 & \ldots & \mathbf{u}_B \end{bmatrix}$ and $\mathbf{z}^{\top} = \begin{bmatrix} \mathbf{z}_1 \ldots & \mathbf{z}_B \end{bmatrix}$ with $\mathbf{u} \in \mathcal{U} = \left[0, 1\right]^n$. The vector $\mathbf{u}$ is a single unobserved covariate and $\gamma \geq 0$ is a sensitivity parameter. While the assumption that $\mathbf{u} \in \left[0, 1\right]^n$ might appear restrictive, @rosenbaum2017[300, footnote 33] shows that any violation of complete random assignment within blocks can be expressed in terms of some $\mathbf{u} \in \left[0, 1\right]^n$ such that complete random assignment within blocks would hold if we had access to and could exactly match on this $\mathbf{u}$. In addition, @rosenbaum1995a [1424--1425] shows that this sensitivity analysis model is equivalent to one in which $\gamma = \log(\Gamma) \geq 0$, where $\Gamma$ is a bound on how much any two units in the same matched set differ in their odds of treatment assignment.^[More formally, write this bound on how much any two units in the same matched set can differ in their odds of treatment assignment as
+\begin{eqnarray*}
+\frac{1}{\Gamma} \leq \frac{\pi_{bi}\left(1 - \pi_{bj}\right)}{\pi_{bj}\left(1 - \pi_{bi}\right)} \leq \Gamma \text{ for all } i, \, j \neq i \, \text{ and } b.
+\end{eqnarray*}]
+
+Before, we calculated our $p$-value under the assumption that all units had identical probabilities of assignment within matched sets.
+In our sensitivity analysis, we relax this assumption and assume that units do \textit{not} have identical assignment probabilities. For example, we could assume that $\Gamma = \log\left(\gamma\right) = 2$, which implies that $\gamma = \log\left(2\right) \approx 0.6931$. The quantity $\gamma$ is the coefficient of the unobserved baseline covariate. But if all units within matched sets have the same value of this unobserved covariate --- i.e., $u_{bi} = u_{bj}$ for all $i, j \neq i \text{ and } b$ --- then all units' assignment probabilities will remain identical. A conservative approach therefore finds a vector $\mathbf{u}$ that, given a value of $\gamma$, will maximize the $p$-value of a test of the sharp null hypothesis of no effect. This $p$-value is
+\begin{equation}
+\label{eq: sens p-value}
+\Pr\left( t\left(\mathbf{Z}, \mathbf{y}\right) \geq t^{obs} \right) = \sum \limits_{\mathbf{z} \in \Omega}\mathbb{1}\left\{t\left(\mathbf{z}, \mathbf{y}\right) \geq t^{obs} \right\}\Pr\left(\mathbf{Z} = \mathbf{z}; \gamma, \mathbf{u}\right),
+\end{equation}
+where $t\left(\mathbf{z}, \mathbf{y}\right)$ is the test statistic under the sharp null of no effect, $\mathbb{1}\left\{\cdot\right\}$ is the indicator function, $\Pr\left(\mathbf{Z} = \mathbf{z}; \gamma, \mathbf{u}\right)$ is as defined in \eqref{eq: sens Omega probs} and $t^{obs}$ is the observed test statistic.
+
+@rosenbaumkrieger1990 prove that for any fixed $\gamma \geq 0$, the unobserved covariate vector $\mathbf{u}_b$ that maximizes the $p$-value within a given block, $b$, will lie in the following space:
+
+\begin{eqnarray*}
+U_b & = & \left\{
+\begin{bmatrix} 1 \\ 0  \\ 0 \\ \vdots \\ 0 \\ 0 \end{bmatrix},
+\begin{bmatrix} 1 \\ 1  \\ 0 \\ \vdots \\ 0 \\ 0 \end{bmatrix},
+\dots ,
+\begin{bmatrix} 1 \\ 1  \\ 1 \\ \vdots \\ 1 \\ 0 \end{bmatrix}
+\right\},
+\end{eqnarray*}
+where the $n_b$ subjects within block $b$ are renumbered such that $y_{b1} \geq y_{b2} \geq \dots \geq y_{bn_b}$. With only one block, it is easy to enumerate all $n_b - 1$ possible vectors of $\mathbf{u}_b$ and then assess which one maximizes the $p$-value for some fixed $\gamma \geq 0$. 
+
+Unfortunately, the vector over all blocks, $\mathbf{u}$, that maximizes the $p$-value for a fixed $\gamma \geq 0$ does not consist of the block-specific vectors that maximize the $p$-value within each block. Instead, @rosenbaumkrieger1990 show that there are $\prod \limits_{b = 1}^B \left\lvert U_b \right\rvert$ candidate vectors we need to explore, where $\left\lvert U_b \right\rvert$ is the number of elements in the set $U_b$.
+
+In our case, with $n = 54$ total units and, based on the number of blocks and number of units within each block, the number of candidate vectors is the product of our block sizes:
+
+
+```{r}
+
+n_ubs <- table( data_matched$fm ) - 1
+prod( n_ubs ) 
+
+```
+
+
+When combined with the set of all possible treatment assignments, $\Omega$ and the many possible values of $\gamma$, it is computationally burdensome to enumerate this many candidate vectors, and this is only a small dataset.
+
+Therefore, @gastwirthetal2000 [see also @rosenbaum2018] provide a procedure that finds the worst case vector $\mathbf{u}$ using an asymptotic approximation to the null distribution of a sum statistic. The use of sum statistics has the benefit of being easily coupled with finite population central limit theorems [see @liding2017] and of having closed form expressions for its expectation and variance under a given sharp causal hypothesis.^[Under a sharp null, we no longer have the problem of being unable to estimate the Difference-in-Means estimator's variance due to there being only $1$ treated or $1$ control unit within each block. Once we have imputed all unobserved potential outcomes according to the sharp null of no effect, we can then directly calculate the variance within each block.] We can then use an asymptotic approximation to the solution of which vector $\mathbf{u} \in \mathcal{U}$ maximizes the $p$-value for a test of a sharp causal hypothesis without needing to consider all of the candidate values of $\mathbf{u}$.
+
+<!-- The logic of the asymptotically separable algorithm @gastwirthetal2000 is as follows: For a fixed $\gamma \geq 0$, find the values of $\mathbf{u} \in \mathcal{U}^+$ that maximize the expectation of the null sum statistic under the sharp null. Among the values of $\mathbf{u} \in \mathcal{U}^+$ that maximize the expectation, choose the $\mathbf{u} \in \mathcal{U}^+$ that maximizes the variance. \citet{gastwirthetal2000} call this approach an asymptotically separable approximation because it allows the optimization algorithm to be done in each stratum individually. This algorithm does not necessarily find $\max \limits_{\mathbf{u} \in \mathcal{U}} \Pr\left(t\left(\mathbf{Z}, \mathbf{y}\right) \geq k \right)$. But, as $S \to \infty$ with $1 \leq m_s < n_s \leq \tilde{n}$, the difference between $\max \limits_{\mathbf{u} \in \mathcal{U}} \Pr\left(t\left(\mathbf{Z}, \mathbf{y}\right) \geq k \right)$ and $\mathbf{u}$ returned by the algorithm is negligible. Building on the asymptotically separable algorithm, @rosenbaum2018 proposes a Taylor series adjustment that is asymptotically slightly more conservative than the separable algorithm such that the asymptotic p-value under the true worst case $\mathbf{u} \in \mathcal{U}^+$ will always lie between the p-value returned by the asymptotically separable algorithm [@gastwirthetal2000] and the Taylor series adjustment algorithm [@rosenbaum2018].  -->
+
+To conduct our sensitivity analysis, we will use the \texttt{senstrat} package, which is the companion \texttt{R} package to @rosenbaum2018. The \texttt{senstrat} package uses the test statistic, $\mathbf{Z}^{\top}\mathbf{y}$, under the sharp null of no effect. Fortunately, most test statistics of interest have an equivalent representation as a sum statistic via scale and shift factors of $\mathbf{y}$ that do not depend on the treatment variable.
+
+We can rescale out outcome variable such that the sum statistic in the \texttt{senstrat} package is equivalent to the Difference-in-Means test statistic we have been using thus far.
+
+
+```{r, tidy = FALSE}
+
+data_matched <- data_matched %>% 
+  group_by(fm) %>% 
+  mutate(fm_n = n(),
+         fm_n_0 = sum(1 - UN),
+         fm_n_1 = sum(UN),
+         fm_sum_ldur = sum(ldur),
+         fm_h = (1/fm_n_0 + 1/fm_n_1)^{-1})
+
+data_matched <- mutate(.data = data_matched,
+    ldur_resc = (ldur/fm_h - fm_sum_ldur/(fm_n_0 * fm_n_1)) * (fm_n/nrow(data_matched)))
+```
+
+
+Notice that with our rescaled outcome, our observed test statistic, is reproduced by the \texttt{senstrat} package. 
+
+```{r, tidy = FALSE}
+# install.packages("senstrat")
+library(senstrat)
+
+cbind(senstrat(sc = data_matched$ldur_resc,
+               z = data_matched$UN,
+               st = data_matched$fm,
+               gamma = 1)$Result["Statistic"],
+      res$ATE_hat)
+```
+
+Having appropriately rescaled the outcome of interest to recover our difference in means test statistic, we can now implement the sensitivity analysis. Since we are interested in the sharp null hypothesis relative to the alternative of larger effect (i.e., UN interventions cause post-conflict countries to experience longer durations of peace), we assess how our upper $p$-values change for different values of $\Gamma$.
+
+
+```{r, tidy = FALSE, fig.width = 5, fig.height = 3}
+
+senstrat_p_values <- sapply(X = seq(from = 1, to = 1.5, by = 0.001),
+                            FUN = function(x) { 
+                              senstrat(sc = data_matched$ldur_resc,
+                                       z = data_matched$UN,
+                                       st = data_matched$fm,
+                                       gamma = x,
+                                       alternative = "greater")$Result[1] })
+
+senstrat_plot_data <- data.frame(Gamma = seq(from = 1,
+                                             to = 1.5,
+                                             by = 0.001),
+                                 p_value = senstrat_p_values)
+
+min(senstrat_plot_data$Gamma[which(senstrat_plot_data$p_value >= 0.05)])
+
+alpha <- 0.05
+
+ggplot(data = senstrat_plot_data,
+       mapping = aes(x = Gamma,
+                     y = p_value)) +
+  geom_line() +
+  geom_hline(yintercept = alpha) +
+  theme_bw() +
+  scale_x_continuous(breaks = seq(from = 1, to = 1.5, by = 0.1)) +
+  scale_y_continuous(breaks = seq(from = 0, to = 0.2, by = 0.01),
+                     labels = seq(from = 0, to = 0.2, by = 0.01)) +
+  xlab(label = expression(Gamma)) +
+  ylab(label = "p-value")
+
+```
+
+We are able to reject the sharp null of no effects under the assumption of uniform assignment probabilities within blocks (i.e., $\Gamma = 1$). However, this qualitative conclusion is very sensitive to deviations from this assumption. At a $\Gamma$ of roughly `r min(senstrat_plot_data$Gamma[which(senstrat_plot_data$p_value >= 0.05)])`, we are no longer able to reject the sharp null of no effect at an $\alpha$-level of $0.05$. In general, the worst-case $p$-value of a test of the sharp null of no effect is increasing in $\Gamma$ and in principle we could assess sensitivity for any $\alpha$-level, not only the conventional level of $\alpha = 0.05$.
+E.g., for $\alpha = 0.10$ our sensitivity goes to around `r min(senstrat_plot_data$Gamma[which(senstrat_plot_data$p_value >= 0.1)])`---still fairly sensitive.
+
+\newpage
+# References
