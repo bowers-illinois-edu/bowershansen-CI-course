@@ -1,7 +1,7 @@
 
 
 Section 1: Genealogy of field and intro to potential outcomes
-Day 1: Ben and Jake; into to course, genealogy of field of causal inference, into to pot outs, different modes of inference
+Day 1: Tom and Jake; into to course, genealogy of field of causal inference, into to pot outs, different modes of inference
 
 Section 2: Estimation and inference in randomized experiments (Data application, Arceneaux, 2005)
 Day 2: Tom; Neymanian estimation and variance of Diff-in-Means estimator
@@ -10,7 +10,7 @@ Day 4: Tom; Fisherian inference
 Day 5: Tom; more on Fisherian inference and/or covariance adjustment in randomized experiments for both Neymanian and Fisherian inference
 
 Section 3: Estimation and inference in imperfect randomized experiments (noncompliance and attrition) (Data application, Albertson and Lawrence, 2009)
-Day 6: Ben: Noncompliance, Bloom estimator
+Day 6: Tom: Noncompliance, Bloom estimator
 Day 7: Jake: Noncompliance and IV (Rosenbaum-style); attrition
 
 Section 4: Observational studies (Data application: Cerda et al, 2012)

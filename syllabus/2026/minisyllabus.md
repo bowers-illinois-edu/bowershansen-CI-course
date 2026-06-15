@@ -18,9 +18,10 @@ statistical concepts, such as sampling distributions, statistical
 inference, and hypothesis testing. Demonstrations, examples and
 assignments make extensive use of `R`.
 
-The course meets from 9:30 AM to 12:45 PM US Eastern Time, Monday
-through Friday, from June 16 through July 3, in room 1437 Mason Hall.
-Ben will be the primary instructor for the half of the course. Jake will
+The course meets from 9:00 AM to 12:00 PM US Eastern Time, Monday
+through Friday, from June 15 through July 2 (no class June 19 for
+Juneteenth), in Room 1110 of the North Quadrangle Residential and Academic Complex (NQ 1110).
+Tom will be the primary instructor for the first half of the course. Jake will
 be the primary instructor for the second half. The teaching assistants
 are Tyler Chen (`tylercr@umich.edu`) and Alice Malmberg
 (`ammalmberg@ucdavis.edu`).

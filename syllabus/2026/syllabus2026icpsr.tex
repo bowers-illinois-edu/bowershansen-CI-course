@@ -9,17 +9,34 @@ pdfstandard = {ua-2,a-4},
 }
 \documentclass[12pt]{article}
 
-% Use Unicode fonts with LuaLaTeX/XeLaTeX
+% Use Unicode fonts with LuaLaTeX/XeLaTeX.
+% Load by filename (resolved via the texmf tree by kpathsea) rather than by
+% system font name, so the document compiles under XeLaTeX and LuaLaTeX even
+% when the Libertinus fonts are not registered with the OS / fontconfig.
 \usepackage{fontspec}
-\setmainfont{Libertinus Serif}
-\setsansfont{Libertinus Sans}
-\setmonofont{Libertinus Mono}
+\setmainfont{LibertinusSerif}[
+  Extension    = .otf,
+  UprightFont  = *-Regular,
+  ItalicFont   = *-Italic,
+  BoldFont     = *-Bold,
+  BoldItalicFont = *-BoldItalic,
+]
+\setsansfont{LibertinusSans}[
+  Extension    = .otf,
+  UprightFont  = *-Regular,
+  ItalicFont   = *-Italic,
+  BoldFont     = *-Bold,
+]
+\setmonofont{LibertinusMono}[
+  Extension    = .otf,
+  UprightFont  = *-Regular,
+]
 
 % NO fontenc and NO libertinus package in this setup
 % \usepackage[T1]{fontenc}   % <- remove
 % \usepackage{libertinus}    % <- remove
 \usepackage{unicode-math}
-\setmathfont{Libertinus Math}
+\setmathfont{LibertinusMath-Regular.otf}
 \usepackage[letterpaper, top=.5in, bottom=.5in, right=1in, left=1in,includehead,includefoot]{geometry}
 % from fancyhdr error messages
 \setlength{\headheight}{13.59999pt}
@@ -36,10 +53,11 @@ pdfstandard = {ua-2,a-4},
 \usepackage[hidelinks]{hyperref}
 \hypersetup{
   pdftitle  = {Causal Inference for the Social Sciences},
-  pdfauthor = {Ben Hansen, Jake Bowers, Thomas Leavitt}
+  pdfauthor = {Jake Bowers, Thomas Leavitt}
 }
 \usepackage[style=authoryear, backend=biber]{biblatex}
 \addbibresource{bib_2026.bib}
+\addbibresource{matching_guide_extra.bib}
 
 \usepackage{parskip}
 \usepackage{bookmark}
@@ -48,7 +66,6 @@ pdfstandard = {ua-2,a-4},
 
 \usepackage{setspace}
 \setcounter{secnumdepth}{4}
-
 
 \usepackage{fancyhdr}
 \fancypagestyle{myfancy}{%
@@ -59,7 +76,6 @@ pdfstandard = {ua-2,a-4},
   \renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0pt}}
 
-
 \usepackage{soul}
 \usepackage[compact,nobottomtitles*]{titlesec}
 
@@ -69,8 +85,7 @@ pdfstandard = {ua-2,a-4},
 
 \author{%
   Jake Bowers\textsuperscript{1} \and
-  Ben Hansen\textsuperscript{2} \and
-  Thomas (Tom) Leavitt\textsuperscript{3}
+  Thomas (Tom) Leavitt\textsuperscript{2}
 }
 
 \begin{document}
@@ -80,11 +95,19 @@ pdfstandard = {ua-2,a-4},
 \begin{center}\small
   \textsuperscript{1}Departments of Political Science and Statistics,
   University of Illinois at Urbana–Champaign; \texttt{jwbowers@illinois.edu}\\
-  \textsuperscript{2}Department of Statistics, University of Michigan, Ann Arbor;
-  \texttt{bbh@umich.edu}\\
-  \textsuperscript{3}Marxe School of Public and International Affairs,
+  \textsuperscript{2}Marxe School of Public and International Affairs,
   Baruch College, City University of New York (CUNY);
   \texttt{thomas.leavitt@baruch.cuny.edu}
+\end{center}
+
+\begin{center}\small
+  Teaching Assistant: Alice Malmberg, Department of Political Science,
+  University of California, Davis; \texttt{ammalmberg@ucdavis.edu}
+\end{center}
+
+\begin{center}\small
+  Class meets in the North Quadrangle Residential and Academic Complex (NQ),
+  Room~1110 (NQ~1110).
 \end{center}
 
 \begin{abstract}
@@ -103,7 +126,6 @@ assignments make extensive use of \texttt{R}.
 \clearpage
 
 %\nobibliography*
-
 
 \section*{Overview}
 
@@ -132,6 +154,10 @@ Other texts that we draw on include
 \begin{verse} \fullcite{gerbergreen2012}  \end{verse}
 
 \begin{verse} \fullcite{imbensrubin2015} \end{verse}
+
+\begin{verse} \fullcite{ding2024} \end{verse}
+
+\begin{verse} \fullcite{rosenbaum2025} \end{verse}
 
 % If you'll be using experiments, propensity scores, regression
 % discontinuity, or instrumental variables in your work, then each of
@@ -192,110 +218,86 @@ least one of \ref{it:part0} and \ref{it:part1}. %and \ref{it:part2}.  There'll b
 \begin{landscape}
 \section*{Course Schedule}\label{sec:schedule}
 
-The course schedule is below. In the Course content section, we provide more extensive readings on each topic in the schedule, as well as additional ``special topics.'' The last two days of the course are reserved for special topics chosen by students.
+The course schedule is below; the Course content section gives fuller readings for each topic, along with the menu of student-chosen special topics for the final day. Everything through June 19 concerns randomized experiments; the June 22 session extends these ideas to experiments with noncompliance and attrition, after which the course turns to observational studies.
 
-\begin{table}[!htbp]
-\caption{Course schedule by date, instructor, topic, readings, and application}
-\centering
-%{\large\renewcommand{\arraystretch}{.8}
-\resizebox{9in}{!}{\begin{tabular}{|l|l|l|l|l|}
+\begingroup
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.95}
+\begin{center}
+{\small\textbf{Table 1:} Course schedule by date, instructor, topic, readings, and application}
+\par\vspace{2pt}
+\resizebox{7.4in}{!}{\begin{tabular}{|l|l|l|l|l|}
 \hline
 \textbf{Date} & \textbf{Instructor} & \textbf{Topic} & \textbf{Required readings} & \textbf{Application} \\ \hline
-Mon, June 16 & Tom & Introduction: Random allocation and Fisher's exact test
-                      & \begin{tabular}{@{}c@{}}
-                                              Kinder
-                                              and Palfrey (1993,
-                                              Section 1.2) \\ Fisher
-                                              (1935, Introduction) \\
-                                              Rosenbaum (2017,
-                                              Chapter 3) \end{tabular} & Fisher (1935) \\ \cline{1-5}
-Tues, June 17 & \multirow{2}{*}{Tom} & \multirow{2}{*}{Randomized experiments: Potential
-                                        outcome schedules and estimation of causal
-                                        effects}
-                                                     & \begin{tabular}{@{}c@{}}
-                                                         Fisher (1935,
-                                                         \S~5--10 on pp.11--19\\
-                                                         Rosenbaum
-                                                         (2017,
-                                                         Chapter 2)
-\\Holland (1986, \S~1--3) \\
-                                                     % Aronow and Middleton (2013) \\
-                                                     % Middleton and
-                                                     %     Aronow (2015)
-                                                     %     \\ Gerber and
-                                                     %     Green (2012,
-                                                     %     pp. 51 -- 61)
-                                                       \end{tabular} & \multirow{5}{*}{Arceneaux (2005)} \\ \cline{1-4}
-  Wed, June 18 & Tom & Differences of means and average causal effects & Gerber and Green (2012, Ch. 2 and
-                             \S~1--4 of Ch.3) & ~ \\ \cline{1-4}
-  Thurs, June 19 & -- &  No Class: Juneteenth U.S. Holiday & & ~ \\ \cline{1-4}
-Fri, June 20 (HW 1 due) & Tom & Randomized experiments: covariance adjustment and regression & \begin{tabular}{@{}c@{}} Gerber and Green (2012, Chapter 4) \\ Rosenbaum (2002) \\ Lin (2013) \end{tabular} & ~ \\ \hline
-Mon, June 23 & Tom & \multirow{2}{*}{Randomized experiments: Noncompliance and attrition} & \begin{tabular}{@{}c@{}} Gerber and Green (2012, Chapters 5 -- 6) \\ Rosenbaum (1996) \\ Rosenbaum (2010, Section 5.3)\end{tabular} & \multirow{2}{*}{Albertson and Lawrence (2009)} \\ \cline{1-5}
-Tues, June 24 & Tom & Observational studies: Introduction & \begin{tabular}{@{}c@{}} Bind and Rubin (2019) \\ Gelman and Hill (2006, Sections 9.0 -- 9.2) \\ Berk (2010) \end{tabular} &  \\ \cline{1-4}
-  Wed, June 25 & Tom Jake & Introduction to matching & Rosenbaum (2017, pp. 65 -- 90); Hansen and Bowers (2008)  & ~ \\ \cline{1-4}
-Thurs, June 26  & Tom & Nuts and bolts of matching & \begin{tabular}{@{}c@{}} Rosenbaum (2010, Chapters 7 -- 8) \\ Rosenbaum (2017, Chapter 11) \end{tabular} & \multirow{6}{*}{Cerd\'{a} et al (2012)} \\ \cline{1-4}
-Fri, June 27 (HW 2 due) & Tom & Multivariate matching with propensity scores & \begin{tabular}{@{}c@{}} Rosenbaum (2017, pp. 90 -- 96) \\ Hansen (2011) \end{tabular} & ~ \\ \cline{1-4}
-Mon, June 30 & Jake & Assessments of covariate balance & Hansen and Bowers (2008) & ~ \\ \cline{1-4}
-Tues, July 1 & Jake & Outcome analysis with stratified designs & Gerber and Green (2021, pp. 71 -- 79) & ~ \\ \cline{1-4}
-Wed, July 2 & Jake & Fisherian sensitivity analysis & \begin{tabular}{@{}c@{}} Rosenbaum (2017, Chapter 9) \\ Gastwirth et al (2000) \\ Rosenbaum (2015) \\ Rosenbaum (2018) \end{tabular} & ~ \\ \cline{1-4}
-Thurs, July 3 (HW 3 due) & Jake & Sensitivity analysis elaborations and
-                               extensions & \begin{tabular}{@{}c@{}}
-                               Fogarty (2023) \\ Rosenbaum (2004) \\ Rosenbaum (2017, Chapter 10) \end{tabular} & ~ \\ \cline{1-4}
-Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
+Mon, June 15 & Tom & \begin{tabular}{@{}l@{}} Introduction: Random allocation, \\ potential outcomes, and Fisher's exact test \end{tabular} & \begin{tabular}{@{}c@{}} Holland (1986, \S~1--4) \\ Rosenbaum (2017, Chapter 2) \end{tabular} & Fisher (1935) \\ \cline{1-5}
+Tues, June 16 & Tom & \begin{tabular}{@{}l@{}} The sharp framework: \\ Fisherian inference \end{tabular} & \begin{tabular}{@{}c@{}} Rosenbaum (2017, Chapter 3) \\ Fisher (1935, \S~5--10) \end{tabular} & \multirow{3}{*}{Arceneaux (2005)} \\ \cline{1-4}
+  Wed, June 17 & Tom & \begin{tabular}{@{}l@{}} Weak framework I: \\ Estimating average effects \end{tabular} & \begin{tabular}{@{}c@{}} Gerber and Green (2012, Ch.~2 and pp.~51--61) \\ Aronow and Middleton (2013) \\ Middleton and Aronow (2015) \end{tabular} & ~ \\ \cline{1-4}
+Thurs, June 18 & Tom & \begin{tabular}{@{}l@{}} Weak framework II: Variance and conservative \\ inference; covariance adjustment \end{tabular} & \begin{tabular}{@{}c@{}} Gerber and Green (2012, Ch.~3--4) \\ Freedman et al.\ (1998) \\ Imbens and Rubin (2015, pp.~87--98) \\ Rosenbaum (2002); Lin (2013) \end{tabular} & ~ \\ \hline
+  Fri, June 19 (HW 1 due) & -- & No Class: Juneteenth U.S. Holiday & & ~ \\ \hline
+Mon, June 22 & Tom & Noncompliance and attrition & \begin{tabular}{@{}c@{}} Gerber and Green (2012, Ch.~5--7) \\ Rosenbaum (1996) \\ Rosenbaum (2010, \S~5.3) \end{tabular} & \begin{tabular}{@{}c@{}} Albertson and \\ Lawrence (2009) \end{tabular} \\ \hline
+Tues, June 23 & Tom & \begin{tabular}{@{}l@{}} Observational studies and \\ as-if randomization \end{tabular} & \begin{tabular}{@{}c@{}} Leavitt and Miratrix (2026, \S~1) \\ Rosenbaum (2017, Chapter 5) \\ Gelman and Hill (2006, \S~9.0--9.2) \\ Berk (2010) \end{tabular}& \multirow{8}{*}{\begin{tabular}{@{}c@{}} Gilligan and \\ Sergenti (2008); \\ Cerd\'{a} et al (2012) \end{tabular}} \\ \cline{1-4}
+  Wed, June 24 & Tom & \begin{tabular}{@{}l@{}} Building a matched design: \\ Distances and forming matches \end{tabular} & \begin{tabular}{@{}c@{}} Leavitt and Miratrix (2026, \S~2.1--2.2.4) \\ Rosenbaum (2017, pp.~65--96) \\ Rosenbaum (2010, Ch.~7--8) \\ Hansen (2011) \end{tabular} & ~ \\ \cline{1-4}
+Thurs, June 25 & Tom & \begin{tabular}{@{}l@{}} Evaluating a matched design: Balance \\ and effective sample size \end{tabular} & \begin{tabular}{@{}c@{}} Leavitt and Miratrix (2026, \S~2.2.5) \\ Hansen and Bowers (2008) \end{tabular} & ~ \\ \cline{1-4}
+Fri, June 26 (HW 2 due) & Tom & \begin{tabular}{@{}l@{}} Inference under as-if randomization I: \\ The sharp framework \end{tabular} & \begin{tabular}{@{}c@{}} Leavitt and Miratrix (2026, \S~2.3--2.3.1) \\ Rosenbaum (2017, Chapter 3) \end{tabular} & ~ \\ \cline{1-4}
+Mon, June 29 & Jake & \begin{tabular}{@{}l@{}} Inference under as-if randomization II: \\ The weak framework \end{tabular} & \begin{tabular}{@{}c@{}} Leavitt and Miratrix (2026, \S~2.3.2) \\ Gerber and Green (2012, pp.~71--79) \\ Fogarty (2018); Pashley and Miratrix (2020) \end{tabular} & ~ \\ \cline{1-4}
+Tues, June 30 & Jake & \begin{tabular}{@{}l@{}} Sensitivity analysis I: \\ The sharp framework \end{tabular} & \begin{tabular}{@{}c@{}} Leavitt and Miratrix (2026, \S~2.4--2.4.1) \\ Rosenbaum (2017, Chapter 9) \\ Rosenbaum (2018) \end{tabular} & ~ \\ \cline{1-4}
+Wed, July 1 & Jake & \begin{tabular}{@{}l@{}} Sensitivity analysis II: \\ The weak framework \end{tabular} & \begin{tabular}{@{}c@{}} Leavitt and Miratrix (2026, \S~2.4.2) \\ Fogarty (2023) \end{tabular} & ~ \\ \cline{1-4}
+Thurs, July 2 (HW 3 due) & Jake & \begin{tabular}{@{}l@{}} Full pipeline end-to-end and/or \\ special topics (students' choice) \end{tabular} & \begin{tabular}{@{}c@{}} Leavitt and Miratrix (2026) \end{tabular} & ~ \\ \hline
 \end{tabular}}
-%}
-\end{table}
+\end{center}
+\endgroup
 
 \end{landscape}
 \newpage
 \section*{Course content}
 
-\section{Potential outcomes and random assignment}
+\section{Randomized experiments}
 
-%Medical- and social-science data generating processes can be difficult to capture accurately in a single regression equation, for various reasons. The statistical foundations of randomized experiments are much more satisfying, particularly when they are taken on their own terms. Fisher and Neyman did this earlier in the 1920s and 30s, in work that Rubin, Holland and others reinvigorated beginning in the 1970s. The course begins by surveying the circle of ideas to emerge from this.
+\subsection{Introduction: Random allocation, potential outcomes and Fisher's exact test}
 
 \paragraph*{Required}
 
-\begin{verse}\fullcite{holland1986}, Sections~1 -- 4. (The article that brought the ``Rubin Causal Model'' to  statisticians' attention.)\end{verse}
+\begin{verse} \fullcite{holland1986}, Sections~1 -- 4. \end{verse}
 
-\begin{verse} Section~1.2, ``Experimentation defined,''  of
-\fullcite{kinderpalfrey1993}.  (Particularly pp. 5 -- 10.) \end{verse}
-
-\begin{verse} \fullcite{rosenbaum2017}, Chapter 2. \end{verse}
-
-\begin{verse} Chapter~1, ``Introduction,'' of \fullcite {fisher1935a} and pages 131 -- 135 of \fullcite{box1978} for historical context. \end{verse}
+\begin{verse} Chapter 2 of \fullcite{rosenbaum2017}. \end{verse}
 
 \paragraph*{Recommended}
 
+\begin{verse} Section~1.2, ``Experimentation defined,'' of \fullcite{kinderpalfrey1993}. (Particularly pp. 5 -- 10.) \end{verse}
+
+\begin{verse} Chapter~1, ``Introduction,'' of \fullcite{fisher1935a} and pages 131 -- 135 of \fullcite{box1978} for historical context. \end{verse}
+
+\begin{verse} \fullcite{neyman1923} \end{verse}
+
+\begin{verse} \fullcite{rubin1974} \end{verse}
+
 \begin{verse} \fullcite{bowersleavitt2020} \end{verse}
 
-\section{Random assignment as a basis for inference}
+\subsection{The sharp framework: Fisherian inference for causal effects}
 
 \subsection*{Application}
 
 \begin{verse} \fullcite{arceneaux2005} \end{verse}
 
-\subsection{Inference for causal effects: the Fisherian tradition}
-
 \paragraph*{Required}
 
-\begin{verse}
-  Chapter 3 of \fullcite{rosenbaum2017}.
-\end{verse}
+\begin{verse} Chapter 3 of \fullcite{rosenbaum2017}. \end{verse}
+
+\begin{verse} Sections~5 -- 10 (pp.~11 -- 19) of \fullcite{fisher1935a}. \end{verse}
 
 \paragraph*{Recommended}
 
-\begin{verse}
-  Pages 27 -- 49 of \fullcite{rosenbaum2002a}
-\end{verse}
+\begin{verse} Pages 27 -- 49 of \fullcite{rosenbaum2002a} \end{verse}
 
-\begin{verse}
-  Chapter 2 of \fullcite{rosenbaum2010}.
-\end{verse}
+\begin{verse} Chapter 2 of \fullcite{rosenbaum2010}. \end{verse}
 
-\subsection{Inference for causal effects: the Neyman tradition}
+\begin{verse} \fullcite{caugheyetal2023} \end{verse}
 
-\subsubsection{Estimation of average causal effects}
+\begin{verse} \fullcite{kimetal2026} \end{verse}
+
+\begin{verse} \fullcite{gelman2003} \end{verse}
+
+\subsection{The weak framework I: Estimating average effects}
 
 \paragraph*{Required}
 
@@ -303,7 +305,7 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 \begin{verse} \fullcite{aronowmiddleton2013} \end{verse}
 \begin{verse} \fullcite{middletonaronow2015} \end{verse}
 
-\subsubsection{Variance estimation and hypothesis testing}
+\subsection{The weak framework II: Variance and conservative inference}
 
 \paragraph*{Required}
 
@@ -313,7 +315,7 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 
 \begin{verse} Endnote spanning pages A-32 and 33,
   \fullcite{freedmanpisanipurves1998}.  (This can be read as a pr{\'e}cis
-  of: \fullcite{neyman1990}.)
+  of: \fullcite{neyman1923}.)
 \end{verse}
 
 \begin{verse} Chapter 6, pp. 87 -- 98 of \fullcite{imbensrubin2015} \end{verse}
@@ -328,17 +330,17 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 
 \begin{verse} \fullcite{aronowetal2014} \end{verse}
 
-\subsection{Covariance adjustment in randomized experiments}
+\begin{verse} \fullcite{robins1988} \end{verse}
+
+\begin{verse} \fullcite{harshawetal2026} \end{verse}
+
+\subsection{Covariance adjustment (sharp and weak frameworks)}
 
 \paragraph*{Required}
 
-\begin{verse}
-  Chapter~4 of \fullcite{gerbergreen2012}.
-\end{verse}
+\begin{verse} Chapter~4 of \fullcite{gerbergreen2012}. \end{verse}
 
-\begin{verse}
-  \fullcite{rosenbaum2002c}.
-\end{verse}
+\begin{verse} \fullcite{rosenbaum2002c}. \end{verse}
 
 \begin{verse} \fullcite{lin2013} \end{verse}
 
@@ -358,14 +360,21 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 
 \begin{verse} \fullcite{abadieetal2020} \end{verse}
 
+\begin{verse} \fullcite{fogarty2018} \end{verse}
 
-\section{Noncompliance and Attrition}
+\begin{verse} \fullcite{guobasse2023} \end{verse}
 
-\subsection*{Applications}
+\begin{verse} \fullcite{cohenfogarty2023} \end{verse}
+
+\begin{verse} \fullcite{changetal2024} \end{verse}
+
+\subsection{Noncompliance and attrition}
+
+\subsection*{Application}
 
 \begin{verse} \fullcite{albertsonlawrence2009} \end{verse}
 
-\subsection{Noncompliance and instrumental variables}
+\subsubsection{Noncompliance and instrumental variables}
 
 \paragraph*{Required}
 
@@ -389,11 +398,21 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 
 \begin{verse} \fullcite{hansenbowers2008} \end{verse}
 
-\subsection{Attrition, or missing outcomes}
+\begin{verse} \fullcite{aronowetal2025} \end{verse}
 
-\paragraph*{Recommended}
+\begin{verse} \fullcite{pashley2022} \end{verse}
+
+\begin{verse} \fullcite{pashleyetal2024} \end{verse}
+
+\begin{verse} \fullcite{blackwellpashley2021} \end{verse}
+
+\subsubsection{Attrition, or missing outcomes}
+
+\paragraph*{Required}
 
 \begin{verse} Chapter 7 of \fullcite{gerbergreen2012} \end{verse}
+
+\paragraph*{Recommended}
 
 \begin{verse} \fullcite{lee2009} \end{verse}
 
@@ -403,13 +422,17 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 
 \begin{verse} \fullcite{coppocketal2017} \end{verse}
 
-\section{Observational Studies}
+\begin{verse} \fullcite{lietal2025} \end{verse}
 
-\subsection{Introduction:  ``Controlling for'' in observational studies}
+\section{Observational studies}
+
+\subsection{Observational studies and as-if randomization}
 
 \paragraph*{Required}
 
-\begin{verse} \fullcite{bindrubin2019} \end{verse}
+\begin{verse} Section~1, ``Design-Based Foundations of the Matching Pipeline,'' of \fullcite{leavittmiratrix2026} \end{verse}
+
+\begin{verse} Chapter 5 of \fullcite{rosenbaum2017} \end{verse}
 
 \begin{verse} Sections 9.0 -- 9.2 (especially discussion of interpolation and extrapolation) of \fullcite{gelmanhill2006} \end{verse}
 
@@ -417,35 +440,51 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 
 \paragraph*{Recommended}
 
-\begin{verse} Chapter 5 of \fullcite{rosenbaum2017} \end{verse}
+\begin{verse} \fullcite{bindrubin2019} \end{verse}
+
+\begin{verse} \fullcite{rubin1977} \end{verse}
 
 \begin{verse} \fullcite{cochran1965} \end{verse}
 
-\begin{verse} On the problem of kitchen sink regressions, \fullcite{achen2002} \end{verse}
+\begin{verse} \fullcite{achen2002} \end{verse}
 
 \begin{verse} Chapters 11 and 19 (on overly influential points) of \fullcite{fox2016} \end{verse}
 
-\subsection{Matching: An introduction}
+\subsection{Building a matched design: Measuring similarity and forming matches}
 
 \subsection*{Application}
+
+\begin{verse} \fullcite{gilligansergenti2008} \end{verse}
 
 \begin{verse} \fullcite{cerdaetal2012} \end{verse}
 
 \paragraph*{Required}
 
-\begin{verse}
-  Pages 65 -- 90 of \fullcite{rosenbaum2017}
-\end{verse}
+\begin{verse} Sections~2.1 -- 2.2.4 (running example through forming the matches) of \fullcite{leavittmiratrix2026} \end{verse}
 
-\begin{verse}
-  \fullcite{rosenbaum2020}
-\end{verse}
+\begin{verse} Pages 65 -- 96 of \fullcite{rosenbaum2017} \end{verse}
+
+\begin{verse} Chapters 7 -- 8 of \fullcite{rosenbaum2010} \end{verse}
+
+\begin{verse} \fullcite{hansen2011} \end{verse}
 
 \paragraph*{Recommended}
 
-\begin{verse}
-  Chapter 3 of \fullcite{rosenbaum2002a}, specifically Sections 3.1 -- 3.2 and 3.4 -- 3.5.
-\end{verse}
+\begin{verse} \fullcite{hansen2004} \end{verse}
+
+\begin{verse} \fullcite{hansenklopfer2006} \end{verse}
+
+\begin{verse} \fullcite{gurosenbaum1993} \end{verse}
+
+\begin{verse} \fullcite{rubinwaterman2006} \end{verse}
+
+\begin{verse} \fullcite{hansen2008a} \end{verse}
+
+\begin{verse} \fullcite{saleshansenrowan2018} \end{verse}
+
+\begin{verse} \fullcite{rosenbaum2020} \end{verse}
+
+\begin{verse} Chapter 3 of \fullcite{rosenbaum2002a}, specifically Sections 3.1 -- 3.2 and 3.4 -- 3.5. \end{verse}
 
 \begin{verse} \fullcite{rosenbaum2001d} \end{verse}
 
@@ -453,110 +492,109 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 
 \begin{verse} \fullcite{arceneauxetal2010} \end{verse}
 
-\subsection{Nuts and bolts of matching}
+\begin{verse} \fullcite{rubin1979} \end{verse}
+
+\begin{verse} \fullcite{robinsetal2000a} \end{verse}
+
+\begin{verse} \fullcite{hoetal2007} \end{verse}
+
+\begin{verse} Chapter 13 of \fullcite{rosenbaum2010} \end{verse}
+
+\begin{verse} \fullcite{rosenbaumrubin1985} \end{verse}
+
+\subsection{Evaluating a matched design: Balance and effective sample size}
 
 \paragraph*{Required}
 
-\begin{verse}
-  Chapters 7 -- 8 of \fullcite{rosenbaum2010},
-\end{verse}
+\begin{verse} Section~2.2.5 (balance and effective sample size) of \fullcite{leavittmiratrix2026} \end{verse}
 
-\begin{verse}
-  Chapter 11 \fullcite{rosenbaum2017},
-\end{verse}
-
-\subsection{Propensity scores methods}
-
-\paragraph*{Required}
-
-\begin{verse} Pages 90 -- 96 of \fullcite{rosenbaum2017} \end{verse}
-
-\begin{verse}
-  \fullcite{hansen2011}
-\end{verse}
+\begin{verse} \fullcite{hansenbowers2008} \end{verse}
 
 \paragraph*{Recommended}
 
-\begin{verse}
-  \fullcite{rubin1979}
-\end{verse}
+\begin{verse} \fullcite{austin2009} \end{verse}
 
-\begin{verse}
-  \fullcite{robinsetal2000a}
-\end{verse}
+\begin{verse} \fullcite{stuart2010} \end{verse}
 
-\begin{verse}
-\fullcite{hoetal2007}
-\end{verse}
+\begin{verse} \fullcite{rubin2001} \end{verse}
 
-\begin{verse}
-  Chapters 13 of \fullcite{rosenbaum2010}
-\end{verse}
+\begin{verse} \fullcite{austin2008} \end{verse}
 
-\begin{verse}
-  \fullcite{rosenbaumrubin1985}
-\end{verse}
+\begin{verse} \fullcite{hansen2008b} \end{verse}
 
-\subsection{Covariate balance and outcome analysis after matching}
+\begin{verse} \fullcite{holm1979} \end{verse}
+
+\begin{verse} \fullcite{imai2008a} \end{verse}
+
+\begin{verse} \fullcite{imaietal2008} \end{verse}
+
+\subsection{Inference under as-if randomization I: The sharp framework}
 
 \paragraph*{Required}
 
-\begin{verse}
-  \fullcite{hansenbowers2008}
-\end{verse}
+\begin{verse} Sections~2.3 -- 2.3.1 (inference under the sharp framework) of \fullcite{leavittmiratrix2026} \end{verse}
 
-\begin{verse}
- Pages 71 -- 79 of \fullcite{gerbergreen2012}
-\end{verse}
+\begin{verse} Chapter 3 of \fullcite{rosenbaum2017} \end{verse}
 
 \paragraph*{Recommended}
 
-\begin{verse}
-  \fullcite{fogarty2018a}
-\end{verse}
+\begin{verse} \fullcite{pashleyetal2021} \end{verse}
 
-\begin{verse}
-  \fullcite{pashleymiratrix2020}
-\end{verse}
+\subsection{Inference under as-if randomization II: The weak framework}
 
-\begin{verse}
-  \fullcite{imai2008a}
-\end{verse}
+\paragraph*{Required}
 
-\begin{verse}
-  \fullcite{imaietal2008}
-\end{verse}
+\begin{verse} Section~2.3.2 (inference under the weak framework) of \fullcite{leavittmiratrix2026} \end{verse}
+
+\begin{verse} Pages 71 -- 79 of \fullcite{gerbergreen2012} \end{verse}
+
+\begin{verse} \fullcite{fogarty2018a} \end{verse}
+
+\begin{verse} \fullcite{pashleymiratrix2020} \end{verse}
+
+\paragraph*{Recommended}
+
+\begin{verse} \fullcite{lietal2018a} \end{verse}
+
+\begin{verse} \fullcite{pashleyetal2021} \end{verse}
 
 \section{Sensitivity analysis}
 
 \subsection*{Application}
 
+\begin{verse} \fullcite{gilligansergenti2008} \end{verse}
+
 \begin{verse} \fullcite{cerdaetal2012} \end{verse}
 
-\subsection{Sensitivity analysis for sharp nulls}
+\subsection{Sensitivity analysis I: The sharp framework}
 
 \paragraph*{Required}
 
+\begin{verse} Sections~2.4 -- 2.4.1 (sensitivity analysis under the sharp framework) of \fullcite{leavittmiratrix2026} \end{verse}
+
 \begin{verse}
-  Chapter 11 \fullcite{rosenbaum2017},
+  Chapter 9 of \fullcite{rosenbaum2017}
 \end{verse}
+
+\begin{verse} \fullcite{rosenbaum2018} \end{verse}
 
 \paragraph*{Recommended}
 
 \begin{verse} Chapter 4 of \fullcite{rosenbaum2002a} \end{verse}
 
-\begin{verse} \fullcite{rosenbaum2018} \end{verse}
-
 \begin{verse} \fullcite{rosenbaumkrieger1990} \end{verse}
+
+\begin{verse} \fullcite{gastwirthetal2000} \end{verse}
 
 \begin{verse} \fullcite{hansenrosenbaumsmall2014} \end{verse}
 
 \begin{verse} \fullcite{hsusmall2013} \end{verse}
 
-
-\subsection{Sensitivity analysis for weak nulls}
+\subsection{Sensitivity analysis II: The weak framework}
 
 \paragraph*{Required}
+
+\begin{verse} Section~2.4.2 (sensitivity analysis under the weak framework) of \fullcite{leavittmiratrix2026} \end{verse}
 
 \begin{verse} \fullcite{fogarty2023} \end{verse}
 
@@ -570,30 +608,191 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 
 \subsection{Design sensitivity}
 
-\paragraph*{Required}
-
 \begin{verse} \fullcite{rosenbaum2004} \end{verse}
 
-\begin{verse} Chapter 10 of \fullcite{rosenbaum2017} \end{verse}
+\begin{verse} \fullcite{helleretal2009} \end{verse}
 
-\subsection{Nonbipartite matching}\label{sec:nbp}
+\begin{verse} \fullcite{hsuetal2013} \end{verse}
 
-\begin{verse} Chapter 11 of \fullcite{rosenbaum2010} \end{verse}
+\begin{verse} \fullcite{smalletal2013} \end{verse}
+
+\subsection{Special topics in matching: nonbipartite, multilevel, risk-set, cardinality, coarsened exact, template, exterior, generalized full, and fine balance}\label{sec:nbp}
 
 \begin{verse} \fullcite{luetal2001} \end{verse}
 
-\begin{verse} Chapter 11 of \fullcite{rosenbaum2010} \end{verse}
-
 \begin{verse} \fullcite{luetal2011} \end{verse}
 
-\begin{verse} \fullcite{lu2005} \end{verse}
+\begin{verse} pages 207 -- 221 of \fullcite{rosenbaum2010} \end{verse}
 
-\begin{verse} \fullcite{baiocchietal2010} \end{verse}
+\begin{verse} \fullcite{silberetal2014} \end{verse}
 
-\begin{verse} \fullcite{zubizarretaetal2013} \end{verse}
-\begin{verse} \fullcite{rabb2022pnas} \end{verse}
+\begin{verse} \fullcite{zubizarretakeele2017} \end{verse}
 
-\subsection{Regression discontinuity designs and ``natural experiments''} \label{sec:nat_exp}
+\begin{verse} \fullcite{pimenteletal2018} \end{verse}
+
+\begin{verse} \fullcite{lietal2001} \end{verse}
+
+\begin{verse} \fullcite{zubizarretaetal2014} \end{verse}
+
+\begin{verse} \fullcite{iacusetal2012} \end{verse}
+
+\begin{verse} \fullcite{rosenbaumsilber2013} \end{verse}
+
+\begin{verse} \fullcite{savjehigginssekhon2021} \end{verse}
+
+\begin{verse} \fullcite{cochran1965} \end{verse}
+
+\begin{verse} \fullcite{danieletal2008} \end{verse}
+
+\begin{verse} \fullcite{yuetal2021} \end{verse}
+
+\begin{verse} \fullcite{rosenbaumetal2007} \end{verse}
+
+\begin{verse} \fullcite{yangetal2012} \end{verse}
+
+\begin{verse} \fullcite{yu2023} \end{verse}
+
+\begin{verse} \fullcite{pimenteletal2015a} \end{verse}
+
+\begin{verse} \fullcite{pimenteletal2015b} \end{verse}
+
+\subsection{Extensions to covariate balance testing}
+
+\begin{verse} \fullcite{gagnon-bartschshem-tov2019} \end{verse}
+
+\begin{verse} \fullcite{branson2021} \end{verse}
+
+\begin{verse} \fullcite{hansensales2015} \end{verse}
+
+\subsection{Residual imbalance on observed covariates}
+
+\begin{verse} \fullcite{rosenbaum1988} \end{verse}
+
+\begin{verse} \fullcite{pimentelhuang2024} \end{verse}
+
+\begin{verse} \fullcite{chenetal2023} \end{verse}
+
+\begin{verse} \fullcite{hengetal2025} \end{verse}
+
+\begin{verse} \fullcite{zhuetal2025} \end{verse}
+
+\subsection{Defining an interpretable study population}
+
+\begin{verse} \fullcite{traskinsmall2011} \end{verse}
+
+\begin{verse} \fullcite{fogartyetal2016} \end{verse}
+
+\begin{verse} \fullcite{crumpetal2009} \end{verse}
+
+\begin{verse} \fullcite{kingzeng2006} \end{verse}
+
+\subsection{Rerandomization}
+
+\begin{verse} \fullcite{morganrubin2012} \end{verse}
+
+\begin{verse} \fullcite{morganrubin2015} \end{verse}
+
+\begin{verse} \fullcite{lietal2018b} \end{verse}
+
+\begin{verse} \fullcite{liding2020} \end{verse}
+
+\begin{verse} \fullcite{bransonetal2023} \end{verse}
+
+\begin{verse} \fullcite{wangetal2021} \end{verse}
+
+\begin{verse} \fullcite{johanssonetal2021} \end{verse}
+
+\begin{verse} \fullcite{luetal2023} \end{verse}
+
+\begin{verse} \fullcite{cytrynbaum2024} \end{verse}
+
+\begin{verse} \fullcite{ribeirobranson2025} \end{verse}
+
+\subsection{Randomization versus optimal design}
+
+\begin{verse} \fullcite{kiefer1959} \end{verse}
+
+\begin{verse} \fullcite{fedorov1972} \end{verse}
+
+\begin{verse} \fullcite{harville1975} \end{verse}
+
+\begin{verse} \fullcite{basu1980} \end{verse}
+
+\begin{verse} \fullcite{wu1981} \end{verse}
+
+\begin{verse} \fullcite{senn1994a} \end{verse}
+
+\begin{verse} \fullcite{senn2013} \end{verse}
+
+\begin{verse} \fullcite{bertsimasetal2015} \end{verse}
+
+\begin{verse} \fullcite{kasy2016} \end{verse}
+
+\begin{verse} \fullcite{banerjeeetal2017} \end{verse}
+
+\begin{verse} \fullcite{kallus2018} \end{verse}
+
+\begin{verse} \fullcite{banerjeeetal2020} \end{verse}
+
+\begin{verse} \fullcite{kallus2021} \end{verse}
+
+\begin{verse} \fullcite{kapelneretal2021} \end{verse}
+
+\begin{verse} \fullcite{kapelneretal2022} \end{verse}
+
+\begin{verse} \fullcite{bai2023} \end{verse}
+
+\begin{verse} \fullcite{harshawetal2024} \end{verse}
+
+\begin{verse} \fullcite{martinezteira2024} \end{verse}
+
+\subsection{Quasi-experimental devices}
+
+\begin{verse} \fullcite{campbell1957} \end{verse}
+
+\begin{verse} \fullcite{campbellstanley1963} \end{verse}
+
+\begin{verse} \fullcite{shadishetal2002} \end{verse}
+
+\begin{verse} Section~IV of \fullcite{rosenbaum2025} \end{verse}
+
+\subsubsection{Difference-in-Differences}\label{sec:did}
+
+\begin{verse} \fullcite{hammiratrix2024} \end{verse}
+
+\begin{verse} Pages 162 -- 167 of \fullcite{rosenbaum2017} \end{verse}
+
+\begin{verse} Section 4.1 of \fullcite{gerbergreen2012} \end{verse}
+
+\begin{verse} Chapter 5 of \fullcite{angristpischke2008} \end{verse}
+
+\begin{verse} \fullcite{lechner2011} \end{verse}
+
+\begin{verse} \fullcite{manskipepper2018} \end{verse}
+
+\begin{verse} \fullcite{dingli2019} \end{verse}
+
+\begin{verse} \fullcite{imaikim2021} \end{verse}
+
+\begin{verse} \fullcite{callawaysantanna2021} \end{verse}
+
+\begin{verse} \fullcite{rambachanroth2023} \end{verse}
+
+\begin{verse} \fullcite{roth2022} \end{verse}
+
+\begin{verse} \fullcite{rothsantanna2023} \end{verse}
+
+\begin{verse} \fullcite{rothetal2023} \end{verse}
+
+\begin{verse} \fullcite{bakeretal2026} \end{verse}
+
+\begin{verse} \fullcite{mikhaeilharshaw2025} \end{verse}
+
+\begin{verse} \fullcite{leavitthatfield2025} \end{verse}
+
+\begin{verse} \fullcite{leavitt2026} \end{verse}
+
+\subsubsection{Regression discontinuity designs and ``natural experiments''}\label{sec:nat_exp}
 
 \begin{verse} \fullcite{caugheysekhon2011} \end{verse}
 
@@ -606,8 +805,6 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 \begin{verse} \fullcite{sekhontitiunik2017} \end{verse}
 
 \begin{verse} \fullcite{sekhontitiunik2016} \end{verse}
-
-\begin{verse} \fullcite{hansensales2015} \end{verse}
 
 \begin{verse} \fullcite{hahnetal2001} \end{verse}
 
@@ -633,51 +830,43 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 
 \begin{verse} \fullcite{atheyetal2018} \end{verse}
 
+\begin{verse} \fullcite{savjeetal2021} \end{verse}
+
+\begin{verse} \fullcite{wangetal2025} \end{verse}
+
+\begin{verse} \fullcite{kandirosetal2024} \end{verse}
+
+\begin{verse} \fullcite{bowersetal2018} \end{verse}
+
+\begin{verse} \fullcite{harshawetal2026} \end{verse}
+
 \subsection{Factorial and complex experiments}
 
 \begin{verse} \fullcite{dasguptaetal2015} \end{verse}
 
 \begin{verse} \fullcite{hainmuelleretal2014} \end{verse}
 
+\begin{verse} \fullcite{harshawetal2026} \end{verse}
+
 \begin{verse} \fullcite{egamiimai2019} \end{verse}
 
 \begin{verse} \fullcite{gerberetal2010} \end{verse}
 
-\subsection{Difference-in-Differences}\label{sec:did}
+\begin{verse} \fullcite{blackwellpashley2026} \end{verse}
 
-\begin{verse} Pages 162 -- 167 of \fullcite{rosenbaum2017} \end{verse}
+\begin{verse} \fullcite{goplerudetal2025} \end{verse}
 
-\begin{verse} Section 4.1 of \fullcite{gerbergreen2012} \end{verse}
+\subsection{Joint inference of sharp and weak causal hypotheses}
 
-\begin{verse} Chapter 5 of \fullcite{angristpischke2008} \end{verse}
+\begin{verse} \fullcite{chungromano2013} \end{verse}
 
-\begin{verse} \fullcite{lechner2011} \end{verse}
+\begin{verse} \fullcite{ding2017} \end{verse}
 
-\begin{verse} \fullcite{manskipepper2018} \end{verse}
+\begin{verse} \fullcite{wuding2021} \end{verse}
 
-\begin{verse} \fullcite{dingli2019} \end{verse}
+\begin{verse} \fullcite{cohenfogarty2022} \end{verse}
 
-\begin{verse} \fullcite{imaikim2021} \end{verse}
-
-\subsection{Special topics in matching: Multilevel, risk set, cardinality, generalized full matching and fine balance}
-
-\begin{verse} \fullcite{zubizarretakeele2017} \end{verse}
-
-\begin{verse} \fullcite{yangetal2016} \end{verse}
-
-\begin{verse} \fullcite{pimenteletal2018} \end{verse}
-
-\begin{verse} Chapter 12 of \fullcite{rosenbaum2010} \end{verse}
-
-\begin{verse} \fullcite{lietal2001} \end{verse}
-
-\begin{verse} Chapter 10 of \fullcite{rosenbaum2010} \end{verse}
-
-\begin{verse} \fullcite{kilciogluzubizarreta2016} \end{verse}
-
-\begin{verse} \fullcite{savjehigginssekhon2021} \end{verse}
-
-\subsection{Attributable effects and inference of random causal quantities}
+\subsection{Attributable effects, the ATT, and alternative effect models}
 
 \begin{verse} \fullcite{rosenbaum2001a} \end{verse}
 
@@ -691,7 +880,11 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 
 \begin{verse} \fullcite{rosenbaum2007} \end{verse}
 
-\subsection{Regression-based sensitivity analysis}
+\begin{verse} \fullcite{rosenbaum1999} \end{verse}
+
+\begin{verse} pages 46 -- 49 of \fullcite{rosenbaum2010} \end{verse}
+
+\subsection{Sensitivity analysis: regression-based approaches and recent extensions}
 
 \begin{verse} \fullcite{hosmanetal2010} \end{verse}
 
@@ -700,6 +893,16 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 \begin{verse} \fullcite{imbens2003} \end{verse}
 
 \begin{verse} \fullcite{oster2019} \end{verse}
+
+\begin{verse} \fullcite{wuli2025} \end{verse}
+
+\begin{verse} \fullcite{li2025} \end{verse}
+
+\begin{verse} \fullcite{fogarty2025} \end{verse}
+
+\begin{verse} \fullcite{bekermanetal2026} \end{verse}
+
+\begin{verse} \fullcite{linetal2026} \end{verse}
 
 \subsection{External validity}
 
@@ -712,6 +915,8 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 \begin{verse} \fullcite{silberetal2014} \end{verse}
 
 \begin{verse} \fullcite{westreichetal2019} \end{verse}
+
+\begin{verse} \fullcite{egamihartman2022} \end{verse}
 
 \subsection{Weighting methods}
 
@@ -731,9 +936,15 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 
 \subsection{Synthetic control}
 
+\begin{verse} \fullcite{abadiegardeazabal2003} \end{verse}
+
 \begin{verse} \fullcite{abadieetal2010} \end{verse}
 
 \begin{verse} \fullcite{abadieetal2012} \end{verse}
+
+\begin{verse} \fullcite{abadie2021} \end{verse}
+
+\begin{verse} \fullcite{arkhangelskyetal2021} \end{verse}
 
 \begin{verse} \fullcite{ben-michaeletal2021} \end{verse}
 
@@ -745,11 +956,15 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 
 \begin{verse} \fullcite{leavitt2023} \end{verse}
 
+\begin{verse} \fullcite{leavitt2024} \end{verse}
+
 \begin{verse} \fullcite{imbensrubin1997} \end{verse}
 
 \begin{verse} \fullcite{keelequinn2017} \end{verse}
 
 \begin{verse} \fullcite{dingmiratrix2019} \end{verse}
+
+\begin{verse} \fullcite{liuetal2025} \end{verse}
 
 \clearpage
 
@@ -764,6 +979,5 @@ Fri, July 4 & -- & No class: 4th of July U.S. Holiday &  & ~ \\ \hline
 %"master" is Ryan Moore's file (as of summer 2012).
 %"causalinference" is Ben's, and lives (as of summer 2013) in
 % http://dept.stat.lsa.umich.edu/~bbh/texmf/bibtex/bib/
-
 
 \end{document}
