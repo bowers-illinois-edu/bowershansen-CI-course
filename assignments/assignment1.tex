@@ -4,8 +4,9 @@
 
 \title{Causal Inference Assignment 1}
 \input{../courseedition}
-\author{Due  noon Saturday 6/21}
+\author{Due noon Friday, June 19, 2026}
 \usepackage{../icpsr-classwork}
+\renewcommand{\bm}[1]{\boldsymbol{#1}} % bold-italic vectors, matching the slides
 
 
 \begin{document}
@@ -26,33 +27,33 @@
 %\item For this data set, are the chi-square test and the fisher test
 %  both admissible? (Hint: what are the sample size requirements of the
 %  chi-square procedure? As review, read R's warnings and documentation.)
-\item Refer to the the \texttt{acorn} data set that accompanies this assignment.  Using the mean of turnout proportions in
-treatment group precincts, $n_{1}^{-1}\mathbf{Z}'\mathbf{y}$, as
-test statistic, simulate its rerandomization distribution under the
-null hypothesis of strictly no effect, reporting: \label{q:simmoments}
+\item Refer to the \texttt{acorn} data set that accompanies this assignment.  Using the mean of turnout proportions in
+treatment-group precincts, $n_{1}^{-1}\bm{Z}^{\top}\bm{y}$, as
+test statistic, simulate its randomization distribution under the
+sharp null hypothesis of no effect, reporting: \label{q:simmoments}
 \begin{enumerate}
-  \item your simulation $p$-value; 
+  \item your simulation $p$-value;
   \item your simulation approximation of $\mathrm{E}[
-    n_{1}^{-1}\mathbf{Z}'\mathbf{y}]$, the null expected value of the test
-    statistic; 
+    n_{1}^{-1}\bm{Z}^{\top}\bm{y}]$, the null expected value of the test
+    statistic;
   \item your simulation approximation of
-    $\mathrm{Var}[n_{1}^{-1}\mathbf{Z}'\mathbf{y}]$, this test
+    $\mathrm{Var}[n_{1}^{-1}\bm{Z}^{\top}\bm{y}]$, this test
     statistic's variance under the null.
   \end{enumerate}
- Note that $n_1$ is the number of treated units, $n$ is the total number of units, $\mathbf{Z}$ is the random assignment variable and $\mathbf{y}$ is the observed outcome variable
-\item Calculate $\mathrm{E} [ n_{1}^{-1}\mathbf{Z}'\mathbf{y} ]$, the expected value of the
-  sample mean under the strict null hypothesis of no effect, from first principles --- i.e., without simulations ---  using data in $\mathbf{y}$.  \label{q:exactEV}
+ Here $n_1$ is the number of treated units, $n_0 = N - n_1$ the number of control units, $N$ the total number of units, $\bm{Z}$ the random assignment vector, and $\bm{y}$ the observed outcome vector.  In the \texttt{acorn03} data set, the column \texttt{z} records the observed treatment assignment $\bm{z}$ (the realized GOTV assignment indicator), of which $\bm{Z}$ is the random counterpart that you simulate over; the column \texttt{vote03} records the observed outcome $\bm{y}$ (the 2003 turnout proportion in each precinct).
+\item Calculate $\mathrm{E} [ n_{1}^{-1}\bm{Z}^{\top}\bm{y} ]$, the expected value of the
+  treatment-group mean under the sharp null hypothesis of no effect, from first principles --- i.e., without simulations ---  using the data in $\bm{y}$.  \label{q:exactEV}
 \item In this setup, $\mathrm{Var}\, [\bar{y}_{1}]  = \frac{1}{n_{1}}
-  \frac{n_0}{n} \frac{\sum_{i=1}^{n} (y_{i} - \bar y)^{2}}{n-1} $,
-  where $\bar{y}_{1} = n_{1}^{-1}\mathbf{Z}'\mathbf{y}$ is the mean of
+  \frac{n_0}{N} \frac{\sum_{i=1}^{N} (y_{i} - \bar y)^{2}}{N-1} $,
+  where $\bar{y}_{1} = n_{1}^{-1}\bm{Z}^{\top}\bm{y}$ is the mean of
   $y$s among the group assigned to treatment ($\{i: Z_{i} =1\}$) while
-  $\bar{y} = n^{-1}\mathbf{1}'\mathbf{y}$ is the mean of $y$ over
+  $\bar{y} = N^{-1}\bm{1}^{\top}\bm{y}$ is the mean of $y$ over
   the full study population.  If you've seen formulas for the sampling
   variance of the mean in earlier stats
   courses, you probably saw
   $$
   \widehat{\mathrm{Var}} \left[\bar{y}_{1}\right] = \frac{s^{2}_{y}}{n_{1}} = \frac{1}{n_{1}}
-  \frac{\sum_{i=1}^{n_{1}} (y_{i} - \bar{y}_{1})^{2}}{n_{1}-1}, 
+  \frac{\sum_{i=1}^{n_{1}} (y_{i} - \bar{y}_{1})^{2}}{n_{1}-1},
 \, \mathrm{and/or}\,
   \mathrm{Var} \left[\bar{y}_{1}\right] = \frac{\sigma_{y}^{2}}{n_{1}} = \frac{1}{n_{1}}
   \frac{\sum_{i=1}^{N} (y_{i} - \bar{y})^{2}}{N}.
@@ -64,18 +65,18 @@ sense that the formula we've given would differ in the direction it does
 from this other formula. %, in terms of the difference between this
 %sampling situation and the sampling model that more commonly
 %accompanies the Central Limit Theorem.
-\item Calculate $\mathrm{Var}\, [n_{1}^{-1}\mathbf{Z}'\mathbf{y}]$ using the appropriate
+\item Calculate $\mathrm{Var}\, [n_{1}^{-1}\bm{Z}^{\top}\bm{y}]$ using the appropriate
   formula.   Determine the error of the simulation-based
   approximation to this quantity that you reported in question~\ref{q:simmoments},
-  expressing it as a percentage of $\mathrm{Var}\,[ n_{1}^{-1}\mathbf{Z}'\mathbf{y}]$. \label{q:exactvar}
-\item Determine the Normal theory approximation to
-  $\mathrm{Pr}(n_{1}^{-1}\mathbf{Z}'\mathbf{y} \geq
-  n_{1}^{-1}\mathbf{z}'\mathbf{y} ) $.  (Hints: Use the variance and
-  expected values calculated in~\ref{q:exactvar} and \ref{q:exactEV} to transform your
-  observed treatment group mean into a corresponding ``$z$-score.'' 
-  To to determine Normal quantiles corresponding to z-scores in R, use
-  \texttt{pnorm()}; type \texttt{?pnorm} for help. And $\mathbf{z}'$ refers to
-  the observed Acorn data treatment assignment.)
+  expressing it as a percentage of $\mathrm{Var}\,[ n_{1}^{-1}\bm{Z}^{\top}\bm{y}]$. \label{q:exactvar}
+\item Determine the Normal-theory approximation to
+  $\mathrm{Pr}(n_{1}^{-1}\bm{Z}^{\top}\bm{y} \geq
+  n_{1}^{-1}\bm{z}^{\top}\bm{y} ) $.  (Hints: Use the variance and
+  expected value calculated in~\ref{q:exactvar} and \ref{q:exactEV} to transform your
+  observed treatment-group mean into a corresponding ``$z$-score.''
+  To determine Normal quantiles corresponding to z-scores in R, use
+  \texttt{pnorm()}; type \texttt{?pnorm} for help. Here $\bm{z}^{\top}$ refers to
+  the observed ACORN treatment assignment.)
 \item %\input{gg15i}
 A researcher plans to ask six subjects to donate time to an adult
 literacy program. Each subject will be asked to donate either 30
@@ -86,35 +87,28 @@ subject, tossing a coin each time. Method C is to
 write ``30'' and ``60'' on three playing cards each, and then shuffle
 the six cards. Method P tosses one coin for each of the 3 pairs
 $(1,2)$, $(3,4)$, $(5,6)$, asking for 30 (60) minutes from exactly one
-member of each pair. 
-  \begin{minipage}{.45\linewidth}
+member of each pair.
 \begin{itemize}
 \item[a] Discuss strengths \& weaknesses of each method.
-\item[b] How would your answers to (a) change if $n: 6 \mapsto 600$?
+\item[b] How would your answers to (a) change if $N: 6 \mapsto 600$?
 \item[c] Determine $\EE[  Z_{1} ]$  under each method.
 \item[d] Determine $\EE\big[  Z_{1} + Z_{2} + \cdots + Z_{6} \big]$ under each method.
-\item[e] Calculate $\EE[\mathbf{Z}'\mathbf{1}]$ under each of the three methods.
-\end{itemize}
-\end{minipage}
-% \input{gg15ii}
-\begin{minipage}{.45\linewidth}
-  \begin{itemize}
- \item[f] For which of the methods does $\EE
-  \big[\big(\mathbf{Z}'\mathbf{1} -\EE [\mathbf{Z}'\mathbf{1}]\big)^{2}\big] =
-  0$?\footnotemark[1] 
-\item[h] For two of the three methods, the linearity property of expected value%
+\item[e] Calculate $\EE[\bm{Z}^{\top}\bm{1}]$ under each of the three methods.
+\item[f] For which of the methods does $\EE
+  \big[\big(\bm{Z}^{\top}\bm{1} -\EE [\bm{Z}^{\top}\bm{1}]\big)^{2}\big] =
+  0$?\footnotemark[1]
+\item[g] For two of the three methods, the linearity property of expected value%
   \footnotemark[2]
   entails that
-  $\EE [\frac{\mathbf{Z}'\mathbf{x}}{\mathbf{Z}'\mathbf{1}}] = (x_{1}
+  $\EE \big[\frac{\bm{Z}^{\top}\bm{x}}{\bm{Z}^{\top}\bm{1}}\big] = (x_{1}
   + x_{2}+ \ldots + x_{6})/6$.  Which two are
   these, and why doesn't the argument work for the third?
 \end{itemize}
-\end{minipage}
 \end{enumerate}
 \footnotetext[1]{I.e., for which does
-    $\mathrm{Var}[\mathbf{Z}'\mathbf{1}] = 0$?  (In general,
-    $\mathrm{Var}[V] = \EE \big[V - \EE[V] \big]^{2} $.)}
-\footnotetext[2]{For constant $\alpha$ and $\beta$, $\EE(\alpha + \beta Y)
-    = \alpha + \beta \EE(X)$. Also $\EE(\alpha X + \beta Y)
-    = \alpha\EE(Y) + \beta \EE(X)$.}
+    $\mathrm{Var}[\bm{Z}^{\top}\bm{1}] = 0$?  (In general,
+    $\mathrm{Var}[V] = \EE \big[(V - \EE[V])^{2} \big] $.)}
+\footnotetext[2]{For constants $\alpha$ and $\beta$, $\EE(\alpha + \beta Y)
+    = \alpha + \beta \EE(Y)$. Also $\EE(\alpha X + \beta Y)
+    = \alpha\EE(X) + \beta \EE(Y)$.}
 \end{document}

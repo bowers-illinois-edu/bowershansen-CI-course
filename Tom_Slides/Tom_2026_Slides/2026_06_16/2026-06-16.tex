@@ -1,0 +1,697 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%------------------------------------------------------------------------------------------------
+%   PACKAGES AND THEMES
+%------------------------------------------------------------------------------------------------
+
+\documentclass[table, xcolor = {dvipsnames}, 9pt]{beamer}
+\usepackage{tikz}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows,shapes}
+\usetikzlibrary{tikzmark}
+\usetikzlibrary{calc}
+\usetikzlibrary{colorbrewer}
+\mode<presentation> {
+
+% The Beamer class comes with a number of default slide themes
+% which change the colors and layouts of slides. Below this is a list
+% of all the themes, uncomment each in turn to see what they look like.
+
+\usetheme{default}
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Dresden}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+%\usetheme{Madrid}
+\usetheme{metropolis}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+% As well as themes, the Beamer class has a number of color themes
+% for any slide theme. Uncomment each of these in turn to see how it
+% changes the colors of your current slide theme.
+
+%\usecolortheme{albatross}
+%\usecolortheme{beaver}
+%\usecolortheme{beetle}
+%\usecolortheme{crane}
+%\usecolortheme{dolphin}
+%\usecolortheme{dove}
+%\usecolortheme{fly}
+%\usecolortheme{lily}
+%\usecolortheme{orchid}
+%\usecolortheme{rose}
+\usecolortheme{seagull}
+%\usecolortheme{seahorse}
+%\usecolortheme{whale}
+%\usecolortheme{wolverine}
+\usefonttheme{professionalfonts}
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{multirow}
+\usepackage{xspace}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{diagbox}
+\usepackage{makecell}
+\usepackage{xparse}
+\usepackage{subfig}
+\usepackage{amsfonts,amsthm,amsmath,amssymb}
+\usepackage{mathtools, nccmath}
+\usepackage[ruled, vlined, linesnumbered]{algorithm2e}
+\usepackage{wrapfig}
+\usepackage{comment}  
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{empheq}
+\usepackage{pgfplots}
+\usepgfplotslibrary{colorbrewer}
+\usepackage{animate}
+\usepackage{array}
+\usepackage{ragged2e}
+\newcolumntype{P}[1]{>{\RaggedRight\hspace{0pt}}p{#1}}
+\newcolumntype{X}[1]{>{\RaggedRight\hspace*{0pt}}p{#1}}
+
+% color box
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows,shapes}
+\usetikzlibrary{tikzmark}
+\usetikzlibrary{calc}
+% Commands for Highlighting text -- non tikz method
+\newcommand{\highlight}[2]{\colorbox{#1!17}{$\displaystyle #2$}}
+%\newcommand{\highlight}[2]{\colorbox{#1!17}{$#2$}}
+\newcommand{\highlightdark}[2]{\colorbox{#1!47}{$\displaystyle #2$}}
+
+% my custom colors for shading
+\colorlet{mhpurple}{Plum!80}
+
+
+% Commands for Highlighting text -- non tikz method
+\renewcommand{\highlight}[2]{\colorbox{#1!17}{#2}}
+\renewcommand{\highlightdark}[2]{\colorbox{#1!47}{#2}}
+
+\usepgfplotslibrary{colorbrewer}
+
+\newcommand\mybox[2][]{\tikz[overlay]\node[fill=lightgray,inner sep=2pt, anchor=text, rectangle, rounded corners=1mm,#1] {#2};\phantom{#2}}
+\hypersetup{unicode=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1}}
+\usepackage{xcolor}
+% R code listing style (matches the course's R-code slides)
+\usepackage{listings}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{Rstyle}{
+    language=R,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+\newcommand\myheading[1]{%
+  \par\bigskip
+  {\Large\bfseries#1}\par\smallskip}
+\newcommand\given[1][]{\:#1\vert\:}
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}{Proposition\thisthmnumber}
+\newtheorem{lem}{Lemma\thisthmnumber}
+\newtheorem{cor}{Corollary}
+\newtheorem{defin}{Definition}
+\newtheorem{algo}{Algorithm}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand{\bh}[1]{{\color{blue}{#1}}}
+\newcommand{\mh}[1]{{\color{magenta}{#1}}}
+\newcommand{\thisthmnumber}{}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\DeclareMathOperator{\N}{\mathbb{N}}
+\DeclareMathOperator{\E}{\rm{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\e}{\rm{e}}
+\DeclareMathOperator{\logit}{\rm{logit}}
+\DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+%\DeclareMathOperator{\Pr}{\rm{Pr}}
+%------------------------------------------------------------------------
+% TITLE PAGE
+%-----------------------------------------------------------------------
+\pagestyle{empty}
+\title[]{From Fisher's exact test to general sharp hypotheses} % The short title appears at the bottom of every slide, the full title is only on the title page
+
+\author{Thomas Leavitt} % Your name
+\institute[] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+% Your institution for the title page
+\medskip
+\textit{} % Your email address
+}
+\date{June 16, 2026} % Date, can be changed to a custom date
+
+\begin{document}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+%\begin{frame}
+%\frametitle{Overview} % Table of contents slide, comment this block out to remove it
+%\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+%\end{frame}
+
+%------------------------------------------------------------------------
+% PRESENTATION SLIDES
+%------------------------------------------------------------------------
+\section{Recap}
+\begin{frame}[t]{Where we landed yesterday}
+\vfill
+\begin{itemize} \vfill
+\item Yesterday's logic: \mh{design} $\to$ \mh{model} $\to$ \mh{test} \vfill
+\begin{itemize} \vfill
+\item \textbf{Design}: known assignment mechanism $p(\bm{z})$ over $\Omega$ \vfill
+\item \textbf{Model}: each unit's \mh{potential outcomes} $y_i(1), y_i(0)$ (a sharp causal model) \vfill
+\item[] observe only one: $y_i = z_i\,y_i(1) + (1 - z_i)\,y_i(0)$ \vfill
+\item \textbf{Test}: randomization distribution of $t(\bm{Z}, \bm{y})$ \vfill
+\item[] $\bm{Z}$ \emph{random}, $\bm{y}$ \emph{fixed} at observed $=$ \mh{sharp null of no effect} \vfill
+\end{itemize} \vfill
+\item Tested \emph{one} sharp model: \mh{no discrimination} \vfill
+\item Random assignment fixed that test's \mh{error probabilities}: \vfill
+\begin{itemize} \vfill
+\item reject when \mh{true} (no discrimination): $\Pr = 1/70$ \vfill
+\item reject when \mh{perfect discrimination} is true: $\Pr = 1$ \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{Today: from one test to a general method}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Quantify} the test's size and power \vfill
+\item Test \mh{any constant-effect null}, not just no effect \vfill
+\item \mh{Same procedure} for any outcome or test statistic (here, turnout) \vfill
+\item \mh{Invert} the test $\to$ confidence set and point estimate \vfill
+\item Throughout: \mh{random assignment} $\to$ known distribution $\to$ inference \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\section{Hypothesis testing}
+\begin{frame}[t]{The testing logic: sharp null of no effect}
+\vfill
+\begin{enumerate} \vfill
+\item \textbf{Observe} data $(\bm{z}, \bm{y})$; summarize by test statistic $t(\bm{z}, \bm{y})$ \vfill
+\item \textbf{Postulate} the \mh{sharp null of no effect}: outcomes unchanged by assignment \vfill
+\item[] so hold $\bm{y}$ \mh{fixed} at its observed values \vfill
+\item \textbf{Recompute} $t(\bm{Z}, \bm{y})$ over all $\bm{z} \in \Omega$ \vfill
+\item[] $\Rightarrow$ the \mh{randomization distribution} of $t$ under no effect \vfill
+\item \textbf{Compare} the observed $t$ to that distribution \vfill
+\item \textbf{Reject} if it falls in the rejection region; else retain \vfill
+\end{enumerate} \vfill
+\mh{Later}: other sharp nulls (e.g.\ a constant effect) reconstruct the outcomes first
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{What makes a hypothesis ``sharp''}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Sharp null}: specifies \emph{both} potential outcomes $y_i(1), y_i(0)$ for every unit \vfill
+\item[] $\Rightarrow$ both are \mh{fixed} numbers, so the outcome $y_i(z_i)$ under any $\bm{z}$ is known \vfill
+\item[] $\Rightarrow$ $t$ computable on \emph{every} $\bm{z} \in \Omega$; randomization distribution \mh{known} \vfill
+\item \mh{No effect} ($y_i(1) = y_i(0)$): fixed responses $=$ observed $\bm{y}$, so use $t(\bm{z}, \bm{y})$ \vfill
+\item[] no discrimination was this no-effect null (yesterday) \vfill
+\item Non-sharp claim (e.g.\ only the \emph{average} effect): outcomes unspecified \vfill
+\begin{itemize} \vfill
+\item[$\star$] then $t$ not computable on every assignment; needs other tools \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{Two ways a test can be wrong}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Type I error}: reject the null when it is \mh{true} \vfill
+\item \mh{Type II error}: retain the null when it is \mh{false} \vfill
+\item Yesterday's test, same rule (reject iff all four correct): \vfill
+\begin{itemize} \vfill
+\item Type I: reject no discrimination when true $\to \Pr = 1/70$ \vfill
+\item Type II: fail to detect perfect discrimination when true $\to \Pr = 0$ \vfill
+\end{itemize} \vfill
+\item Both probabilities come from the \mh{design}, not assumptions \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{Size and power}
+\vfill
+\begin{itemize} \vfill
+\item Fix a \mh{level} $\alpha$ up front; reject in the largest tail with null prob $\leq \alpha$ \vfill
+\item \mh{Size} $=$ that tail's null probability $\leq \alpha$; \mh{power} $= \Pr(\text{reject} \mid \text{null false})$ \vfill
+\item Raise power (subject to size $\leq \alpha$): \vfill
+\begin{itemize} \vfill
+\item[$\star$] design: bigger study; treated/control split \vfill
+\item[$\star$] choice of test statistic (covariate adjustment, ranks) \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+\begin{center}
+\includegraphics[width=\linewidth,height=0.46\textheight,keepaspectratio]{images/size_power_tea.pdf}
+\end{center}
+\begin{itemize} \vfill
+\item Shaded $t = 4$ is the \mh{rejection region} (reject iff all four correct) \vfill
+\end{itemize}
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+\section{Testing no effect}
+\begin{frame}[t]{A second experiment: ACORN voter mobilization}
+\vfill
+\begin{itemize} \vfill
+\item Kansas City, 2003: ballot vote on a sales tax funding \mh{public transit} \vfill
+\item ACORN ran a \mh{door-to-door} campaign to mobilize pro-tax voters \vfill
+\item $28$ precincts: half \mh{canvassed} (treatment), half \mh{control} \vfill
+\item Outcome: precinct voter \mh{turnout} in 2003 \vfill
+\item[] \citet{arceneaux2005} \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{ACORN GOTV: the randomized design}
+\vfill
+\begin{itemize} \vfill
+\item $N = 28$ precincts; \mh{complete random assignment} of $n_1 = 14$ canvassed \vfill
+\item Outcome $y_i$: 2003 turnout rate --- a proportion, not a $0/1$ \vfill
+\item \mh{Same design-based logic} as yesterday; only outcome and statistic change \vfill
+\item[] Support $\Omega$: $\binom{28}{14} = 40{,}116{,}600$ assignments \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{Sharp null of no effect}
+\vfill
+\begin{itemize} \vfill
+\item True individual effect $\tau_i \coloneqq y_i(1) - y_i(0)$ (unknown) \vfill
+\item \mh{No-effect null} $H_0$: $\tau_i = 0$ for \emph{every} unit $i$ \vfill
+\item[] i.e.\ $y_i(1) = y_i(0)$, so $y_i$ \mh{fixed}: same with or without GOTV \vfill
+\end{itemize} \vfill
+\begin{table}
+\centering \small
+  \begin{tabular}{r|rr|rrr}
+  \hline
+ & GOTV? & vote03(\%)& $\bm{y}(\bm{0})$ & $\bm{y}(\bm{1})$ & $\bm{\tau}$\\
+  \hline
+1 & 0 & 38 & 38 & 38 & 0 \\
+$\vdots$& & & & & \\
+14 & 0 & 34 & 34 & 34 & 0 \\
+15 & 1 & 49 & 49 & 49 & 0 \\
+$\vdots$& & & & & \\
+28 & 1 & 29 & 29 & 29 & 0 \\
+   \hline
+\end{tabular}
+\end{table}
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{Another common test statistic: the Difference-in-Means}
+\vfill
+\begin{itemize} \vfill
+\item Test statistic = any \mh{rule} $t(\bm{z}, \bm{y})$; e.g.\ a count, $\bm{z}^{\top}\bm{y}$ \vfill
+\item Another common choice --- the \mh{Difference-in-Means}: \vfill
+\end{itemize} \vfill
+\begin{equation*}
+t(\bm{z}, \bm{y}) = \underbrace{n_1^{-1}\, \bm{z}^{\top}\bm{y}}_{\textcolor{magenta}{\text{treated mean}}} \; - \; \underbrace{n_0^{-1}\, (\bm{1} - \bm{z})^{\top}\bm{y}}_{\textcolor{magenta}{\text{control mean}}}
+\end{equation*} \vfill
+\begin{itemize} \vfill
+\item $t$ is a \mh{function of} $(\bm{z}, \bm{y})$, with $n_1 = \bm{z}^{\top}\bm{1}$, $n_0 = (\bm{1} - \bm{z})^\top \bm{1}$ \vfill
+\item[] complete randomization $\Rightarrow$ $n_1$ same for all $\bm{z} \in \Omega$, so a constant here \vfill
+\item Any rule: \mh{design} and \mh{null} determine the randomization distribution \vfill
+\item Observed: treated turnout exceeds control by $t^{\text{obs}} \approx 3.6$ points \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{The randomization distribution, by sampling}
+\vfill
+\begin{itemize} \vfill
+\item Yesterday we enumerated all $70$ assignments exactly \vfill
+\item Here $\lvert \Omega \rvert = \binom{28}{14} \approx 40$ million --- too many to enumerate \vfill
+\item Instead randomly \mh{sample} assignments; recompute $t$ holding $\bm{y}$ \mh{fixed} \vfill
+\item[] $\bm{y}$ fixed at observed $=$ sharp null of \mh{no effect} \vfill
+\item Upper $p$-value, \emph{under no effect}: \vfill
+\end{itemize} \vfill
+\begin{equation*}
+\Pr\!\left(t(\bm{Z}, \bm{y}) \geq t^{\text{obs}}\right) =
+\overbrace{\sum_{\bm{z} \in \Omega}}^{\text{over all assignments } \bm{z} \in \Omega}
+\underbrace{\mathbbm{1}\!\left\{\underbrace{t(\bm{z}, \bm{y}) \geq t^{\text{obs}}}_{\substack{\text{statistic at } \bm{z} \text{ at least} \\ \text{as large as observed}}}\right\}}_{\substack{=1 \text{ if so,} \\ =0 \text{ otherwise}}}
+\;
+\underbrace{p(\bm{z})}_{\substack{\text{probability of} \\ \text{assignment } \bm{z}}}
+\end{equation*} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{Is the observed difference surprising?}
+\vfill
+\begin{center}
+\includegraphics[height=0.55\textheight,keepaspectratio]{images/null_dist_no_effect_plot.pdf}
+\end{center}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Rejection region} (shaded): largest upper tail with null prob $\leq \alpha = 0.05$ \vfill
+\item Observed $t^{\text{obs}} \approx 3.6$ (dashed) lies \emph{outside} it $\Rightarrow$ \mh{retain} no effect \vfill
+\item[] equivalently, upper $p$-value $\approx 0.08 > 0.05$ \vfill
+\item[] why a \emph{tail}? it maximizes power (appendix) \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[fragile]{Testing the sharp null of no effect in \texttt{R}}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+# ACORN GOTV experiment: test the sharp null of NO EFFECT
+acorn <- read.csv("data/acorn03.csv")        # 28 precincts
+z_obs <- acorn$z                             # 1 = GOTV, 0 = control
+y_obs <- acorn$vote03 * 100                  # 2003 turnout, in percent
+
+# Difference-in-Means test statistic: treated mean - control mean
+diff_in_means <- function(z, y) {
+  return(mean(y[z == 1]) - mean(y[z == 0]))
+}
+t_obs <- diff_in_means(z = z_obs, y = y_obs) # observed effect, ~3.6
+
+# Sharp null of no effect: y is FIXED; only the assignment is random.
+# choose(28, 14) ~ 40 million assignments is too many to list, so we
+# SAMPLE assignments by permuting the observed z (14 ones, 14 zeros)
+set.seed(seed = 12345)
+null_dist <- replicate(
+  n = 10^4,
+  expr = diff_in_means(z = sample(x = z_obs), y = y_obs)
+)
+
+# Upper p-value: chance of a Difference-in-Means >= observed, under no effect
+mean(null_dist >= t_obs)                     # = 0.08: retain no effect
+\end{lstlisting}
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{We can also approximate with a Normal}
+\vfill
+\begin{itemize} \vfill
+\item The sharp-null randomization distribution is \mh{approximately Normal} \vfill
+\item Larger study $\Rightarrow$ the approximation improves \vfill
+\item So a \mh{closed-form} $p$-value --- no enumeration or simulation \vfill
+\end{itemize}
+\begin{center}
+\includegraphics[height=0.44\textheight,keepaspectratio]{images/normal_approx.pdf}
+\end{center}
+\vfill
+\end{frame}
+%---------------------------------------------------------------
+\section{Constant-effect nulls}
+\begin{frame}[t]{Intuition: subtract the effect, recover no effect}
+\vfill
+\begin{itemize} \vfill
+\item Each treated unit shows $y_i = y_i(1)$; subtract its effect: $y_i(1) - \tau_i = y_i(0)$ \vfill
+\item \emph{If} we knew every true effect $\tau_i$, subtract it from each treated outcome \vfill
+\item[] $\Rightarrow$ every unit back at its \mh{control} outcome $y_i(0)$ \vfill
+\item[] $\Rightarrow$ treated and control now differ only by chance --- \mh{no effect}, exactly \vfill
+\item We never know the true $\bm{\tau}$ --- but we can \mh{hypothesize} it and test \vfill
+\item Hypothesis \mh{true} $\to$ adjusted data look null; \mh{false} $\to$ effect remains \vfill
+\end{itemize} \vfill
+\end{frame}
+%---------------------------------------------------------------
+\begin{frame}[t]{From idea to test: a constant (homogeneous) effect}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Constant-effect null} $H_{\tau_0}$: $\tau_i = \tau_0$ for \emph{every} unit $i$ \vfill
+\item[] a null about the values of $\tau_i$ --- one common $\tau_0$ (homogeneous) \vfill
+\item Adjusted outcome $\tilde{y}_i = y_i - \tau_0\, z_i$, with $\tau_0$ fixed under $H_{\tau_0}$ \vfill
+\item[] subtract $\tau_0$ from treated units \citep{rosenbaum2002a,rosenbaum2010,rosenbaum2017a} \vfill
+\item If $H_{\tau_0}$ is true, each $\tilde{y}_i = y_i(0)$ --- \mh{fixed}, no effect \vfill
+\item Test it: refer $t(\bm{z}, \tilde{\bm{y}})$ to the no-effect distribution \vfill
+\item No-effect null $=$ the special case $\tau_0 = 0$ \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{Testing $H_{\tau_0}$: subtract the constant $\tau_0$ from treated}
+\begin{itemize} \vfill
+\item Build $\tilde{\bm{y}} = \bm{y} - \tau_0\,\bm{z}$; hold it \mh{fixed} as outcomes \vfill
+\item Does removing a constant $\tau_0$ make the data look \mh{null}? \vfill
+\end{itemize}
+\begin{center}
+  \begin{tabular}{r|rr|rrrr}
+  \hline
+ & GOTV? & vote03(\%)& $\bm{\tilde{y}}$ & $\bm{y}(\bm{0})$ & $\bm{y}(\bm{1})$ & $\bm{\tau}$\\
+  \hline
+1 & 0 & 38 & 38 & 38 & ? & ?\\
+$\vdots$& & & & & & \\
+14 & 0 & 34 & 34 & 34& ? & ?\\
+15 & 1 & 49 & $49 - \tau_0$ & ?& 49 & ?\\
+$\vdots$& & & & & & \\
+28 & 1 & 29 & $29 - \tau_0$ & ?& 29 & ? \\
+   \hline
+\end{tabular}
+\end{center}
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{Testing $H_{\tau_0}$: the concrete case $\tau_0 = 2.5$}
+\begin{center}
+  \begin{tabular}{r|rr|rrrr}
+  \hline
+ & GOTV? & vote03(\%)& $\bm{\tilde{y}}$ & $\bm{y}(\bm{0})$ & $\bm{y}(\bm{1})$ & $\bm{\tau}$\\
+  \hline
+1 & 0 & 38 & 38 & 38 & ? & ?\\
+$\vdots$& & & & & & \\
+14 & 0 & 34 & 34 & 34& ? & ?\\
+15 & 1 & 49 & 46.5 & ?& 49 & ?\\
+$\vdots$& & & & & & \\
+28 & 1 & 29 & 26.5 & ?& 29 & ? \\
+   \hline
+\end{tabular}
+\end{center}
+\begin{itemize} \vfill
+\item Observed statistic on adjusted outcomes: $t(\bm{z}, \tilde{\bm{y}}) \approx 1.13$ \vfill
+\item How extreme is $1.13$ within $t(\bm{Z}, \tilde{\bm{y}})$? \vfill
+\end{itemize}
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{Which tail? Reading the result}
+\vfill
+\begin{itemize} \vfill
+\item Adjust by $\tau_0$, then see where the observed $t$ falls \vfill
+\item $\tau_0$ \mh{too small}: residual positive effect $\to$ observed $t$ in the \mh{upper} tail \vfill
+\item $\tau_0$ \mh{too large}: over-subtracted $\to$ observed $t$ in the \mh{lower} tail \vfill
+\item $\tau_0$ \mh{about right}: observed $t$ sits in the \mh{middle} \vfill
+\item Two-sided test rejects for \emph{either} tail \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{Testing $H_{\tau_0}$: $\tau_0 = 2.5$}
+\vfill
+\begin{center}
+\includegraphics[height=0.55\textheight,keepaspectratio]{images/null_unif_plot.pdf}
+\end{center}
+\vfill
+\begin{itemize} \vfill
+\item Adjusted statistic $t(\bm{z}, \tilde{\bm{y}}) \approx 1.13$ (dashed) lies \emph{outside} the rejection region \vfill
+\item $\Rightarrow$ \mh{retain} $H_{2.5}$ (upper $p$-value $\approx 0.33$) \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{The two-sided test: split $\alpha$ between the tails}
+\vfill
+\begin{itemize} \vfill
+\item No direction in advance $\Rightarrow$ reject for a large \emph{or} small statistic \vfill
+\item Region $=$ \mh{both tails}, $\alpha/2$ each $\Rightarrow$ total rejection prob $= \alpha$ \vfill
+\end{itemize}
+\begin{center}
+\includegraphics[height=0.40\textheight,keepaspectratio]{images/two_sided_rejection.pdf}
+\end{center}
+\begin{itemize} \vfill
+\item Same idea on $p$-value scale --- double smaller one-sided $p$-value \citep[][p.~33]{rosenbaum2010} \vfill
+\item[] $p_t = \min\{1,\, 2\min(p_u, p_l)\}$; reject iff $p_t \leq \alpha$ \vfill
+\end{itemize}
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\section{Confidence sets}
+\begin{frame}[t]{Inverting the test: a confidence set}
+\vfill
+\begin{itemize} \vfill
+\item For each $\tau_0$ on a \mh{grid}: rebuild $\tilde{\bm{y}} = \bm{y} - \tau_0\bm{z}$; get $p_u(\tau_0), p_l(\tau_0)$ \vfill
+\item $1-\alpha$ confidence set $= \{\tau_0 : p_t(\tau_0) \geq \alpha\}$ --- $H_{\tau_0}$ not rejected \vfill
+\item[] equivalently, $p_u(\tau_0) \geq \alpha/2$ \emph{and} $p_l(\tau_0) \geq \alpha/2$ \vfill
+\item ACORN, $95\%$ set: $\tau_0 \in [-1.5,\ 8.6]$ (approx), contains $0$ \vfill
+\item[] $\Rightarrow$ consistent with retaining no effect \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[fragile]{Confidence set by test inversion in \texttt{R}}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+# 95% confidence set: invert the two-sided test over a grid of effects
+# (z_obs, y_obs, diff_in_means() as in the no-effect test above)
+
+# Sample assignments once (complete randomization: permute observed z)
+set.seed(seed = 12345)
+assignments <- replicate(n = 10^4, expr = sample(x = z_obs))
+
+# Test H: constant effect = tau. Adjust outcomes by tau, then compare the
+# observed Difference-in-Means to its randomization distribution.
+test_tau <- function(tau) {
+  y_adj <- y_obs - tau * z_obs                  # reconstruct outcomes under H
+  obs   <- diff_in_means(z = z_obs, y = y_adj)
+  null  <- apply(X = assignments, MARGIN = 2,
+                 FUN = function(z) diff_in_means(z = z, y = y_adj))
+  c(upper = mean(null >= obs), lower = mean(null <= obs))  # one-sided p-values
+}
+
+# Keep every tau the two-sided test does NOT reject (both tails >= alpha/2)
+taus  <- seq(from = -5, to = 12, by = 0.1)
+pvals <- sapply(X = taus, FUN = test_tau)
+keep  <- taus[pvals["upper", ] >= 0.025 & pvals["lower", ] >= 0.025]
+range(keep)                                     # ~ -1.5 to 8.6: the 95% set
+\end{lstlisting}
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{The bounds are the nulls just outside the tails}
+\vfill
+\begin{center}
+\includegraphics[width=0.96\linewidth]{images/ci_bounds.pdf}
+\end{center}
+\vfill
+\begin{itemize} \vfill
+\item At each bound, observed sits \emph{just} at a tail edge (two-sided, $\alpha/2$) \vfill
+\item Smaller $\tau_0$ $\to$ upper tail; larger $\tau_0$ $\to$ lower tail $\Rightarrow$ reject \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[t]{From test to point estimate}
+\vfill
+\begin{itemize} \vfill
+\item Same machinery $\to$ a \mh{point estimate}, the \mh{Hodges--Lehmann} estimate \vfill
+\item[] \citep{hodgeslehmann1963} \vfill
+\item $\tau_0$ making the observed $t$ equal its null mean \vfill
+\end{itemize}
+\begin{center}
+\includegraphics[height=0.42\textheight,keepaspectratio]{images/hl_estimate.pdf}
+\end{center}
+\begin{itemize} \vfill
+\item Observed sits at the null \mh{center}; $\hat{\tau}_{HL} \approx 3.6$ (the observed difference) \vfill
+\end{itemize}
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\section{Other models of effects}
+\begin{frame}[t]{Any sharp model of effects can be tested}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Sharp model}: each unit's potential outcome under \emph{every} $\bm{z}$ \vfill
+\item[] $\Rightarrow$ reconstruct outcomes under it, hold fixed, refer $t$ to its null distribution \vfill
+\item Beyond the \mh{constant} effect $y_i(1) = y_i(0) + \tau$: \vfill
+\begin{itemize} \vfill
+\item \mh{multiplicative}: $y_i(1) = \beta\, y_i(0)$ \citep{rosenbaum2002a} \vfill
+\item \mh{interference}: $y_i(\bm{z})$ depends on \emph{others'} treatments \citep{bowersetal2013} \vfill
+\end{itemize} \vfill
+\item Same recipe throughout --- only the \mh{model} changes \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\section{Recap}
+\begin{frame}[t]{Recap: one design, a full inferential method}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Sharp null} fixes all outcomes $\Rightarrow$ known randomization distribution \vfill
+\item \mh{Error rates}: size $\leq \alpha$ for Type I, power large for Type II --- by design \vfill
+\item \mh{Adjusted outcomes}: test any constant effect $\tau_0$, not just $0$ \vfill
+\item \mh{Invert} the test $\to$ confidence set and point estimate \vfill
+\item All \mh{design}-based \vfill
+\item Randomization's value: a \mh{reasoned basis for inference} \vfill
+\end{itemize} \vfill
+\end{frame}
+%----------------------------------------------------------------
+\section{Appendix}
+\begin{frame}[t]{Appendix: why a \emph{tail} rejection region?}
+\vfill
+\begin{itemize} \vfill
+\item Any region with null probability $\alpha$ controls the size \vfill
+\item Choose it to \mh{maximize power}: where a true effect sends the statistic \vfill
+\item An effect \mh{shifts} the distribution; the \mh{tail} captures the most alternative mass \vfill
+\end{itemize} \vfill
+\begin{center}
+\includegraphics[height=0.46\textheight,keepaspectratio]{images/rejection_region_power.pdf}
+\end{center}
+\vfill
+\end{frame}
+%----------------------------------------------------------------
+\begin{frame}[allowframebreaks]
+\frametitle{References}
+\scriptsize
+\bibliographystyle{chicago}
+\bibliography{Master_Bibliography}   % name your BibTeX data base
+\end{frame}
+%---------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+\end{document}

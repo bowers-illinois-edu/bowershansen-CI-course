@@ -1,15 +1,25 @@
 ###############################################################################
-## Fisher's "Lady Tasting Tea": randomization calculation and slide figures
+## Fisher's "Lady Tasting Tea": randomization calculation and figures
 ##
-## Run this file from its own folder; the figures are written to ./images and
-## are then included on the slides:
-##   Rscript 2026-06-15.R
+## What this script does:
+##   - computes the randomization distribution of Fisher's tea-tasting
+##     experiment under the null hypothesis of no discrimination, and
+##   - saves two figures into an "images/" folder.
 ##
-## Style: snake_case names; arguments named when the name teaches or guards a
-## transposition; left unnamed for an obvious single input, an operator, or a
-## "..." item (see R_STYLE.md).
+## How to run it:
+##   Put this file in its own folder, create an "images/" subfolder next to it,
+##   then from that folder run, open file in RStudio and run it top to bottom.
+##
+## A note on style: argument names are written out (e.g. combn(x = 1:8, m = 4))
+## whenever the name either teaches what an argument does or guards against
+## silently swapping two arguments ("transposing" them, e.g. mixing up x and m).
+## Names are dropped for an obvious single input, an operator, or a "..." item.
 ###############################################################################
 
+## This script uses the ggplot2 package for its figures. If you do not already
+## have it installed, run the next line once (delete the leading "#"), then put
+## the "#" back so it does not re-install every time you run the script:
+# install.packages("ggplot2")
 library(ggplot2)
 
 ## ===========================================================================
