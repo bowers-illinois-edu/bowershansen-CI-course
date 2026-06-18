@@ -1,0 +1,677 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%------------------------------------------------------------------------------------------------
+% PACKAGES AND THEMES
+%------------------------------------------------------------------------------------------------
+
+\documentclass[table, xcolor = {dvipsnames}, 9pt]{beamer}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{external}
+\mode<presentation> {
+
+% The Beamer class comes with a number of default slide themes
+% which change the colors and layouts of slides. Below this is a list
+% of all the themes, uncomment each in turn to see what they look like.
+
+\usetheme{default}
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Dresden}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+%\usetheme{Madrid}
+\usetheme{metropolis}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+% As well as themes, the Beamer class has a number of color themes
+% for any slide theme. Uncomment each of these in turn to see how it
+% changes the colors of your current slide theme.
+
+%\usecolortheme{albatross}
+%\usecolortheme{beaver}
+%\usecolortheme{beetle}
+%\usecolortheme{crane}
+%\usecolortheme{dolphin}
+%\usecolortheme{dove}
+%\usecolortheme{fly}
+%\usecolortheme{lily}
+%\usecolortheme{orchid}
+%\usecolortheme{rose}
+\usecolortheme{seagull}
+%\usecolortheme{seahorse}
+%\usecolortheme{whale}
+%\usecolortheme{wolverine}
+\usefonttheme{professionalfonts}
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{diagbox}
+\usepackage{makecell}
+\usepackage{xparse}
+\usepackage{subfig}
+\usepackage{amsmath}
+\usepackage{amsfonts,amsthm,amsmath,amssymb}
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{empheq}
+\usepackage{pgfplots}
+\usepackage{animate}
+\usepgfplotslibrary{colorbrewer}
+\pgfplotsset{compat=1.17}
+
+\newcommand\mybox[2][]{\tikz[overlay]\node[fill=lightgray,inner sep=2pt, anchor=text, rectangle, rounded corners=1mm,#1] {#2};\phantom{#2}}
+\hypersetup{unicode=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1}}
+\usepackage{xcolor}
+% R code listing style (matches the course's R-code slides)
+\usepackage{listings}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{Rstyle}{
+    language=R,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\newcommand\myheading[1]{%
+  \par\bigskip
+  {\Large\bfseries#1}\par\smallskip}
+\newcommand\given[1][]{\:#1\vert\:}
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}{Proposition\thisthmnumber}
+\newtheorem{lem}{Lemma\thisthmnumber}
+\newtheorem{cor}{Corollary}
+\newtheorem{defin}{Definition}
+\newtheorem{algo}{Algorithm}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand{\bh}[1]{{\color{blue}{#1}}}
+\newcommand{\mh}[1]{{\color{magenta}{#1}}}
+\newcommand{\thisthmnumber}{}
+\newcommand{\tikzmark}[1]{\tikz[baseline,remember picture] \coordinate (#1) {};}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\DeclareMathOperator{\E}{\rm{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\N}{\mathbb{N}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\Supp}{\rm{Supp}}
+\DeclareMathOperator{\e}{\rm{e}}
+\DeclareMathOperator{\F}{\mathcal{F}}
+\DeclareMathOperator{\Z}{\mathcal{Z}}
+\DeclareMathOperator{\logit}{\rm{logit}}
+\DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+%\DeclareMathOperator{\Pr}{\rm{Pr}}
+%------------------------------------------------------------------------
+% TITLE PAGE
+%-----------------------------------------------------------------------
+\pagestyle{empty}
+\title[]{Uncertainty Estimation, Testing, and Covariance Adjustment} % The short title appears at the bottom of every slide, the full title is only on the title page
+
+\author{Thomas Leavitt} % Your name
+\institute[] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+% Your institution for the title page
+\medskip
+\textit{} % Your email address
+}
+\date{June 18, 2026} % Date, can be changed to a custom date
+
+\begin{document}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+%\begin{frame}
+%\frametitle{Overview} % Table of contents slide, comment this block out to remove it
+%\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+%\end{frame}
+
+%------------------------------------------------------------------------
+% PRESENTATION SLIDES
+%------------------------------------------------------------------------
+\section{Where we landed}
+
+\begin{frame}[t]{Yesterday: the average effect, estimated without bias}
+\vfill
+\begin{itemize} \vfill
+\item \textbf{Estimand}: the ATE $\bar{\tau} = \bar{y}(1) - \bar{y}(0)$ --- a \mh{composite}, average claim \vfill
+\item \textbf{Estimator}: Difference-in-Means $\hat{\tau}\left(\bm{Z}, \bm{Y}\right)$, treated mean $-$ control mean \vfill
+\item Under CRA, \emph{whatever} the potential outcomes, $\E\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \bar{\tau}$ \vfill
+\item ACORN study: the Difference-in-Means produced $\hat{\tau}\left(\bm{Z}, \bm{Y}\right) \approx 0.036$ \vfill
+\item True variance (Neyman):
+\begin{equation*}
+\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{S^2_{\bm{y}(\bm{1})}}{n_1} + \frac{S^2_{\bm{y}(\bm{0})}}{n_0} - \frac{S^2_{\bm{\tau}}}{N}
+\end{equation*} \vfill
+\item $S^2_{\bm{\tau}}$: \mh{no data} to estimate it --- no unit reveals both POs \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Today: from true variance to honest inference}
+\vfill
+\begin{itemize} \vfill
+\item One experiment, \emph{one} estimate --- how far might $\hat{\tau}\left(\bm{Z}, \bm{Y}\right)$ sit from $\bar{\tau}$? \vfill
+\item \textbf{Problem}: the true variance needs $S^2_{\bm{\tau}}$ --- and no data can estimate it \vfill
+\item Today: \mh{ACORN}, plus \mh{village heads} to illustrate \citep[Ch.~2]{gerbergreen2012}: \vfill
+\begin{itemize} \vfill
+\item Conservative \emph{estimator of variance} $\to$ standard error estimator \vfill
+\item Normal approximation $\to$ test statistic, $p$-values \vfill
+\item Confidence intervals as the nulls we do not reject \vfill
+\item Covariance adjustment $\to$ precision from baseline covariates \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\section{Conservative variance estimation}
+
+\begin{frame}[t]{The variance-estimation problem}
+\vfill
+\begin{itemize} \vfill
+\item True variance has three pieces:
+\begin{equation*}
+\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right] = \frac{S^2_{\bm{y}(\bm{1})}}{n_1} + \frac{S^2_{\bm{y}(\bm{0})}}{n_0} - \frac{S^2_{\bm{\tau}}}{N}
+\end{equation*} \vfill
+\item \mh{None} directly observable --- all are features of fixed POs \vfill
+\item But treated units reveal a \mh{sample} of $y_i(1)$; control units of $y_i(0)$ \vfill
+\item[] $\Rightarrow$ \emph{estimate} $S^2_{\bm{y}(\bm{1})}$ (treated arm) and $S^2_{\bm{y}(\bm{0})}$ (control arm) \vfill
+\item No unit reveals \emph{both} POs $\Rightarrow$ no sample of effects $\tau_i$ \vfill
+\item[] $\Rightarrow$ no data to estimate $S^2_{\bm{\tau}}$ \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Neyman's conservative estimator of the variance}
+\vfill
+\begin{itemize} \vfill
+\item Split off the inestimable term: $\Var\left[\hat{\tau}\right] = \underbrace{\dfrac{S^2_{\bm{y}(\bm{1})}}{n_1} + \dfrac{S^2_{\bm{y}(\bm{0})}}{n_0}}_{U} - \dfrac{S^2_{\bm{\tau}}}{N}$ \vfill
+\item $S^2_{\bm{\tau}}/N \geq 0$ $\Rightarrow$ $U$ is an \mh{upper bound}: $U \geq \Var\left[\hat{\tau}\right]$ \vfill
+\item We can \emph{unbiasedly} estimate $S^2_{\bm{y}(\bm{1})}, S^2_{\bm{y}(\bm{0})}$, so
+\begin{equation*}
+\widehat{\Var}\left[\hat{\tau}\right] = \frac{\hat{S}^2_{\bm{y}(\bm{1})}}{n_1} + \frac{\hat{S}^2_{\bm{y}(\bm{0})}}{n_0}, \qquad \E\left[\widehat{\Var}\right] = U \geq \Var\left[\hat{\tau}\right]
+\end{equation*} \vfill
+\item Why \mh{conservative}? overstating $\Var$ $\Rightarrow$ wider intervals, harder to reject \vfill
+\item[] $\Rightarrow$ a true null is rejected \emph{less} than $\alpha$ of the time --- not too \mh{liberal} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Exact when effects are constant, conservative otherwise}
+\vfill
+\begin{itemize} \vfill
+\item The gap $\E\left[\widehat{\Var}\right] - \Var\left[\hat{\tau}\right]$ is exactly the dropped term $S^2_{\bm{\tau}}/N$ \vfill
+\item \mh{Constant} (homogeneous) effect $\tau_i = \bar{\tau}$ for all $i$ $\Rightarrow$ $S^2_{\bm{\tau}} = 0$ $\Rightarrow$ \emph{exact} \vfill
+\item \mh{Varying} effects $\Rightarrow$ $S^2_{\bm{\tau}} > 0$ $\Rightarrow$ overstates (conservative) \vfill
+\item Either way it \emph{never understates} uncertainty --- an honest default \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Village heads: a worked example (both POs known)}
+\vfill
+\begin{itemize}
+\item $N = 7$, $n_1 = 2$; budget share (\%) \citep[Ch.~2]{gerbergreen2012} \vfill 
+\item[] \vfill 
+\begin{center}
+\small
+\begin{tabular}{l|rrr} \hline
+Village &$\bm{y}(\bm{0})$& $\bm{y}(\bm{1})$& $\bm{\tau}$  \\ \hline
+1& 10 & 15  & 5  \\
+2& 15 & 15  & 0   \\
+3& 20 & 30  & 10   \\
+4& 20 & 15  & -5   \\
+5& 10 & 20  & 10   \\
+6& 15 & 15  & 0   \\
+7& 15 & 30  & 15   \\ \hline
+Average & 15 & 20 & 5  \\ \hline
+\end{tabular}
+\end{center}
+\item[] \vfill
+\item Both columns known $\Rightarrow$ we can compute the \mh{true} variance, $\bar{\tau} = 5$ \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Village heads: the conservative estimator overstates}
+\begin{itemize}
+\item Over the $21$ equally likely assignments: \vfill 
+\begin{itemize} \vfill 
+\item True $\Var \approx 21.2$ (solid) \vfill 
+\item $\E[\widehat{\Var}] \approx 28.3$ (dashed)
+\end{itemize}
+\item[]
+\begin{figure}[H]
+\includegraphics[width=0.6\linewidth]{figures/villageheads_consv_var.pdf}
+\end{figure}
+\item \footnotesize Gap $= \E[\widehat{\Var}] - \Var = 28.3 - 21.2 = 7.1 = S^2_{\bm{\tau}}/N$ --- \emph{exactly} the dropped term \normalsize
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[fragile]{ACORN in \texttt{R}: the conservative standard error}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+# Conservative variance: estimate the two arm pieces; no data for -S2_tau/N, so drop it
+conservative_var <- function(z, y) {
+  var(y[z == 1]) / sum(z == 1) + var(y[z == 0]) / sum(z == 0)
+}
+var_hat <- conservative_var(z = z_obs, y = y_obs)   # ~ 0.000595
+se_hat  <- sqrt(var_hat)                            # ~ 0.0244
+\end{lstlisting}
+\begin{itemize} \vfill
+\item True se $= \sqrt{\Var\left[\hat{\tau}\right]}$ --- unknown; plug in $\widehat{\text{se}} = \sqrt{\widehat{\Var}} \approx 0.024$ \vfill
+\item $\widehat{\Var}$ is \mh{conservative}: $\E[\widehat{\Var}] \geq \Var$ \vfill
+\item But $\widehat{\text{se}} = \sqrt{\widehat{\Var}}$ is \emph{not} --- $\E[\widehat{\text{se}}] \leq \sqrt{\E[\widehat{\Var}]}$ (Jensen) \vfill
+\item[] Still $\widehat{\text{se}} \overset{p}{\to} \sqrt{U} \geq$ true se: conservative in the \mh{limit} \vfill
+\item Next: use $\widehat{\text{se}}$ to test hypotheses and build intervals for $\bar{\tau}$ \vfill
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\section{Normal approximation}
+
+\begin{frame}[t]{Why we now need an approximation}
+\vfill
+\begin{itemize} \vfill
+\item We want to \mh{test} hypotheses about the average effect $\bar{\tau}$ \vfill
+\item Fisher's \mh{sharp} null fixed \emph{every} PO $\Rightarrow$ exact randomization distribution \vfill
+\item A null on the \mh{mean} $\bar{\tau} = \tau_0$ fixes only the average \vfill
+\item[] Each missing PO still unknown $\Rightarrow$ no exact distribution of $\hat{\tau}$ to compute \vfill
+\item \mh{Finite population CLT} \citep{liding2017} \vfill 
+\begin{itemize} \vfill 
+\item A Normal approximation needing only mean and variance \vfill
+\item Describes $\hat{\tau}$'s distribution \emph{without} the missing POs \vfill
+\end{itemize} \vfill 
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{What the Normal approximates}
+\begin{itemize}
+\item Standardize the Difference-in-Means by its \mh{true} mean and variance:
+\begin{equation*}
+\frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \bar{\tau}}{\sqrt{\Var\left[\hat{\tau}\left(\bm{Z}, \bm{Y}\right)\right]}} \overset{\text{approx.}}{\sim} \mathcal{N}\left(0, 1\right)
+\end{equation*}
+\item Standardized $\Rightarrow$ mean $0$, sd $1$ at every $N$; only the \mh{shape} converges \vfill
+\item[]
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{figures/villageheads_normal_approx.pdf}
+\end{figure}
+\item[] \footnotesize Village heads, stacked: the standardized estimator approaches $\mathcal{N}(0,1)$ as $N$ grows \normalsize
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\section{Hypothesis testing}
+
+\begin{frame}[t]{A test statistic for the average effect}
+\vfill
+\begin{itemize} \vfill
+\item Under $H_0: \bar{\tau} = \tau_0$, the estimator is centered there: $\E[\hat{\tau}] = \bar{\tau} = \tau_0$ \vfill
+\item So measure the gap $\hat{\tau} - \tau_0$ in \mh{estimated} standard-error units:
+\begin{equation*}
+T = \frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0}{\widehat{\text{se}}}, \qquad \widehat{\text{se}} = \sqrt{\widehat{\Var}\left[\hat{\tau}\right]}
+\end{equation*} \vfill
+\item Under $H_0$, the \mh{reference} is the standard Normal (finite-population CLT) \vfill
+\item $\lvert T \rvert$ large $=$ $\hat{\tau}$ many estimated se's from $\tau_0$ \vfill
+\item[] $\widehat{\text{se}}$ only \emph{conservative in the limit} ($\overset{p}{\to} \sqrt{U} \geq$ true se) \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Rejection region: alternative of a smaller ATE}
+\begin{itemize}
+\item $T$ in the lower tail $\Rightarrow$ reject $H_0$ in favor of a smaller ATE \vfill
+\item[]
+\begin{figure}[H]
+\includegraphics[width=0.74\linewidth]{figures/stand_norm_plot_lower_tail.pdf}
+\end{figure}
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Rejection region: alternative of a larger ATE}
+\begin{itemize}
+\item $T$ in the upper tail $\Rightarrow$ reject $H_0$ in favor of a larger ATE \vfill
+\item[]
+\begin{figure}[H]
+\includegraphics[width=0.74\linewidth]{figures/stand_norm_plot_upper_tail.pdf}
+\end{figure}
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Rejection region: two-sided alternative}
+\begin{itemize}
+\item $T$ in \emph{either} tail $\Rightarrow$ reject $H_0$; split $\alpha$ across the two tails \vfill
+\item[]
+\begin{figure}[H]
+\includegraphics[width=0.74\linewidth]{figures/stand_norm_plot_two_side.pdf}
+\end{figure}
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{$p$-values: a tail area read off the Normal CDF}
+\begin{itemize}
+\item \mh{$p$-value}: chance of a $T$ at least as extreme as observed, if $H_0$ true \vfill
+\item $\Phi = $ standard Normal CDF; reject when $p \leq \alpha$: \vfill
+\item[] \hfill $p_{\text{upper}} = 1 - \Phi(T), \qquad p_{\text{lower}} = \Phi(T), \qquad p_{\text{two}} = 2\left(1 - \Phi\left(\lvert T \rvert\right)\right)$ \hfill
+\item[] \vfill 
+\begin{figure}[H]
+\includegraphics[width=1\linewidth]{figures/stand_norm_cdf.pdf}
+\end{figure}
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Why the test is valid}
+\begin{itemize}
+\item \mh{Valid}: $\Pr\left(\text{reject } H_0 \mid H_0 \text{ true}\right) \leq \alpha$ \vfill
+\item Write $T$ as two factors; their limits combine (Slutsky's Theorem):
+\begin{equation*}
+T = \underbrace{\frac{\hat{\tau} - \tau_0}{\sqrt{\Var\left[\hat{\tau}\right]}}}_{\to\, \mathcal{N}(0,1)\ \text{under}\ H_0} \times \underbrace{\frac{\sqrt{\Var\left[\hat{\tau}\right]}}{\widehat{\text{se}}}}_{\overset{p}{\to}\, c\, \leq\, 1} \ \overset{d}{\to}\ \mathcal{N}(0, c^2)
+\end{equation*}
+\item[] \footnotesize $\widehat{\text{se}} \overset{p}{\to} \sqrt{U} \geq \sqrt{\Var[\hat{\tau}]}$, so $c \leq 1$: the limiting law is \emph{narrower} than $\mathcal{N}(0,1)$ \normalsize
+\vspace{-0.2em}
+\begin{figure}[H]
+\includegraphics[width=0.8\linewidth]{figures/consv_stand_norm_plot.pdf}
+\end{figure}
+\vspace{-0.3em}
+\item[] \footnotesize Rejection region holds \emph{less} mass under the narrower law $\Rightarrow$ reject a true null with prob.\ $\leq \alpha$ \normalsize
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[fragile]{ACORN in \texttt{R}: testing no average effect}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+# test statistic for H0: ATE = 0  (null mean 0, conservative se)
+T_obs <- (tau_hat - 0) / se_hat                  # ~ 1.49
+
+# Normal-approximation p-values (Phi = pnorm)
+pnorm(q = T_obs, lower.tail = FALSE)             # upper p    ~ 0.068
+2 * pnorm(q = abs(T_obs), lower.tail = FALSE)    # two-sided  ~ 0.137
+\end{lstlisting}
+\begin{itemize} \vfill
+\item At $\alpha = 0.05$: \mh{do not reject} $\bar{\tau} = 0$ (two-sided $p \approx 0.137$) \vfill
+\item Estimate is positive, but \emph{not} distinguishable from $0$ at this size \vfill
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\section{Confidence intervals by inverting tests}
+
+\begin{frame}{Confidence interval by inverting the test}
+\begin{itemize}
+\item \mh{Confidence interval}: the null ATEs $\tau_0$ we do \emph{not} reject \vfill
+\item Test each $\tau_0$; keep it when $\lvert T(\tau_0) \rvert \leq 1.96$ \vfill
+\item[]
+\begin{figure}[H]
+\includegraphics[width=0.62\linewidth]{figures/stand_norm_plot_two_side_CI.pdf}
+\end{figure}
+\item[] \footnotesize Endpoints are the $\tau_0$ giving $T = \pm 1.96$: ACORN $95\%$ CI $= [-0.011,\ 0.084]$ \normalsize
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{From inversion to the familiar formula}
+\vfill
+\begin{itemize} \vfill
+\item $z_{1-\alpha/2}$: the standard-Normal $1 - \alpha/2$ quantile (e.g.\ $1.96$ when $\alpha = 0.05$) \vfill
+\item Retain $\tau_0$ with $\left\lvert \dfrac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0}{\widehat{\text{se}}} \right\rvert \leq z_{1 - \alpha/2}$ \vfill
+\item Absolute value $\leq z_{1-\alpha/2}$ means \emph{both} tails at once:
+\begin{equation*}
+-\,z_{1 - \alpha/2} \;\leq\; \frac{\hat{\tau} - \tau_0}{\widehat{\text{se}}} \;\leq\; z_{1 - \alpha/2}
+\end{equation*} \vfill
+\item Multiply by $\widehat{\text{se}}$ and solve for $\tau_0$:
+\begin{equation*}
+\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - z_{1 - \alpha/2}\, \widehat{\text{se}} \;\leq\; \tau_0 \;\leq\; \hat{\tau}\left(\bm{Z}, \bm{Y}\right) + z_{1 - \alpha/2}\, \widehat{\text{se}}
+\end{equation*} \vfill
+\item So $\hat{\tau} \pm z_{1 - \alpha/2}\, \widehat{\text{se}}$ is a \mh{consequence} of inversion, not a definition \vfill
+\item ACORN $95\%$: $0.036 \pm 1.96(0.024) = [-0.011,\ 0.084]$, includes $0$ \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\section{Covariance adjustment}
+
+\begin{frame}[t]{Covariance adjustment: precision, not bias}
+\vfill
+\begin{itemize} \vfill
+\item Difference-in-Means is \emph{already} unbiased under CRA --- nothing to fix there \vfill
+\item But it can be \mh{noisy} when covariates predict the outcome \vfill
+\item \mh{Covariance adjustment}: use baseline covariates to cut the variance \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Baseline covariates carry outcome information}
+\vfill
+\begin{itemize} \vfill
+\item \textbf{Baseline covariate}: pre-treatment, so \mh{fixed} regardless of assignment \vfill
+\item ACORN: $2002$ general-election turnout $x_i$ predicts $2003$ turnout $y_i$ \vfill
+\item Information about $y_i$ the raw Difference-in-Means ignores \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Two design-based ways to use the covariate}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Block}: randomize \emph{within} blocks of similar precincts \vfill
+\item \mh{Rescale}: subtract the covariate before testing (a gain score) \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{If ACORN had been a blocked experiment}
+\vfill
+\begin{itemize} \vfill
+\item Pair the $28$ precincts on $2002$ turnout, $v_{\text{g}2002}$ --- $14$ blocks of two \vfill
+\item Randomize \emph{within} each pair: exactly one precinct canvassed \vfill
+\item CRA: $\binom{28}{14} \approx 40{,}116{,}600$ assignments \vfill
+\item Blocked: $2^{14} = 16{,}384$ assignments --- a tiny, $v_{\text{g}2002}$-balanced subset \vfill
+\item \emph{Ideally}, it drops imbalanced assignments --- estimates far from $\bar{\tau}$ \vfill
+\item[] So the retained estimates sit nearer the truth $\Rightarrow$ tighter distribution \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[fragile]{Forming the pairs in \texttt{R} (\texttt{blockTools})}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+library(blockTools)
+acorn$unit <- seq_len(nrow(acorn))
+
+pairs_out  <- block(
+  data       = acorn,        # the data frame of units
+  id.vars    = "unit",       # column identifying each unit
+  block.vars = "v_g2002",    # covariate(s) to match on
+  n.tr       = 2,            # units per block (2 -> matched pairs)
+  algorithm  = "optimal")    # minimize total within-pair distance
+pair_table <- pairs_out$blocks[[1]]   # 14 rows: "Unit 1", "Unit 2"
+
+# Block randomization: one treated per pair
+z_blocked <- integer(nrow(acorn))
+for (b in seq_len(nrow(pair_table))) {
+  pair <- as.integer(pair_table[b, c("Unit 1", "Unit 2")])
+  z_blocked[sample(x = pair, size = 1)] <- 1
+}
+\end{lstlisting}
+\centering \footnotesize \emph{Illustration only}: ACORN was completely randomized; we re-randomize \emph{as if} blocked to show the variance shrink \normalsize
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Blocking tightens the null distribution}
+\begin{figure}[H]
+\includegraphics[width=0.92\linewidth]{figures/acorn_blocked_vs_complete.pdf}
+\end{figure}
+\vspace{-0.3em}
+\centering \footnotesize Null SD $0.025 \to 0.021$: the blocked distribution is tighter, hence smaller se \normalsize
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{A fixed covariate shift keeps the estimator unbiased}
+\small
+\vfill
+\begin{itemize} \vfill
+\item Gain score $e_i = y_i - x_i$, with POs $e_i(1) = y_i(1) - x_i$, $e_i(0) = y_i(0) - x_i$ \vfill
+\item Apply the Difference-in-Means to $\bm{e}$; by yesterday's unbiasedness argument:
+\begin{align*}
+\E\left[\hat{\tau}\left(\bm{Z}, \bm{e}\right)\right]
+ &= \bar{e}(1) - \bar{e}(0)
+ && \text{\footnotesize (unbiased for $\bm{e}$'s ATE)} \\
+ &= \frac{1}{N}\sum_i \left(y_i(1) - x_i\right) - \frac{1}{N}\sum_i \left(y_i(0) - x_i\right)
+ && \text{\footnotesize (def.\ of $e_i$)} \\
+ &= \frac{1}{N}\sum_i y_i(1) - \frac{1}{N}\sum_i y_i(0) = \mh{\bar{\tau}}
+ && \text{\footnotesize ($x_i$ cancel)}
+\end{align*} \vfill
+\item Same for any \emph{fixed} $\beta$ in $y_i - \beta x_i$: a pre-treatment $\beta x_i$ cancels in each $\tau_i$ \vfill
+\item Needs a \mh{fixed} shift --- estimating $\beta$ from the data breaks \mh{unbiasedness} (next) \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[fragile]{ACORN in \texttt{R}: covariance adjustment}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+x_cov <- acorn$v_g2002              # 2002 general turnout (pre-treatment)
+gain_score <- y_obs - x_cov         # rescaled outcome
+
+tau_hat_adj <- diff_in_means(z = z_obs, y = gain_score)            # ~ 0.057
+se_hat_adj  <- sqrt(conservative_var(z = z_obs, y = gain_score))   # ~ 0.020
+\end{lstlisting}
+\begin{itemize} \vfill
+\item Standard error $0.024 \to 0.020$: variance about $30\%$ smaller \vfill
+\item $95\%$ CI $\to [0.018,\ 0.097]$ --- now \mh{excludes} $0$ (two-sided $p \approx 0.005$) \vfill
+\item Estimate moved ($0.036 \to 0.057$): $\hat{\tau}\left(\bm{Z},\bm{e}\right) = \hat{\tau}\left(\bm{Z},\bm{y}\right) - \hat{\tau}\left(\bm{Z},\bm{x}\right)$ \vfill
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Rescaling tightens the null distribution}
+\begin{figure}[H]
+\includegraphics[width=0.92\linewidth]{figures/acorn_original_vs_rescaled.pdf}
+\end{figure}
+\vspace{-0.3em}
+\centering \footnotesize The gain score's distribution is tighter $\Rightarrow$ smaller se, narrower CI \normalsize
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{The estimate moves, but vanishingly as $N$ grows}
+\begin{itemize}
+\item The Difference-in-Means is \mh{linear} in the outcome, so $\hat{\tau}\left(\bm{Z}, \bm{y} - \bm{x}\right) = \hat{\tau}\left(\bm{Z}, \bm{y}\right) - \hat{\tau}\left(\bm{Z}, \bm{x}\right)$:
+\begin{equation*}
+\underbrace{\hat{\tau}\left(\bm{Z}, \bm{e}\right)}_{\text{adjusted}} - \underbrace{\hat{\tau}\left(\bm{Z}, \bm{y}\right)}_{\text{unadjusted}} = -\,\hat{\tau}\left(\bm{Z}, \bm{x}\right), \quad \E\!\left[\hat{\tau}\left(\bm{Z}, \bm{x}\right)\right] = 0,\ \Var \to 0
+\end{equation*}
+\item[]
+\begin{figure}[H]
+\includegraphics[width=0.62\linewidth]{figures/acorn_adjust_difference.pdf}
+\end{figure}
+\item[] \footnotesize Both unbiased for $\bar{\tau}$; the gap $-\hat{\tau}(\bm{Z},\bm{x})$ concentrates at $0$ --- they \mh{agree} asymptotically \normalsize
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{What adjustment does --- and does not --- do}
+\vfill
+\begin{itemize} \vfill
+\item \textbf{Does}: cut variance $\Rightarrow$ more \mh{powerful} tests and \mh{tighter} confidence intervals \vfill
+\item \textbf{Does not}: remove bias --- randomization gives unbiasedness regardless \vfill
+\item \textbf{Does not}: assume correct outcome model --- inference stays \mh{design-based} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Beyond the gain score: regression adjustment}
+\vfill
+\begin{itemize} \vfill
+\item Gain score \emph{fixes} $\beta = 1$ in $y_i - \beta x_i$ --- but why exactly $1$? \vfill
+\item Instead residualize with a \mh{least-squares} slope $\hat{\beta}$ \vfill
+\item $\hat{\beta}_1, \hat{\beta}_0$: slopes from regressing $y$ on $x$ \emph{within} treated, control \citep{lin2013} \vfill
+\item Residualize each unit with its own arm's slope, on centered $x$: \vfill
+\begin{equation*}
+\tilde{e}_i = y_i - \hat{\beta}_{\mh{Z_i}}\left(x_i - \bar{x}\right), \quad \hat{\beta}_{Z_i} = \begin{cases} \hat{\beta}_1 & Z_i = 1 \\ \hat{\beta}_0 & Z_i = 0 \end{cases}, \quad \hat{\tau}\left(\bm{Z}, \tilde{\bm{e}}\right)
+\end{equation*} \vfill
+\item Equivalently $\hat{\tau}\left(\bm{Z}, \tilde{\bm{e}}\right) = $ coeff.\ on $Z_i$ in $Y_i \sim Z_i + (\bm{x}_i - \bar{\bm{x}}) + Z_i(\bm{x}_i - \bar{\bm{x}})$  \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[fragile]{Lin's estimator in \texttt{R}, and what it buys}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+X <- scale(acorn[, c("v_g2002","v_p2002","v_m2002")], scale = FALSE)  # center covs
+# (a) residualize with arm-specific OLS slopes, then Difference-in-Means
+b1 <- coef(lm(vote03 ~ X, data = acorn, subset = z == 1))[-1]  # treated slopes
+b0 <- coef(lm(vote03 ~ X, data = acorn, subset = z == 0))[-1]  # control slopes
+e  <- acorn$vote03 - ifelse(acorn$z == 1, X %*% b1, X %*% b0)
+mean(e[acorn$z == 1]) - mean(e[acorn$z == 0])          # 0.0566
+# (b) coefficient on z in the interacted regression -- identical
+coef(lm(vote03 ~ z * X, data = acorn))["z"]            # 0.0566
+\end{lstlisting}
+\begin{itemize} \vfill
+\item \mh{Precision}: asymptotically no less precise than unadjusted \citep{lin2013} \vfill
+\item \mh{Inference}: HC2 robust se $\overset{p}{\to}$ a limit $\geq$ true se $\Rightarrow$ (conservatively) valid \vfill
+\item \mh{Small-sample bias}: estimating $\hat{\beta}$ adds a small finite-sample bias \citep{lin2013} \vfill
+\begin{itemize} \vfill
+\item[$-$] new research derives exact bias corrections \citep{changetal2024} \vfill
+\end{itemize} \vfill
+\item \mh{Nonlinear / generalized models}: \citet{guobasse2022}, \citet{cohenfogarty2022b} \vfill
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\section{Recap}
+
+\begin{frame}[t]{Recap: from design to inference}
+\vfill
+\begin{itemize} \vfill
+\item Yesterday: \mh{unbiased} $\bar{\tau}$, and its true variance (Neyman) \vfill
+\item Today: a \mh{conservative} variance estimator $\Rightarrow$ honest standard error \vfill
+\item \mh{Normal approximation} $\Rightarrow$ test statistic and $p$-values \vfill
+\item \mh{Confidence interval} $=$ nulls we do not reject (inversion) \vfill
+\item \mh{Covariance adjustment} $\Rightarrow$ precision, by blocking or rescaling \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+
+\begin{frame}[allowframebreaks]
+\frametitle{References}
+\scriptsize
+\bibliographystyle{chicago}
+\bibliography{Master_Bibliography}
+\end{frame}
+%------------------------------------------------------------------------
+\end{document}
