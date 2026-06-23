@@ -1,0 +1,218 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath, amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}   % for \resizebox
+\usepackage{xcolor}
+
+% --- notation (hats over the letters only) ---
+\newcommand{\ITTY}{\mathrm{ITT}_Y}
+\newcommand{\ITTD}{\mathrm{ITT}_D}
+\newcommand{\CACE}{\mathrm{CACE}}
+\newcommand{\hITTY}{\widehat{\mathrm{ITT}}_Y}
+\newcommand{\hITTD}{\widehat{\mathrm{ITT}}_D}
+\newcommand{\hCACE}{\widehat{\mathrm{CACE}}}
+\newcommand{\E}{\mathbb{E}}
+
+\begin{document}
+
+\begin{center}
+{\large\bfseries Why $\dfrac{(\hCACE-\CACE)-L}{\sqrt{V_\Delta}}\overset{p}{\longrightarrow}0$:
+an exact look at the remainder}
+\end{center}
+
+\bigskip
+\noindent
+The claim on the slide is that the two standardized estimators differ by a
+remainder that vanishes:
+\begin{equation*}
+\resizebox{\linewidth}{!}{$\displaystyle
+\underbrace{\frac{\hCACE - \CACE}{\sqrt{V_\Delta}}}_{\text{(a) estimator}}
+- \underbrace{\frac{L}{\sqrt{V_\Delta}}}_{\text{(b) approximation}}
+= \frac{\left(\hCACE - \CACE\right) - L}{\sqrt{V_\Delta}}
+\overset{p}{\longrightarrow} 0$}
+\end{equation*}
+We will compute the numerator $\left(\hCACE-\CACE\right)-L$ \emph{exactly} and
+see precisely why it is negligible.
+
+\bigskip
+\noindent\textbf{Definitions.}
+\begin{equation*}
+\hCACE = \frac{\hITTY}{\hITTD}, \qquad
+\CACE = \frac{\ITTY}{\ITTD}, \qquad
+L = \frac{\hITTY - \CACE\,\hITTD}{\ITTD}.
+\end{equation*}
+Write the estimation errors of the two ingredients as
+\begin{equation*}
+\Delta_Y = \hITTY - \ITTY, \qquad \Delta_D = \hITTD - \ITTD,
+\end{equation*}
+so that $\hITTY = \ITTY + \Delta_Y$ and $\hITTD = \ITTD + \Delta_D$.
+
+\bigskip
+\noindent\textbf{Step 1. The exact estimation error, over a common denominator.}
+\begin{align*}
+\hCACE - \CACE
+&= \frac{\hITTY}{\hITTD} - \frac{\ITTY}{\ITTD}
+= \frac{\ITTD\,\hITTY - \ITTY\,\hITTD}{\ITTD\,\hITTD} \\[4pt]
+&= \frac{\ITTD\left(\ITTY+\Delta_Y\right) - \ITTY\left(\ITTD+\Delta_D\right)}{\ITTD\,\hITTD}
+= \frac{\ITTD\,\Delta_Y - \ITTY\,\Delta_D}{\ITTD\,\hITTD}.
+\end{align*}
+
+\bigskip
+\noindent\textbf{Step 2. The linear approximation, in the same notation.}
+Since $\CACE = \ITTY/\ITTD$,
+\begin{align*}
+L = \frac{\hITTY - \CACE\,\hITTD}{\ITTD}
+&= \frac{\hITTY - \frac{\ITTY}{\ITTD}\,\hITTD}{\ITTD}
+= \frac{\ITTD\,\hITTY - \ITTY\,\hITTD}{\ITTD^{2}} \\[4pt]
+&= \frac{\ITTD\,\Delta_Y - \ITTY\,\Delta_D}{\ITTD^{2}}.
+\end{align*}
+
+\bigskip
+\noindent\textbf{Key observation.}
+The estimator's error and its linear approximation have the \emph{same numerator}
+$\;\ITTD\,\Delta_Y - \ITTY\,\Delta_D\;$; they differ \emph{only} in the
+denominator ($\ITTD\,\hITTD$ versus $\ITTD^{2}$). Hence
+\begin{equation*}
+\hCACE - \CACE
+= L \cdot \frac{\ITTD^{2}}{\ITTD\,\hITTD}
+= L \cdot \frac{\ITTD}{\hITTD}.
+\end{equation*}
+
+\bigskip
+\noindent\textbf{Step 3. The remainder.}
+\begin{align*}
+\left(\hCACE - \CACE\right) - L
+&= L\,\frac{\ITTD}{\hITTD} - L
+= L\left(\frac{\ITTD}{\hITTD} - 1\right)
+= L\,\frac{\ITTD - \hITTD}{\hITTD} \\[4pt]
+&= -\,L\,\frac{\hITTD - \ITTD}{\hITTD}
+= -\,L\,\frac{\Delta_D}{\hITTD}.
+\end{align*}
+That is,
+\begin{equation*}
+\boxed{\;\left(\hCACE - \CACE\right) - L
+= -\,L\,\frac{\hITTD - \ITTD}{\hITTD}\;}
+\end{equation*}
+the linear approximation $L$ times (minus) the \emph{relative error of the first
+stage}, $\Delta_D/\hITTD = (\hITTD - \ITTD)/\hITTD$.
+
+\bigskip
+\noindent\textbf{Step 4. Standardize: the remainder is a product of two factors.}
+Dividing the boxed identity by $\sqrt{V_\Delta}$,
+\begin{equation*}
+\frac{\left(\hCACE - \CACE\right) - L}{\sqrt{V_\Delta}}
+= -\,\underbrace{\frac{L}{\sqrt{V_\Delta}}}_{\textstyle \text{Factor 1}}
+\;\cdot\;
+\underbrace{\frac{\hITTD - \ITTD}{\hITTD}}_{\textstyle \text{Factor 2}} .
+\end{equation*}
+We must show this product converges in probability to $0$. The plan: \emph{Factor 1
+stays bounded}, \emph{Factor 2 vanishes}, and a bounded quantity times a vanishing
+one must vanish. Throughout, ``$N$'' indexes a growing sequence of finite
+populations; the only randomness is the assignment.
+
+\bigskip
+\noindent\textbf{The rates, in one breath (the intuition).}
+A difference-in-means has sampling variance equal to a sum of within-arm variances
+divided by the arm sizes, and the arm sizes grow in proportion to $N$. So its
+\emph{variance shrinks in proportion to $1/N$}, and its \emph{standard deviation in
+proportion to $1/\sqrt{N}$}. Hence:
+\begin{itemize}
+\item A typical first-stage error $\Delta_D = \hITTD - \ITTD$ is about
+$1/\sqrt{N}$ in size and shrinks to $0$ as the study grows.
+\item $L$ and $\sqrt{V_\Delta}$ are \emph{both} about $1/\sqrt{N}$: $L$ is a linear
+combination of the two errors, and $\sqrt{V_\Delta}$ is exactly $L$'s own standard
+deviation. Their ratio (Factor 1) is therefore about $1$ --- it neither grows nor
+shrinks, which is precisely why it can have a non-degenerate ($N(0,1)$) limit.
+\item The denominator $\hITTD$ settles on the fixed nonzero number $\ITTD$, so
+Factor 2 is about $(1/\sqrt{N})/\ITTD$ --- it shrinks to $0$ at the $1/\sqrt{N}$
+rate.
+\end{itemize}
+So the product is about $1 \times 1/\sqrt{N} = 1/\sqrt{N}$: the standardized
+remainder shrinks to $0$ at the root-$N$ rate. The rest makes this rigorous.
+
+\bigskip
+\noindent\textbf{Factor 2 vanishes (consistency of the first stage).}
+``$W_N$ converges in probability to $0$'' means: \emph{for every tolerance
+$\varepsilon > 0$, the probability $\Pr(\lvert W_N\rvert > \varepsilon)$ can be made
+as small as we like by taking $N$ large enough.} The first-stage estimator is
+unbiased, $\E[\hITTD] = \ITTD$, with variance proportional to $1/N$. Chebyshev's
+inequality then gives, for any fixed $\varepsilon>0$,
+\begin{equation*}
+\Pr\!\left(\lvert \Delta_D\rvert > \varepsilon\right)
+\;\le\; \frac{\operatorname{Var}(\hITTD)}{\varepsilon^{2}}
+\;\propto\; \frac{1}{N\,\varepsilon^{2}} \;\longrightarrow\; 0 ,
+\end{equation*}
+so $\Delta_D \to 0$ in probability. Because $\ITTD \neq 0$ and
+$\hITTD = \ITTD + \Delta_D$ settles on $\ITTD$, the ratio Factor 2 has numerator
+going to $0$ and denominator going to a nonzero constant, so
+\begin{equation*}
+\text{Factor 2} = \frac{\Delta_D}{\hITTD} \;\longrightarrow\; 0
+\quad\text{in probability.}
+\end{equation*}
+
+\bigskip
+\noindent\textbf{Factor 1 stays bounded (it cannot blow up).}
+``$X_N$ is bounded in probability'' means: \emph{the values do not escape to
+infinity --- for every small $\delta>0$ there is a finite cutoff $M$, the same for
+all $N$, with $\Pr(\lvert X_N\rvert > M) < \delta$.} Factor 1 $=L/\sqrt{V_\Delta}$
+converges in distribution to $N(0,1)$ (a linear combination of jointly Normal
+differences in means, divided by its own standard deviation). A sequence whose
+distribution settles on a fixed, genuine distribution cannot leak mass off to
+$\pm\infty$: for large $N$ its distribution is close to $N(0,1)$, and the standard
+Normal puts all but $\delta$ of its mass inside $[-M, M]$ once $M$ is the
+$(1-\delta/2)$ Normal quantile. So $\Pr(\lvert \text{Factor 1}\rvert > M)$ is
+eventually below $\delta$: Factor 1 does \emph{not} blow up.
+
+\bigskip
+\noindent\textbf{Bounded $\times$ vanishing $=$ vanishing (the one lemma we need).}
+Let $X_N$ be bounded in probability and $Y_N \to 0$ in probability. Then
+$X_N Y_N \to 0$ in probability. \emph{Proof.} Fix $\varepsilon>0$ and $\delta>0$.
+Choose $M$ (finite, the same for all $N$) with $\Pr(\lvert X_N\rvert > M) <
+\delta/2$. Whenever $\lvert X_N\rvert \le M$ we have $\lvert X_N Y_N\rvert \le
+M\,\lvert Y_N\rvert$, so $\lvert X_N Y_N\rvert > \varepsilon$ forces
+$\lvert Y_N\rvert > \varepsilon/M$. Hence
+\begin{equation*}
+\Pr\!\left(\lvert X_N Y_N\rvert > \varepsilon\right)
+\;\le\; \Pr\!\left(\lvert X_N\rvert > M\right)
++ \Pr\!\left(\lvert Y_N\rvert > \tfrac{\varepsilon}{M}\right)
+\;<\; \tfrac{\delta}{2} + \Pr\!\left(\lvert Y_N\rvert > \tfrac{\varepsilon}{M}\right).
+\end{equation*}
+Since $\varepsilon/M$ is a fixed positive number and $Y_N \to 0$ in probability, the
+last term is below $\delta/2$ for $N$ large, so the bound is below $\delta$. As
+$\varepsilon,\delta$ were arbitrary, $X_N Y_N \to 0$ in probability. \hfill$\square$
+
+\bigskip
+\noindent\textbf{Conclusion.}
+With $X_N = $ Factor 1 (bounded) and $Y_N = $ Factor 2 (vanishing), the lemma gives
+\begin{equation*}
+\frac{\left(\hCACE - \CACE\right) - L}{\sqrt{V_\Delta}}
+= -\,X_N\,Y_N \;\longrightarrow\; 0 \quad\text{in probability.}
+\end{equation*}
+And since Factor 1 $=L/\sqrt{V_\Delta} \to N(0,1)$ while the standardized remainder
+$\to 0$ in probability, adding them back,
+\begin{equation*}
+\frac{\hCACE - \CACE}{\sqrt{V_\Delta}}
+= \frac{L}{\sqrt{V_\Delta}} + \frac{\left(\hCACE - \CACE\right) - L}{\sqrt{V_\Delta}}
+\;\longrightarrow\; N(0,1),
+\end{equation*}
+by Slutsky's lemma (a sequence converging in distribution, plus one vanishing in
+probability, keeps the same limiting distribution). \hfill$\blacksquare$
+
+\bigskip
+\noindent\textbf{The ``second order'' story, in one line.}
+Substituting $L = (\ITTD\,\Delta_Y - \ITTY\,\Delta_D)/\ITTD^{2}$ into the boxed
+identity,
+\begin{equation*}
+\left(\hCACE - \CACE\right) - L
+= -\,\frac{\left(\ITTD\,\Delta_Y - \ITTY\,\Delta_D\right)\,\Delta_D}
+{\ITTD^{2}\,\hITTD},
+\end{equation*}
+a product of \emph{two} errors ($\Delta_Y\Delta_D$ and $\Delta_D^{2}$). Each error
+is about $1/\sqrt{N}$, so their product is about $1/N$; dividing by
+$\sqrt{V_\Delta}\approx 1/\sqrt{N}$ leaves about $1/\sqrt{N}\to 0$. The estimator's
+error $L$ is \emph{first order} (about $1/\sqrt{N}$); the gap the tangent misses is
+\emph{second order} (about $1/N$) --- smaller by a factor of about $1/\sqrt{N}$.
+That is the precise sense in which the remainder is negligible relative to the
+standard error.
+
+\end{document}
