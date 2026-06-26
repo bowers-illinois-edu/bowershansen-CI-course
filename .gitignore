@@ -52,6 +52,14 @@ day_*-wmn.tex
 BIB
 units  #use this as a link to current-year directory's subfolder for slides, handouts etc
 data/lawnsigns
+# matching-guide: keep source, drop generated/build bundles
+Tom_Slides/matching-guide/observational-studies-submission.zip
+Tom_Slides/matching-guide/observational-studies-submission/
+Tom_Slides/matching-guide/README.html
+Tom_Slides/matching-guide/**/*.rdb
+Tom_Slides/matching-guide/**/*.rdx
+Tom_Slides/matching-guide/**/*.RData
+
 # tex files derived from tracked Rnw and Rmd sources
 *-Rex.tex
 unit01-fishercombs.tex

@@ -1,0 +1,491 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation -- ICPSR Causal Inference
+% Day 9 (June 25, 2026): Constructing the optimal matches and assessing the design
+% Source: Leavitt and Miratrix (2026), Sections 2.2.4-2.2.5; Hansen and Bowers (2008)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%------------------------------------------------------------------------------------------------
+% PACKAGES AND THEMES
+%------------------------------------------------------------------------------------------------
+
+\documentclass[table, xcolor = {dvipsnames}, 9pt]{beamer}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{external}
+\mode<presentation> {
+\usetheme{metropolis}
+\usecolortheme{seagull}
+\usefonttheme{professionalfonts}
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{diagbox}
+\usepackage{makecell}
+\usepackage{xparse}
+\usepackage{subfig}
+\usepackage{amsmath}
+\usepackage{amsfonts,amsthm,amsmath,amssymb}
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{empheq}
+\usepackage{pgfplots}
+\usepackage{animate}
+\usepgfplotslibrary{colorbrewer}
+\pgfplotsset{compat=1.17}
+
+\newcommand\mybox[2][]{\tikz[overlay]\node[fill=lightgray,inner sep=2pt, anchor=text, rectangle, rounded corners=1mm,#1] {#2};\phantom{#2}}
+\hypersetup{unicode=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1}}
+\usepackage{xcolor}
+% R code listing style (matches the course's R-code slides)
+\usepackage{listings}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{Rstyle}{
+    language=R,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\newcommand\myheading[1]{%
+  \par\bigskip
+  {\Large\bfseries#1}\par\smallskip}
+\newcommand\given[1][]{\:#1\vert\:}
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}{Proposition\thisthmnumber}
+\newtheorem{lem}{Lemma\thisthmnumber}
+\newtheorem{cor}{Corollary}
+\newtheorem{defin}{Definition}
+\newtheorem{algo}{Algorithm}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand{\bh}[1]{{\color{blue}{#1}}}
+\newcommand{\mh}[1]{{\color{magenta}{#1}}}
+\newcommand{\thisthmnumber}{}
+\newcommand{\tikzmark}[1]{\tikz[baseline,remember picture] \coordinate (#1) {};}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\newcommand{\abs}[1]{\left\lvert #1 \right\rvert}
+\DeclareMathOperator{\E}{\rm{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\N}{\mathbb{N}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\Supp}{\rm{Supp}}
+\DeclareMathOperator{\e}{\rm{e}}
+\DeclareMathOperator{\F}{\mathcal{F}}
+\DeclareMathOperator{\Z}{\mathcal{Z}}
+\DeclareMathOperator{\logit}{\rm{logit}}
+\DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+%------------------------------------------------------------------------
+% TITLE PAGE -- Day 9 (June 25, 2026)
+% Source: Leavitt and Miratrix (2026), Sections 2.2.4-2.2.5; Hansen and Bowers (2008)
+%-----------------------------------------------------------------------
+\pagestyle{empty}
+\title[Constructing \& assessing a matched design]{Constructing the Optimal Matches and Assessing the Design: Balance and Effective Sample Size}
+
+\author{Thomas Leavitt}
+\institute[]
+{
+\medskip
+\textit{}
+}
+\date{June 25, 2026}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+%------------------------------------------------------------------------
+\begin{frame}[t]{Where we are}
+\vfill
+\begin{itemize} \vfill
+\item Yesterday: \mh{comparability} and the \mh{effective sample size}  \vfill
+\item We have the ingredients --- but \emph{not yet} a design \vfill
+\item Today: \mh{construct} the optimal matches with full matching \vfill
+\item Today: \mh{assess} the design --- balance and effective sample size \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\section{How do I actually form the matches?}
+
+\begin{frame}[t]{How optimal matching chooses}
+\vfill
+\begin{itemize} \vfill
+\item \texttt{optmatch} \mh{partitions} units into sets \citep{hansen2004} \vfill
+\item It picks the partition with the smallest total within-set distance \\ \citep{rosenbaum1991,gurosenbaum1993,hansen2004} \vfill
+\item[] Always results in each set with $1$ treated or $1$ control \vfill
+\item Units drop out \emph{only} to satisfy constraints \vfill 
+\item[] Namely, calipers or exact matching restrictions \vfill
+\item Sets can be \mh{lopsided}: $1$ treated to many controls, or the reverse \vfill 
+\item[] A small harmonic mean $\Rightarrow$ lower \mh{effective sample size} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Forming matches: a worked example}
+\vfill
+\begin{itemize} \vfill
+\item Four episodes, matched on the estimated \mh{logit propensity score}: \vfill
+\end{itemize}
+\begin{table}[H]
+\centering \footnotesize
+\begin{tabular}{lcc}
+\toprule
+Episode & \texttt{UN} & est.\ logit PS \\
+\midrule
+A & 1 & $\phantom{-}0.5$ \\
+B & 1 & $-1.5$ \\
+C & 0 & $\phantom{-}0.3$ \\
+D & 0 & $-1.4$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{itemize} \vfill
+\item Each set needs $\ge 1$ treated and $\ge 1$ control --- three ways to partition \vfill
+\item Within a set, \mh{sum} pairwise distances; across sets, pick the \mh{smallest total} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Forming matches: which partition is optimal?}
+\vfill
+\begin{itemize} \vfill
+\item $\mathcal{M}_1 = \{A,B,C,D\}$: one set, all four pairs --- $|0.5 - 0.3| + |0.5 + 1.4| + |{-1.5} - 0.3| + |{-1.5} + 1.4| = 4.0$ \vfill
+\item $\mathcal{M}_2 = \{\{A,C\}, \{B,D\}\}$: $|0.5 - 0.3| + |{-1.5} + 1.4| = 0.2 + 0.1 = \mh{0.3}$ \vfill
+\item $\mathcal{M}_3 = \{\{A,D\}, \{B,C\}\}$: $|0.5 + 1.4| + |{-1.5} - 0.3| = 1.9 + 1.8 = 3.7$ \vfill
+\item \mh{Optimal full matching} picks $\mathcal{M}_2$ --- the smallest total distance \vfill
+\item \texttt{optmatch} solves this for all $87$ units at once \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{The design we carry forward}
+\vfill
+\begin{itemize} \vfill
+\item Combine several distances and constraints into one structure: \vfill
+\begin{itemize} \vfill
+\item \mh{rank-based Mahalanobis} distance --- robust to outliers and scale \\ \citep[pp.~170--172]{rosenbaum2010} \vfill
+\item caliper of \mh{$0.5$ SD} on the logit propensity score ($\approx 0.98$) \vfill
+\item exact match on \mh{region} \vfill
+\item calipers on \texttt{ethfrac} ($35$) and \texttt{bwgdp} ($2$) \vfill
+\end{itemize} \vfill
+\item Then \mh{full matching}: $\le 4$ controls per treated unit \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[fragile]{Full matching in \texttt{R}}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+data$logit_p_score <- lin_cov_inds
+pop_sd_logit <- sqrt(mean((data$logit_p_score - mean(data$logit_p_score))^2))
+
+ps_mat       <- match_on(UN ~ logit_p_score, caliper = 0.5 * pop_sd_logit, data = data,
+                         standardization.scale = NULL, method = "euclidean")
+rank_mah_mat <- match_on(reformulate(setdiff(covs, "region"), "UN"), data = data,
+                         standardization.scale = NULL, method = "rank_mahalanobis")
+eth_mat      <- match_on(UN ~ ethfrac, caliper = 35, data = data,
+                         standardization.scale = NULL, method = "euclidean")
+bwgdp_mat    <- match_on(UN ~ bwgdp,   caliper = 2,  data = data,
+                         standardization.scale = NULL, method = "euclidean")
+
+fm <- fullmatch(x = ps_mat + rank_mah_mat + eth_mat + bwgdp_mat + em_region,
+                data = data, max.controls = 4)
+\end{lstlisting}
+\begin{itemize}
+\item \texttt{optmatch} returns the \mh{optimal} full match: \vfill
+\item[] minimizes total within-set distance \vfill
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[fragile]{Reading the matched structure}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\scriptsize, frame=single]
+effectiveSampleSize(fm)   # 15.27
+summary(fm)
+\end{lstlisting}
+\footnotesize
+\begin{verbatim}
+Structure of matched sets:
+1:0 2:1 1:1 1:2 1:3 1:4 0:1
+  6   1   4   4   2   1  45
+Effective Sample Size:  15.3  (equivalent number of matched pairs).
+\end{verbatim}
+\normalsize
+\begin{itemize} \vfill
+\item \texttt{1:2} $=$ $1$ treated, $2$ controls; \texttt{1:0}, \texttt{0:1} $=$ unmatched treated, control \vfill
+\item $13$ treated and $23$ control units matched; $36$ units, effective size $\approx 15.3$ \vfill
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[fragile]{Inside one matched set: \texttt{ssafrica.3}}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\scriptsize, frame=single]
+data$fm <- fm
+data |> filter(fm == "ssafrica.3") |>
+  select(cname, UN, region, logit_p_score, ethfrac, bwgdp, bwplty2)
+\end{lstlisting}
+\footnotesize
+\begin{verbatim}
+    cname UN   region logit_p_score ethfrac bwgdp bwplty2
+  Burundi  0 ssafrica          0.51    3.55  5.35      -7
+   Rwanda  1 ssafrica          0.15   12.92  5.68      -7
+  Somalia  0 ssafrica          0.21    7.67  6.61      -7
+  Lesotho  0 ssafrica          0.56   22.25  6.28       0
+\end{verbatim}
+\normalsize
+\begin{itemize}
+\item Exact match on region holds; logit scores within the $\approx 0.98$ caliper \vfill
+\item \texttt{bwplty2} still shows mild imbalance --- no caliper was placed on it \vfill
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\section{How do I decide whether to move ahead with my matched design?}
+
+\begin{frame}[t]{Did we succeed?}
+\vfill
+\begin{itemize} \vfill
+\item A good matched design should look like a \mh{block-randomized} experiment \vfill
+\item So compare treated vs.\ control covariate means \emph{within} sets \vfill
+\item A covariate is \mh{balanced} when that difference is near $0$ \vfill
+\item Two tools: \vfill
+\begin{itemize} \vfill
+\item \mh{standardized differences} --- one per covariate (a love plot) \vfill
+\item an \mh{omnibus test} --- all covariates at once \citep{hansenbowers2008} \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{The standardized difference}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Adjusted difference}: weighted average of within-set treated$-$control gaps, each set weighted by its harmonic mean / the \mh{sum} of harmonic means \vfill
+\item Divide by the covariate's \mh{pooled SD} in the unmatched data: \vfill
+\item[]
+\begin{equation*}
+\text{std.\ diff} = \frac{\bar{x}_{T} - \bar{x}_{C}}{s_{\text{pooled}}}
+\end{equation*} \vfill
+\item $\bar{x}_T, \bar{x}_C$: adjusted treated/control means; $s_{\text{pooled}}$: pooled SD \vfill
+\item Puts every covariate on \emph{one} comparable scale (SD units) \vfill
+\item Same denominator throughout $\Rightarrow$ changes reflect \mh{matching}, not rescaling \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{The Love plot \citep{love2002}: balance before vs.\ after}
+\begin{itemize}
+\item $\abs{\text{std.\ diff}}$ per covariate; matching pulls points \mh{toward $0$} \vfill
+\item[]
+\begin{figure}[H]
+\includegraphics[width=0.78\linewidth]{figures/love_plot.pdf}
+\end{figure}
+\item[] \footnotesize Region dummies $\to$ exactly $0$ (exact match); \texttt{ethfrac}, \texttt{bwgdp} still $\approx 0.2$. \normalsize
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Rules of thumb, not hard thresholds}
+\vfill
+\begin{itemize} \vfill
+\item Common guides: $0.10$ \citep{austin2009}; the more lenient $0.25$ \citep{stuart2010} \vfill
+\item These are \mh{heuristics}, not hard thresholds \vfill
+\item Weight each covariate by its \mh{importance} --- a $0.2$ gap on a key covariate matters more than on a minor one \vfill
+\item Read the love plot \emph{and} the context together \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\section{Balance testing}
+
+\begin{frame}[fragile]{Per-covariate balance, with significance stars}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+cov_bal <- balanceTest(fmla = update(cov_fmla, . ~ . + strata(fm)),
+                       data = data, p.adjust.method = "none")   # * marks p <= 0.05
+\end{lstlisting}
+\vspace{-0.2em}
+\scriptsize
+\begin{table}[H]
+\centering
+\begin{tabular}{lrr}
+\toprule
+Covariate & Std.\ diff (before) & Std.\ diff (after) \\
+\midrule
+\texttt{lwdeaths} & $0.84^{*}$ & $0.08$ \\
+\texttt{lwdurat} & $0.39$ & $0.16$ \\
+\texttt{ethfrac} & $-0.28$ & $0.22$ \\
+\texttt{pop} & $-0.64^{*}$ & $0.02$ \\
+\texttt{lmtnest} & $0.43$ & $0.09$ \\
+\texttt{milper} & $-0.42$ & $-0.06$ \\
+\texttt{bwgdp} & $0.03$ & $-0.17$ \\
+\texttt{bwplty2} & $-0.32$ & $-0.07$ \\
+\texttt{region:asia} & $-0.68^{*}$ & $0.00$ \\
+\texttt{region:eeurop} & $0.51^{*}$ & $0.00$ \\
+\texttt{region:lamerica} & $0.25$ & $0.00$ \\
+\texttt{region:nafrme} & $-0.04$ & $0.00$ \\
+\texttt{region:ssafrica} & $-0.23$ & $0.00$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+\normalsize
+\vspace{-0.2em}
+\begin{itemize}
+\item $^{*}\, p \le 0.05$: four covariates flagged \mh{before}, \mh{none after} \vfill
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Zooming in: testing one covariate}
+\begin{itemize}
+\item Logged war deaths --- the worst pre-match imbalance --- after matching \vfill
+\item Observed difference vs.\ its block-randomized reference: \vfill
+\item[]
+\begin{figure}[H]
+\includegraphics[width=0.66\linewidth]{figures/cov_balance_exact_normal.pdf}
+\end{figure}
+\item[] \footnotesize Observed (dashed) sits in the bulk of the reference distribution ($p \approx 0.82$) --- \mh{balanced}. \normalsize
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{From eyeballing to a test \citep{hansenbowers2008}}
+\vfill
+\begin{itemize} \vfill
+\item Many covariates $\Rightarrow$ many standardized differences to read \vfill
+\item One summary: \vfill
+\item[] Is balance \mh{unusual} under within-block complete random assignment? \vfill
+\item Hansen and Bowers \citep{hansenbowers2008}: \vfill
+\item[] \mh{Omnibus} test of all covariates, accounting for \mh{correlations} like Mahalanobis \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{The omnibus statistic}
+\vfill
+\begin{itemize} \vfill
+\item One number, $d^2$, summarizing imbalance across \emph{all} covariates at once \vfill
+\item The \mh{test} asks: \vfill
+\item[] How often would within-block randomization alone produce a $d^2$ this large? \vfill
+\item \mh{Small} $d^2$: unremarkable under within-block complete random assignment \vfill
+\item \mh{Large} $d^2$: some covariate (or combination of them) is \mh{imbalanced} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\iffalse  % ===== technical construction of d^2 (kept in source, omitted from the lecture) =====
+\begin{frame}[t]{The omnibus statistic: the pieces}
+\vfill
+\begin{itemize} \vfill
+\item For covariate $k$, the \mh{sum statistic} $t_k = \sum_{i:\, z_i = 1} x_{ik}$ (the treated total) \vfill
+\item Centered, $t_k - \E[t_k]$ is the treated$-$control \mh{mean difference} (up to a set weight) \vfill
+\item Stack across covariates: $\bm{t} = \bm{X}^{\top}\bm{z}$ \vfill
+\item Within-set randomization ($m_s$ fixed per set) gives \mh{known} moments: \vfill
+\item[]
+\begin{equation*}
+\E[\bm{t}] = \sum_s m_s\, \bar{\bm{x}}_s, \qquad \bm{V} = \sum_s \frac{m_s(n_s - m_s)}{n_s - 1}\, \bm{\Sigma}_s
+\end{equation*} \vfill
+\item $\bar{\bm{x}}_s, \bm{\Sigma}_s$: the within-set \mh{mean} and \mh{covariance} of the covariates \vfill
+\end{itemize} \vfill
+\end{frame}
+\begin{frame}[t]{The omnibus statistic: the quadratic form}
+\vfill
+\begin{itemize} \vfill
+\item Combine all covariates into one number: \vfill
+\item[]
+\begin{equation*}
+d^2 = \left(\bm{t} - \E[\bm{t}]\right)^{\top} \bm{V}^{-1} \left(\bm{t} - \E[\bm{t}]\right)
+\end{equation*} \vfill
+\item $\bm{V}^{-1}$ \mh{standardizes and decorrelates}: the Mahalanobis distance of $\bm{t}$ from its null mean \vfill
+\item Equivalently, the \mh{worst case} over all linear combinations $\bm{a}^{\top}\bm{x}$ of the covariates: \vfill
+\item[]
+\begin{equation*}
+d^2 = \max_{\bm{a}} \frac{\left(\bm{a}^{\top}(\bm{t} - \E[\bm{t}])\right)^2}{\bm{a}^{\top}\bm{V}\,\bm{a}}
+\end{equation*} \vfill
+\item So large $d^2$ $\Rightarrow$ \emph{some} combination of covariates is badly imbalanced \vfill
+\end{itemize} \vfill
+\end{frame}
+\fi
+%------------------------------------------------------------------------
+\begin{frame}[t]{Two reference distributions for $d^2$}
+\vfill
+\begin{itemize} \vfill
+\item How surprising is the observed $d^2$ under as-if randomization? \vfill
+\item \mh{Exact}: re-randomize treatment \emph{within} sets, recompute $d^2$ each time --- the randomization distribution, no large-sample assumption \vfill
+\item \mh{Asymptotic}: $d^2 \approx \chi^2$, df $=$ number of covariates that \emph{vary} within sets \vfill
+\item Here df $= 8$: region is held fixed by the exact match, so it does not count \vfill
+\item Both use the \emph{same} $d^2$ statistic; they differ only in the \mh{reference distribution} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{The omnibus: exact distribution vs.\ chi-squared}
+\begin{itemize}
+\item Combine all $8$ covariates into $d^2$; the asymptotic reference is $\chi^2_{8}$ \vfill
+\item[]
+\begin{figure}[H]
+\includegraphics[width=0.72\linewidth]{figures/omnibus_exact_chisq.pdf}
+\end{figure}
+\item[] \footnotesize Permutation distribution runs slightly \emph{tighter} than $\chi^2$; observed $d^2 = 2.63$ is unremarkable. \normalsize
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Interpreting the $p$-values}
+\vfill
+\begin{itemize} \vfill
+\item $d^2 = 2.63$; exact $p$-value $\approx 0.98$, asymptotic $\approx 0.96$ \vfill
+\item \mh{Large} $p$-value: balance is unsurprising under block randomization --- we do \emph{not} reject as-if randomization, good news here \vfill
+\item A \mh{small} $p$-value would flag imbalance and send us back to the design \vfill
+\item No multiplicity adjustment $\Rightarrow$ per-covariate stars are \mh{conservative}: \vfill
+\item[] Easier to flag imbalance, a cautious check \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{A caution: Hansen vs.\ Austin}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Austin's concern} \citep{austin2008,imaietal2008}: shrinking $N$ alone inflates balance-test $p$-values, so a smaller matched sample can ``pass'' for the \emph{wrong} reason \vfill
+\item \mh{Hansen's reply} \citep{hansen2008b}: the shrink also widens outcome CIs, so a high balance $p$-value stays \mh{informative} --- we don't overstate effects \vfill
+\item The trade-off is \emph{transparent}: better balance \emph{costs} effective sample size \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\section{Recap}
+
+\begin{frame}[t]{Recap: Stage 1, end to end}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Distance} measures similarity: Euclidean $\to$ Mahalanobis $\to$ rank-based \vfill
+\item \mh{Propensity score} collapses many covariates into one index \vfill
+\item Calipers / exact matches forbid bad matches; ratio constraints shape sets \vfill
+\item \mh{Effective sample size} rewards balanced sets (harmonic mean) \vfill
+\item \texttt{fullmatch()} turns distances $+$ rules into matched sets \vfill
+\item \mh{Balance}: love plot and tests say the design looks block-randomized \vfill
+\item Next: infer causal effects under as-if randomization \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[allowframebreaks]
+\frametitle{References}
+\scriptsize
+\bibliographystyle{chicago}
+\bibliography{Bibliography}
+\end{frame}
+%------------------------------------------------------------------------
+\end{document}

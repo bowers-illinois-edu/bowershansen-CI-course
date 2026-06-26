@@ -1,0 +1,2200 @@
+---
+title: "Building a Design-Based Matching Pipeline: From Principles to Practical Implementation in R"
+author: \href{mailto:thomas.leavitt@baruch.cuny.edu}{Thomas Leavitt} and \href{mailto:luke_miratrix@gse.harvard.edu }{Luke W. Miratrix}
+date: ""
+output: 
+  pdf_document:
+    citation_package: natbib
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    highlight: tango
+    keep_tex: true
+    toc: no
+    toc_depth: 1
+    includes:
+      in_header: mystyle.sty
+fontsize: 12pt
+classoption: leqno
+geometry: margin = 1.5cm
+biblio-style: unsrtnat
+bibliography: Bibliography.bib
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE}
+
+# ---- Load required packages ----
+# If you get an error such as "there is no package called '<name>'",
+# install the missing package first using install.packages("<name>")
+library(knitr)       # For controlling knitting behavior and chunk options
+library(rmdformats)  # For polished R Markdown / HTML / PDF formatting
+
+# ---- Define custom knit hook for single-spaced code chunks ----
+# Adds LaTeX commands around each chunk to render code/output single-spaced
+# while keeping regular text double-spaced.
+hook_chunk <- knit_hooks$get("chunk")
+
+knit_hooks$set(chunk = function(x, options) {
+  regular_output <- hook_chunk(x, options)
+  if (isTRUE(options$singlespacing))
+    sprintf("\\singlespacing\n%s\n\\doublespacing", regular_output)
+  else
+    regular_output
+})
+
+# ---- Set default chunk options ----
+# Controls how code and figures are displayed throughout the guide.
+opts_chunk$set(
+  echo = TRUE,            # Show R code in output
+  singlespacing = TRUE,   # Use single spacing for code
+  fig.align = "center"    # Center all figures
+)
+
+# ---- Set global knitting options ----
+# These affect printed output, caching, and console appearance.
+options(max.print = 75)  # Limit how many rows/values print by default
+
+opts_chunk$set(
+  cache = TRUE,      # Cache results to speed up re-knitting
+  prompt = FALSE,    # Don’t show ">" prompts in code blocks
+  tidy = TRUE,       # Format R code nicely
+  comment = NA,      # Suppress "#" in printed output
+  message = FALSE,   # Hide messages (e.g., from loading packages)
+  warning = FALSE    # Hide warnings for clean rendering
+)
+
+# Set max line width for knitted text output
+opts_knit$set(width = 75)
+
+```
+
+\begin{abstract}
+\singlespacing
+\noindent Matching, a canonical design for observational studies, takes many forms that rest on distinct --- yet often implicit --- statistical principles. We construct a matching pipeline for practitioners that makes these principles explicit and integrates stages often treated separately within a coherent design-based framework. The pipeline begins from the conceptual ideal of a randomized experiment, traces how observational studies depart from it, and then employs matching to approximate that ideal. The next stage is inference under the as-if randomization assumption that matched sets are equivalent to a collection of randomized experiments within blocks, where each block has a fixed number of treated units equal to the number observed in that set. Under this assumption, we consider inference on all individual effects in the "sharp" framework and on the average effect in the "weak" framework. The final stage is a sensitivity analysis to assess, under either framework, how inferences change under departures from as-if randomization. Each step includes extensively commented \texttt{R} code that equips practitioners to implement both established and newly developed procedures, including several not yet available in existing \texttt{R} packages. We illustrate the full workflow through an application examining the effect of United Nations peacekeeping interventions on the duration of post-conflict peace.
+\end{abstract}
+
+\newpage
+
+# Design-Based Foundations of the Matching Pipeline
+
+## The Randomized Experimental Ideal
+
+Imagine a randomized experiment in which a researcher flips a fair coin independently for each individual in the study. Heads means assignment of the individual to control, while tails means assignment to treatment. After assignments to treatment and control, the researcher administers the conditions and then compares outcomes between treated and control groups.
+
+Why is this procedure effective? Randomization is a *fair lottery*: Every individual has the same chance of being assigned to treatment. This means that individuals who would respond more strongly to treatment are no more likely to receive it than those who would respond less strongly, and the same is true for control. Because each individual's assignment is determined by the same coin toss (with the same probability of landing heads or tails), randomization leaves only two possibilities: (1) the difference in outcomes between treatment and control groups reflects the true causal effect, or (2) chance variation produced a misleading difference. Although misleading differences can occur by chance, randomization is valuable because it enables us to use statistical tools to quantify and limit the chance of such errors. As a result, randomized experiments yield especially credible causal conclusions.
+
+Randomization is useful not only as a procedure, but also as an idea. It helps us understand when statistical tools will (and will not) yield credible conclusions, even when we have not directly randomized. In an observational study, the researcher does not control who receives the treatment and instead observes units after they have been assigned to treatment and control groups. In such settings, the idea of randomization can guide how we design studies so that they yield more credible causal conclusions.
+
+## Bridging Randomized Experiments and Observational Studies
+
+A useful framework for connecting randomized experiments to observational studies is what @rubin1977 calls "assignment to treatment group on the basis of a covariate," where a covariate is a pre-treatment characteristic of a study's units. To make this idea concrete, suppose treatment is assigned by independent coin tosses for each individual in which the probability of heads or tails depends on that individual's value of a single covariate. Consequently, all individuals with the same covariate value share the same chance of ending up in treatment, while those with a different covariate value share a different chance.
+
+In this setting, we can envision forming groups (i.e., matched sets) so that all individuals within a group share the same covariate value. Each group then functions as a miniature randomized experiment in that random chance alone explains why some individuals in the group ended up in treatment while others did not. Importantly, to justify this interpretation, we do not need to know each individual's actual probability of treatment. It is enough to know that the probability of treatment depends only on the covariate, which ensures that all individuals with the same covariate value have the same chance of treatment.
+
+## Matching to Approximate the Randomized Experimental Ideal
+
+The same intuition applies to matching when the probability of treatment depends on many baseline covariates. The underlying idea is that individuals with similar covariates have similar treatment assignment probabilities. Thus, in an effort to recreate a randomized experiment, we use the covariates we observe and believe determine treatment chances in order to divide individuals into groups, with each group containing both treated and control subjects who are homogeneous in those covariates. We are, in effect, constructing a new single variable: group (i.e., matched set) membership. We can think of this membership variable as the single covariate in the framework of "assignment to treatment group on the basis of a covariate" [@rubin1977] discussed above. Although we still do not know each individual's treatment probability, the hope is that all individuals within a group share the same probability, whatever it may be. 
+
+We call the condition in which all individuals within matched sets share the same treatment probability *as-if randomization*, although other terms such as *selection on observables* and *strong ignorability* are common. The term as-if randomization is especially fitting: When all units within each matched set share the same individual treatment probability, all assignments within each set --- holding fixed the set's observed number of treated units --- are equally likely. In this case, the probability distribution over these assignments is equivalent to that induced by a randomized experiment in which a researcher first forms blocks corresponding to the matched sets and then randomly assigns a fixed number of units to treatment within each block. Thus, when as-if randomization holds, we can apply the same statistical tools that we would use under such a block-randomized design to draw credible causal inferences from the observational study.
+
+## Why Sensitivity Analysis Matters
+
+Unlike a randomized experiment, even the best matched designs rely on the strong assumption of as-if randomization. When this assumption holds, we can draw causal conclusions by analyzing the data as if they came from a randomized experiment. However, if the assumption is wrong, our causal claims are no longer guaranteed to be credible.
+
+How can this assumption fail? First, individuals within a group may be similar on observed covariates, but not similar enough to have the same treatment probabilities. Second, treatment assignment may depend on covariates we did not measure. If so, even if individuals within groups appear comparable on observed covariates, those individuals may still differ on hidden covariates that determine the probability of treatment.
+
+For these reasons, it is important to assess the sensitivity of our causal conclusions to departures from as-if randomization. Conclusions are especially convincing when they hold not only under this assumption, but also under moderate violations of it. Conclusions that collapse under only mild departures are much less convincing.
+
+## Roadmap of the Design-Based Matching Pipeline
+
+Building on these design-based foundations, we now outline a pipeline that starts with matching and then proceeds to inference and sensitivity analysis:
+
+  - **Construct and evaluate matched sets**. Given the specified covariates to be balanced, we begin with the mechanics of optimal matching [@hansen2004; @hansenklopfer2006]: choosing a distance measure that defines similarity on the covariates, setting calipers --- maximum allowable distances between treated and control units for inclusion in the same matched set --- and imposing structural constraints (e.g., requiring matches to be pairs). We then show how to evaluate the resulting design in terms of both effective sample size and covariate balance. For the latter, we focus on tests proposed by @hansenbowers2008 that compare the matched design's covariate balance to what one would expect under an equivalent completely randomized experiment within blocks (that is, random assignment with a fixed number of treated units per block).
+
+  - **Draw causal inferences**. Once a matched design is chosen, practitioners can conduct inference under as-if randomization, either within a "sharp" causal framework, which pertains to individual-level effects for all units, or a "weak" framework, which pertains to a summary quantity of the unit-level causal effects, typically the average treatment effect (ATE). For the sharp framework, we focus on how researchers can use both simulation- and Normal-based approximations to the exact randomization distribution to perform hypothesis tests, which can be inverted to obtain confidence sets and point estimates. For the weak framework, we cover estimation of the ATE and hypothesis tests about it. We emphasize exposition and code for recent variance estimators tailored to designs with only $1$ treated or $1$ control unit per matched set [@fogarty2018; @pashleymiratrix2021] --- an important case, since such designs are optimal in terms of balance and effective sample size [@gurosenbaum1993; @rosenbaum1991; @hansen2004].
+
+  - **Assess sensitivity**. Finally, we turn to sensitivity analyses under both inferential frameworks. We review established methods for conducting sensitivity analysis for tests of sharp nulls under possible violations of as-if randomization [@rosenbaumkrieger1990; @gastwirthetal2000; @rosenbaum2018]. We then describe and implement new methods that extend sensitivity analysis to tests of weak null hypotheses [@fogarty2023].
+
+Below we present a flow diagram summarizing the overall pipeline, partitioned into three sections aligned with the manuscript's sections. The
+diagram displays each step and decision point, the relevant \texttt{R}
+tools (whether existing packages or custom functions included herein),
+and core references. All relevant code and replication
+materials are publicly available in the manuscript's companion
+\href{https://github.com/tl2624/matching-guide}{GitHub repository}
+
+```{r diagram, echo = FALSE, fig.pos = "H", fig.cap = "Flow diagram of the design-based matching pipeline.\\label{fig: pipeline}", out.width = "\\linewidth"}
+
+library(knitr)  # For knitting R Markdown and including external figures or files
+
+# Insert the matching pipeline flowchart (PDF) from the project’s fig/ directory
+include_graphics(path = "fig/version_2/matching_pipeline_flowchart_V2.pdf")
+
+```
+
+# Implementation of the Matching Pipeline
+
+We provide a high-level overview of the ideas behind matching and include code that demonstrates how to implement those ideas with various \texttt{R} packages. We also work through some of these steps "by hand" to underscore the underlying conceptual issues. Doing so also gives practitioners more flexibility to adapt the matching pipeline to their own needs.
+
+We break the implementation into specific decision points that practitioners commonly face, and present the pipeline in three main stages (see \Cref{fig: pipeline}):
+
+**First Stage: Making a Matched Dataset (toward Justifying As-If Randomization)**
+
+(a) How Do I Measure Similarity on My Chosen Covariates?
+
+   - Similarity on the Estimated Propensity Score
+
+(b) How Can I Apply Rules for Matches to Ensure Comparability?
+
+(c) How Can I Apply Rules for Matches to Improve Effective Sample Size?
+
+(d) How Do I Actually Form the Matches?
+
+(e) How Do I Decide Whether to Move Ahead with My Matched Design?
+
+
+**Second Stage: Causal Inference (under As-If Randomization)**
+
+(a) How Do I Draw Inferences under the Sharp Framework?
+
+(b) How Do I Draw Inferences under the Weak Framework?
+
+
+**Third Stage: Sensitivity Analysis (Departures from As-If Randomization)**
+
+(a) How Do Inferences under the Sharp Framework Change under these Departures?
+
+   - Finding the Worst-Case Scenario of Hidden Confounding for Valid Inference
+     
+     - Separable Approximation
+     - Taylor Series Approximation
+
+   - Conducting Sensitivity Analysis under the Worst-Case Scenario
+
+(b) How Do Inferences under the Weak Framework Change under these Departures?
+
+Before turning to First Stage, we introduce a running example taken from @gilligansergenti2008, which we use throughout this manuscript.
+
+## Running Example: United Nations Peacekeeping and Post-Conflict Peace
+
+We introduce matching through an example that examines the causal effect of United Nations (UN) peacekeeping missions on the durability of post-conflict peace, a question of central importance for both academic research and policy. Our example draws on data from @gilligansergenti2008, whose title includes the phrase "Matching to Improve Causal Inference," underscoring the value of applying matching to study the UN's causal impact on post-conflict peace. These data are publicly available in the supplementary information of the article's webpage in the *Quarterly Journal of Political Science* (DOI: [10.1561/100.00007051](https://doi.org/10.1561/100.00007051)).
+
+The dataset we use from @gilligansergenti2008 includes 87 observations, each corresponding to a country's peace period episode following a civil war, with episodes beginning as early as January 1989 and data extending through December 2003. In some episodes, UN peacekeepers intervened (e.g., Sierra Leone, Jan 2001 - Dec 2003), while in others they did not (e.g., Macedonia, Sep 2001 - Dec 2003). The treatment variable is UN intervention (\texttt{UN}), coded as $1$ if a UN mission was present during the peace period and $0$ otherwise. The outcome variable is the duration of the peace spell, which @gilligansergenti2008 measure as the log of the number of days from the start of peace until either the outbreak of a new conflict or right-censoring at December 2003. This log-transformed outcome (\texttt{ldur}) captures the total length of the peace period rather than the time elapsed after a potential UN intervention. In practice, however, UN interventions almost always began immediately after the onset of peace: "Of the 19 post-conflict UN interventions, the United Nations was present within the first month for 16 of them" [@gilligansergenti2008, p. 118]. In what follows, we set aside these measurement details.
+
+As @gilligansergenti2008 state, "UN missions are not randomly assigned" (p. 89). Whether peacekeepers are present during a given post-conflict peace period presumably depends on baseline covariates measured by @gilligansergenti2008, including the logged number of deaths (\texttt{lwdeaths}), the logged duration of the previous war (\texttt{lwdurat}), ethnic fractionalization (\texttt{ethfrac}, a 0-100 index for which dividing by 100 is intended to represent the probability that two randomly chosen individuals belong to different ethnic groups), logged population size (\texttt{pop}) and others. We implement matching using these same covariates, but emphasize that our exercise is expository and not intended as a replication of the original findings.
+
+### Loading the Data for the Running Example
+
+To load the data, you could first download the replication files from the supplementary information on the article's webpage (DOI: [10.1561/100.00007051](https://doi.org/10.1561/100.00007051)), save the files to your working directory, and then use a package such as \texttt{haven} to load the Stata (.dta) file, \texttt{peace\_pre\_match.dta}, into \texttt{R}. However, for our purposes, we recommend loading our pre-created .rds file (\texttt{peace\_pre\_match.rds}), in which Stata’s monthly numeric dates have been converted to \texttt{R}'s year-month format and the geographic region indicators recoded into a single factor variable (\texttt{region}). The command below loads this pre-created dataset (\texttt{peace\_pre\_match.rds}) into the \texttt{R} environment as an object named \texttt{data}.
+
+```{r, tidy = FALSE}
+
+# Define base URL for the Matching Guide GitHub repo
+base_url <- "https://raw.githubusercontent.com/tl2624/matching-guide/main"
+
+# Load the cleaned dataset
+data <- readRDS(
+  url(
+    paste0(
+      base_url, "/data/peace_pre_match.rds"
+    )
+  )
+)
+
+```
+
+## First Stage: Making a Matched Dataset (toward Justifying As-If Randomization)
+
+In an observational setting, treatment is not assigned by the flip of a coin but depends on individuals’ covariates. The goal of matching is to compare treated and control units that have the same chances of treatment based on those covariates --- i.e., the same *propensity scores*. If we could observe propensity scores, it would be straightforward to compare treated and control units by matching them directly on their propensity scores. Because propensity scores are not directly observed, we instead aim to create a collection of matched sets that is *balanced* --- meaning that treated and control observations are similar in their covariates.
+
+Before turning to questions of covariate similarity and matching, it is important to note that substantive transformations of covariates play a central role, as they determine the inputs on which subsequent notions of similarity between units are based. These transformations reflect substantive judgments and are often among the most important decisions in practice. In this manuscript, however, we do not address these substantive choices. Instead, we take the transformations used by @gilligansergenti2008 as given. For example, they measure ethnic fractionalization (\texttt{ethfrac}) on a 0-100 scale (rather than a 0–1 scale) and apply logarithmic transformations to covariates such as the number of deaths (\texttt{lwdeaths}) and the duration of the previous war (\texttt{lwdurat}), among others. Our focus is on design and analysis decisions conditional on these substantively chosen scales.
+
+### How Do I Measure Similarity on My Chosen Covariates?
+
+In the simplest terms, matching is about ensuring apples-to-apples, rather than apples-to-oranges, comparisons between treated and control observations [@rubinwaterman2006]. To create matched sets in which treated and control groups are similar in their covariates, we first need a distance measure that quantifies how close any two observations are. With such a measure in hand, we can then construct sets of treated and control observations that are close on this measure --- i.e., apples-to-apples in their pre-treatment characteristics.
+
+We record the distances between treated and control units in a distance matrix: The rows correspond to treated units and the columns to control units. Each cell of the matrix records the distance between a specific treated unit and a specific control unit, as defined by a distance measure. This distance measure takes the baseline covariates of the two units and maps them to a single nonnegative number, with smaller values indicating greater similarity.
+
+In our setting, we are interested in similarity across $9$ covariates, named in the object \texttt{covs}. 
+
+```{r, tidy = FALSE}
+
+# Define character vector of the 9 covariate names in the dataset
+covs <- c("lwdeaths", "lwdurat", "ethfrac", "pop", "lmtnest", "milper",
+          "bwgdp", "bwplty2", "region")
+
+```
+
+The first four --- \texttt{lwdeaths}, \texttt{lwdurat}, \texttt{ethfrac}, and \texttt{pop} --- were introduced earlier. The others include a logged measure of the proportion of a country's land area that is mountainous (\texttt{lmtnest}), the logged total number of military personnel in a country (\texttt{milper}), logged GDP per capita before the last civil war (\texttt{bwgdp}), the Polity score (a $-10$ to $10$ scale, from autocratic to democratic institutions) before the last civil war (\texttt{bwplty2}), and a region factor (\texttt{region}) with categories for Eastern Europe, Latin America, Asia, Sub-Saharan Africa, and North Africa/Middle East.
+
+All of these covariates are measured before treatment and presumably determine the chance of a UN intervention during a country's peace period. Our interest in them stems primarily from their role in determining those intervention probabilities. Yet many of these covariates may also be prognostic; that is, they help predict the outcome of interest in @gilligansergenti2008, the log duration of the peace period (\texttt{ldur}) that countries would potentially experience with or without a UN intervention. This prognostic value of covariates can provide an additional reason to match on them [@hansen2008a; @salesetal2018].
+
+There are many ways to measure the distance between a treated and a control unit. For example, we might compare units using the Euclidean distance --- i.e., the square root of the sum of squared differences --- across all baseline covariates. To do so, we first convert the factor variable \texttt{region}, which stores categorical labels, into a set of dummy ($0$ or $1$) variables for each region. This conversion ensures that distances between treated and control units can be computed, since distance measures require numeric variables rather than categorical labels.
+
+```{r, tidy = FALSE}
+
+# Install "dplyr" package (only run if not already installed)
+# install.packages("dplyr")
+
+# Load package for data manipulation (mutate, group_by, summarize, etc.)
+library(dplyr)
+
+# Convert categorical variable "region" into 0/1 dummy indicators
+data <- data |> # Pipe (|>) to pass left-hand result into next function call
+  mutate(
+    # Use mutate() to create new variables by transforming existing columns
+    # ifelse() returns one value if condition is TRUE and another if FALSE
+    eeurop   = ifelse(test = region == "eeurop",   yes = 1, no = 0),
+    lamerica = ifelse(test = region == "lamerica", yes = 1, no = 0),
+    asia     = ifelse(test = region == "asia",     yes = 1, no = 0),
+    ssafrica = ifelse(test = region == "ssafrica", yes = 1, no = 0),
+    nafrme   = ifelse(test = region == "nafrme",   yes = 1, no = 0)
+  )
+
+# Covariate names with "region" replaced by dummy indicators
+expanded_covs <- c(
+  # setdiff() returns elements in 'x' that are not in 'y'
+  setdiff(
+    x = covs,
+    y = "region" # Drops "region" from the covariate list
+  ),
+  "eeurop", "lamerica", "asia", "ssafrica", "nafrme"
+)
+
+```
+
+As an example, we calculate the Euclidean distance between post-conflict Liberia, where the UN did intervene, and post-conflict Guinea-Bissau, where the UN did not.
+
+```{r, tidy = FALSE}
+
+# Extract covariates for Liberia and Guinea-Bissau (cname = country name)
+liberia <- data[data$cname == "Liberia", expanded_covs]
+
+guinea_bissau <- data[data$cname == "Guinea-Bissau", expanded_covs]
+
+# Compute Euclidean distance between the two countries on these covariates
+sqrt(
+  sum(
+    (liberia - guinea_bissau)^2
+    )
+  )  # Display the Euclidean distance
+
+```
+
+We can obtain the full matrix of pairwise distance values using `match_on()` from the \texttt{optmatch} package. We do not need to manually recode factor variables into dummy indicators because `match_on()` handles this conversion automatically.
+
+```{r,  tidy = FALSE}
+
+# Create a formula: UN (treatment indicator) ~ covariates
+# Note: we keep "region" in covs as a factor
+cov_fmla <- reformulate(
+  termlabels = covs,
+  response = "UN"
+)
+
+# Install optmatch if not already installed
+# install.packages("optmatch")
+
+# Load optmatch, which provides the match_on() function
+library(optmatch)
+
+# Euclidean distance matrix: treated (UN = 1) vs control (UN = 0)
+dist_mat_euc <- match_on(
+  x = cov_fmla,                 # Formula for covariates
+  data = data,                  # Dataset used
+  standardization.scale = NULL, # No rescaling of covariates
+  method = "euclidean"          # Use Euclidean distance
+)
+
+# Add country names (cname) as row/column labels for clarity
+dimnames(dist_mat_euc) <- list(
+  data$cname[data$UN == 1], data$cname[data$UN == 0]
+)
+
+# Display submatrix of distances:
+round(        # Round distances for display
+  # treated units in rows 11-15 vs. control units in columns 27-30
+  x = dist_mat_euc[11:15, 27:30],
+  digits = 2  # Number of decimal places to round
+)
+
+```
+
+In this subset of the full distance matrix, the first entry is the Euclidean distance of Sierra Leone (treated) from Niger (control). The last listed entry is the distance between Namibia (treated) and the Central African Republic (control). 
+
+One concern with Euclidean distance is that it depends on the scale of the covariates. For example, the difference between a country in Sub-Saharan Africa (\texttt{ssafrica} = 1) and a country in Latin America (\texttt{ssafrica} = 0) would contribute the same to the Euclidean distance as the difference between two countries with GDP per capita values of \$3000 and \$3001. Intuitively, we would not want such a tiny difference in economic size to be treated as equally important as belonging to different regions of the world. More generally, we want differences across variables to be placed on a comparable scale, so that a meaningful difference in one variable counts about the same as a difference of similar importance in another.
+
+Another concern with Euclidean distance is that it ignores correlations among covariates. For example, countries with larger populations (\texttt{pop}) usually have more military personnel (\texttt{milper}), if only because a larger population provides a greater pool of potential recruits. Therefore, differences in both covariates (\texttt{pop} and \texttt{milper}) may largely reflect the same underlying factor --- population size (\texttt{pop}). Yet Euclidean distance adds these differences separately, as if they were unrelated, which can exaggerate the overall distance between two observations.
+
+The Mahalanobis distance [@mahalanobis1936] addresses both of these concerns. First, it standardizes covariates so that differences are placed on a comparable scale. Second, the Mahalanobis distance adjusts for correlations among covariates, ensuring that highly related variables are not effectively counted twice. We can construct a distance matrix based on Mahalanobis rather than Euclidean distances as follows.
+
+```{r, warning = FALSE, tidy = FALSE}
+
+# Mahalanobis distance matrix: treated (UN = 1) vs control (UN = 0)
+dist_mat_mah <- match_on(
+  x = cov_fmla,
+  data = data,
+  standardization.scale = NULL,
+  method = "mahalanobis" # Use Mahalanobis distance
+)
+
+```
+
+The standardization in the Mahalanobis distance is distinct from researchers' substantive choices about how to transform covariates. Substantive transformations --- such as logging certain covariates --- reflect subject-matter considerations and precede the matching procedure. The standardization in the Mahalanobis distance is a statistical device that operates on the pre-specified covariates to compute distances comparably across covariates. The purpose of this device is to facilitate matches that are similar on the original covariate scales.
+
+#### Similarity on the Estimated Propensity Score
+
+So far, we have focused on ways to measure distance between treated and control units across many covariates in order to identify which units are most similar and group them together to achieve covariate balance. However, when there are many covariates, it becomes difficult to find treated and control units that are similar on all covariates. This challenge is often referred to as the "curse of dimensionality."
+
+A common way to address this problem is to reduce the information from many covariates into a lower-dimensional form. The *estimated propensity score* does this by collapsing information from all covariates into a single number. This number represents a transformation of an estimated linear index of covariates that accounts for how strongly each covariate predicts treatment.
+
+Consider, for example, a logistic model for the estimated propensity score of an individual unit $i$. We write this model as
+\begin{align} \label{eq: linear index}
+\hat{\lambda}(\bm{x}_i) & = \dfrac{1}{1 + \exp(-\bm{\hat{\beta}}^{\top}\bm{x}_i)},
+\end{align}
+where $\bm{x}_i$ is the covariate vector, $\bm{\hat{\beta}}$ is the vector of estimated coefficients, and the superscript $^{\top}$ denotes the transpose, turning the row vector $\bm{\hat{\beta}}$ into a column vector. The quantity $\bm{\hat{\beta}}^{\top}\bm{x}_i$ is the estimated linear index, and the inverse logistic function, $1 / (1 + \exp(-x))$, maps any real-valued input, $x$, onto the interval $(0, \, 1)$. The estimated linear covariate index for unit $i$, $\bm{\hat{\beta}}^{\top}\bm{x}_i$, is simply the logit, i.e., log odds, transformation of $\hat{\lambda}(\bm{x}_i)$ in \eqref{eq: linear index}.
+
+This quantity, $\hat{\lambda}(\bm{x}_i)$, is a simple transformation of a linear index of covariates that best "separates" treated from control units. The estimated coefficients ($\bm{\hat{\beta}}$) "separate" treated from control units on the linear index because the coefficients are chosen to maximize a likelihood that rewards large differences between the groups. When treated and control units have little or no covariate overlap, the estimated linear indices can diverge substantially, very positive for treated units and very negative for controls. With greater overlap, the estimated linear indices for treated and control units are similar, clustering near zero.
+
+This estimation process reflects how predictive each covariate is of treatment. When treated and control observations lack overlap on a covariate, that covariate is highly predictive of treatment and therefore receives an estimated coefficient with a large magnitude. When there is substantial overlap on a covariate, it is less predictive of treatment, and the magnitude of its coefficient is small. Consequently, when we assess similarity on the estimated linear index of covariates in \eqref{eq: linear index}, the estimated coefficients assign greater importance to covariates that strongly predict treatment and less importance to those that do not.
+
+To see this logic in action, we first estimate a logistic propensity score model using all covariates except \texttt{region}, which we exclude because some regions perfectly --- or nearly perfectly --- predict treatment assignment, leading to (near-)complete separation [@albertanderson1984].
+
+```{r, results = "hide",  tidy = FALSE}
+
+# Formula for UN ~ covariates (excluding "region")
+psm_cov_fmla <- reformulate(
+  termlabels = setdiff(
+    x = covs,
+    y = "region"
+  ),
+  response = "UN"
+)
+
+# Fit logistic regression for propensity score model
+psm <- glm(
+  formula = psm_cov_fmla,            # Treatment ~ covariates
+  family = binomial(link = "logit"), # Logistic regression (logit link)
+  data = data
+)
+
+```
+
+Using this fitted propensity score model, we can extract each unit's estimated linear covariate index, $\bm{\hat{\beta}}^{\top} \bm{x}_i$, as follows.
+
+```{r, results = "hide",  tidy = FALSE}
+
+# Extract logit propensity scores (linear predictors from fitted model)
+lin_cov_inds <- psm$linear.predictors  # = model.matrix(psm) %*% coef(psm)
+
+```
+
+Below we can see that the estimated linear covariate indices from the model `psm` correspond exactly to the logits (i.e., the log-odds transformations) of the model's predicted probabilities of treatment, which range between $0$ and $1$.
+
+```{r, tidy = FALSE, results = "hide"}
+
+# Extract estimated propensity scores (predicted probabilities of UN = 1)
+p_scores <- psm$fitted.values
+
+# Check that lin_cov_inds equals log odds (propensity scores on logit scale)
+all.equal(
+  lin_cov_inds, log(p_scores / (1 - p_scores))
+)
+
+# Also check that p_scores equals logistic(lin_cov_inds)
+all.equal(
+  p_scores, 1 / (1 + exp(-lin_cov_inds))
+)
+
+```
+
+```{r, include = FALSE}
+
+# Create data frames with covariates and the linear predictor added
+namibia <- data[which(data$cname == "Namibia" & data$UN == 1),
+                c("cname", "UN", covs[covs != "region"])]
+
+burundi <- data[which(data$cname == "Burundi" & data$UN == 0),
+                c("cname", "UN", covs[covs != "region"])]
+
+# Add linear predictor (logit index) and propensity score
+namibia$lin_cov_index <-
+  lin_cov_inds[
+    which(data$cname == "Namibia" & data$UN == 1)
+  ]
+
+burundi$lin_cov_index <-
+  lin_cov_inds[
+    which(data$cname == "Burundi" & data$UN == 0)
+  ]
+
+namibia_burundi_euc_dist <- sqrt(
+  sum(
+    (namibia[,covs[covs != "region"]] - burundi[,covs[covs != "region"]])^2
+  )
+)
+
+```
+
+To see how two observations that differ on many covariates can still have similar estimated propensity scores, consider post-conflict Namibia (treated) and Burundi (control). The two are similar on some covariates, such as logged military personnel (\texttt{milper}), but --- consistent with the "curse of dimensionality" --- very different on others, such as duration of the last war (\texttt{lwdurat}) and ethnic fractionalization (\texttt{ethfrac}). Yet the estimated linear indices for Namibia and Burundi differ by only a minuscule amount. This small difference occurs because the covariates on which Namibia and Burundi differ greatly have small estimated coefficients in the propensity score model (e.g., approximately `r round(x = coef(psm)["lwdurat"], digits = 2)` for \texttt{lwdurat} and approximately `r round(x = coef(psm)["ethfrac"], digits = 2)` for \texttt{ethfrac}), while those on which the two observations are similar, such as \texttt{milper}, have large estimated coefficients (approximately `r round(x = coef(psm)["milper"], digits = 2)`).
+
+To illustrate these broader patterns, the boxplot below compares the distributions of the estimated linear covariate index for treated and control groups.
+
+```{r, echo = FALSE, fig.pos = "H", fig.width = 6, fig.height = 4, fig.cap = "The empirical distributions of the linear covariate index for treated and control groups."}
+
+# Install "ggplot2" (only run if not already installed)
+# install.packages("ggplot2")
+
+# Load ggplot2 package for visualization
+library(ggplot2)
+
+# Boxplot of estimated linear covariate index by treatment status
+ggplot(
+  data = data,  # Dataset
+  mapping = aes(x = as.factor(UN), # Treatment indicator (0/1 as factor)
+                y = lin_cov_inds)  # Linear covariate index (from logistic regression)
+) +
+  geom_boxplot() +                                   # Draw boxplots
+  xlab(label = "UN intervention") +                  # X-axis label for treatment
+  ylab(label = "Estimated linear covariate index") + # Y-axis label for lin cov index
+  theme_bw() +                                       # Apply black-and-white theme
+  coord_flip()                                       # Flip axes for readability
+
+```
+
+As the figure above shows, there is some, but not a lot of, overlap between treated and control groups. In accordance with our earlier discussion of how the estimated linear covariate index "separates" treated from control units, many control observations have very negative values (as low as `r round(x = min(lin_cov_inds[data$UN == 0]), digits = 2)`), far from the treated units' range of `r round(x = min(lin_cov_inds[data$UN == 1]), digits = 2)` to `r round(x = max(lin_cov_inds[data$UN == 1]), digits = 2)`. Nevertheless, a sufficient number of treated and control observations have estimated linear covariate indices that cluster around $0$, indicating covariate overlap for at least a subset of treated and control observations.
+
+### How Can I Apply Rules for Matches to Ensure Comparability?
+
+The discussion above on measuring covariate distances between treated and control observations helps identify which treated-control pairs are similar. The goal of identifying these similar treated-control pairs is to form matched sets that are closely aligned on their covariates, thereby improving balance between treatment and control groups. In practice, we do this by excluding potential matches that are "too dissimilar." There are two common ways to do this:
+
+- **Exact matching**: Require that units be identical on some subset of important covariates, typically those that are categorical or coarse enough for units to take the same values.
+- **Calipers**: Impose a threshold for the maximum allowable distance so that no matched set may include a treated and a control unit that are farther apart than this caliper.
+
+As a simple example to build intuition, we will impose the following constraints:  
+
+- Observations can belong to the same matched stratum only if they are in the same geographic region.
+- Treated and control observations more than two points apart on the Polity score cannot be in the same matched set.  
+
+Below we impose the first constraint, requiring an exact match on region. Doing so produces separate distance matrices containing the Euclidean distances on the covariate used to define the exact match (\texttt{region}), where all entries are $0$, indicating that treated and control units belong to the same region.
+
+```{r, warning = FALSE, tidy = FALSE}
+
+# Create distance structure: 0 if units are in same region, Inf otherwise
+em_region <- exactMatch(
+  x = UN ~ region,
+  data = data
+)
+
+```
+
+Now we impose the second constraint: We construct a distance matrix based on the Polity score, \texttt{bwplty2}, with a caliper of $2$. This matrix records the Euclidean difference in Polity scores when the difference is $2$ or less, and assigns a value of $\infty$ (denoted in \texttt{R} as `Inf`) when the difference exceeds $2$. The $\infty$ entries are crucial because \texttt{optmatch} minimizes the sum, across all matched sets, of the within-set sums of covariate distances between each treated-control pair. Consequently, any treated–control pair differing by more than 2 points on the Polity score is assigned an overall distance of $\infty$, which prevents them from being matched.
+
+```{r, tidy = FALSE}
+
+# Euclidean distance on Polity score (bwplty2) with caliper = 2
+# Pairs differing by > 2 are set to Inf
+euc_dist_polity_cal_2 <- match_on(
+  x = UN ~ bwplty2,
+  caliper = 2,  # Set caliper
+  data = data,
+  standardization.scale = NULL,
+  method = "euclidean"
+)
+
+```
+
+Note that we used Euclidean distance here because, after exactly matching on geographic region, matching proceeds on only $1$ covariate (Polity score), so we do not have to worry about covariates' relative scales.
+
+Finally, we combine the two constraints into distance matrices defined within each region by ``adding'' the objects `em_region` and `euc_dist_polity_cal_2`, as shown below.
+
+```{r, tidy = FALSE, results = "hide"}
+
+# Overall distance matrix by element-wise addition of two distance matrices
+overall_dist_mat <- em_region + euc_dist_polity_cal_2
+
+```
+
+### How Can I Apply Rules for Matches to Improve Effective Sample Size?
+
+Beyond comparability in covariates, we also care about the matched study's size. The effective sample size depends not simply on the total number of units included in our matches. Effective sample size also depends on how those units are arranged across the matched sets.
+
+The \texttt{optmatch} package will always produce matches with a particular arrangement of units across sets. In particular, all sets contain either $1$ treated unit or $1$ control unit --- an overall structure that minimizes imbalance while excluding as few units as possible [@rosenbaum1991; @gurosenbaum1993; @hansen2004]. In practice, optimal full matching can yield lopsided sets, with either $1$ treated matched to many controls or $1$ control matched to many treated units, which has implications for the effective sample size.
+
+In the \texttt{optmatch} package, the effective sample size is defined as the sum, across matched sets, of the harmonic mean of the numbers of treated and control units within each set. The formal definition is given by
+\begin{align} \label{eq: harmonic mean}
+\textbf{Effective Sample Size:} \quad \sum \limits_{s = 1}^S \left[\left(m_s^{-1} + (n_s - m_s)^{-1}\right)/2\right]^{-1},
+\end{align}
+where the index $s$ runs over the $\left\{1, \dots , S\right\}$ matched sets, with $m_{s}$ denoting the number of treated units in set $s$ and $n_s - m_s$ the number of control units. With $n_s$ denoting the number of units in set $s$, the total number of individuals included in the matched study is $n = \sum_{s = 1}^S n_s$.
+
+From the formula in \eqref{eq: harmonic mean}, we can see how the effective sample size depends on the arrangement of units across sets. For example, in a study with $4$ total units, the effective sample size would be $2$ if the units were arranged into $2$ matched pairs. By contrast, in a study of the same total size but arranged as a single set with $1$ treated unit and $3$ controls, the effective sample size would be $1.5$. The effective sample size is larger in the former arrangement because it provides two distinct treated-versus-control comparisons, whereas the latter provides only one.
+
+This definition of effective sample size anticipates subsequent outcome analysis under as-if randomization, as effective sample size bears directly on the precision of estimators and the power of hypothesis tests. Assuming constant, additive treatment effects within a set, the variance of the Difference-in-Means --- the average outcome among treated units minus the average outcome among control units --- in that set is minimized when the harmonic mean is largest [@hansenbowers2008; @hansen2011]. The harmonic mean reaches its maximum when the numbers of treated and control units are equal. Thus, all else equal, matched pairs and other balanced sets provide more information about causal effects than lopsided sets with unequal treated-to-control ratios.
+
+One straightforward way to increase effective sample size is to relax restrictions on which units can be matched. Relaxing calipers can admit additional units into the matched design by allowing matches for units that would otherwise be discarded. For instance, we might widen the caliper on Polity score from $2$ to $3$ and then rebuild the distance matrix.
+
+```{r, tidy = FALSE, results = "hide"}
+
+# Apply a caliper of width 3 to the polity Euclidean distance matrix
+euc_dist_polity_cal_3 <- match_on(
+  x = UN ~ bwplty2,
+  caliper = 3,
+  data = data,
+  standardization.scale = NULL,
+  method = "euclidean"
+)
+
+# Combine regional exact match distance with polity distance
+em_region + euc_dist_polity_cal_3
+
+```
+
+Doing so increases the effective sample size, but such gains need not be substantial. When newly admitted units are absorbed into existing matched sets --- each of which contains only one treated or one control unit --- rather than generating additional treated–versus-control comparisons, the resulting contribution to effective sample size is limited. More generally, as the formula in \eqref{eq: harmonic mean} makes clear, the effective sample size depends on how units are distributed across sets: When units, including newly admitted ones, are concentrated in only a few sets, the resulting gain in effective sample size is modest.
+
+Instead of relying solely on caliper width, researchers can also shape the effective sample size by controlling the structure of matched sets via the `min.controls` and `max.controls` arguments in \texttt{optmatch}'s `fullmatch()` function. These arguments specify lower and upper bounds, respectively, on the ratio of control to treated units within each matched set. By default, `min.controls = 0` and `max.controls = Inf`, which impose no restrictions on matched set composition. Changing these defaults allows researchers to control how balanced or lopsided matched sets may be, thereby shaping the effective sample size.
+
+To illustrate, suppose we want to restrict matches using the `overall_dist_mat` introduced earlier. We know that \texttt{optmatch} will divide the data into matched sets containing one treated unit and any positive number of controls, or one control unit and any positive number of treated units. However, we can impose additional constraints on this full matching, such as requiring a minimum control-to-treated ratio of $1{:}2$ --- that is, at least one control for every two treated units (`min.controls = 0.5`) --- and no more than two controls per treated unit (`max.controls = 2`). Under these restrictions, allowable matched sets could include $2$ treated units with $1$ control, $1$ treated unit with $1$ control (a matched pair), or $1$ treated unit with $2$ controls.
+
+```{r, tidy = FALSE, results = "hide"}
+
+# Full matching using overall distance matrix
+fullmatch(
+  x = overall_dist_mat,
+  min.controls = 0.5,   # At least 0.5 controls per treated unit
+                        # (i.e., no more than 2 treated per control)
+  max.controls = 2,     # At most 2 controls per treated unit
+  omit.fraction = NULL, # Governs fraction of units discarded
+  mean.controls = NULL, # Governs average controls per treated unit
+  # Only one of omit.fraction or mean.controls can be non-NULL
+  data = data
+)
+
+```
+
+Note, in addition, that the `fullmatch()` arguments of `omit.fraction` and `mean.controls` provide explicit levers for controlling how many treated and control units are discarded, though at most one of `omit.fraction` or `mean.controls` may be specified.
+
+Imposing ratio constraints can have mixed consequences. In some cases, balance may worsen if a control is forced to match with a less similar treated unit --- though still within the specified calipers --- in order to satisfy the minimum and maximum ratio rules. In other cases, such constraints may improve effective sample size by redistributing how units are grouped without hurting balance. However, if the ratio constraints are too stringent, they can reduce effective sample size by forcing too many units to be discarded.
+
+In applied settings, final choices of calipers and ratio constraints typically follow iterative checks of both covariate balance and effective sample size. Practitioners often compare several specifications and select among those that satisfy diagnostics for both goals. @hansensales2015 outline how this process can be carried out in a structured way, drawing on the stepwise intersection–union principle (SIUP) of hypothesis testing.
+
+### How Do I Actually Form the Matches?
+
+The simple matching example above --- based on an exact match on geographic region and a caliper on Euclidean distance for a single covariate (Polity score) --- serves to illustrate the basic ideas. When matching on many covariates, however, we will often prefer some combination of Mahalanobis distance and propensity score matching, sometimes adding calipers on specific covariates. In what follows, we use *rank-based* Mahalanobis distance, which has the advantage of being less sensitive to outliers and differences in scales across covariates [@rosenbaum2010]. We further constrain the matching by imposing a caliper on the estimated propensity score, requiring treated and control observations to come from the same geographic region, and applying additional calipers directly to two covariates: ethnic fractionalization (\texttt{ethfrac}) and logged GDP per capita (\texttt{bwgdp}).
+
+```{r, include = FALSE}
+
+# Compute here (even though repeated later) so we can reference in text
+data$logit_p_score <- lin_cov_inds
+
+pop_sd_logit <- sqrt(
+  mean(
+    (data$logit_p_score - mean(data$logit_p_score))^2
+  )
+)
+
+```
+
+We impose a caliper equal to $0.5$ standard deviations of the logit of the estimated propensity score (the estimated linear covariate index defined above). This choice is larger than one rule of thumb emanating from @cochranrubin1973, which recommends a caliper less than or equal to $0.20$ standard deviations. Given that the standard deviation of the logit index is approximately `r round(x = pop_sd_logit, digits = 2)`, our choice of $0.5$ permits treated and control units to differ by up to roughly `r round(x = 0.5 * pop_sd_logit, digits = 2)` on the logit scale, compared to about `r round(x = 0.2 * pop_sd_logit, digits = 2)` under the $0.20$ guideline.
+
+```{r,  tidy = FALSE}
+
+# Add logistic regression linear predictors to dataset
+data$logit_p_score <- lin_cov_inds
+
+# Population standard deviation of logit_p_score (divides by n, not n - 1)
+pop_sd_logit <- sqrt(
+  mean(
+    (data$logit_p_score - mean(data$logit_p_score))^2
+  )
+)
+
+# Distance matrix for logit of estimated propensity scores
+ps_mat <- match_on(
+  x = UN ~ logit_p_score,
+  caliper = 0.5 * pop_sd_logit,
+  data = data,
+  standardization.scale = NULL,
+  method = "euclidean"
+)
+
+```
+
+Below we construct the distance matrix for rank-based Mahalanobis distance.
+
+```{r, tidy = FALSE}
+
+# Rank-based Mahalanobis distance on covariates
+# Covs defined earlier as covariate names; here, drop "region"
+rank_mah_mat <- match_on(
+  x      = reformulate(
+    termlabels = setdiff(
+      x = covs,
+      y = "region"),
+    response   = "UN"),
+  data   = data,
+  standardization.scale = NULL,
+  method = "rank_mahalanobis" # Use rank-based Mahalanobis distance
+)
+
+```
+
+Finally, we construct the Euclidean distance matrix for ethnic fractionalization (\texttt{ethfrac}) and logged GDP per capita (\texttt{bwgdp}) using calipers of $35$ and $2$, respectively. The exact-match constraint on region has already been defined through the object `em_region` above.
+
+```{r, tidy = FALSE}
+
+# Compute Euclidean distance matrix for ethnic fractionalization
+eth_mat <- match_on(
+  x = UN ~ ethfrac,
+  caliper = 35,
+  data = data,
+  standardization.scale = NULL,
+  method = "euclidean"
+)
+
+# Compute Euclidean distance matrix for logged GDP per capita
+bwgdp_mat <- match_on(
+  x = UN ~ bwgdp,
+  caliper = 2,
+  data = data,
+  standardization.scale = NULL,
+  method = "euclidean"
+)
+
+```
+
+We then combine the `ps_mat`, `rank_mah_mat`, `eth_mat`, `bwgdp_mat`, and `em_region` objects to form the overall distance structure. We then pass the combined object to \texttt{optmatch}'s `fullmatch()` function, imposing a constraint that no more than $4$ control units may be matched to any treated unit. If instead we wanted to perform pair matching, the \texttt{optmatch} package allows users to directly specify a matched-pair structure via the `pairmatch()` function. Equivalently, we could implement pair matching by setting `min.controls = 1` and `max.controls = 1` in the `fullmatch()` call. The code chunk below proceeds with full matching under the constraint that no more than $4$ controls may be matched to any treated unit.
+
+```{r, tidy = FALSE}
+
+# Full matching: 
+# PS + rank Mahalanobis + Euclidean (ethfrac, bwgdp) + region exact
+fm <- fullmatch(
+# x specifies the distance structure:
+# match_on() formula, distance matrix, or sum of match_on() distances
+  x            = ps_mat + rank_mah_mat + eth_mat + bwgdp_mat + em_region,
+  data         = data,
+  max.controls = 4 # <= 4 controls per treated (min.controls = 0 by default)
+)
+
+```
+
+To calculate the effective sample size of the matched observations, we use the following function from \texttt{optmatch}.
+
+```{r,  tidy = FALSE}
+
+# Effective sample size of matched sets
+effectiveSampleSize(
+  fm
+)
+
+```
+
+```{r,  include = FALSE}
+
+# Effective sample size of matched sets
+ess <- effectiveSampleSize(fm)
+
+```
+
+Referring back to \eqref{eq: harmonic mean}, this reported effective sample size of approximately `r round(x = ess, digits = 2)` equals the sum across sets of the within-set harmonic mean of the number of treated and control subjects. This effective sample size reflects the matched structure in which no set contains more than $4$ controls for any $1$ treated observation.
+
+```{r,  tidy = FALSE}
+
+# Summarize matched sets and report effective sample size
+summary(
+  fm
+)
+
+```
+
+The notation in the `summary()` output of \texttt{optmatch} indicates the ratio of treated to control observations within each matched set. For example, `1:0` indicates $1$ treated unit and no controls (effectively an unmatched treated unit). Similarly, `1:2` indicates $1$ treated unit and $2$ controls, and `0:1` indicates no treated units and $1$ control (effectively an unmatched control). Below each label, the output shows how many matched sets have that particular structure.
+
+If we examine the object returned by the matching call (`fm`), we see that \texttt{optmatch} labels each observation according to its matched set, assigning `NA` to those not included. Because we performed exact matching by region, \texttt{optmatch} labels each matched set using the name of the exact-match stratum followed by a set index within that stratum. For example, the label `lamerica.1` denotes the first matched set within the Latin America stratum.
+
+To see which units were matched together, we can add the `fm` object to the dataframe and then tabulate. For example, to view the `ssafrica.3` set, we run the following.
+
+```{r, message = FALSE, tidy = FALSE}
+
+# Add matched set ID to data for each unit
+data$fm <- fm
+
+# Look at one matched set ("ssafrica.3") for illustration
+data |>
+  filter(
+    fm == "ssafrica.3" # Keep only units in set "ssafrica.3"
+  ) |>
+  # Display selected variables
+  select(
+    cname, UN, region, logit_p_score, ethfrac, bwgdp, bwplty2
+  )
+
+```
+
+We can see that the exact match on geographic region holds: All $4$ countries are located in Sub-Saharan Africa. The logit of the estimated propensity score is similar across units, though not identical. The treated country, Rwanda, is matched to three controls --- Burundi, Somalia, and Lesotho --- and in each case the distance falls within $0.5$ standard deviations of the estimated logit propensity scores (approximately `r round(x = 0.5 * pop_sd_logit, digits = 2)`), the caliper we specified. Likewise, Rwanda's distances to each of the $3$ control units fall within the calipers of $35$ for ethnic fractionalization (\texttt{ethfrac}) and $2$ for logged GDP per capita (\texttt{bwgdp}). By contrast, distances between control countries can technically exceed these thresholds, since \texttt{optmatch} enforces calipers only between treated and control units, not among controls.
+
+We can also see that some covariates used in the propensity score model and the rank-based Mahalanobis distance --- such as Polity score (\texttt{bwplty2}) --- still show modest imbalance within this matched set. This imbalance is unsurprising. We applied a caliper on the logit of the estimated propensity score and matched on the rank-based Mahalanobis distance including \texttt{bwplty2}, but we did not apply a caliper directly to \texttt{bwplty2}, though such a caliper could easily be added if desired.
+
+### How Do I Decide Whether to Move Ahead with My Matched Design?
+
+Once we have constructed our matched sets, we want to evaluate the overall quality of the matched design. Covariate balance is an important aspect of this evaluation. To assess covariate balance, we compare the balance in our matched observational study with the balance we would expect to see in a completely randomized experiment within blocks [@hansenbowers2008].
+
+Below we calculate adjusted covariate means for the treated and control groups by averaging set-specific means across matched sets, with each set weighted by its contribution to the effective sample size. We also report standardized differences, defined as the treated-minus-control difference in these adjusted means divided by the pooled standard deviation of the covariate across treated and control units in the overall data (including both matched and unmatched units).
+
+```{r,  tidy = FALSE}
+
+# Install "RItools" package (only run if not already installed)
+# install.packages("RItools")
+
+# Load RItools package for balance diagnostics (balanceTest)
+library(RItools)
+# Covariate balance test
+cov_bal <- balanceTest(
+  # Formula: treatment ~ covariates
+  # update(): keep the original formula (. ~ .)
+  # and add stratification by matched set, + strata(fm)
+  fmla = update(
+    cov_fmla, . ~ . + strata(fm)
+  ),
+  data = data,
+  p.adjust.method = "none" # Method of p-value adjustment (none here)
+)
+
+```
+
+```{r, tidy = FALSE, echo = FALSE, results = "asis"}
+
+# Install packages (only run these lines if not already installed)
+# install.packages("tibble")
+# install.packages("kableExtra")
+
+# Load tibble for cleaner data frame printing/handling
+library(tibble)
+
+# Load kableExtra for formatting tables for LaTeX/HTML output
+library(kableExtra)
+
+# Extract balanceTest 3-D results:
+# [vars, stats (Control,Treatment,std.diff,p), strata (fm, --)]
+arr  <- cov_bal$results
+vars <- dimnames(arr)$vars
+
+# Get readable labels from data (haven-style), else fall back to variable name
+label_from_data <- function(v) {
+  if (v %in% names(data)) {
+    lb <- attr(data[[v]], "label", exact = TRUE)
+    if (!is.null(lb) && nzchar(lb)) return(lb)
+  }
+  v
+}
+
+# Map region dummy names → readable labels
+region_map <- c(
+  regioneeurop   = "Eastern Europe",
+  regionlamerica = "Latin America",
+  regionnafrme   = "North Africa & Middle East",
+  regionssafrica = "Sub-Saharan Africa",
+  regionasia     = "Asia"
+)
+
+# Final covariate labels
+# Use region_map if present; else dataset label; else raw name
+cov_labels <- sapply(
+  X = vars,
+  FUN = function(v) {
+    ifelse(
+      test = v %in% names(region_map),
+      yes  = region_map[[v]],
+      no   = label_from_data(v)
+    )
+  },
+  USE.NAMES = FALSE
+)
+
+# Helper: slice a 2-D matrix (vars × stats) for one stratum
+slice_mat <- function(a, stratum) {
+  a[, c("Control", "Treatment", "std.diff", "p"),
+    stratum,
+    drop = FALSE][,,1, drop = TRUE]
+}
+
+# Before/after matrices
+# In balanceTest output, "--" is the overall (unstratified) result
+before <- slice_mat(arr, "--")
+after  <- slice_mat(arr, "fm")
+
+# Build tibble with distinct internal names
+cov_tab <- tibble(
+  Covariate      = cov_labels,
+  Control_before = round(x = before[, "Control"],   digits = 2),
+  Treated_before = round(x = before[, "Treatment"], digits = 2),
+  StdDiff_before = before[, "std.diff"],
+  Control_after  = round(x = after[,  "Control"],   digits = 2),
+  Treated_after  = round(x = after[,  "Treatment"], digits = 2),
+  StdDiff_after  = after[,  "std.diff"],
+  p_before       = before[, "p"],  # keep for star annotation
+  p_after        = after[,  "p"]
+)
+
+# Format standardized differences, adding * when p <= 0.05
+fmt_sd <- function(x, p) {
+  ifelse(
+    test = !is.na(p) & p <= 0.05,
+    yes  = sprintf("%.2f*", x),
+    no   = sprintf("%.2f",  x)
+  )
+}
+
+# Apply formatting; drop helper p-values
+cov_tab <- cov_tab |>
+  mutate(
+    StdDiff_before = fmt_sd(StdDiff_before, p_before),
+    StdDiff_after  = fmt_sd(StdDiff_after,  p_after)
+  ) |>
+  select(-p_before, -p_after)
+
+# Print LaTeX table:
+# - grouped headers: Before matching / After matching
+# - printed column names omit "(Before)/(After)"
+# Build the LaTeX table *without* a caption
+tab_tex <- kbl(
+  cov_tab,
+  booktabs  = TRUE,
+  align     = c("l","c","c","c","c","c","c"),
+  col.names = c("Covariate", "Control mean", "Treated mean", "Std. diff",
+                "Control mean", "Treated mean", "Std. diff"),
+  # no caption here!
+  linesep   = ""
+) |>
+  add_header_above(
+    c(" " = 1, "Before matching" = 3, "After matching" = 3),
+    bold = TRUE
+  ) |>
+  kable_styling(latex_options = c("hold_position", "scale_down"),
+                full_width    = FALSE) |>
+  as.character()
+
+# Insert caption + label *before* \end{table} so it appears below the tabular
+tab_tex <- sub(
+  "\\\\end\\{table\\}",
+  paste0(
+    "\\\\captionof{table}{Adjusted covariate means for treated and control groups ",
+    "and standardized treated--control differences, before and after matching. ",
+    "Asterisks denote two-tailed $p$-values less than or equal to 0.05.}\n",
+    "\\\\label{tab: balance}\n",
+    "\\\\end{table}"
+  ),
+  tab_tex
+)
+
+cat(tab_tex)
+
+```
+
+\FloatBarrier
+
+In Table \ref{tab: balance} above, the adjusted means offer a direct description of balance. The standardized differences place all covariates on a common scale, enabling at-a-glance comparisons of imbalance across covariates. Stars indicate covariates for which the adjusted mean difference would be unusually extreme under a block-randomized experiment that assigns treatment completely at random within matched sets, holding fixed the observed number of treated units in each set. The stars are based on a Normal approximation to the randomization distribution of adjusted mean differences, and, because no adjustments are made for multiple comparisons, these stars are conservative. That is, for any given covariate, the corresponding adjusted mean difference is, if anything, more likely than the nominal rate to fall in the tails of its own randomization distribution under complete random assignment within matched sets. Alternative adjustments for testing multiple covariates are available, such as the Holm procedure [@holm1979], which is the default option in \texttt{RItools}’s `balanceTest()` function.
+
+One concern with balance tests is that high $p$-values may arise not from improved covariate balance but from the reduction in effective sample size that typically accompanies the matching process [@austin2008; @imaietal2008]. As @hansen2008b notes, however, this possibility is less troubling than it first appears. The same increase in standard errors that produces high $p$-values for covariate balance tests will also carry over to subsequent causal inferences, meaning that those high $p$-values remain informative: They suggest that we are, if anything, less likely to overstate our causal conclusions than if the $p$-values had been significant.
+
+Regardless of whether the balance tests are statistically significant, there are also established guidelines for what constitutes sufficient balance. While precise thresholds depend on context and substantive judgment about each covariate's importance, two rules of thumb appear in @austin2009 and @stuart2010. @austin2009 suggests that standardized differences of 0.1 or greater indicate inadequate balance on a covariate, whereas @stuart2010, following @rubin2001, proposes a more lenient threshold of 0.25. In our case, all covariates meet this latter standard, and none show statistically significant differences, indicating that observed imbalances would not be unusual under a completely randomized experiment within blocks (i.e., under as-if randomization).
+
+In addition to assessing balance on each covariate individually, @hansenbowers2008 also propose an omnibus, chi-squared ($\chi^2$) test that evaluates balance across all covariates and their linear combinations simultaneously. We conduct this test below.
+
+```{r, include = FALSE}
+
+# Extract overall chi-square test statistic (rounded to 2 decimals)
+bal_stat <- round(
+  x = cov_bal$overall["fm", "chisquare"],
+  digits = 2
+)
+
+# Extract overall chi-square test p-value (rounded to 2 decimals)
+bal_p_val <- round(
+  x = cov_bal$overall["fm", "p.value"],
+  digits = 2
+)
+
+```
+
+```{r,  tidy = FALSE}
+
+# Extract overall chi-square balance test by matched set (fm)
+cov_bal$overall["fm", ]
+
+```
+
+This $\chi^2$ balance test yields an observed test statistic of `r bal_stat` and a corresponding $p$-value of `r bal_p_val`. Our high $p$-value indicates that the observed level of covariate balance is consistent with what we would expect in a completely randomized experiment within blocks.
+
+Despite the high $p$-value, there is no guarantee that balance is sufficient for as-if randomization. Residual imbalance on observed covariates and hidden imbalance on unobserved ones may undermine the as-if randomization assumption. For now, we proceed under the as-if randomization assumption, but we will later assess how sensitive our inferences are to violations of it due to such imbalances.
+
+## Second Stage: Causal Inference (under As-If Randomization)
+
+In both the sharp and weak frameworks, the causal targets of inference are defined through potential outcomes. Under what is known as SUTVA, the stable unit treatment value assumption [@rubin1980; @rubin1986; @cox1958], each unit has two potential outcomes: a value the outcome would take if that unit were assigned to treatment and a value the outcome would take if that unit were assigned to control. Let $y_{si}(1)$ and $y_{si}(0)$ denote these potential outcomes, respectively, for unit $i$ in set $s$, where the index $i$ runs over the $\{1, \ldots, n_s\}$ units in set $s$. The individual treatment effect is $\tau_{si} = y_{si}(1) - y_{si}(0)$. With $n = \sum_{s = 1}^S n_s$ total units, let $\bm{\tau} = (\tau_{1,1}, \tau_{1,2}, \ldots, \tau_{S,n_s})^{\top}$ collect all $n$ unit-level effects, indexed first by matched set and then by unit within set, and write the ATE as $\tau = (1/n) \sum_{s=1}^S \sum_{i=1}^{n_s} \tau_{si}$.
+
+Both $\bm{\tau}$ and $\tau$ are defined only for the subset of units retained after matching, which often differs from the original set of units prior to matching [@rosenbaumrubin1985; @rosenbaum2012]. This difference is especially important when retention is driven by overlap in the estimated propensity score, as the resulting study population can be difficult to interpret substantively. In such settings, it is often preferable to define the study population directly in terms of a small number of substantively meaningful covariates, reflecting the argument in @rosenbaum2010 that it is "usually better to go back to the covariates themselves ... perhaps redefining the population under study to be a subpopulation of the original population" (p. 86), as also emphasized by @stuart2010. Building on this insight, subsequent approaches seek to define the matched study population directly in terms of a small number of substantively meaningful covariates [@fogartyetal2016; @traskinsmall2011].
+
+The breadth of the study population retained after matching depends in part on the relative abundance of treated and control units across covariate space. When one treatment arm is sparsely represented in regions dominated by the other, overlap may be limited to a narrow region of covariate space and include relatively few units. All else equal, a larger pool of units available for matching supports overlap over a wider region of covariate space and a larger, more interpretable study population over which the target of inference is defined.
+
+These targets of inference, $\bm{\tau}$ nor $\tau$, defined among the matched units, cannot be directly calculated. Even in a randomized experiment, we cannot assign a country emerging from civil war to receive a UN peacekeeping mission, observe how long the ensuing peace lasts, and then rewind time to observe how long peace would have lasted in the absence of a UN peacekeeping mission. In other words, for each unit we observe only one of its two potential outcomes. Let $y_{si}$ denote this observed outcome, which equals the treated potential outcome when unit $i$ in set $s$ receives the treatment and the control potential outcome otherwise. Because the individual-level causal effect can never be directly observed --- only one potential outcome is realized for each unit --- we must rely on statistical inference to draw conclusions about $\bm{\tau}$ and $\tau$.
+
+We consider inference under the sharp and weak frameworks, targeting $\bm{\tau}$ and $\tau$, respectively. Ongoing work shows how both types of effects can be inferred simultaneously under as-if randomization [@chungromano2013; @ding2017; @wuding2021; @cohenfogarty2022], though they cannot generally be unified in sensitivity analyses [@fogarty2023]. When researchers must choose between the two, the decision depends on both statistical properties and substantive goals.
+
+  - Statistically, the sharp framework specifies all missing potential outcomes, allowing exact randomization inference under minimal assumptions. The weak framework leaves some outcomes unspecified and instead relies on variance estimation and a Normal approximation, which can perform poorly in small samples or when outcomes are skewed with extreme outliers. In such cases --- or whenever one wants exact $p$-values under minimal assumptions --- permutation inference under the sharp framework may be preferable.
+
+  - Substantively, researchers usually test a constant effect in the sharp framework. Such a hypothesis may be unrealistic or of limited scientific interest [@gelman2003; @gelman2011]. The weak framework, by contrast, accommodates heterogeneous effects across units, making the ATE a more relevant target in many settings. Nevertheless, tests of a constant effect can provide a useful approximation to a more complex hypothesis with heterogeneous effects [@rosenbaum2010, pp. 44–46], and such tests remain valid for a range of bounded but heterogeneous effects [@caugheyetal2023].
+
+#### The Assignment Process as the Basis for Inference
+
+Regardless of the framework, inference is based on the treatment assignment process. Let $z_{si}$ denote an indicator for whether unit $i$ in matched set $s$ is treated ($z_{si} = 1$) or not ($z_{si} = 0$). We collect these indicators for all units in set $s$ into the vector $\bm{z}_s = (z_{s1}, \ldots, z_{sn_s})^{\top}$. Stacking these vectors across all sets gives the full assignment vector $\bm{z} = (z_{11}, \ldots, z_{Sn_S})^{\top}$, again indexed first by matched set and then by unit within set. For inference, we condition on the number of treated units within each set, $m_s$, even if the actual assignment mechanism were to consist of $n_s$ independent assignments. For further discussion of this form of "conditional as-if analysis," see @pashleyetal2021 and @rosenbaum2017[pp. 289–290, fn. 15].
+
+We denote by $\Omega_s$ the set of all possible treatment assignments in set $s$, holding fixed the observed number of treated units in that set. Formally, $\Omega_s$ includes every possible way the $n_s$ units in set $s$ could be assigned to treatment and control such that exactly $m_s$ units are treated. The number of possible assignments in $\Omega_s$ is denoted by $\abs{\Omega_s}$, where the notation $\abs{\cdot}$ indicates the number of elements in a set. This quantity equals $\abs{\Omega_s} = \binom{n_s}{m_s} = n_s! / [m_s! (n_s - m_s)!]$, where "!" denotes the factorial operator (e.g., $4! = 4 \times 3 \times 2 \times 1$).
+
+In the `ssafrica.3` set, for example, there are $4$ observations --- $1$ treated and $3$ control --- so $\abs{\Omega_s}$ for the `ssafrica.3` set is $\binom{4}{1} = 4$. The corresponding set of possible assignments with this treated count is shown in the table below.
+
+```{r, tidy = FALSE, echo = FALSE, results = "asis"}
+
+# ---- define matched set and subset data ----
+set_id <- "ssafrica.3"  # Matched set name
+sdat <- data |> filter(fm == set_id) |> select(cname, UN)
+n <- nrow(sdat)  # Number of total units
+m <- sum(sdat$UN)  # Number of units treated
+
+# ---- enumerate all possible assignments ----
+# Install "randomizr" (only run if not already installed)
+# install.packages("randomizr")
+# Load randomizr for generating random assignments
+library(randomizr)
+Z <- obtain_permutation_matrix(declaration = declare_ra(N = n, m = m))
+# Label assignment columns
+colnames(Z) <- paste0("Assignment ", seq_len(ncol(Z)))  
+
+# ---- build LaTeX table manually (no unwanted vertical lines) ----
+assign_cols <- ncol(Z)
+# One vline only after first col
+preamble <- paste0("l|", paste(rep("c", assign_cols), collapse = ""))
+header <- paste(c("", colnames(Z)), collapse = " & ")  # Blank header for unit
+
+# ---- create one LaTeX row per unit ----
+row_lines <- vapply(
+  seq_len(n),
+  function(i) {
+    cells <- as.integer(Z[i, ])
+    paste(c(sdat$cname[i], cells), collapse = " & ")
+  },
+  character(1)
+)
+
+# ---- wrap table in center environment ----
+tex <- c(
+  "\\begin{table}[htbp]",
+  "\\centering",
+  paste0("\\begin{tabular}{", preamble, "}"),
+  "\\hline",
+  header, " \\\\",
+  "\\hline",
+  paste0(row_lines, " \\\\"),
+  "\\hline",
+  "\\end{tabular}",
+  "\\caption{All possible treatment assignments within matched set \\texttt{ssafrica.3}, holding fixed the observed number of treated units in that set.}",
+  "\\label{tab: ssafrica.3 assignments}",
+  "\\end{table}"
+)
+
+# ---- print final LaTeX code ----
+cat(paste(tex, collapse = "\n"))
+
+```
+
+\FloatBarrier
+
+The column labeled Assignment 3 shows the assignment that actually occurred. The other possible assignments --- Assignment 1, Assignment 2, and Assignment 4 --- represent cases in which Lesotho, Somalia, or Burundi is treated instead of Rwanda. The set excludes any assignments with more than $1$ treated unit.
+
+The set of possible treatment assignments across all matched sets, given the number treated in each, is $\Omega = \Omega_1 \times \ldots \times \Omega_S$, which is all the ways one assignment can be chosen from each $\Omega_s$ at the same time. Although the assignment itself can vary, the underlying causal quantities of interest --- $\bm{\tau}$ and $\tau$ --- remain fixed across all possible assignments. What changes from one assignment to another is which potential outcomes we would actually observe. In the observed Assignment 3, we see Rwanda's treated potential outcome and the control potential outcomes of Burundi, Somalia, and Lesotho, but not Rwanda's control potential outcome or the treated potential outcomes of the others. Under a different assignment, a different set of treated and control potential outcomes would have been observed. No matter which assignment occurs, we observe only partial information about our causal targets.
+
+Inference from the partial information contained in the data to our causal targets is predicated on a probability distribution defined over the set of assignments, $\Omega$. This distribution constitutes the uncertainty underlying our inferences --- what @fisher1935[p. 14] famously called the "reasoned basis" for inference --- but, unlike in a randomized experiment, this distribution is unknown in an observational study. Because this distribution is unknown, we must make assumptions about it when drawing inferences from observational data. Under the assumption of as-if randomization, every possible assignment within each $\Omega_s$ is equally likely, making each overall assignment in $\Omega$ equally likely as well. In this case, all individuals within the same matched set have the same probability of treatment, equal to $m_s / n_s$. When as-if randomization does not hold, however, assignments are no longer equally likely, and some individuals have a higher probability of treatment than others.
+
+### How Do I Draw Inferences under the Sharp Framework?
+
+To set the stage for inference under the sharp framework, consider a thought experiment. Suppose we were to subtract the true individual effects from the outcomes of whichever units happen to be treated. Doing so would yield, for each unit, the outcome it would have had under control. In other words, we may imagine reconstructing the dataset so that, under any possible treatment assignment, the outcomes would appear exactly as they would have if no one had been treated. In this reconstructed world, there would be no effect since every unit's outcome would reflect what it would have been without treatment.
+
+Of course, we do not know the true collection of individual effects, $\bm{\tau}$, but we can test hypotheses about it, such as the hypothesis of a homogeneous effect for all units, denoted by $\tau_h$. We do so by evaluating whether the data would look consistent with no treatment effect when that hypothesized value is subtracted from the treated outcomes. If, after this reconstruction, the data still show a positive effect, then the hypothesized value is presumably too small; if they show a negative effect, then the hypothesized value is presumably too large.
+
+From a hypothesis testing perspective, when outcomes are reconstructed under a null hypothesis, the observed test statistic --- computed on these reconstructed outcomes --- will tend to fall in the upper tail of the null distribution if the hypothesized effect is too small, and in the lower tail if it is too large. To generate this null distribution, we reconstruct the outcomes under the hypothesized effect. Under the null, these reconstructed outcomes would remain fixed across assignments, so we hold them constant and recalculate the test statistic for every possible assignment. We then use this null distribution to determine where the observed test statistic falls for the calculation of $p$-values.
+
+A canonical choice of test statistic in this setting is a *sum statistic*, which first adds up the treated outcomes within each set, and then adds those set-level sums across all sets. Many familiar test statistics can be expressed in this form by applying to the outcomes scale and shift transformations that do not depend on the treatment assignments. One such useful test statistic that can be expressed as a sum statistic is the Difference-in-Means, computed within sets and then averaged across sets, with each set's contribution weighted by its effective sample size.
+
+Under as-if randomization, the harmonic-mean-weighted Difference-in-Means is useful because, as discussed earlier, the variance of the within-set Difference-in-Means is minimized --- under homogeneous treatment effects --- when the harmonic mean of the numbers of treated and control units is largest. As a result, under this model of homogeneous individual treatment effects, a test has greater power when it places more weight on sets with large harmonic means --- that is, sets in which the Difference-in-Means is most informative. Weighting sets solely by their share of units, by contrast, can overweight large but highly lopsided sets and dilute information from more balanced comparisons.
+
+The harmonic-mean–weighted Difference-in-Means also has the practical advantage of coinciding with two other common approaches to analyzing matched data:
+
+- First, the harmonic-mean–weighted Difference-in-Means equals the coefficient on the treatment indicator from a fixed-effects regression that includes matched set indicators [@hansenbowers2008, pp. 228-229], an approach commonly used in practice after matching.
+
+- Second, the harmonic-mean–weighted Difference-in-Means coincides with the overlap-weighted Difference-in-Means [@lietal2018] when overlap weights are constructed using the treatment assignment probabilities implied by as-if randomization. Overlap weights place the greatest weight on units with intermediate values of these assignment probabilities and downweight units with extreme values. In particular, using the assignment probability under as-if randomization, control units are weighted by that probability, while treated units are weighted by $1$ minus that probability. Because these assignment probabilities are constant within each matched set, the resulting overlap weights are constant within treated units and within control units in a set, and they aggregate exactly to the harmonic-mean weights implied by the matched sets.
+
+To implement a sum statistic equivalent to the harmonic-mean–weighted Difference-in-Means for hypothesis testing, we first reconstruct the outcomes that treated units would have exhibited under the null hypothesis $\tau_h = 0$.
+
+```{r, tidy = FALSE}
+
+# Keep only rows assigned to a matched set (drop NA in fm)
+data_matched <- filter(
+  .data = data, !is.na(fm)
+)
+
+# Null hypothesis value
+tau_h <- 0
+
+# Reconstruct outcomes under sharp null (tau_h = 0)
+data_matched <- data_matched |>
+  mutate(
+    ldur_tilde = ldur - tau_h * UN
+  )
+
+```
+
+We now source a helper function from the companion GitHub repository; this function rescales the outcome variable so that the sum of the rescaled values among treated units equals the harmonic-mean–weighted Difference-in-Means. After sourcing the function, we apply it to the matched dataset to generate a new column containing the rescaled outcomes. We then use this rescaled outcome to compute the observed test statistic.
+
+```{r, tidy = FALSE}
+
+# Load hm_stat_rescale() from GitHub repo
+# base_url (defined earlier) points to repo URL
+source(
+  paste0(
+    base_url, "/R/hm_stat_rescale.R"
+  )
+)
+
+# Apply rescaling: adds .hm_scaled and returns matched dataset
+data_matched <- hm_stat_rescale(
+  data = data_matched,
+  outcome = ldur_tilde, # Set outcome to be rescaled within matched sets
+  treat = UN,           # Set name of treatment indicator variable
+  strata = fm           # Set name of matched strata (block) variable
+)
+
+# Observed HM-weighted diff-in-means statistic
+obs_stat <- sum(
+  data_matched$ldur_tilde_hm_scaled[data_matched$UN == 1]
+)
+
+```
+
+We can verify in \texttt{R} that this observed sum statistic coincides with the harmonic-mean-weighted Difference-in-Means, the coefficient on the treatment indicator from a fixed-effects regression that includes matched set indicators, and the overlap-weighted Difference-in-Means constructed from the assignment probabilities implied by as-if randomization.
+
+First, we show that the observed sum statistic equals the harmonic-mean–weighted average of the within–matched-set Differences-in-Means, where each matched set is weighted by its contribution to the effective sample size.
+
+```{r}
+
+# Harmonic-mean-weighted difference in means (weights computed within sets)
+dim_hm <- data_matched |>
+  group_by(
+    fm
+  ) |>
+  summarize(
+    n_treated = sum(UN == 1),
+    n_control = sum(UN == 0),
+    # Within-set Difference-in-Means
+    dim_set   = mean(ldur_tilde[UN == 1]) - mean(ldur_tilde[UN == 0]),
+    # Harmonic-mean weight (set's contribution to effective sample size)
+    w_hm      = 2 * n_treated * n_control / (n_treated + n_control),
+    .groups   = "drop" # Drop grouping after summarise
+  ) |>
+  summarize(
+    # Harmonic-mean-weighted average of within-set Differences-in-Means
+    dim_hm = sum(
+      w_hm * dim_set) / sum(w_hm)
+  ) |>
+  pull( # Pull column out of data frame
+    dim_hm
+  )
+
+# Approaches coincides with the sum statistic
+all.equal(
+  dim_hm, obs_stat
+)
+
+```
+
+Next, we verify that the same quantity is obtained as the coefficient on the treatment indicator from a fixed-effects regression that includes matched set indicators.
+
+```{r, tidy = FALSE}
+
+# FE coefficient on UN (matched-set FE)
+fe_fit <- lm(
+  formula = ldur_tilde ~ UN + fm,
+  data = data_matched
+)
+
+# Drop name so comparison is purely numeric
+treat_coef_fe_fit <- unname(
+  coef(fe_fit)["UN"]
+)
+
+# Approaches coincides with the sum statistic
+all.equal(
+  treat_coef_fe_fit, obs_stat
+)
+
+```
+
+Finally, we confirm that the observed sum statistic also coincides with the overlap-weighted Difference-in-Means. The overlap weights are constructed from the treatment assignment probabilities implied by as-if randomization within matched sets, with treated units weighted by one minus their treatment probability and control units weighted by their treatment probability.
+
+```{r}
+
+# Install "PSweight" package (only run if not already installed)
+# install.packages("PSweight")
+library(PSweight) # For overlap weights from Li et al (2018)
+
+# Treatment probabilities within matched sets: n_treated / n
+ps_fit <- PSmethod(
+  ps.formula = UN ~ factor(fm), # Reproduces n_treated / n in each set
+  method     = "glm",           # Estimate using generalized linear model
+  # Use as.data.frame() for PSmethod() compatibility
+  data       = as.data.frame(data_matched),
+  ncate      = 2                # Binary treatment (treated vs. control)
+)
+
+assign_prob <- ps_fit$e.h[, "1"]  # Column for treatment level "1"
+
+# Overlap weights from treatment probabilities
+# Controls: treatment probability ; Treated: 1 - treatment probability
+w_ow <- ifelse(
+  test = data_matched$UN == 1,
+  yes  = 1 - assign_prob,
+  no   = assign_prob
+)
+
+# Overlap-weighted difference in means
+dim_ow <- data_matched |>
+  summarize( # Aggregate rows into summary values
+    # Overlap-weighted mean outcome for treated units
+    treated_weighted_mean =
+      sum(w_ow[UN == 1] * ldur_tilde[UN == 1]) / sum(w_ow[UN == 1]),
+
+    # Overlap-weighted mean outcome for control units
+    control_weighted_mean =
+      sum(w_ow[UN == 0] * ldur_tilde[UN == 0]) / sum(w_ow[UN == 0]),
+
+    # Difference between overlap-weighted treated and control means
+    dim_ow = treated_weighted_mean - control_weighted_mean
+  ) |>
+  pull(
+    dim_ow
+  )
+
+# Approaches coincides with the sum statistic
+all.equal(
+  dim_ow, obs_stat
+)
+
+```
+
+```{r, include = FALSE}
+
+# Number of matched sets (non-missing fm)
+n_sets <- data$fm |> na.omit() |> n_distinct()
+
+# Set-level counts: total units and treated units per set
+set_sum <- data |>
+  filter(
+    !is.na(fm)
+  ) |>
+  group_by(
+    fm
+  ) |>
+  summarise(
+    n   = n(),       # set size
+    m = sum(UN),     # number treated
+    .groups = "drop"
+  )
+
+# Minimum and maximum set sizes
+min_set_size <- min(set_sum$n)
+
+max_set_size <- max(set_sum$n)
+
+# Total possible treatment assignments = product of binomial coefficients
+# (choose n_s units for treatment in each set and multiply across sets)
+total_assigns <- prod(
+  choose(
+    n = set_sum$n, k = set_sum$m
+  )
+)
+
+```
+
+Now, to generate the distribution to which we refer our observed sum statistic, we can hold the reconstructed and rescaled outcomes fixed and then calculate the sum statistic over all possible assignments in $\Omega$. In our application, with `r n_sets` sets ranging in size from `r min_set_size` to `r max_set_size`, the total number of assignments is `r format(x = total_assigns, scientific = FALSE, big.mark = ",")`. 
+
+```{r, tidy = FALSE, results = "hide"}
+
+# For each matched set (fm), record:
+# n = total units in the set
+# m = number treated (UN == 1)
+block_ns <- data_matched |>
+  group_by(          # Group results by key variables
+    fm
+  ) |>
+  summarise(         # Aggregate to one row per group
+    n = n(),         # Row count per group
+    m = sum(UN),
+    .groups = "drop"
+  )
+
+# Total possible treatment assignments = product of binomial coefficients
+# (choose n_s units for treatment in each set and multiply across sets)
+exact_n_assigns <- prod(
+  choose(
+    n = block_ns$n,
+    k = block_ns$m
+  )
+)
+
+```
+
+Because our matched study is relatively small, we can enumerate all possible treatment assignments exactly.
+
+```{r}
+
+# Install "randomizr" (only run if not already installed)
+# install.packages("randomizr")
+
+# Load randomizr for generating random assignments
+library(randomizr)
+
+exact_assigns <- obtain_permutation_matrix(
+  declaration = declare_ra(   # Declare assignment procedure
+    N = nrow(data_matched),   # Total number of units
+    blocks = data_matched$fm, # Matched set membership
+    block_m = block_ns$m      # Number treated in each set
+  ),
+# Total number of assignments with treated counts fixed within sets
+  maximum_permutations = exact_n_assigns
+)
+
+```
+
+However, in most applications, exactly enumerating all possible assignments is computationally infeasible. Instead, we typically draw a random subset of assignments (e.g., $10{,}000$) to approximate the exact randomization distribution, as illustrated below.
+
+```{r, tidy = FALSE}
+
+# Set RNG seed for reproducibility
+set.seed(11242017)
+
+# Generate permutation matrix of treatment assignments
+# Each column = one possible assignment consistent with block structure
+sim_assigns <- obtain_permutation_matrix(
+  declaration = declare_ra(
+    N = nrow(data_matched),
+    blocks = data_matched$fm,
+    block_m = block_ns$m
+  ),
+  maximum_permutations = 10^4  # Cap at 10,000 random draws
+)
+
+```
+
+Now, to generate the null distribution of the sum statistic, we apply the statistic to each of these $10{,}000$ assignments while holding the reconstructed and rescaled outcomes fixed under the null.
+
+```{r, tidy = FALSE}
+
+# Randomization distribution under sharp null
+# Apply sum statistic to each assignment in sim_assigns
+# Outcome transformed so sum = harmonic-mean weighted diff in means
+sim_sharp_null_dist <- apply(
+  X = sim_assigns,    # Matrix of treatment assignments
+  MARGIN = 2,         # Iterate over columns (assignments)
+  FUN = function(x) {
+    # Sum transformed outcomes among treated
+    sum(
+      data_matched$ldur_tilde_hm_scaled[x == 1]
+    )
+  }
+)
+# Faster equivalent computation via matrix multiplication
+# as.numeric(
+#   t(data_matched$ldur_tilde_hm_scaled) %*% sim_assigns
+# )
+
+```
+
+From this null distribution, we compute a one-sided upper $p$-value, which, under as-if randomization, is simply the proportion of null test statistics greater than or equal to the observed test statistic.
+
+```{r, tidy = FALSE}
+
+# One-sided, upper p-value:
+# Propprtion of simulated randomization stats >= observed
+round(
+  x = mean(
+    sim_sharp_null_dist >= obs_stat
+  ),
+  digits = 4
+)
+
+```
+
+```{r, include = FALSE}
+
+# One-sided, upper p-value: proportion of simulated randomization statistics >= observed
+sim_upper_p_value <- mean(
+  sim_sharp_null_dist >= obs_stat
+)
+
+```
+
+The upper $p$-value of a test of the sharp null of no effect against the alternative of a larger effect is `r round(x = sim_upper_p_value, digits = 4)`.
+
+In this particular case, unlike in most applications, the matched study is small enough to compute the exact $p$-value and assess the accuracy of the simulation-based $p$-value approximation.
+
+```{r, tidy = FALSE}
+
+# Transformed outcomes under sharp null (tau_h = 0)
+q_tau_h_0 <- data_matched$ldur_tilde_hm_scaled
+
+# Fast computation of exact null distribution using matrix multiplication
+exact_sharp_null_dist <- as.numeric(
+  t(q_tau_h_0) %*% exact_assigns
+)
+
+# Slower apply()-based computation (for reference)
+# apply(
+#  X = exact_assigns,
+#  MARGIN = 2,
+#  FUN = function(x) {
+#    sum(data_matched$ldur_tilde_hm_scaled[x == 1])
+#  }
+#)
+
+# Exact one-sided, upper p-value
+round(
+  x = mean(
+    exact_sharp_null_dist >= obs_stat
+  ),
+  digits = 4
+)
+
+```
+
+```{r, include = FALSE}
+
+# One-sided, upper p-value: proportion of simulated randomization statistics >= observed
+exact_upper_p_value <- mean(
+  exact_sharp_null_dist >= obs_stat
+)
+
+```
+
+The exact $p$-value of `r round(x = exact_upper_p_value, digits = 4)` is nearly identical to the simulation-based $p$-value of `r round(x = sim_upper_p_value, digits = 4)`. At the conventional significance level of $\alpha = 0.05$, we would reject the null hypothesis in favor of the alternative, regardless of whether we use the exact or simulation-based $p$-value.
+
+As an alternative to randomly sampling assignments and computing the test statistic for each one, we can use a much faster Normal approximation to the null distribution when the matched study is sufficiently large. The approximation relies on closed-form expressions for the expected value and variance of a sum statistic derived in @rosenbaumkrieger1990. Using these expressions, we standardize the observed test statistic and then compare it to the standard Normal distribution, which gives us a corresponding $p$-value. Although primarily designed for sensitivity analyses under violations of as-if randomization, the \texttt{senstrat} package can also be used to compute the null expected value and variance of a sum statistic under as-if randomization.
+
+```{r, tidy = FALSE}
+
+# Install "senstrat" package (only run if not already installed)
+# install.packages("senstrat")
+
+# Load senstrat for stratum-level null moments and sensitivity analysis
+# (Rosenbaum & Krieger 1990)
+library(senstrat)
+
+# Compute per-block null expectations and variances
+per_block_moms <- data_matched |>
+  group_by(
+    fm
+  ) |>
+  summarize(
+    expect   = ev(
+      sc = ldur_tilde_hm_scaled, # Transformed outcomes for the stratum
+      z = UN,                    # Treatment indicator
+      m = 1,                     # Count of 1s in hidden confounder
+                                 # Irrelevant here since Gamma = 1
+      g = 1,                     # Sensitivity parameter Gamma
+      method = "RK"              # Use Rosenbaum and Krieger (1990) formula 
+    )$expect,                    # Null expectation of sum statistic by set
+    variance = ev(
+      sc     = ldur_tilde_hm_scaled,
+      z      = UN,
+      m = 1,
+      g      = 1,
+      method = "RK"
+    )$vari,                      # Null variance of sum statistic by set
+    .groups  = "drop"
+  )
+
+# Sum across blocks to get overall null expectation
+null_ev  <- sum(
+  per_block_moms$expect
+)
+
+# Sum across blocks to get overall null variance
+null_var <- sum(
+  per_block_moms$variance
+)
+
+# Standardized test statistic and one-sided Normal p-value (upper tail)
+norm_upper_p_value <- pnorm(
+  q = (obs_stat - null_ev) / sqrt(null_var), # Standardized statistic
+  lower.tail = FALSE                         # Compute upper-tail prob
+)
+# By default in pnorm(): mean = 0 and sd = 1 (standard normal distribution)
+
+```
+
+This Normal-approximation $p$-value of `r round(x = norm_upper_p_value, digits = 4)` is close to the exact and simulation-based $p$-values of `r round(x = exact_upper_p_value, digits = 4)` and `r round(x = sim_upper_p_value, digits = 4)`, respectively. All $p$-values lead to the same conclusion in which we reject the sharp null of no effect in favor of a larger effect.
+
+To test not just a single null hypothesis but a grid of null hypotheses under the sharp null framework, we use a Normal approximation to the randomization distribution. We repeat the above procedure for a range of hypothesized constant effects, $\tau_h$. For each value of $\tau_h$, we reconstruct the outcomes under the null, rescale them so that the sum statistic equals the harmonic-mean–weighted Difference-in-Means, compute the observed test statistic, and obtain the corresponding p-value using the Normal approximation. To form a one-sided confidence set, we retain all null values that are not rejected by the upper-tail test at the chosen $\alpha$ level. To form a two-sided confidence set, we proceed analogously, allocating $\alpha/2$ to each tail --- reflecting that each null value is tested against departures in both directions --- and using the corresponding upper- and lower-tail rejection regions.
+
+```{r, tidy = FALSE}
+
+# Significance level
+alpha <- 0.05
+
+# Upper-tail confidence set (tau_h values not rejected by upper-tail test)
+# Lower endpoint: smallest tau_h with upper-tail p-value >= alpha
+# (any smaller tau_h would be rejected)
+cs_sharp_lower_one_sided <- c(
+  lower = obs_stat - qnorm(p = 1 - alpha) * sqrt(null_var),
+  upper = Inf
+)
+# qnorm(1 - alpha): upper one-sided Normal critical value
+
+cs_sharp_two_sided <- c(
+  lower = obs_stat - qnorm(p = 1 - alpha / 2) * sqrt(null_var),
+  upper = obs_stat + qnorm(p = 1 - alpha / 2) * sqrt(null_var)
+)
+# At lower endpoint, upper-tail one-sided p-value equals alpha/2;
+# any smaller null value would be rejected by two-sided test
+# At upper endpoint, lower-tail one-sided p-value equals alpha/2;
+# any larger null value would be rejected by two-sided test
+
+```
+
+An analogous procedure applies when constructing confidence sets without relying on a Normal approximation, instead using a simulation-based approximation to the null randomization distribution.
+
+```{r, tidy = FALSE}
+
+# Grid of constant-effect null values (sharp framework)
+tau_h_grid <- seq(
+  from = -0.02,
+  to = 1.5,
+  by = 0.0001
+)
+
+# Repeat the randomization test for each tau_h
+# sapply() computes and stacks the resulting p-values
+p_mat <- sapply(X = tau_h_grid,
+                FUN = function(tau_h) {
+
+                  # Shift outcomes under null: ldur_i - tau_h * UN_i
+                  dat_tau_h <- hm_stat_rescale(
+                  # transform(): copy data_matched adding shifted outcome
+                    data    = transform(
+                      data_matched,
+                      ldur_tilde_shift = ldur - tau_h * UN),
+                    outcome = ldur_tilde_shift,
+                    treat   = UN,
+                    strata  = fm
+                  )
+
+                  # Transformed outcomes under sharp null tau_h
+                  q_tau_h <- dat_tau_h$ldur_tilde_shift_hm_scaled
+
+                  # Observed statistic under null tau_h
+                  obs_stat_tau_h <- sum(
+                    dat_tau_h$UN * q_tau_h
+                  )
+
+                  # Randomization distribution via simulated assignments
+                  # Matrix multiplication used for speed (vs apply())
+                  sim_null_dist_tau_h <- as.numeric(
+                    t(q_tau_h) %*% sim_assigns
+                  )
+
+
+                  # Upper-tail and lower-tail randomization p-values
+                  p_upper_tau_h <- mean(
+                    sim_null_dist_tau_h >= obs_stat_tau_h
+                  )
+
+                  p_lower_tau_h <- mean(
+                    sim_null_dist_tau_h <= obs_stat_tau_h
+                  )
+
+                  c(
+                    upper_tail = p_upper_tau_h,
+                    lower_tail = p_lower_tau_h
+                  )
+                })
+
+# Extract vector of upper-tail p-values
+p_upper <- p_mat["upper_tail", ]
+
+# Extract vector of lower-tail p-values
+p_lower <- p_mat["lower_tail", ]
+
+# Simulation-based confidence sets
+
+# Upper-tail confidence set: retain all tau_h with upper-tail p >= alpha
+cs_sharp_upper_tail_sim <- tau_h_grid[p_upper >= alpha]
+
+# Lower bound of the upper-tail confidence set
+cs_sharp_upper_tail_sim_bound <- min(
+  cs_sharp_upper_tail_sim
+)
+
+# Two-sided confidence set (inversion using alpha/2 in each tail):
+# retain tau_h only if neither one-sided test rejects at level alpha/2
+cs_sharp_two_sided_sim <- tau_h_grid[
+  p_upper >= alpha / 2 & p_lower >= alpha / 2
+]
+
+# Two-sided confidence set summarized by its bounds
+cs_sharp_two_sided_sim_bounds <- c(
+  lower = min(
+    cs_sharp_two_sided_sim
+  ),
+  upper = max(
+    cs_sharp_two_sided_sim
+  )
+)
+
+```
+
+Likewise, for a point estimate, one could follow @hodgeslehmann1963 and @rosenbaum1993 by identifying the null value that makes the observed sum statistic equal to its null expectation. With our test statistic under as-if randomization, this would occur when the null equals the harmonic-mean weighted Difference-in-Means computed from the observed outcomes (roughly `r round(x = obs_stat, digits = 3)`), which yields a null expectation of $0$.
+
+### How Do I Draw Inferences under the Weak Framework?
+
+When the target is the ATE, it can be written as $\tau = \sum_{s = 1}^S (n_s / n)\tau_s$, a weighted average of the set-level ATEs with weights equal to each set's share of the total study size. Thus, a straightforward way to estimate the ATE is to compute the Difference-in-Means within each matched set, and then combine these set-level estimates using the same weights. Formally, the overall Difference-in-Means is $\hat{\tau} = \sum_{s=1}^S (n_s / n) \hat{\tau}_s$, where $\hat{\tau}_s$ is the Difference-in-Means in set $s$.
+
+These weights are appealing because, under as-if randomization, the resulting Difference-in-Means is an unbiased estimator of the ATE. Formally, the expected value of the estimator --- i.e., the average of $\hat{\tau}$ taken over all treatment assignments consistent with the matched design and their associated probabilities --- equals the true ATE. Nevertheless, although correct in expectation, the Difference-in-Means can vary substantially across assignments. In any given assignment, the estimate may lie far from the target ATE.
+
+Because the estimator can fluctuate across different treatment assignments, it is important to quantify the typical squared distance between an estimate and the true ATE. To this end, @neyman1923 introduced a canonical variance estimator. Under as-if randomization, this estimator is exactly unbiased when individual treatment effects are homogeneous; otherwise, it is conservative, meaning its expected value is greater than or equal to the true variance of the Difference-in-Means, although subsequent refinements reduce this conservativeness while maintaining validity [see @robins1988; @aronowetal2014; @harshawetal2024]. In principle, we could apply this approach by estimating the variance of the Difference-in-Means within each matched set and then taking a weighted sum of these estimates [see, e.g., @miratrixetal2013].
+
+In our setting, however, this approach is infeasible because each matched set contains only $1$ treated or $1$ control unit. The usual Neyman formula relies on computing sample variances separately within the treated and control groups of each set. The sample variance requires at least two observations because `var()` divides by the number of observations minus $1$. As a result, we cannot compute the sample variance when there is only a single treated or control unit.
+
+How, then, can we estimate the variance of the Difference-in-Means in a matched observational study? @pashleymiratrix2021 and @fogarty2018 offer distinct solutions. @pashleymiratrix2021 propose two approaches, each valid under different conditions on the matched structure, while @fogarty2018 develops a single method that applies more broadly to finely stratified designs.
+
+The first approach in @pashleymiratrix2021, `hybrid_m`, requires at least two matched sets of each unique set size in the data. The second approach, `hybrid_p`, permits variation in set sizes as long as no single set contains half or more of the total study size. Our matched design meets the condition for the second approach, not the first. We therefore estimate the variance using `hybrid_p` through the \texttt{blkvar} package, the companion software for @pashleymiratrix2021.
+
+```{r, tidy = FALSE}
+
+# Install blkvar (only run if not already installed)
+# install.packages("remotes")
+# Remotes::install_github("lmiratrix/blkvar")
+
+# Load blkvar for block randomization variance estimators
+library(blkvar)
+
+# Compute results with hybrid_p method
+res <- block_estimator(
+  Yobs = ldur,         # Observed outcomes
+  Z = UN,              # Treatment indicator
+  B = fm,              # Block (matched set) membership
+  data = data_matched, # Dataset
+  method = "hybrid_p"  # variance estimation method
+)
+
+# Extract variance estimate
+res$var_est
+
+```
+
+We can also estimate the variance of the Difference-in-Means in a finely stratified design using the approach of @fogarty2018. To do so, we load a custom \texttt{R} function, \texttt{fine\_strat\_var\_est()}, from the companion GitHub repository.
+
+```{r, tidy = FALSE}
+
+# Load the fine_strat_var_est() function from the GitHub repo
+source(
+  paste0(
+    base_url, "/R/fine_strat_var_est.R"
+  )
+)
+
+```  
+
+The function takes as inputs the set-specific treatment effect estimates and the number of units in each set, and it returns a single scalar representing the estimated variance. We compute the set-specific estimates and corresponding set sizes, and then pass these two vectors as inputs to \texttt{fine\_strat\_var\_est()}.
+
+```{r, tidy = FALSE}
+
+# Compute matched set sizes and matched-set-specific differences in means
+set_stats <- data_matched |>
+  group_by(
+    fm
+  ) |>
+  summarize(
+    n = n(),                              # Matched set size
+    diff_in_means = mean(                 # Treated mean
+      ldur[UN == 1L]
+    ) -                                   # minus
+      mean(                               # control mean
+        ldur[UN == 0L]
+      ),
+    .groups = "drop"
+  )
+
+# Apply Fogarty (2018/2023) variance estimator
+fine_strat_var_est(
+  strat_ns = set_stats$n,               # Vector of stratum sizes
+  strat_ests = set_stats$diff_in_means  # Vector of stratum estimates
+)
+
+```  
+
+This variance estimate is nearly identical to the one we obtained using the `hybrid_p` approach of @pashleymiratrix2021.
+
+Now that we have estimates of both the ATE and the variance of the ATE estimator, we can form a standardized test statistic by subtracting the expected Difference-in-Means implied by the null and dividing the result by the estimated standard error (the square root of the estimated variance). We then compare this statistic to a standard Normal distribution to calculate $p$-values. Below, we calculate the upper one-sided $p$-value for a test the null hypothesis that the ATE is $0$ against the alternative that it is positive.
+
+```{r, tidy = FALSE}
+
+pnorm(
+  q = (res$ATE_hat - 0) / sqrt(res$var_est),
+  lower.tail = FALSE
+)
+
+```
+
+Here, we reject the weak null hypothesis that the ATE equals $0$ in favor of the alternative that the ATE is greater than $0$, using the conventional significance level of $\alpha = 0.05$. 
+
+As in the construction of confidence sets for a homogeneous treatment effect under the sharp framework, we form 95% confidence sets by inverting the corresponding hypothesis tests. We first construct a one-sided confidence set obtained by inverting the upper-tail test and retaining all null values that are not rejected at the $\alpha = 0.05$ level. We then construct a two-sided confidence set by allocating $\alpha/2 = 0.025$ to each tail, as in the tail allocation used in the sharp null framework.
+
+```{r, tidy = FALSE}
+
+# One-sided (upper-tail) confidence set
+cs_weak_upper_tail <- c(
+  lower = res$ATE_hat - qnorm(p = 1 - alpha) * sqrt(res$var_est),
+  upper = Inf
+)
+
+# Two-sided confidence set
+cs_weak_two_sided <- c(
+  lower = res$ATE_hat - qnorm(p = 1 - alpha / 2) * sqrt(res$var_est),
+  upper = res$ATE_hat + qnorm(p = 1 - alpha / 2) * sqrt(res$var_est)
+)
+
+```
+
+
+## Third Stage: Sensitivity Analysis (Departures from As-If Randomization)
+
+Up to this point, we have supposed a framework in which each observation's chance of a UN intervention is like flipping a weighted coin. Each coin flip is independent across observations, but the probability of landing tails (i.e., receiving treatment) can differ from one unit to another depending on its baseline characteristics. With matching, we make our crucial assumption that all units within a set are similar enough on these characteristics that their coins have the same probability of landing tails.
+
+This as-if randomization assumption may fail because of imbalances on hidden covariates (or residual imbalances on observed covariates, though the sensitivity analysis to follow subsumes both within the same framework). To represent such imbalances, consider a single hidden covariate, $\bm{u} = (u_{11}, \ldots , u_{Sn_S})^{\top}$, indexed first by matched set and then by unit within set, with each $u_{si}$ constrained to lie in the interval from $0$ to $1$. Although the restriction that each element of $\bm{u}$ is between 0 and 1 may seem strong, @rosenbaum2017[p. 300, fn. 33] shows that any departure from complete random assignment within blocks can be represented by such a $\bm{u}$ in the sense that as-if randomization would hold if we had access to and exactly matched on this $\bm{u}$.
+
+@rosenbaum1987a and @rosenbaumkrieger1990 then propose a model in which each unit's independent probability of treatment assignment is given by
+\begin{equation}
+\label{eq: indiv sens prob}
+\pi_{si} = \frac{\exp\left[\kappa_s + \log(\Gamma) u_{si}\right]}{1 + \exp\left[\kappa_s + \log(\Gamma) u_{si}\right]}.
+\end{equation}
+The parameter $\kappa_s$ is a set-specific intercept that captures the baseline propensity for treatment shared by all units in matched set $s$ before accounting for any differences in the hidden covariate. In other words, $\kappa_s$ reflects the central idea in matching that, after forming matched sets homogeneous in observed covariates, all individuals within a set share the same treatment propensity based on those covariates. The parameter $\Gamma \geq 1$, by contrast, quantifies how strongly the hidden covariate $u_{si}$ can alter treatment odds. When $\Gamma = 1$, all individuals in matched set $s$ have the same probability of treatment, $\exp[\kappa_s] / (1 + \exp[\kappa_s])$. However, when $\Gamma > 1$, two individuals in the same set who differ in the hidden covariate may differ in their odds of treatment by as much as a factor of $\Gamma$.
+
+An important point to reiterate is that we condition on assignments that belong to the set $\Omega$, meaning that the number of treated units is fixed within each matched set. It turns out that this conditioning removes dependence on the set-specific baseline $\kappa_s$ in the probability distribution over assignments in $\Omega$ [@rosenbaum1984]. Eliminating this dependence is crucial because it allows us to characterize both as-if randomization and departures from it using just a single sensitivity parameter, $\Gamma$.
+
+To build intuition for the sensitivity parameter $\Gamma$, note that the model in \eqref{eq: indiv sens prob} implies the following restriction:
+\begin{equation} \label{eq: odds ratio restrict}
+\frac{1}{\Gamma} \leq \frac{\pi_{si}\left(1 - \pi_{sj}\right)}{\pi_{sj}\left(1 - \pi_{si}\right)} \leq \Gamma \text{ for all } i, \, j \, \text{ and } s.
+\end{equation}
+This restriction states that, within any set, no two units can differ in their odds of treatment by more than a factor of $\Gamma$. When $\Gamma = 1$, all units share the same odds of treatment, corresponding to as-if randomization. By contrast, larger values of $\Gamma$ represent increasingly severe departures from this assumption.
+
+@rosenbaum1995a[pp. 1424–1425] shows that the converse also holds: The restriction in \eqref{eq: odds ratio restrict} implies a model of the form in \eqref{eq: indiv sens prob}. For any collection of treatment probabilities satisfying the bound in \eqref{eq: odds ratio restrict}, it is always possible to find values of $u_{si} \in [0,1]$ for all sets $s$ and units $i$, along with a scalar $\Gamma \geq 1$, such that the two formulations yield the same probability distribution over assignments in $\Omega$. In other words, \eqref{eq: odds ratio restrict} describes a general restriction on treatment probabilities that does not assume a particular functional form. The logistic model in \eqref{eq: indiv sens prob}, by contrast, provides one convenient parametric representation of that general restriction.
+
+Thus far, we have conducted inference assuming $\Gamma = 1$, meaning that all units within a matched set share the same treatment probability. Under this as-if randomization assumption, tests of sharp null hypotheses are exactly valid, while tests of weak null hypotheses are valid in large studies. In both cases, validity means that the probability of falsely rejecting the null hypothesis does not exceed the nominal level $\alpha$.
+
+When we allow departures from as-if randomization, governed by the sensitivity parameter $\Gamma \geq 1$, we seek new $p$-values that remain valid in the same sense. The probability of a false rejection should not exceed $\alpha$, regardless of the hidden covariate $\mathbf{u}$ or the potential outcomes consistent with the null. The way we ensure this validity, however, differs between the sharp and weak frameworks, which we consider in turn.
+
+### How Do Inferences under the Sharp Framework Change under these Departures?
+
+For a sharp null, if the hidden $\bm{u}$ were known, we could calculate from \eqref{eq: indiv sens prob} the exact distribution of assignments consistent with the matched design for any given value of $\Gamma \geq 1$. This distribution would provide the correct reference for computing $p$-values under the null. In particular, the upper one-sided $p$-value could be obtained by summing the probabilities of all assignments whose test statistic under the null is at least as large as the observed statistic.
+
+In practice, however, $\bm{u}$ is unknown. Thus, to ensure validity of our tests, we compute $p$-values under the worst-case choice of $\bm{u}$ --- the one that makes the $p$-value as large as possible. Rejection under the worst-case choice of $\bm{u}$ guarantees rejection under the actual (but hidden) $\bm{u}$. Consequently, we will not reject the null more often than we would if the true assignment probabilities --- governed by the actual but unobserved $\bm{u}$ --- were known under the model in \eqref{eq: indiv sens prob}.
+
+#### Finding the Worst-Case Scenario of Hidden Confounding for Valid Inference
+
+Actually finding this worst-case $\bm{u}$ is difficult. As a first step, @rosenbaumkrieger1990 show that in the unmatched (i.e., two sample) case, the vector $\bm{u}$ that maximizes the $p$-value under any fixed $\Gamma \geq 1$ must belong to a restricted set of possibilities, denoted by $\mathcal{U}_{+}$. Once the subjects are ordered from the largest to the smallest outcome, all the candidate vectors in $\mathcal{U}_{+}$ look the same: a sequence of $1$s at the top followed by $0$s below. We do not know *how many* $1$s should precede the $0$s, and this number determines which configuration of $\bm{u}$ yields the worst-case $p$-value. In an unmatched study, it is straightforward to enumerate all $n - 1$ such candidate vectors in $\mathcal{U}_+$, and then identify which one yields the largest $p$-value for a fixed $\Gamma \geq 1$.
+
+Unfortunately, in matched designs, the overall worst-case vector $\bm{u}$ cannot be obtained by simply stitching together the worst-case vectors from each matched set. That is, the global worst-case is not just the collection of local worst-cases. Instead, $\mathcal{U}_{+}$ consists of $\prod_{s = 1}^S (n_s - 1)$ total candidate vectors for the worst-case $\bm{u}$ --- a quantity that quickly becomes infeasible to enumerate directly. For example, with only $20$ matched sets of $4$ units each, the number of candidate vectors already exceeds $3.5$ billion.
+
+##### Separable Approximation
+
+To address this challenge, @gastwirthetal2000 propose a practical shortcut called the *separable approximation*. The idea is to select, within each matched set, the configuration $\bm{u}_s$ (from the set-specific candidate sequences of 1s and 0s) that maximizes the expected value of the test statistic in that set under the null. If more than one candidate yields the same expectation, the choice goes to the $\bm{u}_s$ that produces the larger variance of the test statistic in that set under the null. The method is called "separable" because it then stitches together the choices of $\bm{u}_s$ made separately within each matched set, rather than searching over all possible combinations across sets. The resulting $\bm{u}$ may not give the exact worst-case $p$-value; yet in designs with many small matched sets, the error is negligible.
+
+##### Taylor Series Approximation
+
+The separable approximation is a useful shortcut, but it can fail in designs with relatively few matched sets or with highly unbalanced set sizes. In such cases, the $\bm{u}$ selected by the separable approximation may yield $p$-values that are smaller than the true worst-case $p$-value. @rosenbaum2018 therefore introduces a refinement that guarantees valid inference.
+
+The key idea is to reframe hypothesis testing in terms of a function that, for each configuration of hidden confounding $\bm{u} \in \mathcal{U}_{+}$, combines the gap between the null expectation and the observed test statistic with a corresponding Normal critical buffer. Concretely, for $\alpha = 0.05$ and corresponding critical value $1.64$, this function is the expected value of the test statistic under $(\bm{u}, \, \Gamma)$ minus the observed test statistic, plus $1.64$ times the standard deviation of the test statistic under $(\bm{u}, \, \Gamma)$. The function is nonpositive exactly when the observed test statistic lies at least $1.64$ standard deviations above its null expectation, and positive otherwise. Therefore, the null hypothesis is rejected if and only if this function is nonpositive.
+
+We can code this function in \texttt{R} as follows.
+
+```{r, tidy = FALSE}
+
+# Rosenbaum (2018) objective: expectation - observed + kappa * SD
+# Nonpositive values imply rejection at level alpha
+sens_objective <- function(null_expect,
+                           null_variance,
+                           obs_stat,
+                           alpha = 0.05) {
+  # null_expect   : overall null expectation of the test statistic
+  # null_variance : overall null variance of the test statistic
+  # obs_stat      : observed value of the test statistic
+  # alpha         : test size (e.g., 0.05 gives kappa about 1.64)
+
+  # Normal critical value
+  kappa  <- qnorm(
+    p = 1 - alpha
+  )
+
+  # Null standard deviation
+  null_sd <- sqrt(
+    null_variance
+  )
+
+  # Gap between null expectation and observed statistic
+  # (null_expect - obs_stat), + Normal buffer (kappa * null_sd)
+  obj_val <- (null_expect - obs_stat) + kappa * null_sd
+
+  return(obj_val)
+}
+
+```
+
+To build intuition, we next evaluate this function at $\Gamma = 1$.
+
+```{r, tidy = FALSE}
+
+# Evaluate under Gamma = 1 using null_ev, null_var, and obs_stat
+sens_objective(
+  null_expect   = null_ev,
+  null_variance = null_var,
+  obs_stat      = obs_stat,
+  alpha         = 0.05
+)
+
+```
+
+The resulting value is negative, indicating rejection of the null at the chosen significance level. This is exactly what we would expect: Because we previously rejected the sharp null hypothesis that $\tau_h = 0$ for all units at $\Gamma = 1$, the function evaluated at $\Gamma = 1$ is indeed nonpositive.
+
+The crucial property of this function is that it is concave over $\mathcal{U}_{+}$, which means that a tangent line drawn at *any* $\bm{u} \in \mathcal{U}_+$ lies above the function *everywhere* on $\mathcal{U}_{+}$. @rosenbaum2018 draws the tangent line at the configuration of $\bm{u}$ chosen by the separable approximation. Because the original function is concave, this tangent line provides a global upper bound on the function for all candidate configurations of hidden confounding. If this upper bound is nonpositive, then the function itself must also be nonpositive. Consequently, rather than maximizing a curved function over $\mathcal{U}_{+}$, we can instead maximize a linear function, which greatly simplifies the optimization.
+
+Straight lines are easy to work with because they decompose additively across matched sets. We can therefore determine, within each stratum separately, which hidden-bias pattern makes the tangent line as large as possible, and then add up these stratum-specific contributions. The resulting sum is the maximum value of the tangent line over all $\bm{u} \in \mathcal{U}_{+}$.
+
+Recalling that the original function is concave, if the maximum value of the tangent-line approximation over $\bm{u} \in \mathcal{U}_{+}$ is at or below zero, then the original function itself must be nonpositive for every $\bm{u} \in \mathcal{U}_{+}$. Therefore, we can safely base the decision to reject the null hypothesis or not on the Taylor approximation. Although valid, this procedure can be conservative: The tangent line may remain above zero even when the original function would be below zero at its true worst-case $\bm{u}$. By contrast, the separable approximation can be liberal, as it may reject even when the worst-case value of the function is positive.
+
+#### Conducting Worst-Case Sensitivity Analysis
+
+Below we report the upper one-sided $p$-value obtained under the separable approximation, along with an indication of whether the resulting decision to reject or not reject the null hypothesis agrees with the decision implied by the Taylor series approximation. Agreement or disagreement between the two methods is determined by the sign of the Taylor-series–based bound on the function described above that governs rejection of the null hypothesis. Disagreement can occur only when the separable approximation yields a $p$-value slightly below $\alpha$, indicating rejection, while the Taylor series approximation yields a positive value, leading to non-rejection.
+
+
+```{r}
+
+# Grid of Gamma values
+Gamma_vals <- seq(
+  from = 1,
+  to = 1.5,
+  by = 0.0001
+)
+
+# lapply() runs sensitivity analysis at each Gamma, returns list of results
+sens_results <- lapply(
+  X = Gamma_vals,
+  FUN = function(g) {
+    out <- senstrat(
+      sc          = data_matched$ldur_tilde_hm_scaled, # outcome
+      z           = data_matched$UN,                   # treatment indicator
+      st          = data_matched$fm,                   # matched set
+      gamma       = g,                                 # Gamma
+      alternative = "greater",                         # upper-tail test
+      detail      = TRUE # return intermediate quantities
+    )
+
+    # Separable p-value
+    p_sep <- as.numeric(
+      out$Separable["P-value"]
+    )
+
+    # Taylor series margin (cvA)
+    cvA <- as.numeric(
+      out$lambda["Linear Taylor bound"]
+    )
+
+    # Decisions
+    sep_reject <- p_sep <= alpha          # separable rejects?
+    tay_reject <- cvA <= 0                # Taylor rejects?
+
+    # Store results for this value of Gamma
+    data.frame(
+      Gamma     = g,        # sensitivity parameter
+      p_sep     = p_sep,    # separable p-value
+      cvA       = cvA,      # Taylor bound
+      agree_tay = (sep_reject == tay_reject) # agreement indicator
+    )
+  }
+)
+
+# Bind into a single data frame
+sens_df <- do.call(
+  what = rbind,
+  args = sens_results
+)
+
+# Smallest Gamma where the separable p-value is >= alpha
+sens_value_sep <- min(
+  sens_df$Gamma[sens_df$p_sep >= alpha]
+)
+
+# Taylor series sensitivity value:
+# smallest Gamma at which Taylor margin becomes positive (non-rejection)
+sens_value_tay <- min(
+  sens_df$Gamma[sens_df$cvA > 0]
+)
+
+```
+
+For this matched dataset, the conclusions from the separable and Taylor series approximations agree for nearly all values of $\Gamma$, differing over only a narrow interval from `r min(sens_df$Gamma[which(sens_df$agree_tay == 0)])` to `r max(sens_df$Gamma[which(sens_df$agree_tay == 0)])`. As these results indicate, we can reject the sharp null of no effect under as-if randomization (i.e., $\Gamma = 1$), but this conclusion is sensitive to departures from that assumption. Using the more conservative Taylor series approximation, we can no longer reject the sharp null of no effect against the alternative of a larger effect at the $\alpha = 0.05$ level once $\Gamma$ reaches approximately `r round(x = sens_value_tay, digits = 2)`.
+
+The plot below illustrates this comparison and clarifies how the two approaches relate across values of $\Gamma$.
+
+```{r, tidy = FALSE, echo = FALSE, fig.pos = "H", fig.width = 6, fig.height = 4, fig.cap =  "Sensitivity analysis for the sharp null of no individual treatment effect for all units. The top panel shows upper one-sided $p$-values under the separable approximation across values of $\\Gamma$; the bottom panel reports, across the same values of $\\Gamma$, the corresponding Taylor series margin, with the zero line marking the rejection boundary. The shaded vertical band highlights values of $\\Gamma$ for which the separable approximation and the Taylor series approximation lead to different rejection decisions."}
+
+# Install tidyr (only run if not already installed)
+# install.packages("tidyr")
+
+# Load tidyr for reshaping data
+library(tidyr)
+
+## Reshape results into long format for plotting ----
+## We want one column for the quantity being plotted
+## (separable p-value vs. Taylor series margin) and one
+## column for the numeric value, so that we can facet easily.
+
+sens_df_long <- sens_df |>
+  select(Gamma, p_sep, cvA, agree_tay) |>
+  pivot_longer(
+    cols      = c(p_sep, cvA),   # quantities to plot
+    names_to  = "quantity",      # which quantity is being shown
+    values_to = "value"          # numeric value of that quantity
+  ) |>
+  mutate(
+    # Make quantity a factor with readable labels
+    quantity = factor(
+      quantity,
+      levels = c("p_sep", "cvA"),
+      labels = c("Separable p-value",
+                 "Taylor series margin")
+    )
+  )
+
+## Identify regions of disagreement across Gamma ----
+## Disagreement occurs when the separable decision
+## (p_sep <= alpha) differs from the Taylor decision (cvA <= 0).
+
+disagree_df <- sens_df |>
+  filter(!agree_tay)
+
+## If there is any disagreement at all, we summarize it
+## by taking the minimum and maximum Gamma over which
+## disagreement occurs, and use this to define a shaded band.
+## (This keeps the visualization simple and interpretable.)
+
+if (nrow(disagree_df) > 0) {
+  
+  gamma_min_disagree <- min(
+    disagree_df$Gamma
+  )
+  gamma_max_disagree <- max(
+    disagree_df$Gamma
+  )
+  
+  # Create a data frame defining the shaded region.
+  # We repeat the band for each facet so it appears
+  # behind both panels.
+  band_df <- data.frame(
+    xmin     = gamma_min_disagree,
+    xmax     = gamma_max_disagree,
+    quantity = factor(
+      c("Separable p-value",
+        "Taylor series margin"),
+      levels = levels(
+        sens_df_long$quantity
+      )
+    )
+  )
+  
+} else {
+  # If there is no disagreement anywhere, do not draw a band
+  band_df <- NULL
+}
+
+
+## Use a colorblind-friendly palette and keep colors
+## consistent with previous figures in the guide.
+
+plot_cols <- c(
+  "Separable p-value"    = "#0072B2",  # blue
+  "Taylor series margin" = "#D55E00"   # vermillion
+)
+
+## Plot sensitivity results ----
+ggplot(data = sens_df_long,
+       mapping = aes(x = Gamma, y = value, color = quantity)) +
+  
+  # Reference line for separable p-values: alpha
+  geom_hline(
+    data = subset(sens_df_long, quantity == "Separable p-value"),
+    aes(yintercept = alpha),
+    color = "grey50"
+  ) +
+  
+  # Reference line for Taylor series margin: zero is rejection boundary
+  geom_hline(
+    data = subset(sens_df_long, quantity == "Taylor series margin"),
+    aes(yintercept = 0),
+    color = "grey50"
+  ) +
+  
+  ## Shaded vertical band indicating Gamma values
+  ## where the separable and Taylor decisions disagree
+  (if (!is.null(band_df))
+    geom_rect(
+      data = band_df,
+      aes(xmin = xmin, xmax = xmax,
+          ymin = -Inf, ymax = Inf),
+      inherit.aes = FALSE,
+      fill = "grey80",
+      alpha = 0.4
+    )
+  ) +
+  
+  ## Plot curves for each quantity
+  geom_line(
+    linewidth = 0.5
+  ) +
+  
+  ## Manual colors, no legend needed because facets label quantities
+  scale_color_manual(
+    values = plot_cols, guide = "none"
+  ) +
+  
+  theme_bw() +
+  
+  ## Separate panels for p-values and margins
+  facet_wrap(
+    ~ quantity, ncol = 1, scales = "free_y"
+  ) +
+  
+  ## Gamma axis formatting
+  scale_x_continuous(
+    breaks = seq(from = 1, to = 1.5, by = 0.1)
+  ) +
+  
+  ## Axis labels and theme tweaks
+  xlab(
+    expression(Gamma)
+  ) +
+  ylab(NULL) +
+  theme(
+    strip.text        = element_text(face = "bold"),
+    legend.position   = "none",
+    panel.grid.minor.x = element_blank(),  # remove vertical minor grid lines
+    panel.grid.major.x = element_blank()   # remove vertical major grid lines
+  )
+
+```
+
+Zooming in on the shaded vertical band --- corresponding to values of $\Gamma$ for which the two approaches yield different conclusions (between `r min(sens_df$Gamma[which(sens_df$agree_tay == 0)])` to `r max(sens_df$Gamma[which(sens_df$agree_tay == 0)])`) --- shows that the two methods diverge in exactly the way one would expect. Over this range of $\Gamma$ values, the Taylor series margin lies just above zero, indicating no rejection of the sharp null, while the separable approximation yields $p$-values just below $0.05$, indicating rejection. This pattern reflects the relative conservatism of the Taylor series approximation: Rejection under the Taylor series approach implies rejection under the separable approach, but not vice versa.
+
+Both approaches to sensitivity analysis rely on multiple approximations. For example, the separable approximation is used to approximate the worst-case configuration of hidden bias $\bm{u} \in \mathcal{U}_+$, and inference additionally relies on a Normal approximation to the null randomization distribution of the test statistic. If the exact randomization distribution were used instead, the resulting sensitivity conclusions could differ for certain values of $\Gamma$. In principle, one could also assess sensitivity at a given $\Gamma$ using the exact randomization distribution by fixing a configuration of hidden bias $\bm{u}$ --- for example, the separable choice --- and deriving, from \eqref{eq: indiv sens prob}, the implied probability distribution on $\Omega$, which can then be combined with the previously defined `exact_sharp_null_dist` to compute the corresponding $p$-value.
+
+### How Do Inferences under the Weak Framework Change under these Departures?
+
+Compared to tests of the sharp null hypothesis of no effect, constructing valid tests of an analogous weak null hypothesis is more challenging. A sharp null hypothesis specifies all missing potential outcomes, so we need only consider $p$-values over configurations of $\bm{u} \in \mathcal{U}_{+}$, rather than also over multiple configurations of potential outcomes. By contrast, a weak null permits many possible configurations of potential outcomes, so identifying the worst-case $p$-value requires optimization over both $\bm{u}$ and the potential outcomes consistent with the null. This joint optimization is computationally tractable only in restricted settings, such as those with binary outcomes [@fogartyetal2017] or matched-pair designs [@fogarty2020].
+
+A more generally applicable approach is proposed by @fogarty2023, which avoids the need for an explicit search for the worst-case $p$-value over all configurations of $\bm{u}$ and potential outcomes consistent with the null hypothesis about $\tau$. To build intuition for this approach, note that the following inverse probability weighted (IPW) version of the Difference-in-Means is unbiased for the ATE, $\tau$:
+\begin{align} \label{eq: weighted diff-in-means}
+\sum \limits_{s = 1}^S (n_s/n) \left(\frac{1}{\abs{\Omega_s}}\right)\left(\frac{\hat{\tau}_s}{p(\bm{z}_s)}\right),
+\end{align}
+where $p(\bm{z}_s)$ denotes the probability of assignment $\bm{z}_s$ among all treatment assignments in set $s$ that hold fixed the realized number of treated units, with $\abs{\Omega_s}$ denoting, as defined earlier, the total number of such assignments. Both $\hat{\tau}_s$ and $p(\bm{z}_s)$ are evaluated at the same realized treatment assignment $\bm{z}_s$ within matched set $s$. In other words, $p(\bm{z}_s)$ denotes the probability of the assignment under which the treated and control outcomes in set $s$ --- and hence the Difference-in-Means $\hat{\tau}_s$ --- aree realized.
+
+When $\Gamma = 1$, this probability $p(\bm{z}_s)$ is $1/\abs{\Omega_s}$, and the IPW Difference-in-Means reduces to the usual unweighted Difference-in-Means, $\hat{\tau}$. When $\Gamma > 1$, however, $p(\bm{z}_s)$ is no longer known exactly. In matched designs that may include sets with a single treated unit and many controls as well as sets with a single control unit and many treated units, $\Gamma$ restricts the assignment probability to lie within bounds consistent with the specified degree of departure from as-if randomization:
+\begin{align} \label{eq: prob bounds}
+\dfrac{1}{\Gamma (n_s - 1) + 1} \leq p(\bm{z}_s) \leq \dfrac{\Gamma}{(n_s - 1) + \Gamma},
+\end{align}
+for all $\bm{z}_s \in \Omega_s$ and for all matched sets $s$.
+
+Since the IPW Difference-in-Means in \eqref{eq: weighted diff-in-means} cannot be directly computed when $\Gamma > 1$, @fogarty2023 instead uses the bounds in \eqref{eq: prob bounds} to construct a worst-case version of this IPW Difference-in-Means. For tests of a null hypothesis about the overall ATE across all matched sets, this worst-case procedure operates on the set-specific Difference-in-Means centered at the null ATE, $\hat{\tau}_s - \tau_0$, and applies the upper bound from \eqref{eq: prob bounds} whenever $\hat{\tau}_s \geq \tau_0$ and the lower bound whenever $\hat{\tau}_s < \tau_0$. When testing the
+null against a smaller alternative, the procedure reverses these
+substitutions.
+
+To see the value of this procedure, consider testing a null hypothesis about the ATE against the alternative of a larger ATE. @fogarty2023 shows that, for any $\Gamma \geq 1$, the expected value of this worst-case IPW Difference-in-Means --- defined under whatever the true distribution on $\Omega$ consistent with that $\Gamma$ happens to be --- is always less than or equal to the null when it is true. Conversely, when testing against the alternative of a smaller ATE, this expectation is greater than or equal to the null when it is true. Importantly, these properties hold for all possible values of $\bm{u}$ and all configurations of potential outcomes that are consistent with the null hypothesis.
+
+How does this property of the expected value ensures a valid test in sufficiently large studies? Sticking to the case of testing against a larger ATE, the intuition is straightforward: If the expected value of the worst-case IPW Difference-in-Means is less than or equal to the null when it is true, then the worst-case IPW Difference-in-Means tends to fall at or below the null rather than above it. In other words, the procedure intentionally "tilts" the worst-case IPW Difference-in-Means in the direction opposite the alternative, making the procedure conservative.
+
+In addition to this property of the expected value, a second key ingredient for valid hypothesis testing concerns variance estimation. For any fixed $\Gamma \geq 1$, an analogue of the variance estimator from @fogarty2018 (discussed above) consistently overestimates (or bounds above) the true variance of the worst-case IPW Difference-in-Means. As a result, using this variance estimator further reduces the magnitude of the standardized test statistic --- the worst-case IPW Difference-in-Means, which is already centered at the null ATE, divided by the square root of the estimated variance --- relative to what would be obtained using the true (but unknown) variance.
+
+Together, these two properties work in the same direction:
+
+  - The expected value is at or below the null, keeping the center of the distribution at or shifted away from the upper tail, and
+  - the variance estimate tends to be too large, which pulls the standardized statistic closer to zero.
+
+As a result, when the null is true, the probability that the standardized statistic falls in the upper tail of the standard Normal distribution --- that is, the probability of falsely rejecting the null  --- remains at or below the nominal significance level. Hence, the test is conservative (valid) in large studies. Analogous reasoning applies when testing against the alternative of a smaller effect: When the null hypothesis is true, the probability that the standardized value falls in the lower tail of the standard Normal distribution also stays at or below the nominal significance level.
+
+To implement this approach from @fogarty2023, we first source from the GitHub repository an \texttt{R} function that, for a fixed $\Gamma \geq 1$, computes the worst-case IPW Difference-in-Means for a single matched set.
+
+```{r, tidy = FALSE}
+
+# Load the worst_case_IPW() function from GitHub repo
+source(
+  paste0(
+    base_url, "/R/worst_case_IPW.R"
+  )
+)
+
+```
+
+We now use this function to calculate the worst-case IPW version of the Difference-in-Means within each matched set. To form the overall statistic, we average the set-specific values using weights equal to each set’s contribution to the total number of units. Finally, we center the worst-case IPW Difference-in-Means by the null ATE, standardize this difference using the conservative variance estimator from @fogarty2018, and compare the resulting standardized test statistic to the standard Normal distribution to obtain $p$-values.
+
+```{r, tidy = FALSE}
+
+# One-sided sensitivity analysis for the weak null (ATE = 0)
+
+# Null and alternative for the weak-null test
+null_ATE    <- 0                  # Null: ATE = 0
+
+alternative <- "greater"          # Alt: ATE > 0 (upper-tail test)
+
+# Data frame to store results for each Gamma
+weak_sens_df <- data.frame(
+  Gamma   = Gamma_vals,
+  p_value = NA_real_
+)
+
+for (g in Gamma_vals) { # Loop over Gamma values
+
+  # Worst-case IPW estimate within each matched set at Gamma = g
+  set_stats <- data_matched |>
+    group_by(
+      fm
+    ) |>
+    summarise(
+      n      = n(),                        # Set size n_s
+      weight = n / nrow(data_matched),     # Weight n_s / n
+      est    = worst_case_IPW(             # Worst-case IPW in set s
+        z           = UN,                  # Treatment indicator
+        y           = ldur,                # Outcome
+        Gamma       = g,                   # Sensitivity parameter (Gamma)
+        tau_h       = null_ATE,            # Weak null: ATE = 0
+        alternative = alternative          # Direction of alternative
+      ),
+      .groups = "drop"
+    )
+
+  # Overall worst-case IPW statistic (weighted average across sets)
+  wc_ipw_stat <- sum(
+    set_stats$weight * set_stats$est
+  )
+
+  # Variance estimate for the worst-case IPW statistic
+  var_hat <- fine_strat_var_est(
+    strat_ns   = set_stats$n,
+    strat_ests = set_stats$est
+  )
+
+  # Standardized worst-case IPW statistic, centered at the null
+  se_hat   <- sqrt(
+    var_hat
+  )
+
+  std_stat <- wc_ipw_stat / se_hat
+
+  # One-sided p-value, determined by the alternative
+  if (alternative == "greater") {
+    # Upper-tail test: ATE > 0
+    p_val <- 1 - pnorm(std_stat)
+  } else if (alternative == "less") {
+    # Lower-tail test: ATE < 0
+    p_val <- pnorm(std_stat)
+  } else {
+    stop("Only one-sided alternatives (`greater' or `less').")
+  }
+
+  # Store result for this Gamma
+  weak_sens_df$p_value[weak_sens_df$Gamma == g] <- p_val
+}
+
+# Sensitivity value: smallest Gamma where one-sided test no longer rejects
+weak_sens_value <- min(
+  weak_sens_df$Gamma[weak_sens_df$p_value >= alpha]
+)
+
+```
+
+Below, we plot the upper one-sided $p$-values corresponding to $\Gamma$ values from `r min(Gamma_vals)` to `r max(Gamma_vals)`.
+
+```{r, tidy = FALSE, echo = FALSE, fig.pos = "H", fig.width = 6, fig.height = 4, fig.cap = "One-sided upper $p$-values for the weak null hypothesis of zero average effect across values of the sensitivity parameter $\\Gamma$."}
+
+# Plot weak-null sensitivity results: Gammas vs. p-values
+ggplot(
+  data = weak_sens_df,
+  mapping = aes(x = Gamma,
+                y = p_value)
+) +
+  geom_hline(
+    yintercept = alpha,
+    linetype = "solid",
+    color = "grey"
+  ) +
+  geom_line(
+    color = "black"
+  ) +  # P-value curve
+  theme_bw() +
+  scale_x_continuous(
+    breaks = seq(from = 1,
+                 to = 1.5,
+                 by = 0.1)
+  ) +
+  scale_y_continuous(
+    breaks = seq(from = 0,
+                 to = 0.1,
+                 by = 0.01),
+    limits = c(0, 0.1)
+  ) +
+  xlab(
+    expression(Gamma)
+  ) +
+  ylab("One-sided upper p-value")
+
+```
+
+Under as-if randomization ($\Gamma = 1$), we find evidence of a positive average effect. This conclusion about the weak null is slightly more robust to departures from as-if randomization than our earlier rejection of the sharp null of no effect at $\Gamma = 1$. However, in absolute terms, the evidence for a positive ATE remains sensitive. Our qualitative conclusion about the null hypothesis that the ATE equals zero changes once $\Gamma$ reaches `r weak_sens_value`.
+
+It is important to emphasize that this sensitivity analysis guarantees validity across *all* configurations of potential outcomes consistent with the weak null. By contrast, @fogarty2023 also describes an alternative sensitivity analysis that restricts attention to subsets of configurations that researchers may regard as more plausible. Such alternatives can produce smaller $p$-values, but at the cost of forfeiting validity for certain (possibly unrealistic) potential outcome configurations.
+
+# Conclusion
+
+We have now completed the full matching pipeline. We began by constructing matched sets and then conducted inference under the as-if randomization assumption, treating the matched design as a collection of completely randomized experiments within blocks. We examined inference under both sharp and weak null frameworks --- corresponding, respectively, to unit-level causal effects and average effects --- and then assessed the sensitivity of these inferences to potential violations of the as-if randomization assumption. The embedded code, accompanied by extensive comments and illustrated through the running example from @gilligansergenti2008, is intended to be readily adapted by practitioners to their own datasets.
+
+## Limitations and Related Topics Beyond Our Scope
+
+For clarity and focus, we have excluded several important topics, though we have pointed to relevant references where appropriate. Some of these omissions are not specific to matching or observational studies. In particular, we have not addressed imperfect compliance with treatment assignment, missing outcomes, clustered (rather than individual-level) assignment, or interference settings in which a subject’s outcome depends on others’ treatment assignments.
+
+Our analysis has focused on inference for two causal targets only: a constant, additive treatment effect and the average treatment effect. We have not considered alternative effect models, such as dilated effects [@rosenbaum1999], multiplicative effects, or Tobit effects [@rosenbaum2010, pp. 46–49]. Throughout, we have treated causal targets as fixed quantities (over the set of treatment assignments consistent with the matched design), rather than as random variables. As a result, we have excluded attributable effects [@rosenbaum2001; @rosenbaum2003; @hansenbowers2009] and the average treatment effect on the treated [@sekhonshem-tov2021]. We have also set aside methods for joint inference on sharp and weak causal hypotheses [@ding2017; @wuding2021; @cohenfogarty2022], as well as strategies that improve the power of hypothesis tests by rescaling outcomes or choosing alternative test statistics, including regression-assisted approaches [@lin2013; @cohenfogarty2023; @guobasse2023].
+
+Several omissions are specific to matching methodology itself: 
+
+- First, we have not covered a range of **alternative matching and balancing approaches**, including nonbipartite matching for multivalued treatments [@luetal2001; @luetal2011; @rosenbaum2010, pp. 207–221], template matching [@silberetal2014], multilevel matching [@zubizarretakeele2017; @pimenteletal2018], risk-set matching [@lietal2001], cardinality matching [@zubizarretaetal2014], coarsened exact matching [@iacusetal2012], exterior matching [@rosenbaumsilber2013], or generalized full matching [@savjeetal2021], among others. We have further assumed that researchers specify *ex ante* the set of covariates to be balanced, thereby excluding screening procedures that identify additional covariates for adjustment based on observed imbalances [@cochran1965], as in tapered matching approaches [@danieletal2008; @yuetal2021]. Finally, we have not considered balance constraints such as fine and near-fine balance [@rosenbaumetal2007; @yangetal2012; @yu2023; @pimenteletal2015a; @pimenteletal2015b], which enforce exact or nearly exact equality of covariate distributions.
+
+- Second, we have not discussed the use of **prognostic covariates** identified using pilot or external data. Such approaches can substantially improve efficiency by prioritizing covariates that strongly predict potential outcomes. For theoretical foundations, see @hansen2008a, with complementary theoretical results and practical insights in @salesetal2018.
+
+- Third, we have considered only matching strategies aimed at justifying as-if randomization, not those designed explicitly to improve **design sensitivity** --- that is, robustness to moderate violations of as-if randomization [see @rosenbaum2010, Part III, pp. 257-311]. Beyond match construction, researchers can also enhance design sensitivity by selecting particular test statistics, among other strategies [@rosenbaum2004; @helleretal2009; @hsuetal2013; @smalletal2013].
+
+- Fourth, we have excluded **extensions to covariate balance testing** beyond the framework developed in @hansenbowers2008, including subsequent contributions by @gagnon-bartschshem-tov2019 and @branson2021, as well as related approaches based on the stepwise intersection–union principle [@hansensales2015].
+
+- Fifth, we have ignored **residual imbalance on observed covariates**. Specifically, we have proceeded under the assumption that matched set membership can justify as-if randomization, even when small imbalances remain within matched sets. Under this approach, concerns about residual imbalance are absorbed into the sensitivity analysis for hidden bias. This approach is not entirely satisfying, however, because imbalances on observed covariates are not, in fact, hidden. Several methods therefore address such imbalances directly, either in approaches targeting individual effects [@rosenbaum1988; @pimentelhuang2024; @chenetal2023; @hengetal2025] or average effects [@zhuetal2025].
+
+- Sixth, we have not incorporated into the overall pipeline an explicit approach for defining an **interpretable study population** in matched designs. Common practice excludes units based on limited overlap in the estimated propensity score [@crumpetal2009; @kingzeng2006], but study populations defined in this way can be difficult to characterize substantively. Hence, alternative approaches define the study population directly in terms of a small number of covariates. For example, @traskinsmall2011 use a classification tree to define a study population that approximates one defined by trimming on the estimated propensity score, while @fogartyetal2016 use discrete optimization to define a maximal, rectangular region of covariate space with adequate overlap on key covariates.
+
+- Seventh, we have not considered **quasi-experimental devices** [@campbell1957; @campbellstanley1963; @shadishetal2002], specifically how matched designs can leverage such devices [see @rosenbaum2025, Section IV]. Two prominent quasi-experimental devices include an additional control group [@rosenbaum1987b] and outcomes with known effects [@rosenbaum1989], each of which has a range of valuable applications. In the context of evidence factors [@rosenbaum2021], one use of a second control group is to yield stronger causal evidence that is less susceptible to hidden confounding [@rosenbaum2023b]. For known effects, one illustrative use is to support tests for hidden confounding that inform sensitivity analyses by ruling out certain violations of as-if randomization [@rosenbaum2023a].
+
+- Eighth and finally, we have not addressed settings in which matched set membership itself may depend on the treatment assignments --- that is, settings with **$\bm{Z}$-dependence** [@pashleyetal2021; @pimentelhuang2024; @pimentelyu2024]. Our exposition has relied on an analogy to Rubin’s framework of "assignment to treatment on the basis of a covariate" [@rubin1977], where matched set membership plays the role of the covariate. This analogy treats set membership as fixed, but in practice membership can be random when the realized treatment assignment --- determined prior to matching --- induces the matched structure, implying that the structure may vary across possible assignments. We have set aside this issue, which may be minor when practitioners use sufficiently tight calipers for matching (a point we thank Professor Samuel Pimentel for emphasizing in helpful discussions).
+
+Despite these limitations, the pipeline and design-based perspective developed here provide a coherent framework for understanding how matched designs support causal inference. The emphasis on design-based foundations clarifies the logic underlying the construction of matched sets and the subsequent steps of inference and sensitivity analysis under both weak and sharp frameworks. We present this work not as exhaustive, but as a foundation on which researchers can build when incorporating more specialized methods tailored to their substantive and inferential goals.
+
+\newpage

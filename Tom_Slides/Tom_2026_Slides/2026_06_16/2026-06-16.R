@@ -3,7 +3,7 @@
 ##'
 ##' Before running: download acorn03.csv into this script's working directory.
 ##' Then run top-to-bottom (e.g. `Rscript 2026-06-16.R`); figures are written to
-##' an images/ subfolder.
+##' an figures/ subfolder.
 
 library(ggplot2)
 
@@ -76,7 +76,7 @@ p_norm <- pnorm(q = t_obs / sqrt(v_null), lower.tail = FALSE)
 cat("Normal-approximation upper p =", round(p_norm, 3), "\n")
 
 # Figures --------------------------------------------------------------------
-if (!dir.exists("images")) dir.create("images")
+if (!dir.exists("figures")) dir.create("figures")
 
 # Shared look: Freedman-Diaconis bin width, common x-range, and fill colors.
 bin_width <- 2 * IQR(null_no_effect) / length(null_no_effect)^(1 / 3)
@@ -112,13 +112,13 @@ upper_reject_plot <- function(null, obs, x_label, out_file) {
 # Sharp null of no effect: observed lies outside the rejection region.
 upper_reject_plot(null = null_no_effect, obs = t_obs,
                   x_label = "Difference-in-means under no effect",
-                  out_file = "images/null_dist_no_effect_plot.pdf")
+                  out_file = "figures/null_dist_no_effect_plot.pdf")
 
 # Constant-effect null at tau = 2.5 (test on adjusted outcomes).
 upper_reject_plot(null = randomization_dist(y_obs - 2.5 * z_obs),
                   obs = t_obs - 2.5,
                   x_label = "Difference-in-means on adjusted outcomes",
-                  out_file = "images/null_unif_plot.pdf")
+                  out_file = "figures/null_unif_plot.pdf")
 
 # Two-sided rejection region: alpha/2 in each tail.
 c_lo <- quantile(x = null_no_effect, probs = alpha / 2)
@@ -141,7 +141,7 @@ p_two_sided <- ggplot(two_sided_df, aes(x = stat,
   theme_bw() +
   xlab(label = "Difference-in-means under no effect") +
   ylab(label = "Probability")
-ggsave(filename = "images/two_sided_rejection.pdf", plot = p_two_sided,
+ggsave(filename = "figures/two_sided_rejection.pdf", plot = p_two_sided,
        width = 6, height = 3.6, units = "in", dpi = 600)
 
 # Why a TAIL region: power of a tail vs a middle region, each of size alpha.
@@ -196,7 +196,7 @@ p_power <- ggplot() +
   theme(legend.position = "bottom") +
   xlab(label = "Difference-in-means") +
   ylab(label = "Density")
-ggsave(filename = "images/rejection_region_power.pdf", plot = p_power,
+ggsave(filename = "figures/rejection_region_power.pdf", plot = p_power,
        width = 6, height = 4.4, units = "in", dpi = 600)
 
 # Confidence-set bounds: null at a hypothesized tau, with both alpha/2 tails
@@ -234,7 +234,7 @@ p_bounds <- ggplot(bound_hist, aes(x = stat,
   theme_bw() +
   xlab(label = "Difference-in-means on adjusted outcomes") +
   ylab(label = "Probability")
-ggsave(filename = "images/ci_bounds.pdf", plot = p_bounds,
+ggsave(filename = "figures/ci_bounds.pdf", plot = p_bounds,
        width = 6.6, height = 3.4, units = "in", dpi = 600)
 
 # Hodges-Lehmann: at tau = HL the observed adjusted statistic sits at the
@@ -253,7 +253,7 @@ p_hl <- ggplot(hl$hist, aes(x = stat,
   theme_bw() +
   xlab(label = "Difference-in-means on adjusted outcomes") +
   ylab(label = "Probability")
-ggsave(filename = "images/hl_estimate.pdf", plot = p_hl,
+ggsave(filename = "figures/hl_estimate.pdf", plot = p_hl,
        width = 6, height = 3.4, units = "in", dpi = 600)
 
 # Normal approximation: the simulated sharp-null histogram with the N(0, V)
@@ -273,7 +273,7 @@ p_normal <- ggplot(data.frame(stat = null_no_effect), aes(x = stat)) +
   theme_bw() +
   xlab(label = "Difference-in-means under no effect") +
   ylab(label = "Probability")
-ggsave(filename = "images/normal_approx.pdf", plot = p_normal,
+ggsave(filename = "figures/normal_approx.pdf", plot = p_normal,
        width = 6, height = 3.6, units = "in", dpi = 600)
 
 # Size vs power (Lady Tasting Tea, t = z^T y). Reject iff t = 4, so the
@@ -302,5 +302,5 @@ p_size_power <- ggplot(tea_df, aes(x = t, y = prob, fill = region)) +
   theme_bw() +
   xlab(expression(t == bold(z)^T * bold(y))) +
   ylab(label = "Probability")
-ggsave(filename = "images/size_power_tea.pdf", plot = p_size_power,
+ggsave(filename = "figures/size_power_tea.pdf", plot = p_size_power,
        width = 7, height = 3.2, units = "in", dpi = 600)

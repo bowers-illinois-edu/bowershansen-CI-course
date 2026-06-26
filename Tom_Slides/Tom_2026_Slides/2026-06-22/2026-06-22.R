@@ -1,5 +1,5 @@
 ##' ---
-##' title: "Day 6: Noncompliance, Attrition, and the CACE"
+##' title: "Day 6 (June 22): Covariance Adjustment -- Precision Without Bias"
 ##' output: github_document
 ##' ---
 ##'
@@ -7,20 +7,20 @@
 ##' 2026-06-22.tex. It continues the design-based, finite-population framework of
 ##' 2026-06-17.R and 2026-06-18.R: potential outcomes are fixed, randomness comes
 ##' only from the assignment Z, and the Difference-in-Means is the workhorse
-##' estimator. Today the assigned treatment Z and the received treatment D come
-##' apart (noncompliance), so the estimand of interest is the Complier Average
-##' Causal Effect (CACE = ITT_Y / ITT_D), a RATIO of two Difference-in-Means.
+##' estimator. Today a pre-treatment covariate is used to CUT THE VARIANCE of that
+##' estimator -- without touching its unbiasedness -- in two design-based ways:
+##'   (1) BLOCKING   -- randomize within blocks of similar precincts;
+##'   (2) RESCALING  -- subtract the covariate (a gain score) before the test,
+##'                     and its generalization, regression adjustment (Lin 2013).
 ##'
-##' Running example: the 1980 Adams and Smith telephone GOTV experiment, a clean
-##' case of ONE-SIDED noncompliance (no control subject can be contacted). The
-##' cell counts are taken from the course materials (per_protocol_vs_itt_iv.Rmd):
-##'   * N = 2650, n1 = n0 = 1325 (complete randomization)
-##'   * Telephone arm (z = 1): 950 contacted (d = 1), 375 not (d = 0); 392 voted
-##'   * Control arm   (z = 0): 0 contacted (one-sided); 315 voted
+##' Running example: ACORN (acorn03.csv), the Kansas City 2003 GOTV experiment
+##' (Arceneaux 2005): 28 precincts, complete random assignment of 14 canvassed
+##' (z = 1) and 14 control (z = 0); outcome vote03 = 2003 turnout proportion.
 ##'
 ##' Figures produced here (written to the figures/ subdirectory):
-##'   * gotv_itt_joint_dist.pdf   (joint randomization dist of ITT_Y_hat, ITT_D_hat)
-##'   * gotv_cace_sampling_dist.pdf (CACE_hat is approx. Normal -- delta method)
+##'   * acorn_blocked_vs_complete.pdf    (blocking tightens the null distribution)
+##'   * acorn_original_vs_rescaled.pdf   (rescaling tightens the null distribution)
+##'   * acorn_adjust_difference.pdf      (adjusted - unadjusted -> 0 as N grows)
 
 ## ============================================================
 ## Setup
@@ -29,532 +29,269 @@
 if (!exists("saveplots_")) saveplots_ <- FALSE
 
 library(ggplot2)
-library(viridis)   # color-blind-friendly fills, matching the other decks
-library(plot3D)    # static 3D surfaces (base graphics; no OpenGL needed)
+library(viridis)     # color-blind-friendly fills, matching the source figures
+library(blockTools)  # optimal blocking (matched pairs) for the blocked design
+library(nbpMatching) # backs blockTools' algorithm = "optimal"
+library(estimatr)    # lm_lin(): Lin's regression-adjusted estimator with HC2 se
+library(sandwich)    # HC2 robust variance for the lm() form of Lin's estimator
 
 ## Figures are written to the figures/ subdirectory, which the slides source.
 dir.create("figures", showWarnings = FALSE)
 
-## The workhorse estimator from Days 4-5: treated mean minus control mean. Applied
-## to the OUTCOME y it estimates ITT_Y; applied to the RECEIVED treatment d it
-## estimates ITT_D (the first stage).
+## The estimator from Day 4: treated mean minus control mean.
 diff_in_means <- function(z, y) mean(y[z == 1]) - mean(y[z == 0])
 
-## Conservative estimator of the variance of a Difference-in-Means (Day 5): the
-## two estimable arm pieces. It drops the unestimable -S2_tau/N term, so its
-## expectation is an UPPER BOUND on the true variance.
+## Conservative estimator of the variance (Day 5): the two estimable arm pieces.
+## It drops the unestimable -S2_tau/N term, so it estimates an UPPER BOUND on the
+## true variance.
 conservative_var <- function(z, y) {
   var(y[z == 1]) / sum(z == 1) + var(y[z == 0]) / sum(z == 0)
 }
 
-## Conservative variance of the CACE (Wald) estimator: build the feasible
-## transformed outcome W_hat = y - cace_hat * d, take its conservative
-## Difference-in-Means variance, and divide by the squared first stage. This is
-## the function the slides hand the students for the exercise.
-cace_var <- function(z, y, d) {
-  itt_d_hat <- diff_in_means(z = z, y = d)
-  cace_hat  <- diff_in_means(z = z, y = y) / itt_d_hat
-  w_hat     <- y - cace_hat * d
-  conservative_var(z = z, y = w_hat) / itt_d_hat^2
-}
+## Standardized test statistic against a null ATE (Day 5).
+test_statistic <- function(tau_hat, se_hat, tau_0 = 0) (tau_hat - tau_0) / se_hat
 
-alpha   <- 0.05                 # significance level throughout
-z_crit  <- qnorm(p = 1 - alpha / 2)   # 1.96
+alpha   <- 0.05                        # significance level
+z_crit  <- qnorm(p = 1 - alpha / 2)    # 1.96, for two-sided CIs
 
 ## ============================================================
-## 1. Build the Adams-Smith GOTV data from its cell counts
+## 1. ACORN: the unadjusted Difference-in-Means (recap of Days 4-5)
 ## ============================================================
-## We reconstruct the individual-level data (every row is one potential voter)
-## from the published 2 x 2 x 2 cell counts. y = 1 if the subject voted; d = 1 if
-## the subject was actually contacted by a caller; z = 1 if assigned a call.
-make_rows <- function(z, d, n_voted, n_notvoted) {
-  data.frame(z = z, d = d,
-             y = c(rep(1, n_voted), rep(0, n_notvoted)))
+acorn  <- read.csv("acorn03.csv")
+z_obs  <- acorn$z           # 1 = canvassed (GOTV), 0 = control
+y_obs  <- acorn$vote03      # observed 2003 turnout proportion
+N  <- length(z_obs)
+n1 <- sum(z_obs)
+n0 <- N - n1                # 28, 14, 14
+
+tau_hat <- diff_in_means(z = z_obs, y = y_obs)            # ~ 0.036
+se_hat  <- sqrt(conservative_var(z = z_obs, y = y_obs))   # ~ 0.024
+ci_unadj <- c(lower = tau_hat - z_crit * se_hat,
+              upper = tau_hat + z_crit * se_hat)          # ~ [-0.011, 0.084]
+print(round(c(tau_hat = tau_hat, se_hat = se_hat, ci_unadj), 4))
+
+## ============================================================
+## 2. Baseline covariate: prior-election turnout predicts 2003 turnout
+## ============================================================
+## A baseline covariate is measured BEFORE assignment, so it is fixed (the same
+## under either potential outcome). The 2002 general-election turnout tracks 2003
+## turnout, so it carries outcome information the raw Difference-in-Means ignores.
+x_cov <- acorn$v_g2002               # 2002 general turnout (pre-treatment)
+print(round(cor(y_obs, x_cov), 3))   # ~ 0.55
+
+## Freedman-Diaconis bin count, so paired histograms share bins.
+compute_fd_bins <- function(values) {
+  bin_width <- 2 * IQR(values) / (length(values)^(1 / 3))
+  if (bin_width > 0) {
+    ceiling((max(values) - min(values)) / bin_width)
+  } else {
+    30
+  }
 }
 
-gotv <- rbind(
-  make_rows(z = 1, d = 1, n_voted = 310, n_notvoted = 640),  # telephoned, contacted
-  make_rows(z = 1, d = 0, n_voted =  82, n_notvoted = 293),  # telephoned, not reached
-  make_rows(z = 0, d = 0, n_voted = 315, n_notvoted = 1010)  # control (never contacted)
+## ============================================================
+## 3. Design lever (1): blocking on the covariate
+## ============================================================
+## Hypothetical "if ACORN had been blocked." Pair the 28 precincts on the
+## covariate with blockTools (optimal nonbipartite matching), then randomize one
+## treated per pair. Block randomization keeps only the 2^14 = 16,384 assignments
+## balanced on v_g2002 -- a tiny subset of the choose(28,14) ~ 40.1 million under
+## CRA -- ideally the assignments whose estimates sit near the truth.
+acorn$unit <- seq_len(N)
+pairs_out  <- block(
+  data       = acorn,        # the data frame of units
+  id.vars    = "unit",       # column identifying each unit
+  block.vars = "v_g2002",    # covariate(s) to match on
+  n.tr       = 2,            # units per block (2 -> matched pairs)
+  algorithm  = "optimal"     # minimize total within-pair distance
 )
+pair_table <- pairs_out$blocks[[1]]    # 14 matched pairs ("Unit 1", "Unit 2")
 
-z_obs <- gotv$z
-d_obs <- gotv$d
-y_obs <- gotv$y
+## One blocked assignment: randomize exactly one treated per pair.
+block_randomize <- function() {
+  z <- integer(N)
+  for (b in seq_len(nrow(pair_table))) {
+    pair <- as.integer(pair_table[b, c("Unit 1", "Unit 2")])
+    z[sample(x = pair, size = 1)] <- 1
+  }
+  z
+}
 
-N  <- nrow(gotv)                 # 2650
-n1 <- sum(z_obs == 1)            # 1325
-n0 <- sum(z_obs == 0)            # 1325
-print(c(N = N, n1 = n1, n0 = n0))
-
-## The design table the students see (assignment x contact):
-print(xtabs(formula = ~ z + d, data = gotv))
-## Turnout by assignment arm and by contact status:
-print(round(c(turnout_treated = mean(y_obs[z_obs == 1]),
-              turnout_control = mean(y_obs[z_obs == 0]),
-              turnout_contacted    = mean(y_obs[d_obs == 1]),
-              turnout_notcontacted = mean(y_obs[d_obs == 0])), 4))
-
-## ============================================================
-## 2. Per-protocol vs. ITT: why "analyze as treated" misleads
-## ============================================================
-## The per-protocol contrast compares the contacted to the not-contacted. It is
-## confounded: contact (d) is NOT randomly assigned, so the two groups differ in
-## ways beyond the call itself.
-per_protocol <- mean(y_obs[d_obs == 1]) - mean(y_obs[d_obs == 0])   # ~ 0.092
-print(round(c(per_protocol = per_protocol), 4))
-
-## ============================================================
-## 3. The three effects of assignment: ITT_Y, ITT_D, and the CACE
-## ============================================================
-## ITT_Y : effect of ASSIGNMENT on the outcome (reduced form).
-## ITT_D : effect of ASSIGNMENT on receipt of treatment (first stage).
-## CACE  : effect of RECEIPT among Compliers = ITT_Y / ITT_D (Wald / Bloom ratio).
-itt_y_hat <- diff_in_means(z = z_obs, y = y_obs)   # ~ 0.0581
-itt_d_hat <- diff_in_means(z = z_obs, y = d_obs)   # ~ 0.7170 (one-sided: = share contacted)
-cace_hat  <- itt_y_hat / itt_d_hat                 # ~ 0.0810
-print(round(c(itt_y_hat = itt_y_hat, itt_d_hat = itt_d_hat, cace_hat = cace_hat), 4))
-
-## ============================================================
-## 4. Standard error of the CACE: the finite-population delta method
-## ============================================================
-## CACE_hat = A / B with A = ITT_Y_hat, B = ITT_D_hat. The delta method linearizes
-## g(A, B) = A / B around the truth; its gradient is (1/B, -A/B^2). The resulting
-## approximate variance combines THREE pieces -- Var(A), Var(B), and Cov(A, B):
-##
-##   Var(CACE_hat) ~ Var(A)/B^2 - 2 A Cov(A,B)/B^3 + A^2 Var(B)/B^4.
-##
-## (a) The three estimable design-based pieces, each a Day-5 conservative estimate.
-var_itt_y <- conservative_var(z = z_obs, y = y_obs)
-var_itt_d <- conservative_var(z = z_obs, y = d_obs)
-## Covariance of two Difference-in-Means built from the SAME assignment: sum the
-## within-arm sample covariances of (y, d), divided by the arm sizes.
-cov_itt_yd <- cov(y_obs[z_obs == 1], d_obs[z_obs == 1]) / n1 +
-              cov(y_obs[z_obs == 0], d_obs[z_obs == 0]) / n0
-print(round(c(var_itt_y = var_itt_y, var_itt_d = var_itt_d,
-              cov_itt_yd = cov_itt_yd), 6))
-
-## Plug the gradient pieces into the delta-method variance.
-term_varA <-  var_itt_y / itt_d_hat^2                  # Var(A)/B^2
-term_cov  <- -2 * itt_y_hat * cov_itt_yd / itt_d_hat^3 # -2 A Cov(A,B)/B^3
-term_varB <-  itt_y_hat^2 * var_itt_d / itt_d_hat^4    # A^2 Var(B)/B^4
-var_cace_grad <- term_varA + term_cov + term_varB
-## The three terms, so the slide can show that the first dominates HERE only
-## because the first stage is strong and precise (ITT_D large, Var(B) small) and
-## Cov is small; with a WEAK instrument the last two terms are not negligible.
-print(round(c(term_varA = term_varA, term_cov = term_cov,
-              term_varB = term_varB, total = var_cace_grad), 7))
-
-## (b) The SAME variance via the TRANSFORMED (adjusted) outcome W = y - CACE * d.
-## Because the Difference-in-Means is linear in the outcome,
-##   A - CACE * B = ITT_hat of W,   so   Var(CACE_hat) ~ Var(ITT_hat_W) / B^2.
-## The cross-covariance term is absorbed automatically into Var(W). The feasible
-## version plugs in CACE_hat for the unknown CACE: W_hat = y - cace_hat * d.
-w_obs <- y_obs - cace_hat * d_obs
-
-## The two estimable, within-arm pieces of the conservative variance (before the
-## 1/ITT_D^2 scaling). These are the numbers the variance slide reports.
-s2_w_treated  <- var(w_obs[z_obs == 1])
-s2_w_control  <- var(w_obs[z_obs == 0])
-piece_treated <- s2_w_treated / n1
-piece_control <- s2_w_control / n0
-print(round(c(s2_w_treated = s2_w_treated, s2_w_control = s2_w_control,
-              piece_treated = piece_treated, piece_control = piece_control), 6))
-
-var_cace_transf <- conservative_var(z = z_obs, y = w_obs) / itt_d_hat^2
-
-## The two routes agree exactly (a useful internal check):
-print(round(c(var_cace_grad = var_cace_grad,
-              var_cace_transf = var_cace_transf,
-              equal = isTRUE(all.equal(var_cace_grad, var_cace_transf))), 8))
-
-## SUBTLETY: by construction itt_y_hat - cace_hat * itt_d_hat = 0, so the
-## difference in means of the FEASIBLE transformed outcome W_hat is exactly zero.
-## We never use it as a point estimate; only its WITHIN-arm variation feeds the
-## variance estimate above.
-print(round(c(diff_in_means_w_hat = diff_in_means(z = z_obs, y = w_obs)), 12))
-
-se_cace <- sqrt(var_cace_transf)                    # ~ 0.0239
-ci_cace <- c(lower = cace_hat - z_crit * se_cace,
-             upper = cace_hat + z_crit * se_cace)   # ~ [0.034, 0.128]
-print(round(c(cace_hat = cace_hat, se_cace = se_cace, ci_cace), 4))
-
-## The cace_var() helper (defined above, handed to students) reproduces this se.
-print(round(c(se_from_helper = sqrt(cace_var(z = z_obs, y = y_obs, d = d_obs))), 4))
-
-## A test of H_0: CACE = 0 (equivalently ITT_Y = 0, the safely testable null).
-T_cace <- cace_hat / se_cace
-p_two  <- 2 * pnorm(q = abs(T_cace), lower.tail = FALSE)
-print(round(c(T_cace = T_cace, p_two_sided = p_two), 4))   # T ~ 3.40, p ~ 0.0007
-
-## CONTRAST: naively dividing the ITT_Y standard error by the ITT_D POINT estimate
-## ignores both the ratio structure and the covariance -- it is NOT the CACE se.
-se_itt_y    <- sqrt(var_itt_y)
-naive_ratio <- se_itt_y / itt_d_hat
-print(round(c(se_itt_y = se_itt_y, naive_se_ratio = naive_ratio,
-              correct_se_cace = se_cace), 4))
-
-## ============================================================
-## 5. A constructed science table matching the study margins
-## ============================================================
-## To VISUALIZE the joint randomization distribution of (ITT_Y_hat, ITT_D_hat) and
-## the sampling distribution of CACE_hat, we build a finite population of N = 2650
-## units whose fixed potential outcomes reproduce every observed margin exactly:
-##   * 1900 Compliers   : d(0) = 0, d(1) = 1
-##   * 750  Never-Takers: d(0) = d(1) = 0  (exclusion restriction: y(1) = y(0))
-## Turnout counts are chosen so that mean y(0), mean y(1), ITT_D, and the CACE all
-## equal their observed values. This is an ILLUSTRATIVE population, fixed once;
-## randomness in the figures comes only from re-randomizing the assignment.
-n_comp <- 1900   # = 2650 * (950 / 1325): the share contacted when telephoned
-n_nt   <- N - n_comp                                   # 750
-
-## Receipt potential outcomes: only Compliers take the dose, and only if assigned.
-d0 <- rep(0, N)
-d1 <- c(rep(1, n_comp), rep(0, n_nt))
-
-## Outcome potential outcomes (1 = vote), pairing voters so the two POs are
-## positively associated within Compliers (a plausible science table).
-##   Compliers   : 466 vote under control, 620 vote under treatment (CACE on the
-##                 1900 Compliers = (620 - 466) / 1900 = 0.0810).
-##   Never-Takers : 164 vote regardless of assignment (exclusion restriction).
-comp_y0 <- c(rep(1, 466), rep(0, n_comp - 466))
-comp_y1 <- c(rep(1, 620), rep(0, n_comp - 620))
-nt_y    <- c(rep(1, 164), rep(0, n_nt - 164))
-y0 <- c(comp_y0, nt_y)
-y1 <- c(comp_y1, nt_y)
-
-## Confirm the constructed truth reproduces the observed estimates.
-itt_y_true <- mean(y1) - mean(y0)
-itt_d_true <- mean(d1) - mean(d0)
-cace_true  <- itt_y_true / itt_d_true
-print(round(c(itt_y_true = itt_y_true, itt_d_true = itt_d_true,
-              cace_true = cace_true), 4))
-
-## ============================================================
-## 6. Simulate the randomization distribution (figures)
-## ============================================================
-## Complete randomization: 1325 of the 2650 units assigned a call. For each draw,
-## reveal D and Y from the fixed science table and recompute all three estimates.
 set.seed(seed = 12345)
-n_sims <- 10^4
-base_z <- rep(c(1, 0), times = c(n1, n0))
+null_complete <- replicate(n = 10^4,
+                           expr = diff_in_means(z = sample(x = z_obs), y = y_obs))
+null_blocked  <- replicate(n = 10^4,
+                           expr = diff_in_means(z = block_randomize(), y = y_obs))
+print(round(c(sd_complete = sd(null_complete), sd_blocked = sd(null_blocked),
+              ratio = sd(null_blocked) / sd(null_complete)), 4))
 
-sim <- replicate(n = n_sims, expr = {
-  z <- sample(base_z)
-  d <- z * d1 + (1 - z) * d0
-  y <- z * y1 + (1 - z) * y0
-  itt_y <- diff_in_means(z = z, y = y)
-  itt_d <- diff_in_means(z = z, y = d)
-  c(itt_y = itt_y, itt_d = itt_d, cace = itt_y / itt_d)
-})
-sim_df <- as.data.frame(t(sim))
-
-## The estimators are jointly variable and POSITIVELY correlated -- this is the
-## covariance the delta method must account for.
-print(round(c(sd_itt_y = sd(sim_df$itt_y),
-              sd_itt_d = sd(sim_df$itt_d),
-              cor_itt_yd = cor(sim_df$itt_y, sim_df$itt_d),
-              sd_cace = sd(sim_df$cace)), 4))
-
-## ---- Figure: linearizing the ratio (tangent slices) ----
-## The CACE is a NONLINEAR function g(ITT_Y, ITT_D) = ITT_Y / ITT_D of two random
-## differences in means. The delta method replaces g by its tangent PLANE at the
-## (unknown) truth. We visualize that plane one coordinate at a time: holding the
-## other coordinate at its estimate, each slice of the tangent plane is a tangent
-## LINE. The numerator slice is exactly linear, so the tangent COINCIDES with g;
-## the denominator slice is a hyperbola whose curvature -- and the tangent's
-## error -- explodes as the first stage ITT_D nears zero. The expansion point is
-## the unknown truth; we draw it at the Adams-Smith estimates as a stand-in.
-panel_num    <- "Vary~widehat(ITT)[Y]~~(numerator)"
-panel_den    <- "Vary~widehat(ITT)[D]~~(denominator)"
-panel_levels <- c(panel_num, panel_den)
-
-slope_den <- -itt_y_hat / itt_d_hat^2   # d/d(ITT_D) of ITT_Y / ITT_D at the truth
-
-## Numerator slice: hold ITT_D at its estimate, vary ITT_Y. Here g is linear, so
-## the tangent line equals g exactly.
-ty_grid <- seq(from = 0, to = 0.13, length.out = 200)
-num_df  <- data.frame(
-  panel   = panel_num,
-  x       = ty_grid,
-  ratio   = ty_grid / itt_d_hat,
-  tangent = cace_hat + (ty_grid - itt_y_hat) / itt_d_hat
+## Figure: overlaid null randomization distributions, complete vs. blocked.
+block_df <- rbind(
+  data.frame(diff = null_complete, method = "Completely Randomized"),
+  data.frame(diff = null_blocked,  method = "Blocked")
 )
-
-## Denominator slice: hold ITT_Y at its estimate, vary ITT_D. Here g is a
-## hyperbola; the tangent touches at the expansion point and drifts away -- badly
-## as ITT_D -> 0, where the ratio curves sharply.
-td_grid <- seq(from = 0.12, to = 1.30, length.out = 300)
-den_df  <- data.frame(
-  panel   = panel_den,
-  x       = td_grid,
-  ratio   = itt_y_hat / td_grid,
-  tangent = cace_hat + slope_den * (td_grid - itt_d_hat)
-)
-
-## Long format: one row per (panel, x, curve) for a single shared legend.
-slice_long <- rbind(
-  data.frame(num_df[c("panel", "x")], value = num_df$ratio,   curve = "ratio g"),
-  data.frame(num_df[c("panel", "x")], value = num_df$tangent, curve = "tangent"),
-  data.frame(den_df[c("panel", "x")], value = den_df$ratio,   curve = "ratio g"),
-  data.frame(den_df[c("panel", "x")], value = den_df$tangent, curve = "tangent")
-)
-slice_long$panel <- factor(slice_long$panel, levels = panel_levels)
-
-## Expansion point (the truth, drawn at the Adams-Smith estimates) in each panel.
-point_df <- data.frame(
-  panel = factor(panel_levels, levels = panel_levels),
-  x     = c(itt_y_hat, itt_d_hat),
-  value = c(cace_hat, cace_hat)
-)
-
-## Shaded band = where the estimator is likely to land (so the tangent stays
-## accurate): roughly +/- 2 simulated SDs of each ITT estimator around the truth.
-band_df <- data.frame(
-  panel = factor(panel_levels, levels = panel_levels),
-  xmin  = c(itt_y_hat - 2 * sd(sim_df$itt_y), itt_d_hat - 2 * sd(sim_df$itt_d)),
-  xmax  = c(itt_y_hat + 2 * sd(sim_df$itt_y), itt_d_hat + 2 * sd(sim_df$itt_d))
-)
-
-## One short annotation per panel, naming the lesson of each slice.
-anno_df <- data.frame(
-  panel = factor(panel_levels, levels = panel_levels),
-  x     = c(0.005, 0.30),
-  value = c(0.155, 0.40),
-  label = c("exactly linear:\ntangent = ratio",
-            "curvature grows\nas ITT_D -> 0")
-)
-
-ratio_linearization <- ggplot() +
-  geom_rect(data = band_df,
-            mapping = aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
-            fill = "grey85", alpha = 0.6) +
-  geom_line(data = slice_long,
-            mapping = aes(x = x, y = value, colour = curve, linetype = curve),
-            linewidth = 1) +
-  geom_point(data = point_df, mapping = aes(x = x, y = value),
-             size = 2.6, colour = "black") +
-  geom_text(data = anno_df,
-            mapping = aes(x = x, y = value, label = label),
-            hjust = 0, vjust = 1, size = 3.3, colour = "grey25",
-            lineheight = 0.95) +
-  facet_wrap(facets = ~ panel, scales = "free", labeller = label_parsed) +
-  scale_colour_manual(name = NULL,
-                      values = c("ratio g" = viridis(3)[1],
-                                 "tangent" = viridis(3)[2]),
-                      labels = c("ratio  g = ITT_Y / ITT_D",
-                                 "tangent (delta method)")) +
-  scale_linetype_manual(name = NULL,
-                        values = c("ratio g" = "solid", "tangent" = "21"),
-                        labels = c("ratio  g = ITT_Y / ITT_D",
-                                   "tangent (delta method)")) +
-  labs(x = "coordinate varied (the other held at its estimate)",
-       y = expression("ratio  " * ITT[Y] / ITT[D])) +
-  theme_minimal(base_size = 13) +
-  theme(legend.position = "bottom",
-        panel.spacing = unit(1.4, "lines"))
-
-##+ eval=saveplots_
-ggsave(plot = ratio_linearization,
-       file = "figures/ratio_linearization.pdf",
-       width = 8, height = 4.2, units = "in", dpi = 300)
-
-##+ eval=TRUE
-## ---- Figure: the right-hand (denominator) slice only, for the slides ----
-## The trimmed deck shows just this panel: holding the numerator ITT_Y at its
-## (true) value, g = ITT_Y / ITT_D is a hyperbola in the first stage ITT_D. The
-## tangent line at the true ITT_D is the linear approximation -- accurate in the
-## shaded likely region, degrading as ITT_D -> 0.
-right_df <- data.frame(
-  x     = c(td_grid, td_grid),
-  value = c(itt_y_hat / td_grid,
-            cace_hat + slope_den * (td_grid - itt_d_hat)),
-  curve = rep(c("ratio g", "tangent"), each = length(td_grid))
-)
-band_right <- data.frame(
-  xmin = itt_d_hat - 2 * sd(sim_df$itt_d),
-  xmax = itt_d_hat + 2 * sd(sim_df$itt_d)
-)
-ratio_linearization_right <- ggplot() +
-  geom_rect(data = band_right,
-            mapping = aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
-            fill = "grey85", alpha = 0.6) +
-  geom_line(data = right_df,
-            mapping = aes(x = x, y = value, colour = curve, linetype = curve),
-            linewidth = 1.1) +
-  geom_point(mapping = aes(x = itt_d_hat, y = cace_hat),
-             size = 3, colour = "black") +
-  annotate(geom = "text", x = itt_d_hat, y = cace_hat,
-           label = "expand at true ITT_D", hjust = -0.08, vjust = -1,
-           size = 4, colour = "grey25") +
-  annotate(geom = "text", x = 0.27, y = 0.40,
-           label = "curvature grows\nas ITT_D -> 0", hjust = 0, vjust = 1,
-           size = 4, colour = "grey25", lineheight = 0.95) +
-  scale_colour_manual(name = NULL,
-                      values = c("ratio g" = viridis(3)[1],
-                                 "tangent" = viridis(3)[2]),
-                      labels = c("ratio  g = ITT_Y / ITT_D",
-                                 "tangent (linear approx.)")) +
-  scale_linetype_manual(name = NULL,
-                        values = c("ratio g" = "solid", "tangent" = "21"),
-                        labels = c("ratio  g = ITT_Y / ITT_D",
-                                   "tangent (linear approx.)")) +
-  labs(x = expression(ITT[D] ~ ~ "(first stage; " * ITT[Y] * " held at its true value)"),
-       y = expression("ratio  " * ITT[Y] / ITT[D])) +
+block_df$method <- factor(block_df$method,
+                          levels = c("Completely Randomized", "Blocked"))
+block_bins <- max(compute_fd_bins(null_complete), compute_fd_bins(null_blocked))
+acorn_blocked_vs_complete <- ggplot(data = block_df,
+                                    mapping = aes(x = diff, fill = method)) +
+  geom_histogram(data = subset(block_df, method == "Completely Randomized"),
+                 bins = block_bins, alpha = 0.4, position = "identity") +
+  geom_histogram(data = subset(block_df, method == "Blocked"),
+                 bins = block_bins, alpha = 0.7, position = "identity") +
+  scale_fill_viridis_d(option = "plasma") +
+  labs(title = "Blocked vs. Completely Randomized",
+       subtitle = "Randomization Distributions under the Sharp Null of No Effect",
+       x = "Difference-in-Means", y = "Frequency", fill = "Randomization Type") +
   theme_minimal(base_size = 14) +
-  theme(legend.position = "bottom")
+  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5, size = 11),
+        legend.position = "top")
 
 ##+ eval=saveplots_
-ggsave(plot = ratio_linearization_right,
-       file = "figures/ratio_linearization_right.pdf",
-       width = 6.5, height = 4.6, units = "in", dpi = 300)
-
-##+ eval=TRUE
-## ---- Figure: the multivariate linearization in 3D (surface + tangent plane) --
-## The faithful multivariate picture: g(ITT_Y, ITT_D) = ITT_Y / ITT_D is a curved
-## SURFACE, and the delta method replaces it by its tangent PLANE at the (unknown)
-## truth. The plane grazes the surface at the expansion point and pulls away where
-## the surface curves -- fastest toward small ITT_D. We draw it at the Adams-Smith
-## estimates as a stand-in for the truth. A static 3D view is hard to read
-## precisely, which is exactly why the companion figure slices it in 2D.
-ty_grid_3d    <- seq(from = 0.00, to = 0.12, length.out = 80)
-td_grid_3d    <- seq(from = 0.40, to = 1.05, length.out = 80)
-ratio_surface <- outer(ty_grid_3d, td_grid_3d, function(y, d) y / d)
-
-## A coarser grid renders the tangent plane as a clean wireframe.
-ty_coarse     <- seq(from = 0.00, to = 0.12, length.out = 14)
-td_coarse     <- seq(from = 0.40, to = 1.05, length.out = 14)
-tangent_plane <- outer(ty_coarse, td_coarse, function(y, d)
-  cace_hat + (y - itt_y_hat) / itt_d_hat -
-    itt_y_hat / itt_d_hat^2 * (d - itt_d_hat))
-
-##+ eval=saveplots_
-pdf(file = "figures/ratio_linearization_3d.pdf", width = 7, height = 5.6)
-par(mar = c(1.5, 1.5, 1, 1))
-persp3D(x = ty_grid_3d, y = td_grid_3d, z = ratio_surface,
-        theta = -130, phi = 24, expand = 0.7,
-        col = viridis(120), colkey = FALSE, border = NA, shade = 0.25,
-        xlab = "ITT_Y", ylab = "ITT_D", zlab = "ITT_Y / ITT_D",
-        bty = "b2", ticktype = "detailed", cex.axis = 0.65, cex.lab = 0.9)
-## Tangent plane as a translucent orange wireframe -- clearly flat.
-persp3D(x = ty_coarse, y = td_coarse, z = tangent_plane, add = TRUE,
-        facets = NA, border = "darkorange", lwd = 0.9, colkey = FALSE)
-## Dotted drop line marking the expansion point (the truth).
-segments3D(x0 = itt_y_hat, y0 = itt_d_hat, z0 = 0,
-           x1 = itt_y_hat, y1 = itt_d_hat, z1 = cace_hat,
-           add = TRUE, col = "grey25", lty = 3, lwd = 1.2, colkey = FALSE)
-scatter3D(x = itt_y_hat, y = itt_d_hat, z = cace_hat, add = TRUE,
-          col = "red", pch = 19, cex = 1.7, colkey = FALSE)
-dev.off()
-
-##+ eval=TRUE
-## ---- Figure: joint randomization distribution of the two ITT estimators ----
-gotv_itt_joint_dist <- ggplot(data = sim_df,
-                              mapping = aes(x = itt_d, y = itt_y)) +
-  geom_point(alpha = 0.12, colour = viridis(3)[1], size = 0.7) +
-  geom_vline(xintercept = itt_d_true, linetype = "dashed", colour = "grey40") +
-  geom_hline(yintercept = itt_y_true, linetype = "dashed", colour = "grey40") +
-  annotate(geom = "text", x = itt_d_true, y = max(sim_df$itt_y),
-           label = paste0("r = ", round(cor(sim_df$itt_y, sim_df$itt_d), 2)),
-           hjust = -0.1, vjust = 1, size = 4.2, colour = "grey20") +
-  labs(x = expression(widehat(ITT)[D] ~ "(first stage)"),
-       y = expression(widehat(ITT)[Y] ~ "(reduced form)")) +
-  theme_minimal(base_size = 14)
-
-##+ eval=saveplots_
-ggsave(plot = gotv_itt_joint_dist,
-       file = "figures/gotv_itt_joint_dist.pdf",
-       width = 6, height = 4.2, units = "in", dpi = 300)
-
-##+ eval=TRUE
-## ---- Figure: the CACE estimator is approximately Normal (delta method) ----
-## Overlay the Normal centered at the true CACE with the simulated (true) sampling
-## SD: the ratio's distribution is well approximated by a Normal, which is what
-## licenses the delta-method standard error and the Wald confidence interval.
-norm_grid <- seq(from = min(sim_df$cace), to = max(sim_df$cace),
-                 length.out = 400)
-norm_df <- data.frame(cace = norm_grid,
-                      dens = dnorm(norm_grid, mean = cace_true,
-                                   sd = sd(sim_df$cace)))
-gotv_cace_sampling_dist <- ggplot(data = sim_df, mapping = aes(x = cace)) +
-  geom_histogram(mapping = aes(y = after_stat(density)),
-                 bins = 40, fill = "grey75", colour = "white") +
-  geom_line(data = norm_df, mapping = aes(x = cace, y = dens),
-            colour = viridis(3)[1], linewidth = 0.9) +
-  geom_vline(xintercept = cace_true, linetype = "solid", linewidth = 0.7) +
-  geom_vline(xintercept = ci_cace, linetype = "dashed",
-             colour = viridis(3)[2], linewidth = 0.7) +
-  annotate(geom = "text", x = cace_true, y = 0,
-           label = paste0("CACE = ", round(cace_true, 3)),
-           vjust = -0.6, hjust = -0.05, size = 4, colour = "grey20") +
-  labs(x = expression(widehat(CACE) ~ "over re-randomizations"),
-       y = "Density") +
-  theme_minimal(base_size = 14)
-
-##+ eval=saveplots_
-ggsave(plot = gotv_cace_sampling_dist,
-       file = "figures/gotv_cace_sampling_dist.pdf",
-       width = 6.5, height = 4.2, units = "in", dpi = 300)
+ggsave(plot = acorn_blocked_vs_complete,
+       file = "figures/acorn_blocked_vs_complete.pdf",
+       width = 8, height = 5.5, units = "in", dpi = 300)
 
 ##+ eval=TRUE
 ## ============================================================
-## 6b. Two representations of the numerator are identical
+## 4. Design lever (2): rescaling -- the gain score
 ## ============================================================
-## The linear approximation's numerator, tau_hat_W, can be written two ways:
-##   (1) a difference of two Difference-in-Means: tau_hat(Z, Y) - c * tau_hat(Z, D)
-##   (2) one Difference-in-Means on the transformed outcome W = Y - c * D.
-## They are equal by LINEARITY of the Difference-in-Means, for ANY constant c
-## (here the value we linearize at, i.e. CACE). No access to the truth is needed.
-## This block is fully self-contained: it uses fresh simulated data.
-set.seed(seed = 1)
-n <- 500
-z <- rbinom(n = n, size = 1, prob = 0.5)   # random assignment
-y <- rbinom(n = n, size = 1, prob = 0.4)   # observed outcome
-d <- rbinom(n = n, size = 1, prob = 0.7)   # observed receipt
+## Because x is pre-treatment it cancels from the individual effect, so the gain
+## score e_i = y_i - x_i has the SAME ATE: the adjusted estimator stays unbiased.
+## Its variance is smaller when x tracks y.
+gain_score  <- y_obs - x_cov
+tau_hat_adj <- diff_in_means(z = z_obs, y = gain_score)            # ~ 0.057
+se_hat_adj  <- sqrt(conservative_var(z = z_obs, y = gain_score))   # ~ 0.020
+T_obs_adj   <- test_statistic(tau_hat = tau_hat_adj, se_hat = se_hat_adj, tau_0 = 0)
+ci_adj      <- c(lower = tau_hat_adj - z_crit * se_hat_adj,
+                 upper = tau_hat_adj + z_crit * se_hat_adj)        # ~ [0.018, 0.097]
+print(round(c(tau_hat_adj = tau_hat_adj, se_hat_adj = se_hat_adj,
+              var_ratio = (se_hat_adj / se_hat)^2,
+              covariate_dim = diff_in_means(z = z_obs, y = x_cov),  # ~ -0.021
+              ci_adj,
+              p_two_adj = 2 * pnorm(q = abs(T_obs_adj), lower.tail = FALSE)), 4))
 
-cace <- 0.08                                # the constant we linearize at
-## numerator of the linear approximation, computed two ways:
-a <- diff_in_means(z = z, y = y) - cace * diff_in_means(z = z, y = d)  # (a) two Diff-in-Means
-b <- diff_in_means(z = z, y = y - cace * d)                            # (b) one DiM on W
-print(round(c(two_diff_in_means = a,
-              one_on_transformed = b,
-              equal = isTRUE(all.equal(a, b))), 6))
+## Figure: null randomization distribution, original outcome vs. gain score.
+set.seed(seed = 12345)
+null_original <- replicate(n = 10^4,
+                           expr = diff_in_means(z = sample(x = z_obs), y = y_obs))
+null_rescaled <- replicate(n = 10^4,
+                           expr = diff_in_means(z = sample(x = z_obs),
+                                                y = gain_score))
+rescale_df <- rbind(
+  data.frame(diff = null_original, outcome = "Original Outcome (vote03)"),
+  data.frame(diff = null_rescaled,
+             outcome = "Rescaled Outcome (vote03 - v_g2002)")
+)
+acorn_original_vs_rescaled <- ggplot(data = rescale_df,
+                                     mapping = aes(x = diff, fill = outcome)) +
+  geom_histogram(data = subset(rescale_df,
+                               outcome == "Original Outcome (vote03)"),
+                 binwidth = sd(null_original) * 0.3, alpha = 0.4,
+                 position = "identity") +
+  geom_histogram(data = subset(rescale_df,
+                               outcome == "Rescaled Outcome (vote03 - v_g2002)"),
+                 binwidth = sd(null_rescaled) * 0.3, alpha = 0.7,
+                 position = "identity") +
+  scale_fill_manual(values = c("Original Outcome (vote03)" = "blue",
+                               "Rescaled Outcome (vote03 - v_g2002)" = "#E1B000")) +
+  labs(title = "Complete Randomization Distributions",
+       subtitle = "Original vs. Rescaled Outcome under the Sharp Null of No Effect",
+       x = "Difference-in-Means", y = "Frequency", fill = "Outcome Scale") +
+  theme_minimal(base_size = 14) +
+  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5, size = 11),
+        legend.position = "top")
 
-## ============================================================
-## 7. Key numbers echoed on the slides (single tidy printout)
-## ============================================================
-print(round(c(
-  itt_y_hat       = itt_y_hat,
-  itt_d_hat       = itt_d_hat,
-  cace_hat        = cace_hat,
-  per_protocol    = per_protocol,
-  se_cace         = se_cace,
-  ci_lower        = unname(ci_cace["lower"]),
-  ci_upper        = unname(ci_cace["upper"]),
-  p_two_sided     = p_two,
-  naive_se_ratio  = naive_ratio
-), 4))
+##+ eval=saveplots_
+ggsave(plot = acorn_original_vs_rescaled,
+       file = "figures/acorn_original_vs_rescaled.pdf",
+       width = 8, height = 5.5, units = "in", dpi = 300)
 
-## ============================================================
-## 8. Attrition: conditioning on the reporter split (enumeration)
-## ============================================================
-## A small completely randomized experiment to make the conditioning concrete:
-## N = 6 units, of which 4 are Always-Reporters (AR) and 2 are Never-Reporters;
-## n1 = 3 are treated. Enumerate all C(6, 3) = 20 treated sets, group them by the
-## number of treated AR (N_1^R = m1), and confirm that, conditional on m1, each AR
-## unit is treated with probability m1 / N^AR -- i.e. the treated reporters are a
-## simple random sample of the AR, so among the reporters it is a CRE.
-is_ar        <- c(rep(TRUE, 4), rep(FALSE, 2))   # units 1-4 are AR, 5-6 NR
-n_ar         <- sum(is_ar)                       # 4
-treated_sets <- combn(x = 6, m = 3)              # all 20 treated sets (columns)
-n1_R <- apply(X = treated_sets, MARGIN = 2,
-              FUN = function(tr) sum(is_ar[tr]))  # treated-AR count per assignment
-print(table(n1_R))                               # m1 = 1: 4,  2: 12,  3: 4
-
-## Within each split m1, the treatment rate of a fixed AR unit (unit 1) = m1 / 4:
-for (m1 in sort(unique(n1_R))) {
-  cols <- treated_sets[, n1_R == m1, drop = FALSE]
-  rate <- mean(apply(X = cols, MARGIN = 2, FUN = function(tr) 1 %in% tr))
-  cat("m1 =", m1, ": P(AR unit treated | N_1^R = m1) =", round(rate, 3),
-      "= m1/N^AR =", m1 / n_ar, "\n")
+##+ eval=TRUE
+## ---- The adjusted and unadjusted estimates agree asymptotically ----
+## adjusted - unadjusted = diff-in-means on the gain score minus on the outcome
+##                       = -(diff-in-means on the covariate x).
+## E[diff-in-means on x] = 0 (x has no effect) and its variance -> 0 as N grows,
+## so the two estimators coincide in large samples. Stack h copies of the 28
+## precincts (N = 28h) and watch the gap concentrate at 0.
+adjust_gap_draws <- function(h, n_draws = 5000) {
+  xv <- rep(x_cov, h)
+  zz <- rep(z_obs, h)
+  replicate(n = n_draws, expr = -diff_in_means(z = sample(x = zz), y = xv))
 }
+
+set.seed(seed = 12345)
+gap_sizes <- c(28, 56, 112, 224)
+gap_df <- do.call(rbind, lapply(gap_sizes, function(n) {
+  data.frame(gap = adjust_gap_draws(h = n / 28), N = n)
+}))
+gap_df$panel <- factor(paste0("N = ", gap_df$N),
+                       levels = paste0("N = ", gap_sizes))
+acorn_adjust_difference <- ggplot(data = gap_df,
+                                  mapping = aes(x = gap, colour = panel)) +
+  geom_density(linewidth = 0.9) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "grey40") +
+  scale_colour_viridis_d(option = "viridis", end = 0.85, name = NULL) +
+  coord_cartesian(xlim = c(-0.06, 0.06)) +
+  labs(x = "Adjusted minus unadjusted estimate", y = "Density") +
+  theme_minimal(base_size = 14) +
+  theme(panel.grid.minor = element_blank(), legend.position = "top")
+
+##+ eval=saveplots_
+ggsave(plot = acorn_adjust_difference,
+       file = "figures/acorn_adjust_difference.pdf",
+       width = 7, height = 4.2, units = "in", dpi = 300)
+
+##+ eval=TRUE
+## ============================================================
+## 5. Regression adjustment: estimate the slope instead of fixing beta = 1
+## ============================================================
+## The gain score subtracts 1 * x. Regression adjustment instead RESIDUALIZES the
+## outcome on the centered covariate with an ESTIMATED slope (Lin: fit separately
+## within each arm), then takes the Difference-in-Means on the residuals. This is
+## exactly the coefficient on treatment in the interacted OLS regression.
+X <- scale(acorn[, c("v_g2002", "v_p2002", "v_m2002")], scale = FALSE)  # center covs
+
+## (a) residualize with arm-specific OLS slopes, then Difference-in-Means
+b1 <- coef(lm(vote03 ~ X, data = acorn, subset = z == 1))[-1]  # treated slopes
+b0 <- coef(lm(vote03 ~ X, data = acorn, subset = z == 0))[-1]  # control slopes
+e  <- acorn$vote03 - ifelse(acorn$z == 1, X %*% b1, X %*% b0)
+tau_hat_lin_resid <- mean(e[acorn$z == 1]) - mean(e[acorn$z == 0])   # 0.0566
+
+## (b) coefficient on z in the interacted regression -- identical
+tau_hat_lin <- coef(lm(vote03 ~ z * X, data = acorn))["z"]           # 0.0566
+se_lin_hc2  <- sqrt(sandwich::vcovHC(lm(vote03 ~ z * X, data = acorn),
+                                     type = "HC2")["z", "z"])
+
+print(c(resid_form = round(tau_hat_lin_resid, 6),
+        lm_coef = round(unname(tau_hat_lin), 6),
+        equal = isTRUE(all.equal(unname(tau_hat_lin_resid), unname(tau_hat_lin)))))
+print(round(c(tau_hat_lin = tau_hat_lin, se_lin_hc2 = se_lin_hc2), 4))
+
+## estimatr::lm_lin is the canonical one-call version (same estimate and HC2 se):
+lin_fit2 <- estimatr::lm_lin(vote03 ~ z, covariates = ~ v_g2002 + v_p2002 + v_m2002,
+                             data = acorn, se_type = "HC2")
+print(round(c(lm_lin_ate = coef(lin_fit2)["z"],
+              lm_lin_se  = lin_fit2$std.error["z"]), 4))   # ~ 0.057, se ~ 0.018
+
+## Debiasing (Chang, Middleton, and Aronow 2024): the regression estimator has a
+## small O(1/n) bias = covariance of leverage and individual effects -- zero when
+## effects are constant or n_1 = n_0 (as in ACORN). For ACORN's balanced design
+## the bias is negligible, so no correction is needed here.
+print(c(n1 = n1, n0 = n0, balanced = n1 == n0))
+
+## ============================================================
+## 6. Key numbers behind the slides
+## ============================================================
+cat("Unadjusted:  tau =", round(tau_hat, 3),
+    " se =", round(se_hat, 3),
+    " CI = [", round(ci_unadj[1], 3), ",", round(ci_unadj[2], 3), "]\n")
+cat("Blocked null SD:", round(sd(null_blocked), 3),
+    " vs complete:", round(sd(null_complete), 3), "\n")
+cat("Gain score:  tau =", round(tau_hat_adj, 3),
+    " se =", round(se_hat_adj, 3),
+    " CI = [", round(ci_adj[1], 3), ",", round(ci_adj[2], 3), "]\n")
+cat("Lin estimate:", round(unname(tau_hat_lin), 4),
+    " HC2 se =", round(se_lin_hc2, 4), "\n")

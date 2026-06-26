@@ -1,5 +1,5 @@
 ##' ---
-##' title: "Day 5: Uncertainty, Testing, and Covariance Adjustment"
+##' title: "Day 5: Uncertainty, Testing, and Confidence Intervals"
 ##' output: github_document
 ##' ---
 ##'
@@ -10,11 +10,12 @@
 ##'     conservative variance estimator and the Normal approximation, because
 ##'     there we can compute the truth (Gerber and Green 2012, Ch. 2).
 ##'   * ACORN (acorn03.csv) -- the running empirical example for the standard
-##'     error, test, p-values, confidence interval, and covariance adjustment.
+##'     error, test, p-values, and confidence interval.
 ##'
-##' The standard-Normal, conservative-Normal, and covariance-adjustment figures
-##' follow the styling of the source scripts in 04_Uncertainty_and_Hypothesis_
-##' Testing/figures/ and 05_Covariance_Adjustment/Arceneaux_2005/analysis.R.
+##' (Covariance adjustment moved to its own session, 2026-06-22.)
+##'
+##' The standard-Normal and conservative-Normal figures follow the styling of the
+##' source scripts in 04_Uncertainty_and_Hypothesis_Testing/figures/.
 ##'
 ##' Figures produced here (written to the figures/ subdirectory):
 ##'   * villageheads_consv_var.pdf       (conservative estimator overstates truth)
@@ -25,9 +26,6 @@
 ##'   * stand_norm_cdf.pdf               (the CDF Phi behind the p-value)
 ##'   * consv_stand_norm_plot.pdf        (conservative variance => valid tests)
 ##'   * stand_norm_plot_two_side_CI.pdf  (confidence interval by test inversion)
-##'   * acorn_blocked_vs_complete.pdf    (blocking tightens the null distribution)
-##'   * acorn_original_vs_rescaled.pdf   (rescaling tightens the null distribution)
-##'   * acorn_adjust_difference.pdf      (adjusted - unadjusted -> 0 as N grows)
 
 ## ============================================================
 ## Setup
@@ -37,10 +35,6 @@ if (!exists("saveplots_")) saveplots_ <- FALSE
 
 library(ggplot2)
 library(viridis)     # color-blind-friendly fills, matching the source figures
-library(blockTools)  # optimal blocking (matched pairs) for the blocked design
-library(nbpMatching) # backs blockTools' algorithm = "optimal"
-library(estimatr)    # lm_lin(): Lin's regression-adjusted estimator with HC2 se
-library(sandwich)    # HC2 robust variance for the lm() form of Lin's estimator
 
 ## Figures are written to the figures/ subdirectory, which the slides source.
 dir.create("figures", showWarnings = FALSE)
@@ -373,215 +367,3 @@ stand_norm_plot_two_side_CI <- stand_norm_plot +
 ggsave(plot = stand_norm_plot_two_side_CI,
        file = "figures/stand_norm_plot_two_side_CI.pdf",
        width = 6, height = 4, units = "in", dpi = 300)
-
-##+ eval=TRUE
-## ============================================================
-## 7. Covariance adjustment
-## ============================================================
-## A baseline covariate is measured BEFORE assignment (fixed, same under both
-## POs). Prior-election turnout predicts 2003 turnout, so it carries outcome
-## information. Two design-based ways to use it (Arceneaux 2005):
-##   (1) BLOCKING -- randomize within blocks of similar precincts;
-##   (2) RESCALING -- subtract the covariate (a gain score) before the test.
-x_cov <- acorn$v_g2002               # 2002 general turnout (pre-treatment)
-print(round(cor(y_obs, x_cov), 3))   # ~ 0.55
-
-## Freedman-Diaconis bin count (as in analysis.R), so the two histograms share bins.
-compute_fd_bins <- function(values) {
-  bin_width <- 2 * IQR(values) / (length(values)^(1 / 3))
-  if (bin_width > 0) {
-    ceiling((max(values) - min(values)) / bin_width)
-  } else {
-    30
-  }
-}
-
-## ---- (1) Blocking: form 14 pairs by prior turnout, randomize within pairs ----
-## Hypothetical "if ACORN had been blocked." Pair the 28 precincts on the
-## covariate with blockTools (optimal nonbipartite matching), then randomize one
-## treated per pair. Block randomization keeps only the 2^14 = 16,384 assignments
-## balanced on v_g2002 -- a tiny subset of the choose(28,14) ~ 40.1 million under
-## CRA -- ideally the assignments whose estimates sit near the truth.
-acorn$unit <- seq_len(N)
-pairs_out  <- blockTools::block(data = acorn, id.vars = "unit", block.vars = "v_g2002",
-                                n.tr = 2, algorithm = "optimal")
-pair_table <- pairs_out$blocks[[1]]      # 14 matched pairs ("Unit 1", "Unit 2")
-
-## One blocked assignment: randomize exactly one treated per pair.
-block_randomize <- function() {
-  z <- integer(N)
-  for (b in seq_len(nrow(pair_table))) {
-    pair <- as.integer(pair_table[b, c("Unit 1", "Unit 2")])
-    z[sample(x = pair, size = 1)] <- 1
-  }
-  z
-}
-
-set.seed(seed = 12345)
-null_complete <- replicate(n = 10^4,
-                           expr = diff_in_means(z = sample(x = z_obs), y = y_obs))
-null_blocked  <- replicate(n = 10^4,
-                           expr = diff_in_means(z = block_randomize(), y = y_obs))
-print(round(c(sd_complete = sd(null_complete), sd_blocked = sd(null_blocked),
-              ratio = sd(null_blocked) / sd(null_complete)), 4))
-
-## Plot styled after analysis.R's blocked_vs_randomized.png: overlaid histograms,
-## plasma fill, shared Freedman-Diaconis bins.
-block_df <- rbind(
-  data.frame(diff = null_complete, method = "Completely Randomized"),
-  data.frame(diff = null_blocked,  method = "Blocked")
-)
-block_df$method <- factor(block_df$method,
-                          levels = c("Completely Randomized", "Blocked"))
-block_bins <- max(compute_fd_bins(null_complete), compute_fd_bins(null_blocked))
-acorn_blocked_vs_complete <- ggplot(data = block_df,
-                                    mapping = aes(x = diff, fill = method)) +
-  geom_histogram(data = subset(block_df, method == "Completely Randomized"),
-                 bins = block_bins, alpha = 0.4, position = "identity") +
-  geom_histogram(data = subset(block_df, method == "Blocked"),
-                 bins = block_bins, alpha = 0.7, position = "identity") +
-  scale_fill_viridis_d(option = "plasma") +
-  labs(title = "Blocked vs. Completely Randomized",
-       subtitle = "Randomization Distributions under the Sharp Null of No Effect",
-       x = "Difference-in-Means", y = "Frequency", fill = "Randomization Type") +
-  theme_minimal(base_size = 14) +
-  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-        plot.subtitle = element_text(hjust = 0.5, size = 11),
-        legend.position = "top")
-
-##+ eval=saveplots_
-ggsave(plot = acorn_blocked_vs_complete,
-       file = "figures/acorn_blocked_vs_complete.pdf",
-       width = 8, height = 5.5, units = "in", dpi = 300)
-
-##+ eval=TRUE
-## ---- (2) Rescaling: subtract the covariate (gain score) ----
-## Because x is pre-treatment it cancels from the individual effect, so the gain
-## score has the SAME ATE: the adjusted estimator stays unbiased. Its variance is
-## smaller when x tracks y.
-gain_score  <- y_obs - x_cov
-tau_hat_adj <- diff_in_means(z = z_obs, y = gain_score)            # ~ 0.057
-se_hat_adj  <- sqrt(conservative_var(z = z_obs, y = gain_score))   # ~ 0.020
-T_obs_adj   <- test_statistic(tau_hat = tau_hat_adj, se_hat = se_hat_adj, tau_0 = 0)
-ci_adj      <- c(lower = tau_hat_adj - z_crit * se_hat_adj,
-                 upper = tau_hat_adj + z_crit * se_hat_adj)     # ~ [0.018, 0.097]
-print(round(c(tau_hat_adj = tau_hat_adj, se_hat_adj = se_hat_adj,
-              var_ratio = (se_hat_adj / se_hat)^2,
-              covariate_dim = diff_in_means(z = z_obs, y = x_cov),  # ~ -0.021
-              ci_adj,
-              p_two_adj = 2 * pnorm(q = abs(T_obs_adj), lower.tail = FALSE)), 4))
-
-## ---- Regression adjustment: estimate the coefficient instead of fixing beta=1 ----
-## The gain score subtracts 1 * x. Regression adjustment instead RESIDUALIZES the
-## outcome on the centered covariate with an ESTIMATED slope (Lin: fit separately
-## within each arm), then takes the Difference-in-Means on the residuals. This is
-## exactly the coefficient on treatment in the interacted OLS regression.
-## Center a MATRIX of covariates (Lin extends to many covariates at once).
-X <- scale(acorn[, c("v_g2002", "v_p2002", "v_m2002")], scale = FALSE)  # center covs
-
-## (a) residualize with arm-specific OLS slopes, then Difference-in-Means
-b1 <- coef(lm(vote03 ~ X, data = acorn, subset = z == 1))[-1]  # treated slopes
-b0 <- coef(lm(vote03 ~ X, data = acorn, subset = z == 0))[-1]  # control slopes
-e  <- acorn$vote03 - ifelse(acorn$z == 1, X %*% b1, X %*% b0)
-tau_hat_lin_resid <- mean(e[acorn$z == 1]) - mean(e[acorn$z == 0])   # 0.0566
-
-## (b) coefficient on z in the interacted regression -- identical
-tau_hat_lin <- coef(lm(vote03 ~ z * X, data = acorn))["z"]           # 0.0566
-se_lin_hc2  <- sqrt(sandwich::vcovHC(lm(vote03 ~ z * X, data = acorn),
-                                     type = "HC2")["z", "z"])
-
-## the two are identical, even with many covariates:
-print(c(resid_form = round(tau_hat_lin_resid, 6),
-        lm_coef = round(unname(tau_hat_lin), 6),
-        equal = isTRUE(all.equal(unname(tau_hat_lin_resid), unname(tau_hat_lin)))))
-print(round(c(tau_hat_lin = tau_hat_lin, se_lin_hc2 = se_lin_hc2), 4))
-
-## estimatr::lm_lin is the canonical one-call version (same estimate and HC2 se):
-lin_fit2 <- estimatr::lm_lin(vote03 ~ z, covariates = ~ v_g2002 + v_p2002 + v_m2002,
-                             data = acorn, se_type = "HC2")
-print(round(c(lm_lin_ate = coef(lin_fit2)["z"],
-              lm_lin_se  = lin_fit2$std.error["z"]), 4))   # ~ 0.057, se ~ 0.018
-
-## Debiasing (Chang, Middleton, and Aronow 2024): the regression estimator has a
-## small O(1/n) bias = covariance of leverage and individual effects -- zero when
-## effects are constant or n_1 = n_0 (as in ACORN), growing with effect
-## heterogeneity and arm imbalance. CMA give an exact closed-form correction with
-## the SAME limiting distribution. No CRAN package yet; for ACORN's balanced
-## design the bias is negligible, so no correction is needed here.
-print(c(n1 = n1, n0 = n0, balanced = n1 == n0))
-
-## Null randomization distribution: original outcome vs. rescaled (gain score).
-## Plot styled after analysis.R's complete_randomization.png: overlaid histograms,
-## blue vs. yellow, binwidth proportional to each distribution's SD.
-set.seed(seed = 12345)
-null_original <- replicate(n = 10^4,
-                           expr = diff_in_means(z = sample(x = z_obs), y = y_obs))
-null_rescaled <- replicate(n = 10^4,
-                           expr = diff_in_means(z = sample(x = z_obs),
-                                                y = gain_score))
-rescale_df <- rbind(
-  data.frame(diff = null_original, outcome = "Original Outcome (vote03)"),
-  data.frame(diff = null_rescaled,
-             outcome = "Rescaled Outcome (vote03 - v_g2002)")
-)
-acorn_original_vs_rescaled <- ggplot(data = rescale_df,
-                                     mapping = aes(x = diff, fill = outcome)) +
-  geom_histogram(data = subset(rescale_df,
-                               outcome == "Original Outcome (vote03)"),
-                 binwidth = sd(null_original) * 0.3, alpha = 0.4,
-                 position = "identity") +
-  geom_histogram(data = subset(rescale_df,
-                               outcome == "Rescaled Outcome (vote03 - v_g2002)"),
-                 binwidth = sd(null_rescaled) * 0.3, alpha = 0.7,
-                 position = "identity") +
-  scale_fill_manual(values = c("Original Outcome (vote03)" = "blue",
-                               "Rescaled Outcome (vote03 - v_g2002)" = "#E1B000")) +
-  labs(title = "Complete Randomization Distributions",
-       subtitle = "Original vs. Rescaled Outcome under the Sharp Null of No Effect",
-       x = "Difference-in-Means", y = "Frequency", fill = "Outcome Scale") +
-  theme_minimal(base_size = 14) +
-  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-        plot.subtitle = element_text(hjust = 0.5, size = 11),
-        legend.position = "top")
-
-##+ eval=saveplots_
-ggsave(plot = acorn_original_vs_rescaled,
-       file = "figures/acorn_original_vs_rescaled.pdf",
-       width = 8, height = 5.5, units = "in", dpi = 300)
-
-##+ eval=TRUE
-## ---- The adjusted and unadjusted estimates agree asymptotically ----
-## adjusted - unadjusted = diff-in-means on the gain score minus on the outcome
-##                       = -(diff-in-means on the covariate x).
-## E[diff-in-means on x] = 0 (x has no effect) and its variance -> 0 as N grows,
-## so the two estimators coincide in large samples. Stack h copies of the 28
-## precincts (N = 28h) and watch the gap concentrate at 0.
-adjust_gap_draws <- function(h, n_draws = 5000) {
-  xv <- rep(x_cov, h)
-  zz <- rep(z_obs, h)
-  replicate(n = n_draws, expr = -diff_in_means(z = sample(x = zz), y = xv))
-}
-
-set.seed(seed = 12345)
-gap_sizes <- c(28, 56, 112, 224)
-gap_df <- do.call(rbind, lapply(gap_sizes, function(n) {
-  data.frame(gap = adjust_gap_draws(h = n / 28), N = n)
-}))
-gap_df$panel <- factor(paste0("N = ", gap_df$N),
-                       levels = paste0("N = ", gap_sizes))
-## Overlay the gap's distribution at each N: all centered at 0, narrowing to a
-## spike as N grows -- the adjusted and unadjusted estimates converge.
-acorn_adjust_difference <- ggplot(data = gap_df,
-                                  mapping = aes(x = gap, colour = panel)) +
-  geom_density(linewidth = 0.9) +
-  geom_vline(xintercept = 0, linetype = "dashed", colour = "grey40") +
-  scale_colour_viridis_d(option = "viridis", end = 0.85, name = NULL) +
-  coord_cartesian(xlim = c(-0.06, 0.06)) +
-  labs(x = "Adjusted minus unadjusted estimate", y = "Density") +
-  theme_minimal(base_size = 14) +
-  theme(panel.grid.minor = element_blank(), legend.position = "top")
-
-##+ eval=saveplots_
-ggsave(plot = acorn_adjust_difference,
-       file = "figures/acorn_adjust_difference.pdf",
-       width = 7, height = 4.2, units = "in", dpi = 300)

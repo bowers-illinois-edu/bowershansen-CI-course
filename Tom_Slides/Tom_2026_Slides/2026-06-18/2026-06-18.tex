@@ -171,7 +171,7 @@
 % TITLE PAGE
 %-----------------------------------------------------------------------
 \pagestyle{empty}
-\title[]{Uncertainty Estimation, Testing, and Covariance Adjustment} % The short title appears at the bottom of every slide, the full title is only on the title page
+\title[]{Uncertainty Estimation, Testing, and Confidence Intervals} % The short title appears at the bottom of every slide, the full title is only on the title page
 
 \author{Thomas Leavitt} % Your name
 \institute[] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
@@ -223,7 +223,6 @@
 \item Conservative \emph{estimator of variance} $\to$ standard error estimator \vfill
 \item Normal approximation $\to$ test statistic, $p$-values \vfill
 \item Confidence intervals as the nulls we do not reject \vfill
-\item Covariance adjustment $\to$ precision from baseline covariates \vfill
 \end{itemize} \vfill
 \end{itemize} \vfill
 \end{frame}
@@ -404,15 +403,18 @@ T = \frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0}{\widehat{\text{se}}}, 
 \end{itemize}
 \end{frame}
 %------------------------------------------------------------------------
-\begin{frame}{$p$-values: a tail area read off the Normal CDF}
-\begin{itemize}
+\begin{frame}[t]{$p$-values: a tail area under the standard Normal}
+\vfill
+\begin{itemize} \vfill
 \item \mh{$p$-value}: chance of a $T$ at least as extreme as observed, if $H_0$ true \vfill
-\item $\Phi = $ standard Normal CDF; reject when $p \leq \alpha$: \vfill
-\item[] \hfill $p_{\text{upper}} = 1 - \Phi(T), \qquad p_{\text{lower}} = \Phi(T), \qquad p_{\text{two}} = 2\left(1 - \Phi\left(\lvert T \rvert\right)\right)$ \hfill
-\item[] \vfill 
-\begin{figure}[H]
-\includegraphics[width=1\linewidth]{figures/stand_norm_cdf.pdf}
-\end{figure}
+\item A \mh{tail area} of the standard Normal, beyond the observed $T$ \vfill
+\item $\Phi$ = standard Normal CDF; $1 - \Phi(T)$ = upper-tail area \vfill
+\item[]
+\begin{equation*}
+p_{\text{upper}} = 1 - \Phi(T), \qquad p_{\text{lower}} = \Phi(T), \qquad p_{\text{two}} = 2\left(1 - \Phi\left(\lvert T \rvert\right)\right)
+\end{equation*} \vfill
+\item Each tail matches its \mh{alternative}: upper, lower, or two-sided \vfill
+\item \mh{Decision}: reject $H_0$ when $p \leq \alpha$ \vfill
 \end{itemize}
 \end{frame}
 %------------------------------------------------------------------------
@@ -423,12 +425,22 @@ T = \frac{\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0}{\widehat{\text{se}}}, 
 \begin{equation*}
 T = \underbrace{\frac{\hat{\tau} - \tau_0}{\sqrt{\Var\left[\hat{\tau}\right]}}}_{\to\, \mathcal{N}(0,1)\ \text{under}\ H_0} \times \underbrace{\frac{\sqrt{\Var\left[\hat{\tau}\right]}}{\widehat{\text{se}}}}_{\overset{p}{\to}\, c\, \leq\, 1} \ \overset{d}{\to}\ \mathcal{N}(0, c^2)
 \end{equation*}
-\item[] \footnotesize $\widehat{\text{se}} \overset{p}{\to} \sqrt{U} \geq \sqrt{\Var[\hat{\tau}]}$, so $c \leq 1$: the limiting law is \emph{narrower} than $\mathcal{N}(0,1)$ \normalsize
-\vspace{-0.2em}
+\item Slutsky: $T$ converges to $cZ$, with $Z \sim \mathcal{N}(0,1)$, $c$ a constant \vfill
+\begin{itemize}
+\item Property of the \mh{limiting} $cZ$, not a finite-$N$ rescaling \vfill
+\item $\E[cZ] = 0$: scaling \mh{fixes the center} at $0$ \vfill
+\item $\Var[cZ] = c^2$: scaling \mh{shrinks the spread} \vfill
+\end{itemize}
+\item \mh{Why $c \leq 1$?} conservative $\widehat{\text{se}} \overset{p}{\to} \sqrt{U} \geq \sqrt{\Var[\hat{\tau}]}$ \vfill
+\item Dividing by \emph{over-large} $\widehat{\text{se}}$ shrinks every $T$ toward $0$, hence \mh{smaller variance}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Why the test is valid (cont.)}
 \begin{figure}[H]
 \includegraphics[width=0.8\linewidth]{figures/consv_stand_norm_plot.pdf}
 \end{figure}
-\vspace{-0.3em}
+\begin{itemize}
 \item[] \footnotesize Rejection region holds \emph{less} mass under the narrower law $\Rightarrow$ reject a true null with prob.\ $\leq \alpha$ \normalsize
 \end{itemize}
 \end{frame}
@@ -471,186 +483,28 @@ pnorm(q = T_obs, lower.tail = FALSE)             # upper p    ~ 0.068
 \begin{equation*}
 -\,z_{1 - \alpha/2} \;\leq\; \frac{\hat{\tau} - \tau_0}{\widehat{\text{se}}} \;\leq\; z_{1 - \alpha/2}
 \end{equation*} \vfill
-\item Multiply by $\widehat{\text{se}}$ and solve for $\tau_0$:
+\item Now isolate $\tau_0$ in the middle --- three steps \vfill
+\end{itemize} \vfill
+\end{frame}
+
+\begin{frame}[t]{Solving the inequality for $\tau_0$}
+\vfill
+\begin{itemize} \vfill
+\item Multiply each part by $\widehat{\text{se}} > 0$ (no flip):
+\begin{equation*}
+-\,z_{1 - \alpha/2}\, \widehat{\text{se}} \;\leq\; \hat{\tau}\left(\bm{Z}, \bm{Y}\right) - \tau_0 \;\leq\; z_{1 - \alpha/2}\, \widehat{\text{se}}
+\end{equation*} \vfill
+\item Subtract $\hat{\tau}\left(\bm{Z}, \bm{Y}\right)$ from each part:
+\begin{equation*}
+-\,\hat{\tau}\left(\bm{Z}, \bm{Y}\right) - z_{1 - \alpha/2}\, \widehat{\text{se}} \;\leq\; -\tau_0 \;\leq\; -\hat{\tau}\left(\bm{Z}, \bm{Y}\right) + z_{1 - \alpha/2}\, \widehat{\text{se}}
+\end{equation*} \vfill
+\item Multiply by $-1$ (\emph{flips} both inequalities):
 \begin{equation*}
 \hat{\tau}\left(\bm{Z}, \bm{Y}\right) - z_{1 - \alpha/2}\, \widehat{\text{se}} \;\leq\; \tau_0 \;\leq\; \hat{\tau}\left(\bm{Z}, \bm{Y}\right) + z_{1 - \alpha/2}\, \widehat{\text{se}}
 \end{equation*} \vfill
 \item So $\hat{\tau} \pm z_{1 - \alpha/2}\, \widehat{\text{se}}$ is a \mh{consequence} of inversion, not a definition \vfill
 \item ACORN $95\%$: $0.036 \pm 1.96(0.024) = [-0.011,\ 0.084]$, includes $0$ \vfill
 \end{itemize} \vfill
-\end{frame}
-%------------------------------------------------------------------------
-\section{Covariance adjustment}
-
-\begin{frame}[t]{Covariance adjustment: precision, not bias}
-\vfill
-\begin{itemize} \vfill
-\item Difference-in-Means is \emph{already} unbiased under CRA --- nothing to fix there \vfill
-\item But it can be \mh{noisy} when covariates predict the outcome \vfill
-\item \mh{Covariance adjustment}: use baseline covariates to cut the variance \vfill
-\end{itemize} \vfill
-\end{frame}
-%------------------------------------------------------------------------
-\begin{frame}[t]{Baseline covariates carry outcome information}
-\vfill
-\begin{itemize} \vfill
-\item \textbf{Baseline covariate}: pre-treatment, so \mh{fixed} regardless of assignment \vfill
-\item ACORN: $2002$ general-election turnout $x_i$ predicts $2003$ turnout $y_i$ \vfill
-\item Information about $y_i$ the raw Difference-in-Means ignores \vfill
-\end{itemize} \vfill
-\end{frame}
-%------------------------------------------------------------------------
-\begin{frame}[t]{Two design-based ways to use the covariate}
-\vfill
-\begin{itemize} \vfill
-\item \mh{Block}: randomize \emph{within} blocks of similar precincts \vfill
-\item \mh{Rescale}: subtract the covariate before testing (a gain score) \vfill
-\end{itemize} \vfill
-\end{frame}
-%------------------------------------------------------------------------
-\begin{frame}[t]{If ACORN had been a blocked experiment}
-\vfill
-\begin{itemize} \vfill
-\item Pair the $28$ precincts on $2002$ turnout, $v_{\text{g}2002}$ --- $14$ blocks of two \vfill
-\item Randomize \emph{within} each pair: exactly one precinct canvassed \vfill
-\item CRA: $\binom{28}{14} \approx 40{,}116{,}600$ assignments \vfill
-\item Blocked: $2^{14} = 16{,}384$ assignments --- a tiny, $v_{\text{g}2002}$-balanced subset \vfill
-\item \emph{Ideally}, it drops imbalanced assignments --- estimates far from $\bar{\tau}$ \vfill
-\item[] So the retained estimates sit nearer the truth $\Rightarrow$ tighter distribution \vfill
-\end{itemize} \vfill
-\end{frame}
-%------------------------------------------------------------------------
-\begin{frame}[fragile]{Forming the pairs in \texttt{R} (\texttt{blockTools})}
-\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
-library(blockTools)
-acorn$unit <- seq_len(nrow(acorn))
-
-pairs_out  <- block(
-  data       = acorn,        # the data frame of units
-  id.vars    = "unit",       # column identifying each unit
-  block.vars = "v_g2002",    # covariate(s) to match on
-  n.tr       = 2,            # units per block (2 -> matched pairs)
-  algorithm  = "optimal")    # minimize total within-pair distance
-pair_table <- pairs_out$blocks[[1]]   # 14 rows: "Unit 1", "Unit 2"
-
-# Block randomization: one treated per pair
-z_blocked <- integer(nrow(acorn))
-for (b in seq_len(nrow(pair_table))) {
-  pair <- as.integer(pair_table[b, c("Unit 1", "Unit 2")])
-  z_blocked[sample(x = pair, size = 1)] <- 1
-}
-\end{lstlisting}
-\centering \footnotesize \emph{Illustration only}: ACORN was completely randomized; we re-randomize \emph{as if} blocked to show the variance shrink \normalsize
-\end{frame}
-%------------------------------------------------------------------------
-\begin{frame}{Blocking tightens the null distribution}
-\begin{figure}[H]
-\includegraphics[width=0.92\linewidth]{figures/acorn_blocked_vs_complete.pdf}
-\end{figure}
-\vspace{-0.3em}
-\centering \footnotesize Null SD $0.025 \to 0.021$: the blocked distribution is tighter, hence smaller se \normalsize
-\end{frame}
-%------------------------------------------------------------------------
-\begin{frame}[t]{A fixed covariate shift keeps the estimator unbiased}
-\small
-\vfill
-\begin{itemize} \vfill
-\item Gain score $e_i = y_i - x_i$, with POs $e_i(1) = y_i(1) - x_i$, $e_i(0) = y_i(0) - x_i$ \vfill
-\item Apply the Difference-in-Means to $\bm{e}$; by yesterday's unbiasedness argument:
-\begin{align*}
-\E\left[\hat{\tau}\left(\bm{Z}, \bm{e}\right)\right]
- &= \bar{e}(1) - \bar{e}(0)
- && \text{\footnotesize (unbiased for $\bm{e}$'s ATE)} \\
- &= \frac{1}{N}\sum_i \left(y_i(1) - x_i\right) - \frac{1}{N}\sum_i \left(y_i(0) - x_i\right)
- && \text{\footnotesize (def.\ of $e_i$)} \\
- &= \frac{1}{N}\sum_i y_i(1) - \frac{1}{N}\sum_i y_i(0) = \mh{\bar{\tau}}
- && \text{\footnotesize ($x_i$ cancel)}
-\end{align*} \vfill
-\item Same for any \emph{fixed} $\beta$ in $y_i - \beta x_i$: a pre-treatment $\beta x_i$ cancels in each $\tau_i$ \vfill
-\item Needs a \mh{fixed} shift --- estimating $\beta$ from the data breaks \mh{unbiasedness} (next) \vfill
-\end{itemize} \vfill
-\end{frame}
-%------------------------------------------------------------------------
-\begin{frame}[fragile]{ACORN in \texttt{R}: covariance adjustment}
-\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
-x_cov <- acorn$v_g2002              # 2002 general turnout (pre-treatment)
-gain_score <- y_obs - x_cov         # rescaled outcome
-
-tau_hat_adj <- diff_in_means(z = z_obs, y = gain_score)            # ~ 0.057
-se_hat_adj  <- sqrt(conservative_var(z = z_obs, y = gain_score))   # ~ 0.020
-\end{lstlisting}
-\begin{itemize} \vfill
-\item Standard error $0.024 \to 0.020$: variance about $30\%$ smaller \vfill
-\item $95\%$ CI $\to [0.018,\ 0.097]$ --- now \mh{excludes} $0$ (two-sided $p \approx 0.005$) \vfill
-\item Estimate moved ($0.036 \to 0.057$): $\hat{\tau}\left(\bm{Z},\bm{e}\right) = \hat{\tau}\left(\bm{Z},\bm{y}\right) - \hat{\tau}\left(\bm{Z},\bm{x}\right)$ \vfill
-\end{itemize}
-\end{frame}
-%------------------------------------------------------------------------
-\begin{frame}{Rescaling tightens the null distribution}
-\begin{figure}[H]
-\includegraphics[width=0.92\linewidth]{figures/acorn_original_vs_rescaled.pdf}
-\end{figure}
-\vspace{-0.3em}
-\centering \footnotesize The gain score's distribution is tighter $\Rightarrow$ smaller se, narrower CI \normalsize
-\end{frame}
-%------------------------------------------------------------------------
-\begin{frame}{The estimate moves, but vanishingly as $N$ grows}
-\begin{itemize}
-\item The Difference-in-Means is \mh{linear} in the outcome, so $\hat{\tau}\left(\bm{Z}, \bm{y} - \bm{x}\right) = \hat{\tau}\left(\bm{Z}, \bm{y}\right) - \hat{\tau}\left(\bm{Z}, \bm{x}\right)$:
-\begin{equation*}
-\underbrace{\hat{\tau}\left(\bm{Z}, \bm{e}\right)}_{\text{adjusted}} - \underbrace{\hat{\tau}\left(\bm{Z}, \bm{y}\right)}_{\text{unadjusted}} = -\,\hat{\tau}\left(\bm{Z}, \bm{x}\right), \quad \E\!\left[\hat{\tau}\left(\bm{Z}, \bm{x}\right)\right] = 0,\ \Var \to 0
-\end{equation*}
-\item[]
-\begin{figure}[H]
-\includegraphics[width=0.62\linewidth]{figures/acorn_adjust_difference.pdf}
-\end{figure}
-\item[] \footnotesize Both unbiased for $\bar{\tau}$; the gap $-\hat{\tau}(\bm{Z},\bm{x})$ concentrates at $0$ --- they \mh{agree} asymptotically \normalsize
-\end{itemize}
-\end{frame}
-%------------------------------------------------------------------------
-\begin{frame}[t]{What adjustment does --- and does not --- do}
-\vfill
-\begin{itemize} \vfill
-\item \textbf{Does}: cut variance $\Rightarrow$ more \mh{powerful} tests and \mh{tighter} confidence intervals \vfill
-\item \textbf{Does not}: remove bias --- randomization gives unbiasedness regardless \vfill
-\item \textbf{Does not}: assume correct outcome model --- inference stays \mh{design-based} \vfill
-\end{itemize} \vfill
-\end{frame}
-%------------------------------------------------------------------------
-\begin{frame}[t]{Beyond the gain score: regression adjustment}
-\vfill
-\begin{itemize} \vfill
-\item Gain score \emph{fixes} $\beta = 1$ in $y_i - \beta x_i$ --- but why exactly $1$? \vfill
-\item Instead residualize with a \mh{least-squares} slope $\hat{\beta}$ \vfill
-\item $\hat{\beta}_1, \hat{\beta}_0$: slopes from regressing $y$ on $x$ \emph{within} treated, control \citep{lin2013} \vfill
-\item Residualize each unit with its own arm's slope, on centered $x$: \vfill
-\begin{equation*}
-\tilde{e}_i = y_i - \hat{\beta}_{\mh{Z_i}}\left(x_i - \bar{x}\right), \quad \hat{\beta}_{Z_i} = \begin{cases} \hat{\beta}_1 & Z_i = 1 \\ \hat{\beta}_0 & Z_i = 0 \end{cases}, \quad \hat{\tau}\left(\bm{Z}, \tilde{\bm{e}}\right)
-\end{equation*} \vfill
-\item Equivalently $\hat{\tau}\left(\bm{Z}, \tilde{\bm{e}}\right) = $ coeff.\ on $Z_i$ in $Y_i \sim Z_i + (\bm{x}_i - \bar{\bm{x}}) + Z_i(\bm{x}_i - \bar{\bm{x}})$  \vfill
-\end{itemize} \vfill
-\end{frame}
-%------------------------------------------------------------------------
-\begin{frame}[fragile]{Lin's estimator in \texttt{R}, and what it buys}
-\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
-X <- scale(acorn[, c("v_g2002","v_p2002","v_m2002")], scale = FALSE)  # center covs
-# (a) residualize with arm-specific OLS slopes, then Difference-in-Means
-b1 <- coef(lm(vote03 ~ X, data = acorn, subset = z == 1))[-1]  # treated slopes
-b0 <- coef(lm(vote03 ~ X, data = acorn, subset = z == 0))[-1]  # control slopes
-e  <- acorn$vote03 - ifelse(acorn$z == 1, X %*% b1, X %*% b0)
-mean(e[acorn$z == 1]) - mean(e[acorn$z == 0])          # 0.0566
-# (b) coefficient on z in the interacted regression -- identical
-coef(lm(vote03 ~ z * X, data = acorn))["z"]            # 0.0566
-\end{lstlisting}
-\begin{itemize} \vfill
-\item \mh{Precision}: asymptotically no less precise than unadjusted \citep{lin2013} \vfill
-\item \mh{Inference}: HC2 robust se $\overset{p}{\to}$ a limit $\geq$ true se $\Rightarrow$ (conservatively) valid \vfill
-\item \mh{Small-sample bias}: estimating $\hat{\beta}$ adds a small finite-sample bias \citep{lin2013} \vfill
-\begin{itemize} \vfill
-\item[$-$] new research derives exact bias corrections \citep{changetal2024} \vfill
-\end{itemize} \vfill
-\item \mh{Nonlinear / generalized models}: \citet{guobasse2022}, \citet{cohenfogarty2022b} \vfill
-\end{itemize}
 \end{frame}
 %------------------------------------------------------------------------
 \section{Recap}
@@ -662,7 +516,7 @@ coef(lm(vote03 ~ z * X, data = acorn))["z"]            # 0.0566
 \item Today: a \mh{conservative} variance estimator $\Rightarrow$ honest standard error \vfill
 \item \mh{Normal approximation} $\Rightarrow$ test statistic and $p$-values \vfill
 \item \mh{Confidence interval} $=$ nulls we do not reject (inversion) \vfill
-\item \mh{Covariance adjustment} $\Rightarrow$ precision, by blocking or rescaling \vfill
+\item[] next: \mh{covariance adjustment} --- precision from baseline covariates \vfill
 \end{itemize} \vfill
 \end{frame}
 %------------------------------------------------------------------------

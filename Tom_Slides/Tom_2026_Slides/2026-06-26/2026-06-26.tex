@@ -1,0 +1,597 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation -- ICPSR Causal Inference
+% Day 10 (June 26, 2026): Inference under as-if randomization -- sharp and weak frameworks
+% Source: Leavitt and Miratrix (2026), Sections 2.3-2.3.2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%------------------------------------------------------------------------------------------------
+% PACKAGES AND THEMES
+%------------------------------------------------------------------------------------------------
+
+\documentclass[table, xcolor = {dvipsnames}, 9pt]{beamer}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{external}
+\mode<presentation> {
+\usetheme{metropolis}
+\usecolortheme{seagull}
+\usefonttheme{professionalfonts}
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{diagbox}
+\usepackage{makecell}
+\usepackage{xparse}
+\usepackage{subfig}
+\usepackage{amsmath}
+\usepackage{amsfonts,amsthm,amsmath,amssymb}
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{empheq}
+\usepackage{pgfplots}
+\usepackage{animate}
+\usepgfplotslibrary{colorbrewer}
+\pgfplotsset{compat=1.17}
+
+\newcommand\mybox[2][]{\tikz[overlay]\node[fill=lightgray,inner sep=2pt, anchor=text, rectangle, rounded corners=1mm,#1] {#2};\phantom{#2}}
+\hypersetup{unicode=true,
+            bookmarksnumbered=true,
+            bookmarksopen=true,
+            bookmarksopenlevel=2,
+            breaklinks=false,
+            pdfborder={0 0 1},
+            hypertexnames=false,
+            pdfstartview={XYZ null null 1}}
+\usepackage{xcolor}
+% R code listing style (matches the course's R-code slides)
+\usepackage{listings}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{Rstyle}{
+    language=R,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\newcommand\myheading[1]{%
+  \par\bigskip
+  {\Large\bfseries#1}\par\smallskip}
+\newcommand\given[1][]{\:#1\vert\:}
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}{Proposition\thisthmnumber}
+\newtheorem{lem}{Lemma\thisthmnumber}
+\newtheorem{cor}{Corollary}
+\newtheorem{defin}{Definition}
+\newtheorem{algo}{Algorithm}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand{\bh}[1]{{\color{blue}{#1}}}
+\newcommand{\mh}[1]{{\color{magenta}{#1}}}
+\newcommand{\thisthmnumber}{}
+\newcommand{\tikzmark}[1]{\tikz[baseline,remember picture] \coordinate (#1) {};}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\QEDB}{\hfill\ensuremath{\square}}%
+\newcommand{\abs}[1]{\left\lvert #1 \right\rvert}
+\DeclareMathOperator{\E}{\rm{E}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\N}{\mathbb{N}}
+\DeclareMathOperator{\Var}{\rm{Var}}
+\DeclareMathOperator{\Cov}{\rm{Cov}}
+\DeclareMathOperator{\Supp}{\rm{Supp}}
+\DeclareMathOperator{\e}{\rm{e}}
+\DeclareMathOperator{\F}{\mathcal{F}}
+\DeclareMathOperator{\Z}{\mathcal{Z}}
+\DeclareMathOperator{\logit}{\rm{logit}}
+\DeclareMathOperator{\indep}{{\perp\!\!\!\perp}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+%------------------------------------------------------------------------
+% TITLE PAGE -- Day 10 (June 26, 2026)
+% Source: Leavitt and Miratrix (2026), Sections 2.3-2.3.2
+%-----------------------------------------------------------------------
+\pagestyle{empty}
+\title[Inference under as-if randomization]{Inference under As-If Randomization: The Sharp and Weak Frameworks}
+
+\author{Thomas Leavitt}
+\institute[]
+{
+\medskip
+\textit{}
+}
+\date{June 26, 2026}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+%========================================================================
+\section{From design to inference}
+%========================================================================
+
+%------------------------------------------------------------------------
+\begin{frame}[t]{Where we are: Stage 1 is finished}
+\vfill
+\begin{itemize} \vfill
+\item Matching aims to recreate completely block-randomized experiment \vfill
+\item \textbf{Wed--Thurs}: built matched sets --- distances, calipers, full matching \vfill
+\item Then judged the design: balance like a \mh{block-randomized} experiment? \vfill
+\item If yes, let each matched set stand in for a \mh{mini randomized experiment} \vfill
+\item Within a set, treatment is \emph{hopefully} as-if randomized \vfill
+\item \textbf{Today}: take design as given, \mh{draw inferences} under as-if randomization \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{The matching pipeline: we now enter Stage 2}
+\vfill
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{figures/matching_pipeline_flowchart.pdf}
+\caption*{\scriptsize Flow diagram of the design-based matching pipeline. \citep{leavittmiratrix2026}}
+\end{figure}
+\vfill
+\end{frame}
+%========================================================================
+\section{Targets and frameworks}
+%========================================================================
+
+%------------------------------------------------------------------------
+\begin{frame}[t]{Potential outcomes and individual effects}
+\vfill
+\begin{itemize} \vfill
+\item Under \mh{SUTVA}, each unit $i$ in set $s$ has two potential outcomes: \vfill
+\begin{itemize} \vfill
+\item $y_{si}(1)$ under treatment, \quad $y_{si}(0)$ under control \vfill
+\end{itemize} \vfill
+\item \mh{Individual effect}: $\tau_{si} = y_{si}(1) - y_{si}(0)$ \vfill
+\item Collect $n$ matched-unit effects into $\bm{\tau} = (\tau_{1,1}, \ldots, \tau_{S,n_S})^{\top}$, $n = \sum_{s = 1}^S n_s$ \vfill
+\item \mh{Average treatment effect}: $\tau = \frac{1}{n} \sum_{s=1}^S \sum_{i=1}^{n_s} \tau_{si}$ \vfill
+\item Both defined among \mh{matched} units \vfill
+\item That population may differ from the original \vfill
+\item Constructing an \mh{interpretable} population is its own task \\ \citep{fogartyetal2016,traskinsmall2011} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{The fundamental problem $\Rightarrow$ two frameworks}
+\vfill
+\begin{itemize} \vfill
+\item We observe only \emph{one} potential outcome per unit --- the observed $y_{si}$ \vfill
+\item[] No rewind: can't see peace duration with \emph{and} without a UN mission \vfill
+\item[] $\Rightarrow$ $\bm{\tau}$ and $\tau$ cannot be directly computed --- we must \mh{infer} \vfill
+\item \textbf{Sharp} framework: hypothesis about \emph{all} outcomes $\Rightarrow$ \mh{exact} tests \vfill
+\item \textbf{Weak} framework: hypothesis about \mh{ATE} $\Rightarrow$ variance $+$ Normal approx. \vfill
+\end{itemize} \vfill
+\end{frame}
+%========================================================================
+\section{The assignment process}
+%========================================================================
+
+%------------------------------------------------------------------------
+\begin{frame}[t]{Inference rests on the assignment, not a sample}
+\vfill
+\begin{itemize} \vfill
+\item $z_{si} = 1$ if unit $i$ in set $s$ is treated, else $0$; stack into $\bm{z}$ \vfill
+\item We \mh{condition} on the treated count per set, $m_s$ \citep{rosenbaum1984} \vfill
+\item[] (even if assignment was $n_s$ independent coins, we fix the count) \vfill
+\item $\Omega_s$: all assignments in set $s$ with exactly $m_s$ treated \vfill
+\item[] $\abs{\Omega_s} = \binom{n_s}{m_s}$ --- the number of such assignments \vfill
+\item Full space: $\Omega = \Omega_1 \times \cdots \times \Omega_S$ with $\abs{\Omega_s} = \prod \limits_{s = 1}^S \binom{n_s}{m_s}$\vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{$\Omega_s$ for one set: \texttt{ssafrica.3}}
+\begin{itemize}
+\item $4$ units, $1$ treated $\Rightarrow \abs{\Omega_s} = \binom{4}{1} = 4$ possible assignments \vfill
+\item[]
+\begin{center}
+\small
+\begin{tabular}{l|cccc} \hline
+ & Assign.\ 1 & Assign.\ 2 & \mh{Assign.\ 3} & Assign.\ 4 \\ \hline
+Burundi & 0 & 0 & \mh{0} & 1 \\
+Rwanda  & 0 & 0 & \mh{1} & 0 \\
+Somalia & 0 & 1 & \mh{0} & 0 \\
+Lesotho & 1 & 0 & \mh{0} & 0 \\ \hline
+\end{tabular}
+\end{center}
+\item[] \vfill
+\item \mh{Assignment 3} (Rwanda treated) actually occurred \vfill
+\item The others are counterfactual \vfill
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{As-if randomization: a uniform distribution over $\Omega$}
+\vfill
+\begin{itemize} \vfill
+\item Across assignments, the causal quantities $\bm{\tau}$ and $\tau$ stay \mh{fixed} \vfill
+\item Only \emph{which} potential outcomes we observe changes \vfill
+\item Inference rests on a \mh{probability distribution} over $\Omega$ \vfill
+\item[] Fisher's \mh{``reasoned basis''} \citep[p.~14]{fisher1935} \vfill
+\item Here that probability distribution is \mh{unknown} \vfill
+\item \mh{As-if randomization}: every assignment in each $\Omega_s$ equally likely \vfill
+\item[] \mh{Uniform} over $\Omega$ $\Rightarrow$ treatment probability $m_s / n_s$ per set \vfill
+\item Matching this whole week was built to make as-if randomization credible \vfill
+\end{itemize} \vfill
+\end{frame}
+%========================================================================
+\section{The sharp framework}
+%========================================================================
+
+%------------------------------------------------------------------------
+\begin{frame}[t]{Testing a hypothesis by removing its effect}
+\vfill
+\begin{itemize} \vfill
+\item Test $H_0: \tau_{si} = \tau_h$ by \mh{subtracting} the hypothesized effect \vfill
+\item[] $\tilde{y}_{si} = y_{si} - \tau_h\, z_{si}$ --- the \mh{reconstructed} outcomes \vfill
+\item If $\tau_h$ is the \emph{true} effect, the adjusted data show \mh{no effect} \vfill
+\item Example: four ``village heads'', true constant effect $\tau = 6$ \vfill
+\end{itemize}
+\begin{center}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Village & $z$ & $y_0$ & observed $y$ & $\tilde{y}\ (\tau_h = 6)$ \\
+\midrule
+V1 & 0 & 1 & 1  & 1 \\
+V2 & 1 & 2 & 8  & 2 \\
+V3 & 0 & 3 & 3  & 3 \\
+V4 & 1 & 4 & 10 & 4 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize} \vfill
+\item Removing the true effect recovers the \mh{control} outcomes $y_0$ \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Removing the true effect centers the test at $0$}
+\begin{itemize}
+\item Shuffle treatment: the statistic's distribution is centered at \mh{$0$} \vfill
+\item \mh{Observed} statistic moves from the tail to the center \vfill
+\item[]
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{figures/village_heads_centering.pdf}
+\end{figure}
+\item[] \footnotesize Remove the true effect ($\tau_h = 6$): observed $= 1$, near $0$ --- no apparent effect. \normalsize
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Building the null distribution}
+\vfill
+\begin{itemize} \vfill
+\item Reconstruct outcomes under the null: $\tilde{y}_{si} = y_{si} - \tau_h \, z_{si}$ \vfill
+\item Under the null, reconstructed outcomes would be \mh{fixed} across assignments \vfill
+\item Hold them fixed; recompute the test statistic for \emph{every} assignment in $\Omega$ \vfill
+\item[] $\Rightarrow$ the \mh{randomization distribution} of the statistic under the null \vfill
+\item Observed in the \mh{upper tail} $\Rightarrow$ evidence the effect \emph{exceeds} $\tau_h$ \vfill
+\item Observed in the \mh{lower tail} $\Rightarrow$ evidence the effect is \emph{below} $\tau_h$ \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{The test statistic: a sum statistic}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Sum statistic}: \vfill
+\item[] Add transformed treated outcomes, within sets then across sets \vfill
+\item[]
+\begin{equation*}
+t(\bm{z}, \tilde{\bm{q}}) = \sum_{s=1}^S \sum_{i=1}^{n_s} z_{si}\, \tilde{q}_{si}
+\end{equation*} \vfill
+\item \mh{Why this form?} Two reasons: \vfill
+\item[] (i) \mh{Known} (closed-form) null moments under as-if randomization; \vfill 
+\item[] (ii) many familiar statistics can be expressed as sum statistic \vfill
+\item $\tilde{q}_{si}$: a scale/shift of the \mh{reconstructed} $\tilde{y}_{si}$ \vfill
+\item $\tilde{q}$ is built once under the null; $t$ then recomputes as $\bm{z}$ varies \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[fragile, t]{A sum statistic for the harmonic-mean Diff-in-Means}
+\vfill
+\begin{itemize} \vfill
+\item One such $\tilde{q}$ \emph{reproduces} the \mh{harmonic-mean--weighted Difference-in-Means}: \vfill
+\item[]
+\begin{equation*}
+\sum_{i:\, z_{si}=1} \tilde{q}_{si} = \frac{\sum_s w_s\, \hat{\tau}_s}{\sum_s w_s},
+\quad \hat{\tau}_s = \bar{y}_{sT} - \bar{y}_{sC},
+\quad w_s = \tfrac{2 m_s (n_s - m_s)}{n_s}
+\end{equation*} \vfill
+\item Build it with \texttt{hm\_stat\_rescale()}, then \mh{sum over treated}: \vfill
+\end{itemize}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+source("https://raw.githubusercontent.com/tl2624/matching-guide/main/R/hm_stat_rescale.R")
+data_matched <- hm_stat_rescale(data = data_matched, outcome = ldur_tilde,
+                                treat = UN, strata = fm)
+obs_stat <- sum(data_matched$ldur_tilde_hm_scaled[data_matched$UN == 1])   # 0.673
+\end{lstlisting}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[fragile]{One statistic, three familiar guises}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Power:} Optimal for Diff-in-Means under constant effect \\ 
+\item[] \phantom{\mh{Power:} } (\& simplifying assumptions) \vfill
+\item The harmonic-mean--weighted Difference-in-Means \emph{also} coincides with: \vfill
+\begin{enumerate} \vfill
+\item the treatment coefficient on \mh{matched-set} fixed effects, \emph{no covariates} \\ \citep{hansenbowers2008} \vfill
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+coef(lm(ldur_tilde ~ UN + fm, data = data_matched))["UN"]   # 0.673 (fm = matched-set FE)
+\end{lstlisting} \vfill
+\item \mh{overlap-weighted} Difference-in-Means, weights from the as-if probabilities \\ \citep{lietal2018} \vfill
+\end{enumerate} \vfill
+\item All three reproduce the \emph{same} $\mh{0.673}$ \vfill
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+%========================================================================
+\section{Testing sharp nulls}
+%========================================================================
+
+%------------------------------------------------------------------------
+\begin{frame}{Three reference distributions, one observed statistic}
+\begin{itemize}
+\item Hold the reconstructed outcomes fixed; recompute the statistic over $\Omega$ \vfill
+\item $\abs{\Omega} = \mh{311{,}040}$ here; usually we \mh{sample} (we used $10^4$ draws) \vfill
+\item[]
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{figures/sharp_null_three_panel.pdf}
+\end{figure}
+\item[] \footnotesize Exact, simulated, and Normal agree; observed (blue) lands in the upper-tail rejection region. \normalsize
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{One-sided rejects; two-sided is borderline}
+\vfill
+\begin{itemize} \vfill
+\item Upper one-sided $p$-value, $H_0: \tau_h = 0$ vs.\ a \emph{larger} effect: \vfill
+\begin{itemize} \vfill
+\item \mh{Exact} $0.0363$, \quad \mh{simulated} $0.0340$, \quad \mh{Normal} $0.0343$ \vfill
+\end{itemize} \vfill
+\item Directional question: does UN presence \emph{prolong} peace? \vfill
+\item[] $\Rightarrow$ \mh{reject} at $\alpha = 0.05$ \vfill
+\item \mh{Normal}: use the mean and variance the null $\&$ as-if randomization imply \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Confidence sets by inverting the test}
+\vfill
+\begin{itemize} \vfill
+\item Confidence set $=$ the constant-effect nulls $\tau_h$ we do \emph{not} reject \vfill
+\item Two-sided $95\%$: $[\mh{-0.05},\ \mh{1.40}]$%; \quad one-sided: $[\mh{0.07},\ \infty)$ \vfill
+%\begin{itemize} \vfill 
+%\item[$\star$] Read one-sided $[0.07,\infty)$ as a \mh{95\% lower confidence bound} \vfill
+%\item[$\star$] Effect consistent with anything $\ge 0.07$; below $0.07$ rejected for \emph{larger} effect \vfill
+%\item[$\star$] A \mh{floor} on the effect, no ceiling since we never tested ``too big'' \vfill
+%\end{itemize} \vfill 
+\item[] \vfill 
+\begin{figure}[H]
+\includegraphics[width=0.7\linewidth]{figures/sharp_ci_inversion.pdf}
+\end{figure} \vfill
+\end{itemize}
+\vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{A point estimate \citep{hodgeslehmann1963,rosenbaum1993}}
+\begin{itemize}
+\item \mh{Hodges--Lehmann} estimate: \vfill 
+\item[] The $\tau_h$ where the observed statistic $=$ its null expectation ($0$) \vfill
+\item[] $\Rightarrow$ the harmonic-mean--weighted Difference-in-Means, $\approx \mh{0.673}$ \vfill
+\item[]
+\begin{figure}[H]
+\includegraphics[width=0.64\linewidth]{figures/sharp_hl_estimate.pdf}
+\end{figure}
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{One randomization distribution, three uses}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Test} one null ($\tau_h = 0$): is there \emph{any} effect? \vfill
+\item \mh{Confidence set}: invert the test over \emph{many} nulls $\tau_h$ \vfill
+\item \mh{Point estimate}: the single $\tau_h$ making observed $=$ null expectation \vfill
+\item All three from the \emph{same} reference distribution \vfill
+\end{itemize} \vfill
+\end{frame}
+%========================================================================
+\section{The weak framework}
+%========================================================================
+
+%------------------------------------------------------------------------
+\begin{frame}[t]{From a constant effect to the average effect}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Weak framework}: target the \mh{ATE}, allowing heterogeneous effects \vfill
+\item[]
+\begin{equation*}
+\tau = \sum_{s=1}^S \frac{n_s}{n}\, \tau_s
+\qquad\Longrightarrow\qquad
+\hat{\tau} = \sum_{s=1}^S \frac{n_s}{n}\, \hat{\tau}_s
+\end{equation*} \vfill
+\item Set's \mh{share} $n_s/n$ as the weight; $\hat{\tau}_s$ the within-set Difference-in-Means \vfill
+\item Under as-if randomization, $\hat{\tau}$ is \mh{unbiased} for the ATE \citep{neyman1923} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Two weightings, two jobs}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Estimand} weights $n_s/n$ \emph{define} the target --- the ATE \vfill
+\item \mh{Harmonic-mean} weights used by \mh{sharp} framework's test statistic, for power \vfill
+\begin{itemize} \vfill 
+\item Those weights shaped the \emph{test}, \emph{not} the causal target \vfill
+\end{itemize} \vfill
+\item Same data, two questions: \vfill
+\begin{itemize} \vfill
+\item sharp: ``is there \emph{any} effect?'' \vfill
+\item weak: ``is there effect \emph{on average}?'' \vfill
+\end{itemize} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{The variance problem in matched sets}
+\vfill
+\begin{itemize} \vfill
+\item Variance of Difference-in-Means: $\Var(\hat{\tau}) = \sum_s (n_s/n)^2\, \Var(\hat{\tau}_s)$ \vfill 
+\item Conservative within-set estimator:  $\widehat{\Var}(\hat{\tau}_s) = \dfrac{\hat{S}^2_{sT}}{m_s} + \dfrac{\hat{S}^2_{sC}}{n_s - m_s}$ \vfill
+\item[] Group means: $\bar{y}_{sT} = \dfrac{1}{m_s}\displaystyle\sum_{i=1}^{n_s} z_{si}\, y_{si}$, \quad $\bar{y}_{sC} = \dfrac{1}{n_s - m_s}\displaystyle\sum_{i=1}^{n_s} (1 - z_{si})\, y_{si}$ \vfill
+\item[]
+\begin{equation*}
+\hat{S}^2_{sT} = \frac{\sum_{i=1}^{n_s} z_{si}\,(y_{si} - \bar{y}_{sT})^2}{m_s - 1},
+\qquad
+\hat{S}^2_{sC} = \frac{\sum_{i=1}^{n_s} (1 - z_{si})\,(y_{si} - \bar{y}_{sC})^2}{n_s - m_s - 1}
+\end{equation*} \vfill
+\item Denominators $m_s - 1$ and $n_s - m_s - 1$: \mh{undefined} with one unit \vfill
+\item Every set here has a \mh{single} treated or control unit \vfill
+\item[] $\Rightarrow$ the usual estimator \mh{fails} \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Estimating the variance from the spread across sets}
+\vfill
+\begin{itemize} \vfill
+\item \mh{Matched pairs}: one unit per arm in each set \vfill 
+\begin{itemize} \vfill
+\item So no within-set variance \emph{estimator}: within-arm $(n - 1)$ denominator $= 0$  \vfill
+\item Instead, read $\Var(\hat{\tau})$ off how the $\hat{\tau}_s$ \mh{vary across sets}:
+\item[]
+\begin{align*}
+\widehat{\Var}[\hat{\tau}] = \dfrac{(1/S) \sum_{s = 1}^S (\hat{\tau}_s - \overline{\hat{\tau}})^2}{S - 1}
+\end{align*} 
+\vfill 
+\item $\E[\widehat{\Var}[\hat{\tau}]] \geq \Var[\hat{\tau}]$, so the estimate is \mh{conservative}
+\end{itemize} \vfill 
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[fragile]{Two conservative variance estimators in software}
+\vfill
+\begin{itemize} \vfill
+\item \citet{fogarty2018}: the between-set spread estimator (finely stratified) \vfill
+\item[] Works for \mh{any} set sizes --- needs \emph{neither} condition below \vfill
+\end{itemize}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+source("https://raw.githubusercontent.com/tl2624/matching-guide/main/R/fine_strat_var_est.R")
+fine_strat_var_est(strat_ns = set_stats$n, strat_ests = set_stats$diff_in_means)   # 0.116
+\end{lstlisting}
+\begin{itemize} \vfill
+\item \citet{pashleymiratrix2021}: two variants \vfill
+\begin{itemize} \vfill
+\item \texttt{hybrid\_m}: same-size sets only (needs $\ge 2$ of each size) \vfill
+\item \texttt{hybrid\_p}: pool \emph{all} sets (needs \mh{no set} $\ge 50\%$ of units) --- our case \vfill
+\end{itemize}
+\end{itemize}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+library(blkvar)
+block_estimator(Yobs = ldur, Z = UN, B = fm, data = data_matched,
+                method = "hybrid_p")$var_est   # 0.119
+\end{lstlisting}
+\end{frame}
+%------------------------------------------------------------------------
+%========================================================================
+\section{Testing weak nulls}
+%========================================================================
+
+%------------------------------------------------------------------------
+\begin{frame}[fragile]{Testing the weak null of no average effect}
+\vfill
+\begin{itemize} \vfill
+\item Standardize the estimate by its (conservative) standard error: \vfill
+\item[]
+\begin{equation*}
+\frac{\hat{\tau} - 0}{\widehat{\text{se}}}, \qquad
+\hat{\tau} \approx 0.615, \quad \widehat{\text{se}} \approx 0.341 \ (\text{Fogarty})
+\end{equation*} \vfill
+\item Refer to the \mh{standard Normal} \vfill
+\end{itemize}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+z_weak <- (ate_hat - 0) / se_fogarty                 # se_fogarty = sqrt(var_fogarty); z = 1.80
+pnorm(q = z_weak, lower.tail = FALSE)                 # upper one-sided p = 0.036
+\end{lstlisting}
+\begin{itemize} \vfill
+\item Conservative $z \approx \mh{1.80}$: \mh{reject} the weak null one-sided at $\alpha = 0.05$ \vfill
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}{Where the conservative statistic lands}
+\begin{itemize}
+\item One-sided test: shade only the upper-tail rejection region (area $0.05$) \vfill
+\item[]
+\begin{figure}[H]
+\includegraphics[width=0.82\linewidth]{figures/weak_null_normal.pdf}
+\end{figure}
+\item[] \footnotesize Observed $z \approx 1.80$ lands in the rejection region $\Rightarrow$ \mh{reject} the weak null one-sided. \normalsize
+\end{itemize}
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[fragile, label=weakci]{A confidence interval by inversion}
+\vfill
+\begin{itemize} \vfill
+\item Invert the test: keep the ATE values not rejected \vfill
+\item[] $\hat{\tau} \pm z_{1-\alpha/2}\,\widehat{\text{se}}$ \vfill
+\end{itemize}
+\begin{lstlisting}[style=Rstyle, basicstyle=\ttfamily\tiny, frame=single]
+cs_weak_two_sided <- c(
+  lower = ate_hat - qnorm(p = 1 - alpha / 2) * se_fogarty,
+  upper = ate_hat + qnorm(p = 1 - alpha / 2) * se_fogarty)   #  -0.05   1.28
+\end{lstlisting}
+\begin{itemize} \vfill
+\item Two-sided $95\%$ CI for the ATE: $[\mh{-0.05},\ \mh{1.28}]$ \vfill
+\item Interpretation: ATE values \emph{compatible} with the data at the $5\%$ level \vfill
+\item Conservative variance $\Rightarrow$ interval is, if anything, expected to be too \mh{wide} \vfill
+\end{itemize} \vfill
+\end{frame}
+%========================================================================
+\section{Recap}
+%========================================================================
+
+%------------------------------------------------------------------------
+\begin{frame}[t]{Recap: inference under as-if randomization}
+\vfill
+\begin{itemize} \vfill
+\item Everything rested on \mh{as-if randomization} \emph{within} matched sets \vfill
+\item \textbf{Sharp}: reconstruct outcomes, recompute a \mh{sum statistic} over $\Omega$ \vfill
+\item[] exact / simulated / Normal $p$-values; CI by inversion; HL estimate \vfill
+\item \textbf{Weak}: the \mh{ATE} with a conservative variance, then a Normal test \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[t]{Look ahead: when as-if randomization fails}
+\vfill
+\begin{itemize} \vfill
+\item Every $p$-value today assumed assignments in $\Omega$ are \mh{equally likely} \vfill
+\item But matching balances only \emph{observed} covariates \vfill
+\item A \mh{hidden} confounder may make some assignments more likely than others \vfill
+\item \textbf{Next (Stage 3)}: test under \mh{departures} from as-if randomization \vfill
+\item[] How big must hidden bias be to overturn today's conclusions? \vfill
+\end{itemize} \vfill
+\end{frame}
+%------------------------------------------------------------------------
+\begin{frame}[allowframebreaks]
+\frametitle{References}
+\scriptsize
+\bibliographystyle{chicago}
+\bibliography{Bibliography}
+\end{frame}
+%------------------------------------------------------------------------
+\end{document}

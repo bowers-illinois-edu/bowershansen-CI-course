@@ -4,10 +4,10 @@
 ## What this script does:
 ##   - computes the randomization distribution of Fisher's tea-tasting
 ##     experiment under the null hypothesis of no discrimination, and
-##   - saves two figures into an "images/" folder.
+##   - saves two figures into an "figures/" folder.
 ##
 ## How to run it:
-##   Put this file in its own folder, create an "images/" subfolder next to it,
+##   Put this file in its own folder, create an "figures/" subfolder next to it,
 ##   then from that folder run, open file in RStudio and run it top to bottom.
 ##
 ## A note on style: argument names are written out (e.g. combn(x = 1:8, m = 4))
@@ -87,7 +87,7 @@ fig_null <- ggplot(data = null_df, mapping = aes(x = t, y = prob)) +
        y = "Probability under no discrimination") +
   theme_bw(base_size = 15)
 
-ggsave(filename = "images/fisher_null_dist.png", plot = fig_null,
+ggsave(filename = "figures/fisher_null_dist.png", plot = fig_null,
        width = 8, height = 4, units = "in", dpi = 300)
 
 ## ===========================================================================
@@ -120,5 +120,5 @@ fig_two <- ggplot(data = two_models_df, mapping = aes(x = t, y = prob)) +
   labs(x = expression(t == bold(z)^T * bold(y)), y = "Probability") +
   theme_bw(base_size = 15)
 
-ggsave(filename = "images/fisher_two_models.png", plot = fig_two,
+ggsave(filename = "figures/fisher_two_models.png", plot = fig_two,
        width = 8, height = 3.6, units = "in", dpi = 300)
