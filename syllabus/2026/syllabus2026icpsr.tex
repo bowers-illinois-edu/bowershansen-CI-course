@@ -76,7 +76,29 @@ pdfstandard = {ua-2,a-4},
 \renewcommand{\footrulewidth}{0pt}}
 
 \usepackage{soul}
-\usepackage[compact,nobottomtitles*]{titlesec}
+% titlesec 2.17 is incompatible with the tagged-PDF sectioning installed by
+% \DocumentMetadata{tagging=on}: it patches the legacy \@startsection machinery,
+% which the tagging code has replaced, so every \section/\subsection fails with
+% "Package titlesec Error: No format for this command" plus an "Illegal unit of
+% measure" cascade. We previously loaded it only for compact spacing
+% (options [compact,nobottomtitles*]; no \titleformat/\titlespacing were used).
+% Reproduce the compact spacing here through the kernel's own \@startsection,
+% which the tagging code understands, so headings stay tagged and compile clean.
+% \usepackage[compact,nobottomtitles*]{titlesec}
+\makeatletter
+\renewcommand\section{\@startsection{section}{1}{\z@}%
+  {-2.0ex \@plus -0.5ex \@minus -.2ex}%
+  {1.0ex \@plus .2ex}%
+  {\normalfont\Large\bfseries}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+  {-1.5ex \@plus -0.5ex \@minus -.2ex}%
+  {0.6ex \@plus .2ex}%
+  {\normalfont\large\bfseries}}
+\renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}%
+  {-1.2ex \@plus -0.5ex \@minus -.2ex}%
+  {0.4ex \@plus .2ex}%
+  {\normalfont\normalsize\bfseries}}
+\makeatother
 
 \title{Causal Inference for the Social Sciences}
 
@@ -128,11 +150,11 @@ assignments make extensive use of \texttt{R}.
 
 \section*{Overview}
 
-We may all warn our freshmen that association is not causation, but inferring causation has always been a central aim both for statisticians and for their collaborators. Until recently, however, inference of causation from statistical evidence depended on murky, scarcely attainable requirements; in practice, the weight of casual arguments was largely determined by the scientific authority of the people making them.
+We may all warn our freshmen that association is not causation, but inferring causation has always been a central aim both for statisticians and for their collaborators. Until recently, however, inference of causation from statistical evidence depended on murky, scarcely attainable requirements; in practice, the weight of causal arguments was largely determined by the scientific authority of the people making them.
 
 Requirements for causal inference become more clear when they are framed in terms of \emph{potential outcomes}.  This was first done by Neyman, who in the 1920s used potential outcomes to model agricultural experiments.  Fisher independently proposed a related but distinct, ultimately more influential, analysis of experiments in 1935, and a rich strain of causal analysis developed among his intellectual progeny. It clarified the differing requirements for causal inference with experiments and with observational data, isolating the distinct contributions required of the statistician and of his disciplinary collaborators; generated more satisfying methods with which to address potential confounding due to measured variables; qualitatively and quantitatively advanced our grasp of unmeasured confounding and its potential ramifications; furnished statistical methods with which to eke more out of the strongest study designs, under fewer assumptions; and articulated principles with which to understand study designs as a spectrum, rather than a dichotomy between ``good" experiments and ``bad" observational studies. Understanding the methods and outlook of the school founded by Fisher's student W. G. Cochran will be the central task of this course.
 
-The course begins by applying the Fisher and Neyman-Rubin approaches to statistical inference for counterfactual causal efffects to randomized experiments, touching on considerations specific to clustered treatment assignment, ``small'' sample sizes and treatment effect heterogeneity. The next segment addresses conceptual and methodogical challenges of applying the same models to analysis of non-experimental data. This course segment covers ignorability, selection, ``common support,'' covariate balance, paired comparisons, optimal matching and propensity scores. With these foundations in place, the course then turns to sensitivity analysis --- namely, how to make principled assessments of how inferences would change should crucial assumptions be false. Over the course's three weeks, the course becomes progressively less conceptual and more applied with increasing emphasis on computing strategies in R.
+The course begins by applying the Fisher and Neyman-Rubin approaches to statistical inference for counterfactual causal effects to randomized experiments, touching on considerations specific to clustered treatment assignment, ``small'' sample sizes and treatment effect heterogeneity. The next segment addresses conceptual and methodological challenges of applying the same models to analysis of non-experimental data. This course segment covers ignorability, selection, ``common support,'' covariate balance, paired comparisons, optimal matching and propensity scores. With these foundations in place, the course then turns to sensitivity analysis --- namely, how to make principled assessments of how inferences would change should crucial assumptions be false. Over the course's three weeks, the course becomes progressively less conceptual and more applied with increasing emphasis on computing strategies in R.
 
 \section*{Administrative}
 
