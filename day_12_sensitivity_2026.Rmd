@@ -1,0 +1,450 @@
+---
+title: |
+ | Sensitivity Analysis
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: |
+  | ICPSR 2026 Session 1
+  | Jake Bowers \& Ben Hansen \& Tom Leavitt
+bibliography:
+ - 'BIB/MasterBibliography.bib'
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: styles/icpsr-beamer-template
+    incremental: true
+    includes:
+        in_header:
+           - defs-all.sty
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
+---
+
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
+```
+
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(optmatch)
+library(estimatr)
+library(senstrat)
+library(sensitivitymv)
+library(sensitivityfull)
+library(sensemakr)
+library(blkvar)
+library(propertee)
+options(show.signif.stars = FALSE)
+```
+
+```{r setup3_data_and_match, echo=FALSE, include=FALSE, cache=TRUE}
+## Tom's running example (June 24--26): UN peacekeeping and post-conflict peace.
+## We RECALL the design Tom built; we do not re-derive matching here.
+peace <- readRDS(url(
+  "https://raw.githubusercontent.com/tl2624/matching-guide/main/data/peace_pre_match.rds"))
+covs <- c("lwdeaths", "lwdurat", "ethfrac", "pop", "lmtnest",
+          "milper", "bwgdp", "bwplty2", "region")
+
+## Estimated propensity score (logit index), as in Tom's deck
+psm <- glm(reformulate(setdiff(covs, "region"), "UN"),
+           family = binomial("logit"), data = peace)
+peace$logit_ps <- psm$linear.predictors
+pop_sd_logit <- sqrt(mean((peace$logit_ps - mean(peace$logit_ps))^2))
+
+## Tom's full match: rank-Mahalanobis + a 0.5-SD PS caliper + exact on region
+## + calipers on ethfrac (35) and bwgdp (2); at most 4 controls per treated.
+fm <- fullmatch(
+  match_on(UN ~ logit_ps, caliper = 0.5 * pop_sd_logit, data = peace,
+           standardization.scale = NULL, method = "euclidean") +
+  match_on(reformulate(setdiff(covs, "region"), "UN"), data = peace,
+           standardization.scale = NULL, method = "rank_mahalanobis") +
+  match_on(UN ~ ethfrac, caliper = 35, data = peace,
+           standardization.scale = NULL, method = "euclidean") +
+  match_on(UN ~ bwgdp, caliper = 2, data = peace,
+           standardization.scale = NULL, method = "euclidean") +
+  exactMatch(UN ~ region, data = peace),
+  data = peace, max.controls = 4)
+peace$fm <- fm
+md <- droplevels(peace[matched(fm), ])
+
+## propertee design spec + ATE weights (used below)
+spec <- obs_spec(UN ~ uoa(id) + block(fm), data = md)
+md$atew <- ate(spec, data = md)
+```
+
+## Today
+
+ 1. Reground ourselves in Tom's question and design (UN peacekeeping).
+ 2. **Sensitivity analysis**: reasoning about how departures from the "as-if
+    randomized" assumption might change our substantive conclusions. (This is
+    not "stability" or "fragility" analysis of model specification.)
+ 3. Two currencies for the same question --- Rosenbaum's $\Gamma$ for the idea,
+    Cinelli and Hazlett's `sensemakr` for the tool you will reach for.
+
+# The substantive question
+
+## Does UN peacekeeping prolong peace? \citep{gilligansergenti2008}
+
+ - **Unit**: a *post-conflict peace episode* (the period of peace after a civil
+   war). E.g.\ Sierra Leone, Jan 2001--Dec 2003. There are $87$ episodes,
+   1989--2003.
+ - **Treatment** (`UN`): $1$ if a UN mission was *present* during the episode,
+   else $0$. Here $19$ treated, $68$ control.
+ - **Outcome** (`ldur`): log days of peace until conflict resumes (or
+   censoring).
+ - **The question**: does the presence of a UN mission *prolong* post-conflict
+   peace?
+
+\medskip
+
+UN missions are **not randomly assigned**. Where peace is fragile for reasons
+we do not see, the UN may be *more* likely to deploy --- exactly the kind of
+hidden selection sensitivity analysis is built to reason about.
+
+## The nine covariates Tom matched on
+
+Pre-treatment characteristics thought to drive UN intervention (and to predict
+the duration of peace):
+
+ - logged war deaths (`lwdeaths`), logged previous-war duration (`lwdurat`)
+ - ethnic fractionalization (`ethfrac`), logged population (`pop`)
+ - logged mountainous terrain (`lmtnest`), military personnel (`milper`)
+ - logged pre-war GDP per capita (`bwgdp`), Polity score (`bwplty2`)
+ - `region` (E.\ Europe, Lat.\ America, Asia, Sub-Saharan Africa, N.\
+   Africa / Middle East)
+
+\medskip
+
+The design goal (Tom, June 24--26): build matched sets of episodes that are
+similar on these covariates, so that *within a set* a UN mission looks **as-if**
+randomly assigned.
+
+# But first, review
+
+## The "as-if randomized" approach
+
+Given a matched design that (a) we can defend on substantive grounds and (b)
+compares favorably with a block-randomized experiment on the *observed*
+covariates, why not analyze it **as if** treatment had been randomized within
+sets? "If this had been an experiment, the estimate would be $\hat{\tau}$,
+$p = .03$."
+
+Advantages (Tom's whole second week):
+
+ - No probability model of outcomes to justify (no $Y \sim
+   \text{Poisson}(\lambda)$).
+ - No functional form for covariates and treatment to justify.
+ - No population and sampling needed --- inference is about the pool of episodes
+   we have.
+ - The CLT enters only for convenience (a Normal reference for the weak null).
+
+## The disadvantage that sensitivity analysis confronts
+
+**This is not a randomized experiment.** A high $p$-value from an omnibus
+balance test tells us our comparison carries about as little bias *from the
+covariates we balanced* as a block-randomized experiment would. It says
+**nothing** about *unobserved* covariates that a real randomization would also
+have balanced.
+
+\medskip
+
+All non-randomized studies carry some bias from unobserved confounders. The
+useful question is **how big** that bias would have to be before our conclusion
+changes.
+
+## Recall the design Tom built
+
+```{r recall_design, echo=TRUE}
+summary(fm)                       # structure of the matched sets
+effectiveSampleSize(fm)           # equivalent number of matched pairs
+```
+
+\footnotesize
+$13$ treated and $23$ control episodes matched into $12$ sets (a mix of $1$:$1$,
+$1$:$K$, and one $2$:$1$); effective sample size $\approx 15.3$. This is the
+design we now treat as-if randomized.
+\normalsize
+
+## From the design to an estimate, an SE, and a CLT
+
+Sensitivity analysis needs a result to be sensitive *about*. Tom's weak-null
+machinery gives the average effect of UN presence on log-duration --- and it
+does not matter which design-based estimator we use to get it:
+
+```{r est_se_three_ways, echo=TRUE, cache=TRUE}
+## (1) ATE-weighted lm_robust (HC2 standard error)
+lm_ate <- lm_robust(ldur ~ UN, weights = atew, data = md)
+
+## (2) propertee::lmitt -- design-based, ATE weights
+lmitt1 <- lmitt(ldur ~ 1, specification = spec, data = md, weights = "ate")
+
+## (3) blkvar / Fogarty between-set variance -- Tom's June-26 tool
+blk <- block_estimator(Yobs = ldur, Z = UN, B = fm, data = md, method = "hybrid_p")
+
+round(c(lm_robust  = coef(lm_ate)[["UN"]],
+        propertee  = coef(lmitt1)[["UN."]],
+        blkvar     = blk$ATE_hat), 3)
+round(c(se_lm_robust = lm_ate$std.error[["UN"]],
+        se_blkvar    = blk$se_est), 3)
+```
+
+\footnotesize
+The ATE is about $\hat{\tau} \approx 0.61$ (log-days), SE $\approx 0.34$--$0.39$.
+(Plain `lm_robust` with set fixed effects and *no* weights returns $0.673$
+instead --- the harmonic-mean--weighted estimand from Tom's "two weightings"
+slide; here we want the ATE, so we use ATE weights.)
+\normalsize
+
+## A borderline result --- before we even add hidden bias
+
+```{r design_pvalue, echo=TRUE}
+z_obs <- blk$ATE_hat / blk$se_est           # design-based, Fogarty SE
+c(z = round(z_obs, 2),
+  p_one_sided = round(pnorm(z_obs, lower.tail = FALSE), 3))
+```
+
+ - One-sided $p \approx 0.03$--$0.06$ depending on the variance estimator
+   (Fogarty $\approx 0.034$; HC2 $\approx 0.056$).
+ - The directional question --- does UN presence *prolong* peace? --- makes the
+   one-sided test the relevant one.
+ - This is a **real but not overwhelming** rejection. A natural worry: would it
+   survive any hidden bias at all?
+
+# Two ways to reason about the unobserved
+
+## One question, two currencies
+
+*How much hidden bias would it take to overturn our conclusion?* Two traditions
+answer in two units.
+
+ - **Rosenbaum ($\Gamma$).** Within a matched set, how many times more likely
+   (an odds ratio $\Gamma$) would one episode have to be to receive a UN
+   mission --- because of an unobserved $u$ --- before our **randomization
+   test** stops rejecting? Currency: a treatment-odds ratio.
+ - **Cinelli and Hazlett (partial $R^2$).** How strongly would an unobserved
+   confounder have to relate to *both* treatment and outcome before our
+   **regression estimate** loses significance (or reaches zero)? Currency:
+   shared variance.
+
+\medskip
+
+Same logic, different dial. We learn the idea with $\Gamma$ and report it with
+`sensemakr`, because you will estimate an effect and hand it over.
+
+\footnotesize
+(Word-collision warning: each tradition calls its threshold a "robustness
+value." They are not the same number.)
+\normalsize
+
+# Reasoning with $\Gamma$ (the general idea)
+
+## Sensitivity analysis as a formalized thought experiment {.fragile}
+
+> "In an observational study, a sensitivity analysis replaces qualitative claims
+> about whether unmeasured biases are present with an objective quantitative
+> statement about the magnitude of bias that would need to be present to change
+> the conclusions." (Rosenbaum, `sensitivitymv` manual)
+
+\medskip
+
+\begin{center}
+\begin{tikzcd}[column sep=large,every arrow/.append style=-latex]
+u \arrow[from=1-1,to=2-2, bend right, "\Gamma" near start] \arrow[from=1-1,to=2-3, bend left, "\rho" near start] \\
+& Z \arrow[from=2-2,to=2-3, "\tau"] & y \\
+x_1 \arrow[from=3-1,to=2-2] \arrow[from=3-1,to=2-3,grey] &
+x_2 \arrow[from=3-2,to=2-2] \arrow[from=3-2,to=2-3,grey]
+\end{tikzcd}
+\end{center}
+
+We match on $x$. The question is what an unobserved $u$ --- related to treatment
+($\Gamma$) and outcome ($\rho$) --- could do to the comparison.
+
+## Why $\Gamma$? A model for the unobserved {.fragile}
+
+For two episodes $i$ and $j$ with the same matched-set covariates ($\bx_i =
+\bx_j$), @rosenbaum2002observational bounds their ratio of treatment odds by a
+single number $\Gamma$:
+
+\begin{equation*}
+\frac{1}{\Gamma} \;\leq\; \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \;\leq\; \Gamma .
+\end{equation*}
+
+ - $\Gamma = 1$: within a set, both episodes are equally likely to get a UN
+   mission --- exactly the as-if randomized benchmark.
+ - $\Gamma = 2$: an unobserved $u$ could make one episode **twice** as likely as
+   its match to receive a mission.
+
+We compute the **worst-case** $p$-value the test could take for each $\Gamma$,
+and ask how large $\Gamma$ must be before we no longer reject.
+
+## The search for $\Gamma$ on Tom's design
+
+```{r gamma_search, echo=TRUE, cache=TRUE}
+## senstrat handles full matches directly. Effect is POSITIVE
+## (UN prolongs peace), so we test the upper tail: alternative = "greater".
+pval <- function(g) as.numeric(
+  senstrat(md$ldur, z = md$UN, st = md$fm, gamma = g,
+           alternative = "greater")$Result["P-value"])
+
+gammas <- seq(1, 2, by = 0.02)
+pvals  <- sapply(gammas, pval)
+gstar  <- uniroot(function(g) pval(g) - 0.05, c(1, 2))$root
+round(c(p_at_Gamma1 = pval(1), p_at_Gamma1.5 = pval(1.5), Gamma_star = gstar), 3)
+```
+
+\footnotesize
+At $\Gamma = 1$ (as-if randomized) the one-sided $p \approx 0.034$, matching
+Tom's June-26 result. The smallest $\Gamma$ that pushes the worst-case $p$ above
+$0.05$ is $\Gamma^{*} \approx `r round(gstar,2)`$.
+\normalsize
+
+## The result is fragile to hidden bias
+
+```{r gamma_plot, echo=FALSE, out.width=".7\\textwidth"}
+par(mar = c(3.2, 3.2, 1, 1), mgp = c(2, .6, 0))
+plot(gammas, pvals, type = "l", lwd = 2,
+     xlab = expression(Gamma~"(max treatment-odds ratio from unobserved u)"),
+     ylab = "Worst-case one-sided p-value", ylim = c(0, 0.2))
+abline(h = 0.05, lty = 2)
+abline(v = gstar, lty = 3, col = "red")
+text(gstar, 0.18, labels = bquote(Gamma^"*" == .(round(gstar, 2))), pos = 4, col = "red")
+```
+
+\footnotesize
+An unobserved confounder making one episode only $\approx `r round(gstar,2)`$
+times more likely than its match to receive a UN mission would already be enough
+to overturn the one-sided rejection. **Not much hidden bias is required.**
+\normalsize
+
+## Interpreting $\Gamma^{*}$: the amplification {.fragile}
+
+@rosenbaum2009amplification split $\Gamma$ into the confounder's effect on
+*treatment* ($\Lambda$) and on the *outcome* ($\Delta$): many $(\Lambda,
+\Delta)$ pairs imply the same $\Gamma$.
+
+```{r amplify, echo=TRUE}
+g_round <- round(gstar, 1)                       # a round Gamma to decompose
+amp <- amplify(g_round, lambda = seq(g_round + 0.1, 4, length = 50))
+head(round(amp, 2), 3)                           # (Lambda -> Delta) pairs
+```
+
+\footnotesize
+Read a column as: "a confounder that raised the odds of UN deployment by
+$\Lambda$ *and* the odds of longer peace by $\Delta$ would matter as much as
+$\Gamma = `r g_round`$." It forces the naming question: *what* unobserved feature
+of a conflict could do that?
+\normalsize
+
+# From $\Gamma$ to the regression dial: `sensemakr`
+
+## All `sensemakr` needs: an estimate, an SE, and a CLT
+
+`sensemakr` does not need the matched-set machinery --- only a point estimate,
+its standard error, and the Normal (CLT) reference we already use for the weak
+null. So we feed it the design-based ATE from any of the estimators above:
+
+```{r sensemakr_estimate, echo=TRUE, cache=TRUE}
+sens <- sensemakr(estimate  = coef(lm_ate)[["UN"]],
+                  se        = lm_ate$std.error[["UN"]],
+                  treatment = "UN",
+                  dof       = lm_ate$df.residual)
+sens$sensitivity_stats[, c("estimate", "se", "rv_q")]
+```
+
+\footnotesize
+**Robustness value** (`rv_q` $\approx `r round(sens$sensitivity_stats$rv_q,2)`$):
+a confounder explaining about `r round(100*sens$sensitivity_stats$rv_q)`\% of the
+residual variation in *both* treatment and outcome would drive the point
+estimate to zero. Small RV = fragile.
+\normalsize
+
+## Benchmarking against the covariates we *did* observe
+
+The persuasive move: calibrate the hypothetical confounder against the observed
+covariates. Fit the covariate-adjusted model and ask `sensemakr` to benchmark.
+
+```{r sensemakr_model, echo=TRUE, cache=TRUE}
+ncovs <- setdiff(covs, "region")
+mod   <- lm(reformulate(c("UN", ncovs), "ldur"), data = md, weights = atew)
+sens2 <- sensemakr(model = mod, treatment = "UN",
+                   benchmark_covariates = c("bwgdp", "milper"), kd = 1:2)
+sens2$bounds[, c("bound_label", "r2dz.x", "adjusted_estimate", "adjusted_t")]
+```
+
+\footnotesize
+A confounder even **twice as strong as GDP** (`2x bwgdp`) leaves the estimate
+positive ($\approx 0.63$) and $t \approx 1.6$. The observed covariates are *weak*
+confounders: nothing we measured is nearly strong enough to overturn the result
+on its own.
+\normalsize
+
+## The contour plot says it on one picture
+
+```{r sensemakr_plot, echo=FALSE, out.width=".7\\textwidth"}
+plot(sens2)
+```
+
+\footnotesize
+Axes: a confounder's partial $R^2$ with treatment (x) and outcome (y). Contours:
+the adjusted estimate. The labelled points are "as strong as GDP / military
+personnel" (and twice as strong). The unadjusted estimate sits at the origin.
+\normalsize
+
+# Putting it together
+
+## Be honest about what each dial assumes
+
+ - The **estimate** is design-based: matched sets, as-if randomization, a CLT
+   for the SE. No outcome model --- this is Tom's framework, unchanged.
+ - The **$\Gamma$ analysis** stays inside that design world: it perturbs the
+   *assignment* probabilities and recomputes a randomization test.
+ - The **`sensemakr` analysis** borrows a *regression* lens: Cinelli and
+   Hazlett's partial-$R^2$ argument is an omitted-variable-bias result for
+   linear models. Passing a matched ATE to `sensemakr` is a pragmatic
+   approximation, not a design-based guarantee.
+
+\medskip
+
+So report it as: "*If* we treat the ATE regression as our working model, a
+confounder with partial $R^2 \approx$ RV on treatment and outcome would overturn
+us" --- and show the $\Gamma$ alongside, so the same conclusion appears in both
+currencies.
+
+## What the two dials agree on here
+
+ - The UN-peacekeeping result is **real but fragile**: one-sided $p \approx
+   0.034$ under as-if randomization, but $\Gamma^{*} \approx `r round(gstar,2)`$
+   and RV $\approx `r round(sens$sensitivity_stats$rv_q,2)`$.
+ - A *modest* unobserved confounder of UN deployment would overturn it. The
+   defense has to be **substantive**: is there a feature of conflicts ---
+   unmeasured here --- that strongly predicts both UN deployment and the
+   duration of peace?
+ - Sensitivity analysis does not say such a confounder exists. It tells us how
+   hard we must argue that one does not.
+
+## Summary
+
+ - Formal sensitivity analysis lets us use the as-if randomized approach
+   **provisionally** rather than fearfully: we ask directly how our conclusion
+   would change under hidden bias.
+ - **$\Gamma$** (Rosenbaum) builds the intuition: bias as a departure from
+   as-if randomization, measured as a treatment-odds ratio.
+ - **`sensemakr`** (Cinelli and Hazlett) is the tool you will reach for after
+   estimating an ATE with `lm_robust` / `propertee` / `blkvar`: hand it an
+   estimate, an SE, and a CLT, read off the robustness value, and benchmark
+   against your observed covariates.
+ - See @rabb2022pnas for an application in this style, and @hazlett2020 ("Angry
+   or Weary?") for the regression-based approach in a violence-and-attitudes
+   study.
+
+## References {.allowframebreaks}
