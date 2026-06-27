@@ -1,0 +1,8 @@
+# Paths excluded from renv's dependency discovery (same syntax as .gitignore).
+# These are archived / legacy instructor materials. They still contain
+# library() calls (e.g. library(rdd)) for packages we do not want re-added to
+# renv.lock when running renv::snapshot(). Excluding them keeps the lockfile
+# scoped to the current course code.
+OLD/
+Tom_Slides/
+Tom_2023_Slides/

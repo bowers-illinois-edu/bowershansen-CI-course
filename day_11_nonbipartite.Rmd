@@ -131,7 +131,8 @@ How to strengthen evidence about the claim that Metrocable caused a decrease in 
 
 
 ```{r echo=FALSE, cache=TRUE}
-load(url("http://jakebowers.org/Data/meddat.rda"))
+## Data previously fetched from http://jakebowers.org/Data/meddat.rda (now returns 404); load local copy.
+load(here::here("data", "meddat.rda"))
 meddat<- mutate(meddat,
 		HomRate03=(HomCount2003/Pop2003)*1000,
 		HomRate08=(HomCount2008/Pop2008)*1000)
@@ -337,6 +338,8 @@ covs <- c("nhClass", "nhSisben","nhPopD",  "nhQP03",  "nhPV03",  "nhTP03",
     "nhAgeMid","nhMarDom","nhSepDiv","nhAboveHS" , "nhHS", "HomRate03")
 
 covmat <- dplyr::select(meddat,one_of(covs))
+## nhClass is stored as an ordered factor; treat it as numeric for the Mahalanobis distance.
+covmat$nhClass <- as.numeric(covmat$nhClass)
 
 ## Mahalanobis distances for each neighborhood
 meddat$covmh <- mahalanobis(
@@ -365,18 +368,11 @@ matchdist_mat <- round(100*mhdist_mat / mean(mhdist_mat), 1)
 nearlist <- list(covs=as.matrix(meddat[,c("HomRate03","nhAboveHS")]),
 		 pairs=c(HomRate03=5,nhAboveHS=.5))
 
-## For larger problems you will want to install gurobi using an academic
-## license. After installing the license, then I do something like the following
-## where the details of the version numbers will differ
-## install.packages("/Library/gurobi952/macos_universal2/R/gurobi_9.5-2_R_4.2.0.tgz",repos=NULL)
-## also had to use a different version of designmatch for now:
-
-## Only run this next one one time
-### renv::install("bowers-illinois-edu/designmatch")
 library(designmatch)
-#library(slam)
 library(highs)
-#library(gurobi)
+## We use the open-source HiGHS solver, which needs no license. designmatch (>= 0.5.5,
+## on CRAN) supports it natively via the solver name "highs". For very large problems a
+## commercial solver such as Gurobi can be faster, but it requires a license.
 solverlist <- list(name = "highs", approximate = 0, t_max = 1000, trace = 1)
 ```
 

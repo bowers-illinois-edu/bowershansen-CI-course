@@ -3,6 +3,7 @@
  rm(list = setdiff(ls(), c("handout_", "solutions_")))
 
 require(knitr)
+require(styler) # used by knitr's `tidy = "styler"` chunk option set in opts_chunk below
 ## Setup for most r markdown files
 
 ## This plus size="\\scriptsize" from https://stackoverflow.com/questions/26372138/beamer-presentation-rstudio-change-font-size-for-chunk
