@@ -84,12 +84,12 @@ md$atew <- ate(spec, data = md)
 
 ## Today
 
- 1. Reground ourselves in Tom's question and design (UN peacekeeping).
+ 1. Return to Tom's question and design (UN peacekeeping).
  2. **Sensitivity analysis**: reasoning about how departures from the "as-if
     randomized" assumption might change our substantive conclusions. (This is
     not "stability" or "fragility" analysis of model specification.)
  3. Two currencies for the same question --- Rosenbaum's $\Gamma$ for the idea,
-    Cinelli and Hazlett's `sensemakr` for the tool you will reach for.
+    Cinelli and Hazlett's `sensemakr` for the tool you will use in practice.
 
 # The substantive question
 
@@ -159,7 +159,7 @@ have balanced.
 \medskip
 
 All non-randomized studies carry some bias from unobserved confounders. The
-useful question is **how big** that bias would have to be before our conclusion
+question is **how big** that bias would have to be before our conclusion
 changes.
 
 ## Recall the design Tom built
@@ -178,7 +178,7 @@ design we now treat as-if randomized.
 ## From the design to an estimate, an SE, and a CLT
 
 Sensitivity analysis needs a result to be sensitive *about*. Tom's weak-null
-machinery gives the average effect of UN presence on log-duration --- and it
+analysis gives the average effect of UN presence on log-duration --- and it
 does not matter which design-based estimator we use to get it:
 
 ```{r est_se_three_ways, echo=TRUE, cache=TRUE}
@@ -217,8 +217,8 @@ c(z = round(z_obs, 2),
    (Fogarty $\approx 0.034$; HC2 $\approx 0.056$).
  - The directional question --- does UN presence *prolong* peace? --- makes the
    one-sided test the relevant one.
- - This is a **real but not overwhelming** rejection. A natural worry: would it
-   survive any hidden bias at all?
+ - This is a **real but not overwhelming** rejection. Would even a little hidden
+   bias overturn it?
 
 # Two ways to reason about the unobserved
 
@@ -238,8 +238,8 @@ answer in two units.
 
 \medskip
 
-Same logic, different dial. We learn the idea with $\Gamma$ and report it with
-`sensemakr`, because you will estimate an effect and hand it over.
+Same logic, different units. We learn the idea with $\Gamma$ and report it with
+`sensemakr`, because you will estimate an effect and pass it to `sensemakr`.
 
 \footnotesize
 (Word-collision warning: each tradition calls its threshold a "robustness
@@ -345,13 +345,14 @@ $\Gamma = `r g_round`$." It forces the naming question: *what* unobserved featur
 of a conflict could do that?
 \normalsize
 
-# From $\Gamma$ to the regression dial: `sensemakr`
+# From $\Gamma$ to `sensemakr`
 
 ## All `sensemakr` needs: an estimate, an SE, and a CLT
 
-`sensemakr` does not need the matched-set machinery --- only a point estimate,
-its standard error, and the Normal (CLT) reference we already use for the weak
-null. So we feed it the design-based ATE from any of the estimators above:
+`sensemakr` does not need the matched sets or the randomization distribution ---
+only a point estimate, its standard error, and the Normal (CLT) reference we
+already use for the weak null. So we feed it the design-based ATE from any of
+the estimators above:
 
 ```{r sensemakr_estimate, echo=TRUE, cache=TRUE}
 sens <- sensemakr(estimate  = coef(lm_ate)[["UN"]],
@@ -370,8 +371,8 @@ estimate to zero. Small RV = fragile.
 
 ## Benchmarking against the covariates we *did* observe
 
-The persuasive move: calibrate the hypothetical confounder against the observed
-covariates. Fit the covariate-adjusted model and ask `sensemakr` to benchmark.
+Calibrate the hypothetical confounder against the covariates we did measure. Fit
+the covariate-adjusted model and ask `sensemakr` to benchmark.
 
 ```{r sensemakr_model, echo=TRUE, cache=TRUE}
 ncovs <- setdiff(covs, "region")
@@ -388,7 +389,7 @@ confounders: nothing we measured is nearly strong enough to overturn the result
 on its own.
 \normalsize
 
-## The contour plot says it on one picture
+## The contour plot, in one picture
 
 ```{r sensemakr_plot, echo=FALSE, out.width=".7\\textwidth"}
 plot(sens2)
@@ -397,21 +398,21 @@ plot(sens2)
 \footnotesize
 Axes: a confounder's partial $R^2$ with treatment (x) and outcome (y). Contours:
 the adjusted estimate. The labelled points are "as strong as GDP / military
-personnel" (and twice as strong). The unadjusted estimate sits at the origin.
+personnel" (and twice as strong). The unadjusted estimate is at the origin.
 \normalsize
 
 # Putting it together
 
-## Be honest about what each dial assumes
+## Be honest about what each analysis assumes
 
  - The **estimate** is design-based: matched sets, as-if randomization, a CLT
    for the SE. No outcome model --- this is Tom's framework, unchanged.
- - The **$\Gamma$ analysis** stays inside that design world: it perturbs the
-   *assignment* probabilities and recomputes a randomization test.
- - The **`sensemakr` analysis** borrows a *regression* lens: Cinelli and
-   Hazlett's partial-$R^2$ argument is an omitted-variable-bias result for
-   linear models. Passing a matched ATE to `sensemakr` is a pragmatic
-   approximation, not a design-based guarantee.
+ - The **$\Gamma$ analysis** stays design-based: it perturbs the *assignment*
+   probabilities and recomputes a randomization test.
+ - The **`sensemakr` analysis** is a *regression* argument: Cinelli and
+   Hazlett's partial-$R^2$ result is an omitted-variable-bias bound for linear
+   models. Passing a matched ATE to `sensemakr` is a pragmatic approximation,
+   not a design-based guarantee.
 
 \medskip
 
@@ -420,7 +421,7 @@ confounder with partial $R^2 \approx$ RV on treatment and outcome would overturn
 us" --- and show the $\Gamma$ alongside, so the same conclusion appears in both
 currencies.
 
-## What the two dials agree on here
+## Where the two analyses agree
 
  - The UN-peacekeeping result is **real but fragile**: one-sided $p \approx
    0.034$ under as-if randomization, but $\Gamma^{*} \approx `r round(gstar,2)`$
@@ -439,8 +440,8 @@ currencies.
    would change under hidden bias.
  - **$\Gamma$** (Rosenbaum) builds the intuition: bias as a departure from
    as-if randomization, measured as a treatment-odds ratio.
- - **`sensemakr`** (Cinelli and Hazlett) is the tool you will reach for after
-   estimating an ATE with `lm_robust` / `propertee` / `blkvar`: hand it an
+ - **`sensemakr`** (Cinelli and Hazlett) is the tool you will use after
+   estimating an ATE with `lm_robust` / `propertee` / `blkvar`: give it an
    estimate, an SE, and a CLT, read off the robustness value, and benchmark
    against your observed covariates.
  - See @rabb2022pnas for an application in this style, and @hazlett2020 ("Angry
