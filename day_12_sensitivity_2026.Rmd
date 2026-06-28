@@ -82,15 +82,36 @@ spec <- obs_spec(UN ~ uoa(id) + block(fm), data = md)
 md$atew <- ate(spec, data = md)
 ```
 
+```{r setup4_reshape, echo=FALSE, include=FALSE}
+## Reshape a full match into the matrix sensitivityfull::senfm / senfmCI expect:
+## treated unit first for 1:K sets, control first for K:1 sets; the last column
+## flags 1:K (1) vs K:1 (0). (Helper from the 2025 deck.)
+reshape_sensitivity <- function(y, z, fm, senfm = FALSE) {
+  numcols <- max(table(fm))
+  resplist <- lapply(split(data.frame(y, z), fm), function(dat) {
+    numtrt <- sum(dat$z); numctrl <- sum(1 - dat$z)
+    stopifnot(numtrt == 1 | numctrl == 1)
+    if (numtrt == 1)
+      res <- with(dat, c(y[z == 1], y[z != 1], rep(NA, max(numcols - length(y))), 1))
+    if (numctrl == 1 & numtrt > 1)
+      res <- with(dat, c(y[z == 0], y[z != 0], rep(NA, max(numcols - length(y))), 0))
+    res
+  })
+  respmat <- t(simplify2array(resplist))
+  if (senfm) respmat else respmat[, -ncol(respmat)]
+}
+```
+
 ## Today
 
- 1. Return to Tom's question and design (UN peacekeeping).
- 2. **Sensitivity analysis**: reasoning about how departures from the "as-if
+ 1. Introduction to Jake. Maybe other introductions.
+ 2. Return to UN peacekeeping and review.
+ 3. **Sensitivity analysis**: reasoning about how departures from the "as-if
     randomized" assumption might change our substantive conclusions. (This is
     not "stability" or "fragility" analysis of model specification.)
- 3. Two currencies for the same question --- Rosenbaum's $\Gamma$ for the idea,
-    Cinelli and Hazlett's `sensemakr` for the tool you will use in practice.
-
+ 4. Two approaches to the same question --- Rosenbaum's $\Gamma$ and
+    Cinelli and Hazlett's `sensemakr`.
+    
 # The substantive question
 
 ## Does UN peacekeeping prolong peace? \citep{gilligansergenti2008}
@@ -108,8 +129,7 @@ md$atew <- ate(spec, data = md)
 \medskip
 
 UN missions are **not randomly assigned**. Where peace is fragile for reasons
-we do not see, the UN may be *more* likely to deploy --- exactly the kind of
-hidden selection sensitivity analysis is built to reason about.
+we see or do not see, the UN may be *more* likely to deploy.
 
 ## The nine covariates Tom matched on
 
@@ -125,9 +145,9 @@ the duration of peace):
 
 \medskip
 
-The design goal (Tom, June 24--26): build matched sets of episodes that are
+The design goal: build matched sets of episodes that are
 similar on these covariates, so that *within a set* a UN mission looks **as-if**
-randomly assigned.
+randomly assigned with repect to those observed covariates.
 
 # But first, review
 
@@ -139,11 +159,11 @@ covariates, why not analyze it **as if** treatment had been randomized within
 sets? "If this had been an experiment, the estimate would be $\hat{\tau}$,
 $p = .03$."
 
-Advantages (Tom's whole second week):
+Advantages:
 
- - No probability model of outcomes to justify (no $Y \sim
+ - No probability model of outcomes to justify (ex. no $Y \sim
    \text{Poisson}(\lambda)$).
- - No functional form for covariates and treatment to justify.
+ - No functional form relating covariates and treatment and outcomes to justify.
  - No population and sampling needed --- inference is about the pool of episodes
    we have.
  - The CLT enters only for convenience (a Normal reference for the weak null).
@@ -222,23 +242,23 @@ c(z = round(z_obs, 2),
 
 # Two ways to reason about the unobserved
 
-## One question, two currencies
+## One question, two approaches
 
 *How much hidden bias would it take to overturn our conclusion?* Two traditions
-answer in two units.
+answer it, each measuring hidden bias differently.
 
  - **Rosenbaum ($\Gamma$).** Within a matched set, how many times more likely
    (an odds ratio $\Gamma$) would one episode have to be to receive a UN
    mission --- because of an unobserved $u$ --- before our **randomization
-   test** stops rejecting? Currency: a treatment-odds ratio.
+   test** stops rejecting? Measured as: a treatment-odds ratio.
  - **Cinelli and Hazlett (partial $R^2$).** How strongly would an unobserved
    confounder have to relate to *both* treatment and outcome before our
-   **regression estimate** loses significance (or reaches zero)? Currency:
+   **regression estimate** loses significance (or reaches zero)? Measured as:
    shared variance.
 
 \medskip
 
-Same logic, different units. We learn the idea with $\Gamma$ and report it with
+Same logic, measured two ways. We learn the idea with $\Gamma$ and report it with
 `sensemakr`, because you will estimate an effect and pass it to `sensemakr`.
 
 \footnotesize
@@ -280,7 +300,7 @@ single number $\Gamma$:
 \end{equation*}
 
  - $\Gamma = 1$: within a set, both episodes are equally likely to get a UN
-   mission --- exactly the as-if randomized benchmark.
+   mission --- exactly the as-if randomized case.
  - $\Gamma = 2$: an unobserved $u$ could make one episode **twice** as likely as
    its match to receive a mission.
 
@@ -326,6 +346,96 @@ times more likely than its match to receive a UN mission would already be enough
 to overturn the one-sided rejection. **Not much hidden bias is required.**
 \normalsize
 
+## The choice of test statistic matters
+
+The worst-case $p$ depends on how we score the outcomes. On the same design,
+`senstrat` lets us swap the test statistic:
+
+```{r stat_helpers, echo=FALSE}
+## pval_ss(sc, g): worst-case one-sided p at bias Gamma = g, scoring with sc
+## gstar_ss(sc):   the Gamma where that worst-case p crosses 0.05
+pval_ss  <- function(sc, g) as.numeric(
+  senstrat(sc, z = md$UN, st = md$fm, gamma = g, alternative = "greater")$Result["P-value"])
+gstar_ss <- function(sc) tryCatch(
+  uniroot(function(g) pval_ss(sc, g) - 0.05, c(1, 10))$root, error = function(e) NA)
+```
+
+```{r stat_menu, echo=TRUE, cache=TRUE}
+## pval_ss() wraps senstrat (as on the previous slide); gstar_ss() finds the
+## Gamma where the worst-case p crosses 0.05 (both defined just above)
+stats <- list(mean           = md$ldur,
+              m_statistic    = mscores(md$ldur, md$UN, md$fm),
+              hodges_lehmann = hodgeslehmann(md$ldur, md$UN, md$fm))
+round(sapply(stats, function(sc) c(p_at_Gamma1 = pval_ss(sc, 1),
+                                   Gamma_star  = gstar_ss(sc))), 3)
+```
+
+\footnotesize
+The mean and Huber m-statistic reject ($p \approx 0.03$) and keep rejecting up to
+$\Gamma^{*} \approx 1.15$; the rank-based Hodges--Lehmann statistic is weaker here
+and does not reject even at $\Gamma = 1$. A weak test statistic can fail to reject
+before any hidden bias enters.
+\normalsize
+
+## Two statistics, two sensitivity curves
+
+```{r two_curve, echo=FALSE, out.width=".68\\textwidth", cache=TRUE}
+ms <- mscores(md$ldur, md$UN, md$fm)
+gg <- seq(1, 2, by = 0.02)
+p_mean <- sapply(gg, function(g) pval_ss(md$ldur, g))
+p_m    <- sapply(gg, function(g) pval_ss(ms, g))
+par(mar = c(3.2, 3.2, 1, 1), mgp = c(2, .6, 0))
+plot(gg, p_mean, type = "l", lwd = 2, ylim = c(0, 0.2),
+     xlab = expression(Gamma), ylab = "Worst-case one-sided p-value")
+lines(gg, p_m, lwd = 2, lty = 2)
+abline(h = 0.05, col = "grey50")
+legend("topleft", c("mean", "m-statistic"), lwd = 2, lty = c(1, 2), bty = "n")
+```
+
+\footnotesize
+Both curves cross $0.05$ at about the same place: this design tolerates a
+treatment-odds ratio of only $\Gamma \approx 1.15$ before the conclusion is in
+doubt, whichever statistic we use.
+\normalsize
+
+## Another package, the same answer: `senfm`
+
+`sensitivityfull::senfm` runs directly on a full match (mixed $1$:$K$ and
+$K$:$1$ sets) once we reshape it into a matrix:
+
+```{r senfm_demo, echo=TRUE, cache=TRUE}
+rm_full <- reshape_sensitivity(md$ldur, md$UN, md$fm, senfm = TRUE)
+settype <- rm_full[, ncol(rm_full)] == 1          # TRUE for 1:K sets
+ymat    <- rm_full[, -ncol(rm_full)]
+round(c(senfm_Gamma1    = senfm(ymat, treated1 = settype, gamma = 1)$pval,
+        senfm_Gamma1.14 = senfm(ymat, treated1 = settype, gamma = 1.14)$pval), 3)
+```
+
+\footnotesize
+The same result as `senstrat`: $p \approx 0.04$ at $\Gamma = 1$, crossing $0.05$
+near $\Gamma \approx 1.14$. (`sensitivitymv::senmv` is the cousin for $1$:$K$
+matches only; our design has one $2$:$1$ set, so we use `senfm`.)
+\normalsize
+
+## Point estimates and intervals under a bias of at most $\Gamma$
+
+Allow a bias bound $\Gamma > 1$ and a single point estimate becomes a *range*;
+the confidence interval widens:
+
+```{r senfm_ci, echo=TRUE, cache=TRUE}
+fmt <- function(ci) c(est_lo = ci$PointEstimates[1], est_hi = ci$PointEstimates[2],
+                      ci_lo  = ci$ConfidenceInterval[1], ci_hi = ci$ConfidenceInterval[2])
+round(rbind(Gamma_1   = fmt(senfmCI(ymat, treated1 = settype, gamma = 1)),
+            Gamma_1.5 = fmt(senfmCI(ymat, treated1 = settype, gamma = 1.5))), 2)
+```
+
+\footnotesize
+At $\Gamma = 1$ (as-if randomized) the point estimate is the Hodges--Lehmann
+$0.67$. Allow $\Gamma = 1.5$ and the estimate is only known to lie in an
+interval, and the confidence interval includes $0$ --- the same fragility, read
+off the estimate instead of the $p$-value.
+\normalsize
+
 ## Interpreting $\Gamma^{*}$: the amplification {.fragile}
 
 @rosenbaum2009amplification split $\Gamma$ into the confounder's effect on
@@ -369,36 +479,18 @@ residual variation in *both* treatment and outcome would drive the point
 estimate to zero. Small RV = fragile.
 \normalsize
 
-## Benchmarking against the covariates we *did* observe
+## Reading the contour plot
 
-Calibrate the hypothetical confounder against the covariates we did measure. Fit
-the covariate-adjusted model and ask `sensemakr` to benchmark.
-
-```{r sensemakr_model, echo=TRUE, cache=TRUE}
-ncovs <- setdiff(covs, "region")
-mod   <- lm(reformulate(c("UN", ncovs), "ldur"), data = md, weights = atew)
-sens2 <- sensemakr(model = mod, treatment = "UN",
-                   benchmark_covariates = c("bwgdp", "milper"), kd = 1:2)
-sens2$bounds[, c("bound_label", "r2dz.x", "adjusted_estimate", "adjusted_t")]
+```{r sensemakr_plot, echo=FALSE, out.width=".68\\textwidth"}
+plot(sens)
 ```
 
 \footnotesize
-A confounder even **twice as strong as GDP** (`2x bwgdp`) leaves the estimate
-positive ($\approx 0.63$) and $t \approx 1.6$. The observed covariates are *weak*
-confounders: nothing we measured is nearly strong enough to overturn the result
-on its own.
-\normalsize
-
-## The contour plot, in one picture
-
-```{r sensemakr_plot, echo=FALSE, out.width=".7\\textwidth"}
-plot(sens2)
-```
-
-\footnotesize
-Axes: a confounder's partial $R^2$ with treatment (x) and outcome (y). Contours:
-the adjusted estimate. The labelled points are "as strong as GDP / military
-personnel" (and twice as strong). The unadjusted estimate is at the origin.
+Axes: how much of the residual variation in treatment (x) and outcome (y) a
+hypothetical confounder would explain. The contours show what the point estimate
+would become; the design ATE ($0.615$) is at the origin. The robustness value
+($\approx `r round(sens$sensitivity_stats$rv_q,2)`$) is the point on the diagonal
+where a confounder would drive the estimate to zero.
 \normalsize
 
 # Putting it together
@@ -418,8 +510,8 @@ personnel" (and twice as strong). The unadjusted estimate is at the origin.
 
 So report it as: "*If* we treat the ATE regression as our working model, a
 confounder with partial $R^2 \approx$ RV on treatment and outcome would overturn
-us" --- and show the $\Gamma$ alongside, so the same conclusion appears in both
-currencies.
+us" --- and show the $\Gamma$ alongside, so the same conclusion holds under both
+approaches.
 
 ## Where the two analyses agree
 
@@ -442,10 +534,30 @@ currencies.
    as-if randomization, measured as a treatment-odds ratio.
  - **`sensemakr`** (Cinelli and Hazlett) is the tool you will use after
    estimating an ATE with `lm_robust` / `propertee` / `blkvar`: give it an
-   estimate, an SE, and a CLT, read off the robustness value, and benchmark
-   against your observed covariates.
+   estimate, an SE, and a CLT, and read off the robustness value.
  - See @rabb2022pnas for an application in this style, and @hazlett2020 ("Angry
    or Weary?") for the regression-based approach in a violence-and-attitudes
    study.
+
+## Appendix (if asked): covariate benchmarking
+
+I usually skip this. `sensemakr` can also calibrate a hypothetical confounder
+against the *observed* covariates --- but it needs the covariates *in* the
+outcome model to measure their strength, so the fit reports a covariate-adjusted
+estimate ($0.686$) rather than the design ATE ($0.615$).
+
+```{r sensemakr_bench, echo=TRUE, cache=TRUE}
+ncovs <- setdiff(covs, "region")
+mod   <- lm(reformulate(c("UN", ncovs), "ldur"), data = md, weights = atew)
+sens2 <- sensemakr(model = mod, treatment = "UN",
+                   benchmark_covariates = c("bwgdp", "milper"), kd = 1:2)
+sens2$bounds[, c("bound_label", "r2dz.x", "adjusted_estimate", "adjusted_t")]
+```
+
+\footnotesize
+A confounder twice as strong as GDP leaves the estimate positive ($\approx 0.63$)
+and $t \approx 1.6$: the observed covariates are weak confounders, none nearly
+strong enough to overturn the result on its own.
+\normalsize
 
 ## References {.allowframebreaks}
