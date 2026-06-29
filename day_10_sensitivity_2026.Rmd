@@ -589,7 +589,12 @@ legend("topleft", c("mean", "m-statistic"), lwd = 2, lty = c(1, 2), bty = "n")
 
 @rosenbaum2009amplification split $\Gamma$ into the confounder's effect on
 *treatment* ($\Lambda$) and on the *outcome* ($\Delta$): many $(\Lambda,
-\Delta)$ pairs imply the same $\Gamma$.
+\Delta)$ pairs imply the same $\Gamma$:
+
+\begin{equation*}
+\Gamma = \frac{\Lambda\,\Delta + 1}{\Lambda + \Delta}
+\quad (\Lambda, \Delta > \Gamma).
+\end{equation*}
 
 ```{r amplify, echo=TRUE}
 g_round <- round(gstar, 2)                 # the worst-case Gamma* = 1.14, to decompose
@@ -606,16 +611,14 @@ ratio by which it makes an episode likelier to receive a UN mission. **$\Delta$*
 (bottom row) is its effect on the *outcome* --- the odds ratio by which it makes
 longer peace likelier. A confounder with both at once --- say $\Lambda = 2$ paired
 with $\Delta = `r round(amplify(g_round, 2), 2)`$ --- would bias the test as much as
-$\Gamma^{*} = `r g_round`$ does. Strong on one side needs less on the other; the
-next slide draws the whole trade-off.
+$\Gamma^{*} = `r g_round`$ does. 
 \normalsize
 
 ## The amplification curve: $\Lambda$ on treatment, $\Delta$ on outcome
 
-A single $\Gamma^{*}$ is silent about *how* a confounder would work. The
-amplification splits it into a curve of $(\Lambda, \Delta)$ pairs --- a
-treatment-side strength $\Lambda$ and an outcome-side strength $\Delta$ --- that
-all reproduce the same $\Gamma^{*}$.
+The amplification splits $\Gamma$ into a curve of $(\Lambda, \Delta)$ pairs ---
+a treatment-side strength $\Lambda$ and an outcome-side strength $\Delta$ ---
+that all reproduce the same $\Gamma^{*}$.
 
 ```{r amplify_curve, echo=FALSE, out.width=".56\\textwidth"}
 lam <- seq(g_round + 0.005, 8, length = 400)
@@ -632,18 +635,16 @@ text(c(sym, 3), amplify(g_round, c(sym, 3)),
 ```
 
 \footnotesize
-The same $\Gamma^{*} = `r g_round`$ comes from $`r round(sym, 2)`\times$ on *both*
+The same $\Gamma^{*} = `r g_round`$ can come from $`r round(sym, 2)`\times$ on *both*
 arms, or $3\times$ on treatment with only $`r round(amplify(g_round, 3), 2)`\times$
-on the outcome --- more on one arm means less on the other. Each point on the curve
-produces exactly $\Gamma^{*}$: a weaker confounder (nearer no effect,
-$\Lambda = \Delta = 1$) leaves the result significant, a stronger one overturns it
---- so the curve is the strength a real confounder would need, on *both* arms, to
+on the outcome. The curve is the strengths of impact a confounder would need, on *both* arms, to
 undo the finding.
+
 \normalsize
 
 ## From $\Gamma$ to $R^2$.
 
-`sensemakr` focuses on tests of the weak null. We feed it the design ATE and the Fogarty SE:
+`sensemakr` focuses on tests of the weak null.
 
 ```{r sensemakr_estimate, echo=TRUE, cache=TRUE}
 ## alpha = 0.10 (two-sided) == our one-sided 0.05 directional test
@@ -684,43 +685,50 @@ meets the red line is `rv_qa` $\approx `r round(sens$sensitivity_stats$rv_qa,3)`
 
 ## Be honest about what each analysis assumes
 
- - The **statistical inference** is design-based: matched sets, as-if randomized,
-   maybe a CLT. No outcome model.
- - The **$\Gamma$ analysis** stays design-based: it perturbs the *assignment*
-   probabilities and recomputes a randomization test.
- - The **`sensemakr` analysis** is a *regression* argument: Cinelli and Hazlett's
-   partial-$R^2$ result bounds omitted-variable bias in an *OLS coefficient*. Our
-   matched ATE is not one, so `sensemakr` treats it *as if* it were.
-
-\medskip
-
-So report it as: "*If* we treat the ATE regression as our working model, a
-confounder explaining about `r round(100*sens$sensitivity_stats$rv_qa,1)`\% of the
-residual variation in treatment and outcome would end the rejection" --- and show
-$\Gamma^{*}$ alongside, so the same conclusion holds under both approaches.
+ - The **statistical inference** is design-based: matched sets, as-if
+   randomized, maybe a CLT. No outcome model.
+ - The **$\Gamma$ analysis**  focuses on $u \rightarrow Z$ with worst case $u
+   \rightarrow Y$.
+ - The **$\Delta$ and $\Lambda$ analysis** shows all of the $u \rightarrow Z$
+   and $u \rightarrow Y$ that could produce a given $\Gamma$.
+ - The **`sensemakr` analysis** partial-$R^2$ result bounds omitted-variable
+   bias in an *OLS coefficient* as an estimator of the ATE (after weighting
+   within-matched set analyses by matched-set). Focuses on both $u \rightarrow
+   Z$ and $u \rightarrow Y$ on the $R^2$ scale.
 
 ## Where the two analyses agree
 
  - The UN-peacekeeping result is **real but fragile**: one-sided $p \approx
-   0.034$ under as-if randomization, but $\Gamma^{*} \approx `r round(gstar,2)`$
-   (Rosenbaum) and `rv_qa` $\approx `r round(sens$sensitivity_stats$rv_qa,3)`$
-   (`sensemakr`) --- both tiny.
- - A *modest* unobserved confounder of UN deployment would overturn it. The
-   defense has to be **substantive**: is there a feature of conflicts ---
-   unmeasured here --- that strongly predicts both UN deployment and the
+   0.034$ under as-if randomization for $H_0: \text{ATE}=0$ or $H_0:
+   y_i(1)=y_i(0)$, but $\Gamma^{*} \approx `r round(gstar,2)`$  and `rv_qa`
+   $\approx `r round(sens$sensitivity_stats$rv_qa,3)`$. 
+ - What feature of conflicts ---
+   unmeasured here and uncorrelated with any of the covariates that we already
+   balanced within set --- strongly predicts both UN deployment and the
    duration of peace?
- - Sensitivity analysis does not say such a confounder exists. It tells us how
-   hard we must argue that one does not.
+
+   \smallskip
+
+```{r}
+balfmla
+```
+
+\medskip
+
+**Sensitivity analysis does not say such a confounder exists.** It tells us how strong such a confounder would have to be in order to change our conclusions.
 
 ## Summary
 
- - Formal sensitivity analysis lets us use the as-if randomized approach
-   **provisionally** rather than fearfully: we ask directly how our conclusion
-   would change under hidden bias.
- - **$\Gamma$** (Rosenbaum) bias as a departure from as-if randomization,
-   measured as a treatment-odds ratio. Also "amplification".
- - **`sensemakr`** (Cinelli and Hazlett) give it an estimate, an SE, and read
-   off the robustness value. 
-- This is not "stability" or "fragility" analysis of model specification.
+
+ - Statistical inference for causal effects requires assumptions.
+   - In a randomized experiment, for simple analyses, we use SUTVA and
+     excludability for interpretation.
+   - In an observational study, designed using stratification, we use SUTVA,
+     excludability, plus "conditional ignorability"
+- Formal sensitivity analysis lets us use the as-if randomized approach for
+  statistical inference **provisionally** rather than fearfully.
+- This is **not** "stability" or "fragility" analysis of model specification
+  (Not the same as "Does the logit model and the OLS model give the same
+  results?")
 
 ## References {.allowframebreaks}
