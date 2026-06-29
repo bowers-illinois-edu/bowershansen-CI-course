@@ -1,0 +1,729 @@
+---
+title: |
+  | Sensitivity Analysis: Describing the consequences of possible confounders
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: |
+  | ICPSR 2026 Session 1
+  | Jake Bowers \& Tom Leavitt
+bibliography:
+ - 'BIB/MasterBibliography.bib'
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: styles/icpsr-beamer-template
+    incremental: true
+    includes:
+        in_header:
+           - defs-all.sty
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
+---
+
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
+```
+
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(optmatch)
+library(RItools)
+library(estimatr)
+library(senstrat)
+library(sensitivitymv)
+library(sensemakr)
+library(blkvar)
+library(propertee)
+library(coin)
+options(show.signif.stars = FALSE)
+```
+
+```{r setup5_fogarty, echo=FALSE, include=FALSE}
+## Fogarty (2018) finely-stratified variance estimator (from Tom's
+## matching-guide, R/fine_strat_var_est.R). It reads Var(tau-hat) off how the
+## set-level estimates vary ACROSS sets, so it never needs a within-set (n - 1)
+## variance. Conservative (>= the truth), hence valid.
+fine_strat_var_est <- function(strat_ns, strat_ests) {
+  N <- sum(strat_ns); B <- length(strat_ns)
+  Q <- as.matrix(B * (strat_ns / N))                  # set weights (K = B)
+  H <- Q %*% solve(t(Q) %*% Q) %*% t(Q)               # leverage (hat) matrix
+  y <- strat_ests / sqrt(pmax(1 - diag(H), .Machine$double.eps))
+  W <- diag(B * (strat_ns / N))
+  as.numeric((1 / B^2) * t(y) %*% W %*% (diag(B) - H) %*% W %*% y)
+}
+```
+
+## Today
+
+1. Introductions
+  - Introduction to Jake
+  - Introductions all around: Name, Discipline/Focus, Home department
+2. Review and Preview of the Week
+3. Return to UN peacekeeping
+4. **Today:Sensitivity analysis**: reasoning about how departures from the "as-if
+   randomized" assumption might change our substantive conclusions. Two
+   approaches to the same question --- Rosenbaum's $\Gamma$ and Cinelli and
+   Hazlett's `sensemakr`.
+  
+# Review of Causal Inference So Far
+
+## So far: Why and how infer? Foundations of causal inference.
+
+A quick refresh of the first two weeks before we add to it today.
+
+- **Statistical inference for causal effects.** A causal effect compares a
+  units's two potential outcomes, $y_i(1)$ and $y_i(0)$ (under SUTVA), but only
+  one is ever seen --- so we *infer* about effects rather than observe them
+  directly. **How to infer?**
+- **Randomization is a reasoned basis for inference.** This fact simplifies
+  causal inference from **randomized experiments**. Randomization also
+  **indentifies** the ATE **estimand**.
+- **Two null hypotheses, two tests for statistical inference.**
+   - *Sharp* (Fisher): no effect for *any* unit. Permute/shuffle assignment to
+     create a reference distribution.
+   - *Weak* (Neyman): the *average* effect is zero. The difference-in-means
+     with a conservative variance and a Normal reference dist.
+- **Estimand vs estimator.** The ATE --- the average of $y_i(1) - y_i(0)$ ---
+  is the target; the difference-in-means is an unbiased guess at it.
+  Unbiasedness allows the sample difference in means to be used as a test
+  statistic for the Weak Null.
+
+## So far: Beyond the RCT
+
+- **Refinements in experiments.** Covariate adjustment for precision; the
+  CACE/LATE under not-random noncompliance; the consequences of attrition
+- **Observational studies** How to create a reasoned basis? How to engage
+  **alternative explanations** (confounders)?
+- **Recover it by design through stratification** on covariates and/or scores
+  of them (propensity score, Mahalanobis scores)
+   - **Check it before the outcomes, then test.** Balance (standardized
+     differences, an omnibus test); then the same sharp and weak tests within
+     sets.
+
+\medskip
+
+Questions? Comments?
+
+## Next up: This week ideas
+
+- **Today:** How to reason about the consequences of unobserved
+  confounders/departures from the assumption of conditional ignorability?
+- **Tues:** Why and how is "controlling for" in a linear regression a tool for
+  causal infrence? (plus Review)
+- **Wed:** Matching with continuous and/or multi-valued treatments
+  ("non-bipartite matching") (plus Review)
+- **Thurs:** Given longitudinal/panel data, risk-set matching (conditional
+  ignorability) vs Difference-in-Differences (no anticipation, parallel trends)
+
+\medskip
+
+Questions? Comments?
+
+#  The Causal Effect of UN Peacekeeping
+
+##  Does UN peacekeeping prolong peace? \citep{gilligansergenti2008}
+
+- **Unit**: a *post-conflict peace episode* (the period of peace after a civil
+   war). E.g.\ Sierra Leone, Jan 2001--Dec 2003. There are $87$ episodes,
+   1989--2003.
+ - **Treatment** (`UN`): $1$ if a UN mission was *present* during the episode,
+   else $0$. Here $19$ treated, $68$ control.
+ - **Outcome** (`ldur`): log days of peace until conflict resumes (or
+   censoring).
+ - **The question**: does the presence of a UN mission *prolong* post-conflict
+   peace?
+
+\medskip
+
+UN missions are **not randomly assigned**. Where peace is fragile for reasons
+we see or do not see, the UN may be *more* likely to deploy.
+
+## The nine covariates 
+
+Pre-treatment characteristics thought to drive UN intervention (and to predict
+the duration of peace):
+
+ - logged war deaths (`lwdeaths`), logged previous-war duration (`lwdurat`)
+ - ethnic fractionalization (`ethfrac`), logged population (`pop`)
+ - logged mountainous terrain (`lmtnest`), military personnel (`milper`)
+ - logged pre-war GDP per capita (`bwgdp`), Polity score (`bwplty2`)
+ - `region` (E.\ Europe, Lat.\ America, Asia, Sub-Saharan Africa, N.\
+   Africa / Middle East)
+
+\medskip
+
+The design goal: build matched sets of episodes that are
+similar on these covariates, so that *within a set* a UN mission looks **as-if**
+randomly assigned with repect to those observed covariates.
+
+\medskip
+
+Make an argument for *conditional ignorability* based on **observed covariates**.
+
+## The design {.allowframebreaks}
+
+```{r setup3_data_and_match, echo=TRUE, include=TRUE, cache=TRUE}
+## running example:  UN peacekeeping and post-conflict peace.
+peace <- readRDS(url(
+  "https://raw.githubusercontent.com/tl2624/matching-guide/main/data/peace_pre_match.rds"))
+covs <- c("lwdeaths", "lwdurat", "ethfrac", "pop", "lmtnest",
+          "milper", "bwgdp", "bwplty2", "region")
+
+## Estimated propensity score (logit index)
+psm <- glm(reformulate(setdiff(covs, "region"), "UN"),
+           family = binomial("logit"), data = peace)
+peace$logit_ps <- psm$linear.predictors
+pop_sd_logit <- sqrt(mean((peace$logit_ps - mean(peace$logit_ps))^2))
+
+## A full match: rank-Mahalanobis + a 0.5-SD PS caliper + exact on region
+## + calipers on ethfrac (35) and bwgdp (2); at most 4 controls per treated.
+fm <- fullmatch(
+  match_on(UN ~ logit_ps, caliper = 0.5 * pop_sd_logit, data = peace,
+           standardization.scale = NULL, method = "euclidean") +
+  match_on(reformulate(setdiff(covs, "region"), "UN"), data = peace,
+           standardization.scale = NULL, method = "rank_mahalanobis") +
+  match_on(UN ~ ethfrac, caliper = 35, data = peace,
+           standardization.scale = NULL, method = "euclidean") +
+  match_on(UN ~ bwgdp, caliper = 2, data = peace,
+           standardization.scale = NULL, method = "euclidean") +
+  exactMatch(UN ~ region, data = peace),
+  data = peace, max.controls = 4)
+peace$fm <- fm
+md <- droplevels(peace[matched(fm), ])
+```
+
+## The design summary
+
+```{r recall_design, echo=TRUE}
+summary(fm, min.controls=0,max.controls=Inf)                       # structure of the matched sets
+effectiveSampleSize(fm)           # equivalent number of matched pairs
+```
+
+\medskip
+
+$13$ treated and $23$ control episodes matched into $12$ sets (a mix of $1$:$1$,
+$1$:$K$, and one $2$:$1$); effective sample size $\approx 15.3$.
+
+\medskip
+
+Is this a good enough design? (Recall: we want an answer that does not involve
+outcomes.)
+
+## Balance (1): the omnibus test
+
+Before we look at any outcome: does the matched design resemble a
+block-randomized experiment on the covariates we balanced?
+
+```{r balance_omnibus, echo=TRUE}
+## Hansen & Bowers omnibus balance test; the "fm" row is within the matched sets
+balfmla <- reformulate(covs, "UN")            # UN ~ lwdeaths + ... + region
+balanceTest(update(balfmla, . ~ . + strata(fm)), data = md)$overall["fm", ]
+```
+
+\medskip
+
+A *high* p-value ($\approx 0.95$) is the good case: across the
+nine covariates jointly, the within-set imbalance is no larger than block
+randomization would routinely produce. OR, The average within-set differences
+in means are smaller than $\approx 95\%$ of equivalent block-randomized
+experiments. 
+
+## Balance (2): within-set differences, covariate by covariate
+
+```{r balance_diffs, echo=TRUE}
+keyvars <- setdiff(covs, "region")            # region is matched exactly
+## within each set: abs(mean(treated) - mean(control)) on covariate v
+wsd <- function(v){
+  tapply(seq_len(nrow(md)), md$fm, function(i){
+    abs(mean(md[[v]][i][md$UN[i] == 1]) - mean(md[[v]][i][md$UN[i] == 0]))})
+}
+## percentiles of those set-level differences, across the sets
+round(t(sapply(keyvars, function(v){ quantile(wsd(v), c(0, .25, .5, .75, .90, 1)) })), 2)
+```
+
+\medskip
+
+Columns are percentiles of the set-level differences. Does this look
+substantively small? Or large? Is this good enough?
+
+## Statistical inference: the "as-if randomized" approach
+
+Given a matched design that (a) we can defend on substantive grounds and (b)
+compares favorably with a block-randomized experiment on the *observed*
+covariates, why not analyze it **as if** treatment had been randomized within
+sets? "If this had been an experiment, the estimate would be $\hat{\tau}$,
+$p = .03$."
+
+Advantages:
+
+ - No probability model of outcomes to justify.
+ - No functional form relating covariates and treatment and outcomes to
+   justify.
+ - No population and sampling needed --- inference is about the pool of
+   episodes we have.
+ - The CLT enters only for convenience (a Normal reference for the weak null).
+ - It already compares favorably with an experiment.
+
+## From the design to an estimate, an SE, and a CLT
+
+What is the average effect of UN presence on log-duration?
+
+```{r est_se_three_ways, echo=TRUE, cache=TRUE}
+## propertee design spec + ATE weights (used below)
+spec <- obs_spec(UN ~ uoa(id) + block(fm), data = md)
+md$atew <- ate(spec, data = md)
+
+## (1) ATE-weighted lm_robust (HC2 standard error)
+lm_ate <- lm_robust(ldur ~ UN, weights = atew, data = md)
+
+## (2) propertee::lmitt -- design-based, ATE weights
+lmitt1 <- lmitt(ldur ~ 1, specification = spec, data = md, weights = "ate")
+
+## (3) blkvar (Pashley-Miratrix 2021 variance)
+blk <- block_estimator(Yobs = ldur, Z = UN, B = fm, data = md, method = "hybrid_p")
+
+round(c(lm_robust = coef(lm_ate)[["UN"]],
+        propertee = coef(lmitt1)[["UN."]],
+        blkvar    = blk$ATE_hat), 3)
+```
+
+\smallskip
+
+The ATE is about $\hat{\tau} \approx 0.615$ (log-days). The *standard error* is
+the harder part.
+
+## The variance problem: why not just HC2? (review)
+
+The variance of the design-based ATE is a sum over the matched sets:
+\begin{equation*}
+\mathrm{Var}(\hat{\tau}) = \sum_s (n_s/n)^2\, \mathrm{Var}(\hat{\tau}_s).
+\end{equation*}
+
+The textbook (Neyman) estimate of a set's variance --- the design-based SE you
+learned for experiments in Gerber and Green, and what HC2 reproduces --- needs a
+within-set sample variance in *each arm*:
+\begin{equation*}
+\widehat{\mathrm{Var}}(\hat{\tau}_s) = \frac{\hat{S}^2_{sT}}{m_s} + \frac{\hat{S}^2_{sC}}{n_s - m_s},
+\end{equation*}
+whose two arm variances have denominators $m_s - 1$ and $n_s - m_s - 1$.
+
+\medskip
+
+Every matched set here has a **single** treated or a single control unit, so one
+denominator is $0$: the within-set variance is **undefined**. Finely stratified
+designs break the textbook within-set estimator.
+
+## Fogarty's fix: read the variance off the spread across sets
+
+Estimate $\mathrm{Var}(\hat{\tau})$ from how the set-level effects $\hat{\tau}_s$
+vary *across* sets --- no within-set $(n-1)$ needed, and conservative, so the
+test stays valid.
+
+```{r fogarty_se, echo=TRUE, cache=TRUE}
+set_stats <- md |> dplyr::group_by(fm) |> dplyr::summarize(
+  n = dplyr::n(), dim = mean(ldur[UN == 1]) - mean(ldur[UN == 0]), .groups = "drop")
+ate_hat    <- with(set_stats, sum((n / sum(n)) * dim))            # 0.615
+se_fogarty <- sqrt(fine_strat_var_est(set_stats$n, set_stats$dim))
+round(c(HC2 = lm_ate$std.error[["UN"]], Fogarty = se_fogarty,     # HC2 ignores sets
+        PashleyMir = blk$se_est), 3)                              # PM ~ Fogarty
+```
+
+\footnotesize
+Pooled HC2 ($0.387$) ignores the matched sets and overstates the SE; Fogarty
+($0.341$) and Pashley-Miratrix ($0.345$) condition on the design --- tighter,
+still conservative. Pashley-Miratrix is a *hybrid* (the exact within-set variance
+where a set is big enough, the between-set spread elsewhere); here every set has
+one unit per arm, so it coincides with Fogarty.
+[@fogarty2018a; @pashleymiratrix2020; @gerber2012field]
+\normalsize
+
+## Statistical inference for a causal effect {.shrink}
+
+```{r design_pvalue, echo=TRUE}
+z_obs <- ate_hat / se_fogarty               # Fogarty SE; z = 1.80
+c(z = round(z_obs, 2),
+  p_one_sided = round(pnorm(z_obs, lower.tail = FALSE), 3))
+
+## And the sharp-null using 2 different test statistics and direct permutations
+rank_test <- wilcox_test(ldur~factor(UN)|fm,data=md,alternative="less",
+distribution=approximate(nresample=10000))
+mean_test <- oneway_test(ldur~factor(UN)|fm,data=md,alternative="less",
+distribution=approximate(nresample=10000))
+c(rankp=pvalue(rank_test)[[1]],meanp= pvalue(mean_test)[[1]])
+```
+
+One-sided tests for the directional question --- does UN presence *prolong* peace?
+
+ \smallskip 
+ 
+ This is a **real but not overwhelming** rejection. Would even a little hidden
+ bias overturn it? 
+
+# Two ways to reason about the unobserved
+
+## One question, two approaches
+
+*How much hidden bias would it take to overturn our conclusion?* Two approaches 
+answer it, each measuring hidden bias differently.
+
+ - **Rosenbaum ($\Gamma$).** Within a matched set, how many times more likely
+   (an odds ratio $\Gamma$) would one episode have to be to receive a UN
+   mission --- because of an unobserved $u$ --- before our **randomization
+   test** stops rejecting? Measured as: a treatment-odds ratio.
+ - **Cinelli and Hazlett (partial $R^2$).** How strongly would an unobserved
+   confounder have to relate to *both* treatment and outcome before our
+   **regression estimate** loses significance (or reaches zero)? Measured as:
+   shared variance.
+
+\medskip
+
+\footnotesize
+(Word-collision warning: each tradition calls its threshold a "robustness
+value." They are not the same number.)
+\normalsize
+
+## Sensitivity analysis as a formalized thought experiment {.fragile}
+
+> "In an observational study, a sensitivity analysis replaces qualitative claims
+> about whether unmeasured biases are present with an objective quantitative
+> statement about the magnitude of bias that would need to be present to change
+> the conclusions." (Rosenbaum, `sensitivitymv` manual)
+
+\medskip
+
+\begin{center}
+\begin{tikzcd}[column sep=large,every arrow/.append style=-latex]
+u \arrow[from=1-1,to=2-2, bend right, "\Gamma" near start] \arrow[from=1-1,to=2-3, bend left, "\rho" near start] \\
+& Z \arrow[from=2-2,to=2-3, "\tau"] & y \\
+x_1 \arrow[from=3-1,to=2-2, "{\color{red}\text{\scriptsize$\times$}}"{marking, pos=0.3}] \arrow[from=3-1,to=2-3,grey] &
+x_2 \arrow[from=3-2,to=2-2, "{\color{red}\text{\scriptsize$\times$}}"{marking, pos=0.3}] \arrow[from=3-2,to=2-3,grey]
+\end{tikzcd}
+\end{center}
+
+We match on $x$. The question is what an unobserved $u$ --- related to treatment
+(with strength $\Gamma$) and outcome (with strength $\rho$) --- could do to the comparison.
+
+## Where does the unobserved $u$ enter?
+
+Rosenbaum models each unit's treatment probability
+$\pi_i = \Pr(Z_i{=}1 \mid \bx_i, u_i)$ with a logit that carries an unobserved
+$u_i \in [0,1]$ beside the observed $\bx_i$ --- one copy per episode:
+\begin{align*}
+\log\!\left(\frac{\pi_i}{1 - \pi_i}\right) &= \kappa(\bx_i) + \gamma\, u_i , \\
+\log\!\left(\frac{\pi_j}{1 - \pi_j}\right) &= \kappa(\bx_j) + \gamma\, u_j .
+\end{align*}
+
+Compare two episodes by their *ratio of treatment odds*. Odds divide, so
+\begin{equation*}
+\frac{\pi_i / (1 - \pi_i)}{\pi_j / (1 - \pi_j)}
+  = \frac{\pi_i\,(1 - \pi_j)}{\pi_j\,(1 - \pi_i)} .
+\end{equation*}
+A $\log$ turns this ratio into a *difference* of the two logits above --- next slide.
+
+## Matching on $\bx$ leaves only $u$
+
+The log of a quotient is a difference, so substitute the two logits:
+\begin{align*}
+\log \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)}
+  &= \log\!\frac{\pi_i}{1 - \pi_i} - \log\!\frac{\pi_j}{1 - \pi_j} \\
+  &= \big(\kappa(\bx_i) + \gamma\, u_i\big) - \big(\kappa(\bx_j) + \gamma\, u_j\big) \\
+  &= \underbrace{\kappa(\bx_i) - \kappa(\bx_j)}_{=\, 0 \ \text{when} \ \bx_i = \bx_j}
+     \;+\; \gamma\,(u_i - u_j) .
+\end{align*}
+Match on $\bx$ ($\bx_i = \bx_j$) and the observed part cancels. Exponentiating leaves
+the odds ratio at $e^{\gamma\,(u_i - u_j)}$, between $e^{-\gamma}$ and $e^{\gamma}$
+since $u_i - u_j \in [-1, 1]$. Writing $\Gamma = e^{\gamma}$ gives the bound on the
+next slide.
+
+## Why $\Gamma$? A model for the unobserved {.fragile}
+
+For two episodes $i$ and $j$ with the same matched-set covariates ($\bx_i =
+\bx_j$), @rosenbaum2002observational bounds their ratio of treatment odds by a
+single number $\Gamma$:
+
+\begin{equation*}
+\frac{1}{\Gamma} \leq \frac{\pi_i (1 - \pi_j)}{\pi_j (1 - \pi_i)} \leq \Gamma .
+\end{equation*}
+
+ - $\Gamma = 1$: within a set, both episodes are equally likely to get a UN
+   mission --- exactly the as-if randomized case.
+ - $\Gamma = 2$: an unobserved $u$ could make one episode **twice** as likely as
+   its match to receive a mission.
+
+We compute the **worst-case** $p$-value the test could take for each $\Gamma$,
+and ask how large $\Gamma$ must be before we no longer reject.
+
+## Why is the $p$-value a *worst case*?
+
+- **$\Gamma = 1$: one set of probabilities.** Within a matched set, each
+  episode is equally likely to be the one that received a UN mission. Those
+  equal probabilities are what our randomization test has assumed all along,
+  and they give a single $p$-value.
+- **$\Gamma > 1$: many.** There are many different unobserved $u$, each of
+  which could make some episodes more likely than their set-mates to receive a
+  mission. We never see $u$ --- we know only that two set-mates can differ by
+  at most a factor of $\Gamma$. Each set of probabilities allowed by that
+  factor gives its own $p$-value.**The worst case is the largest of those
+  $p$-values.** It is the set under which our result is least surprising: the
+  episodes that had longer peace were also the ones $u$ would have made most
+  likely to get a mission. Then "UN episodes lasted longer" could be $u$ at
+  work, not the mission.
+
+\medskip
+
+If even that largest $p$ stays below $0.05$, no confounder of strength $\Gamma$
+explains the result away.
+
+## The worst case, in one matched pair
+
+Take a $1$:$1$ set with outcomes $y_i > y_j$ and an upper-tailed test. Under the
+null, which unit got treated?
+\begin{equation*}
+\Pr(i \text{ treated} \mid \text{one treated})
+  = \frac{e^{\gamma u_i}}{e^{\gamma u_i} + e^{\gamma u_j}}
+  \in \left[\frac{1}{1 + \Gamma}, \ \frac{\Gamma}{1 + \Gamma}\right] .
+\end{equation*}
+
+The upper end $\Gamma/(1+\Gamma)$ is the worst case for us: it makes the
+*high-outcome* unit the one most likely to be treated even with no effect, so the
+observed "treated $>$ control" is least surprising and the $p$-value is largest.
+`senstrat` does this for every matched set at once --- each pushed to its
+high-outcome-favoring extreme --- and returns the single upper-bound $p$ we plot
+against $\Gamma$.
+
+## The search for $\Gamma$
+
+```{r gamma_search, echo=TRUE, cache=TRUE}
+##  Only interested in positive effect (UN prolongs peace), so we test the upper tail: alternative = "greater".
+pval <- function(g){ as.numeric(
+  senstrat(md$ldur, z = md$UN, st = md$fm, gamma = g,
+           alternative = "greater")$Result["P-value"])
+           }
+
+gammas <- seq(1, 2, by = 0.02)
+pvals  <- sapply(gammas, pval)
+gstar  <- uniroot(function(g){pval(g) - 0.05}, c(1, 2))$root
+round(c(p_at_Gamma1 = pval(1), p_at_Gamma1.5 = pval(1.5)), 3)   # worst-case one-sided p
+c(Gamma_star = round(gstar, 2))                                 # smallest Gamma with worst-case p > 0.05
+```
+
+\footnotesize
+
+At $\Gamma = 1$ (as-if randomized) the one-sided $p \approx `r round(pval(1), 3)`$. The
+smallest $\Gamma$ that pushes the worst-case $p$ above $0.05$ is $\Gamma^{*}
+\approx `r round(gstar, 2)`$.
+
+\normalsize
+
+## The result is fragile to hidden bias
+
+```{r gamma_plot, echo=FALSE, out.width=".6\\textwidth"}
+par(mar = c(3.2, 3.2, 1, 1), mgp = c(2, .6, 0))
+plot(gammas, pvals, type = "l", lwd = 2,
+     xlab = expression(Gamma~"(max treatment-odds ratio from unobserved u)"),
+     ylab = "Worst-case one-sided p-value", ylim = c(0, 0.2))
+abline(h = 0.05, lty = 2)
+abline(v = gstar, lty = 3, col = "red")
+text(gstar, 0.18, labels = bquote(Gamma^"*" == .(round(gstar, 2))), pos = 4, col = "red")
+```
+
+An unobserved confounder making one episode $\approx `r round(gstar,2)`$
+times more likely than its match to receive a UN mission would already be enough
+to overturn the one-sided rejection.
+
+## The choice of test statistic matters
+
+```{r stat_helpers, echo=FALSE}
+## pval_ss(sc, g): worst-case one-sided p at bias Gamma = g, scoring with sc
+## gstar_ss(sc):   the Gamma where that worst-case p crosses 0.05
+pval_ss  <- function(sc, g){ as.numeric(
+  senstrat(sc, z = md$UN, st = md$fm, gamma = g, alternative = "greater")$Result["P-value"]) }
+gstar_ss <- function(sc){ tryCatch(
+  uniroot(function(g){ pval_ss(sc, g) - 0.05 }, c(1, 10))$root, error = function(e){ NA }) }
+```
+
+```{r stat_menu, echo=TRUE, cache=TRUE}
+## pval_ss() wraps senstrat (as on the previous slide); gstar_ss() finds the
+## Gamma where the worst-case p crosses 0.05 (both defined just above)
+stats <- list(mean           = md$ldur,
+              m_statistic    = mscores(md$ldur, md$UN, md$fm),
+              hodges_lehmann = hodgeslehmann(md$ldur, md$UN, md$fm))
+stat_tab <- round(sapply(stats, function(sc){ c(p_at_Gamma1 = pval_ss(sc, 1),
+                                                Gamma_star  = gstar_ss(sc)) }), 2)
+stat_tab
+```
+
+\footnotesize
+The mean and Huber m-statistic reject ($p \approx 0.03$) and keep rejecting up to
+$\Gamma^{*} = `r stat_tab["Gamma_star", "mean"]`$ and
+$`r stat_tab["Gamma_star", "m_statistic"]`$ respectively.
+
+\normalsize
+
+## Two test statistics, two sensitivity curves
+
+```{r two_curve, echo=FALSE, out.width=".68\\textwidth", cache=TRUE}
+ms <- mscores(md$ldur, md$UN, md$fm)
+gg <- seq(1, 2, by = 0.02)
+p_mean <- sapply(gg, function(g){ pval_ss(md$ldur, g) })
+p_m    <- sapply(gg, function(g){ pval_ss(ms, g) })
+par(mar = c(3.2, 3.2, 1, 1), mgp = c(2, .6, 0))
+plot(gg, p_mean, type = "l", lwd = 2, ylim = c(0, 0.2),
+     xlab = expression(Gamma), ylab = "Worst-case one-sided p-value")
+lines(gg, p_m, lwd = 2, lty = 2)
+abline(h = 0.05, col = "grey50")
+legend("topleft", c("mean", "m-statistic"), lwd = 2, lty = c(1, 2), bty = "n")
+```
+
+## Interpreting $\Gamma^{*}$: the amplification {.fragile}
+
+@rosenbaum2009amplification split $\Gamma$ into the confounder's effect on
+*treatment* ($\Lambda$) and on the *outcome* ($\Delta$): many $(\Lambda,
+\Delta)$ pairs imply the same $\Gamma$.
+
+```{r amplify, echo=TRUE}
+g_round <- round(gstar, 2)                 # the worst-case Gamma* = 1.14, to decompose
+print(g_round)
+Lambda  <- c(1.3, 1.5, 2, 3, 5)            # candidate treatment-side strengths
+Delta   <- unname(amplify(g_round, Lambda))   # outcome-side strength each one needs
+rbind(Lambda_effect_on_Z = Lambda, Delta_effect_on_Y = round(Delta, 2))   # each column is one (Lambda, Delta) pair
+```
+
+\footnotesize
+Each column is one way to split $\Gamma^{*} = `r g_round`$ into two pieces.
+**$\Lambda$** (top row) is the confounder's effect on *treatment* --- the odds
+ratio by which it makes an episode likelier to receive a UN mission. **$\Delta$**
+(bottom row) is its effect on the *outcome* --- the odds ratio by which it makes
+longer peace likelier. A confounder with both at once --- say $\Lambda = 2$ paired
+with $\Delta = `r round(amplify(g_round, 2), 2)`$ --- would bias the test as much as
+$\Gamma^{*} = `r g_round`$ does. Strong on one side needs less on the other; the
+next slide draws the whole trade-off.
+\normalsize
+
+## The amplification curve: $\Lambda$ on treatment, $\Delta$ on outcome
+
+A single $\Gamma^{*}$ is silent about *how* a confounder would work. The
+amplification splits it into a curve of $(\Lambda, \Delta)$ pairs --- a
+treatment-side strength $\Lambda$ and an outcome-side strength $\Delta$ --- that
+all reproduce the same $\Gamma^{*}$.
+
+```{r amplify_curve, echo=FALSE, out.width=".56\\textwidth"}
+lam <- seq(g_round + 0.005, 8, length = 400)
+par(mar = c(3.7, 3.7, 0.6, 0.6), mgp = c(2.4, .7, 0))
+plot(lam, amplify(g_round, lam), type = "l", lwd = 2, xlim = c(1, 6), ylim = c(1, 4),
+     xlab = expression(Lambda * " : effect on treatment (odds)"),
+     ylab = expression(Delta * " : effect on outcome (odds)"))
+abline(0, 1, col = "grey85", lty = 2)                       # the Lambda = Delta diagonal
+abline(h = g_round, v = g_round, col = "grey70", lty = 3)   # both arms asymptote to Gamma*
+sym <- g_round + sqrt(g_round^2 - 1)                        # the Lambda = Delta point
+points(c(sym, 3), amplify(g_round, c(sym, 3)), pch = 19)
+text(c(sym, 3), amplify(g_round, c(sym, 3)),
+     labels = c("equal on both arms", "strong on treatment"), pos = 4, cex = .8)
+```
+
+\footnotesize
+$\Lambda$ is the $u \to Z$ arrow ($\Gamma$ in the DAG): how much, in odds, a hidden
+$u$ raises the chance of a UN mission. $\Delta$ is the $u \to y$ arrow ($\rho$): how
+much $u$ raises the odds of longer peace. The same $\Gamma^{*} = `r g_round`$ comes
+from $`r round(sym, 2)`\times$ on *both* arms, or $3\times$ on treatment with only
+$`r round(amplify(g_round, 3), 2)`\times$ on the outcome --- more on one arm means
+less is needed on the other. Each point on the curve produces exactly $\Gamma^{*}$:
+a weaker confounder (nearer no effect, $\Lambda = \Delta = 1$) leaves the result
+significant, a stronger one overturns it --- so the curve is the strength a real
+confounder would need, on *both* arms, to undo the finding.
+\normalsize
+
+## From $\Gamma$ to $R^2$.
+
+`sensemakr` focuses on tests of the weak null. We feed it the design ATE and the Fogarty SE:
+
+```{r sensemakr_estimate, echo=TRUE, cache=TRUE}
+## alpha = 0.10 (two-sided) == our one-sided 0.05 directional test
+sens <- sensemakr(estimate  = ate_hat,
+                  se        = se_fogarty,
+                  treatment = "UN",
+                  dof       = lm_ate$df.residual,
+                  alpha     = 0.10)
+sens$sensitivity_stats[, c("estimate", "se", "rv_q", "rv_qa")]
+```
+
+\footnotesize
+
+**Robustness value** (`rv_qa` $\approx `r round(sens$sensitivity_stats$rv_qa,3)`$):
+a confounder explaining only about
+`r round(100*sens$sensitivity_stats$rv_qa,1)`\% of the residual variation in
+*both* treatment and outcome would make the result **non-significant** (one-sided
+$\alpha = 0.05$).
+
+\normalsize
+
+## Reading the contour plot
+
+```{r sensemakr_plot, echo=FALSE, out.width=".68\\textwidth"}
+plot(sens, sensitivity.of = "t-value")
+```
+
+\footnotesize
+Axes: how much of the residual variation in treatment (x) and outcome (y) a
+hypothetical confounder would explain. The contours are the *t-value* of the UN
+effect; the red line is the one-sided $0.05$ significance threshold ($t \approx
+1.7$). The design estimate is at the origin ($t \approx 1.8$). Where the diagonal
+meets the red line is `rv_qa` $\approx `r round(sens$sensitivity_stats$rv_qa,3)`$
+--- the confounder strength that ends significance.
+\normalsize
+
+# Putting it together
+
+## Be honest about what each analysis assumes
+
+ - The **estimate** is design-based: matched sets, as-if randomization, a CLT
+   for the SE. No outcome model.
+ - The **$\Gamma$ analysis** stays design-based: it perturbs the *assignment*
+   probabilities and recomputes a randomization test.
+ - The **`sensemakr` analysis** is a *regression* argument: Cinelli and
+   Hazlett's partial-$R^2$ result is an omitted-variable-bias bound for linear
+   models. Passing a matched ATE to `sensemakr` is a pragmatic approximation,
+   not a design-based guarantee.
+
+\medskip
+
+So report it as: "*If* we treat the ATE regression as our working model, a
+confounder explaining about `r round(100*sens$sensitivity_stats$rv_qa,1)`\% of the
+residual variation in treatment and outcome would end the rejection" --- and show
+$\Gamma^{*}$ alongside, so the same conclusion holds under both approaches.
+
+## Where the two analyses agree
+
+ - The UN-peacekeeping result is **real but fragile**: one-sided $p \approx
+   0.034$ under as-if randomization, but $\Gamma^{*} \approx `r round(gstar,2)`$
+   (Rosenbaum) and `rv_qa` $\approx `r round(sens$sensitivity_stats$rv_qa,3)`$
+   (`sensemakr`) --- both tiny.
+ - A *modest* unobserved confounder of UN deployment would overturn it. The
+   defense has to be **substantive**: is there a feature of conflicts ---
+   unmeasured here --- that strongly predicts both UN deployment and the
+   duration of peace?
+ - Sensitivity analysis does not say such a confounder exists. It tells us how
+   hard we must argue that one does not.
+
+## Summary
+
+ - Formal sensitivity analysis lets us use the as-if randomized approach
+   **provisionally** rather than fearfully: we ask directly how our conclusion
+   would change under hidden bias.
+ - **$\Gamma$** (Rosenbaum) bias as a departure from as-if randomization,
+   measured as a treatment-odds ratio. Also "amplification".
+ - **`sensemakr`** (Cinelli and Hazlett) give it an estimate, an SE, and read
+   off the robustness value. 
+- This is not "stability" or "fragility" analysis of model specification.
+
+## References {.allowframebreaks}
