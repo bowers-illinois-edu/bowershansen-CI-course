@@ -1,0 +1,229 @@
+---
+title: |
+  | Longitudinal Designs: Risk-Set Matching vs Difference-in-Differences
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: |
+  | ICPSR 2026 Session 1
+  | Jake Bowers \& Tom Leavitt
+bibliography:
+ - 'BIB/MasterBibliography.bib'
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: styles/icpsr-beamer-template
+    incremental: true
+    includes:
+        in_header:
+           - defs-all.sty
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
+---
+
+<!--
+DRAFT SKELETON. See day_13_longitudinal_2026_PLAN.md for the full plan and TODOs.
+Heavy code chunks are eval=FALSE until: (1) HonestDiD is installed, (2) DiD bib
+keys are added to BIB/MasterBibliography.bib, (3) the V-Dem long panel + risk-set
+data prep is written. This file compiles as-is (prose + non-evaluated code).
+-->
+
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
+```
+
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(estimatr)
+library(RItools)
+## TODO day 13: did, fixest, bacondecomp (installed); HonestDiD (install first).
+options(show.signif.stars = FALSE)
+```
+
+## Today
+
+0. **Your questions.**
+1. **Review (day 12):** non-bipartite matching with a *fixed* 1990 risk set ---
+   does democratization reduce corruption? We compared countries that looked
+   alike in 1990 and found the strong naive association nearly vanished.
+2. **Today:** treatment timing varies across units. Two strategies, two
+   assumption families, a sensitivity analysis for each.
+   - **Risk-set matching:** compare each newly-treated unit to units *still at
+     risk* at that time, similar on history (conditional ignorability).
+   - **Difference-in-differences:** do not match; assume *parallel trends*.
+   - Stress-test each: Gamma for matching, HonestDiD for DiD.
+
+# Review and the Staggered-Timing Problem
+
+## What day 12 left open
+
+Day 12 fixed the risk set at one baseline year (1990). That is fine for teaching
+the mechanics, but real histories are staggered: countries democratize in
+different years, and a country already democratic for a decade is not a
+counterfactual for one democratizing now.
+
+\medskip
+
+Today we let the comparison set move with time.
+
+## The staggered transitions, drawn
+
+<!-- TODO: timeline of a handful of V-Dem countries and their transition years
+     (reuse transition_years from exploration_5). One figure. -->
+
+A country that democratized in 1999 should be compared with countries still
+autocratic in 1999 --- not with ones that transitioned in 1991.
+
+# Risk-Set Matching Over Time
+
+## The idea
+
+At each transition year $t$, the newly-democratizing country is matched to
+countries **still autocratic at $t$**, chosen to be similar on covariate history
+up to $t$ [@rosenbaum2017; @rosenbaum2020book; @lietal2001].
+
+\medskip
+
+This is the day-12 design made dynamic: the risk set is rebuilt at each event
+time so comparisons only ever run among units that were jointly "at risk."
+
+## Why "still at risk" matters
+
+Using an already-democratic country as a control looks ahead in time: it lets the
+future determine the comparison set. Restricting to still-at-risk units removes
+that look-ahead (immortal-time) bias.
+
+## Build it
+
+```{r riskset_build, echo=TRUE, eval=FALSE}
+## TODO. Loop over transition years; within each, form the risk set of
+## still-autocratic countries and match the transitioner to controls on
+## lagged covariate history (t-1). Stack matched sets with a set id.
+## See day_13_longitudinal_2026_PLAN.md for the sketch.
+```
+
+## Balance and estimate
+
+```{r riskset_estimate, echo=TRUE, eval=FALSE}
+## TODO. Balance within the stacked design (day-12 rank trick + balanceTest).
+## Estimate post-transition corruption; event-study view.
+## Sensitivity: reuse the day-10 Gamma machinery (senstrat).
+```
+
+# Difference-in-Differences
+
+## The other strategy: assume parallel trends
+
+Instead of matching on covariates, assume that --- absent treatment --- treated
+and control units would have followed **parallel** corruption paths. Then the
+post-minus-pre change for the treated, minus the same change for controls,
+identifies the effect.
+
+## Two-period DiD: the clean case
+
+```{r did_2x2, echo=TRUE, eval=FALSE}
+## TODO. Pick one cohort (one transition year). 2x2 DiD via lm/fixest.
+## Show the pre-trend (event-study leads) as the partial, falsifiable check.
+```
+
+## Staggered DiD and the TWFE trap
+
+With staggered timing, two-way fixed effects can put **negative weights** on some
+comparisons and use **already-treated** units as controls ("forbidden
+comparisons") [@goodmanbacon2021; @dechaisemartin2020].
+
+```{r bacon, echo=TRUE, eval=FALSE}
+## TODO. Goodman-Bacon decomposition (bacondecomp) on the V-Dem panel.
+```
+
+## An estimator that avoids the trap
+
+Callaway--Sant'Anna group-time ATTs, aggregated to an event study, use only
+not-yet-treated (or never-treated) controls [@callawaysantanna2021].
+
+```{r cs, echo=TRUE, eval=FALSE}
+library(did)
+## TODO. att_gt(yname="v2x_corr", tname="year", idname="country_id",
+##              gname="first_treat", control_group="notyettreated", data=panel_long)
+## aggte(..., type="dynamic"); ggdid().
+```
+
+# Sensitivity for Parallel Trends
+
+## Passing a pre-trend test is not proof
+
+Parallel trends never holds exactly, and pre-trend tests have low power: failing
+to reject a pre-trend is weak evidence, not a clean bill of health
+[@rothetal2023].
+
+## HonestDiD
+
+Bound the post-treatment bias by the magnitude of pre-trend violations and report
+**robust confidence sets** [@rambachanroth2023].
+
+ - **Smoothness ($M$):** how much the underlying trend may bend per period.
+ - **Relative magnitudes ($\bar{M}$):** post-period violation at most $\bar{M}$
+   times the largest pre-period violation.
+
+```{r honestdid, echo=TRUE, eval=FALSE}
+## TODO. Feed the event-study betas + (clustered) vcov to HonestDiD.
+library(HonestDiD)
+hd <- createSensitivityResults_relativeMagnitudes(
+  betahat = coef(es), sigma = vcov(es),
+  numPrePeriods = nPre, numPostPeriods = nPost,
+  Mbarvec = seq(0, 1, by = 0.1), l_vec = rep(1 / nPost, nPost))
+## Robust CI vs Mbar; breakdown Mbar* = smallest Mbar whose CI covers 0
+## (the DiD analog of Gamma-star).
+```
+
+# Putting It Together
+
+## Same question, two designs
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{2.6cm}p{4.0cm}p{2.2cm}p{1.8cm}@{}}
+\toprule
+design & identifying assumption & pre-outcome check & sensitivity \\
+\midrule
+risk-set matching & conditional ignorability given history & balance & $\Gamma$ \\
+difference-in-differences & parallel trends (+ no anticipation) & pre-trends (weak) & HonestDiD \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{center}
+
+\medskip
+
+Each design replaces an untestable assumption with one you can state, check
+before outcomes, and stress-test. That is the week's lesson, now over time.
+
+## When to prefer which
+
+ - **Few pre-periods, good covariates** -> risk-set matching.
+ - **Many clean pre-periods, covariates you cannot measure** -> DiD with a
+   HonestDiD sensitivity analysis.
+
+\medskip
+
+The deeper contrast: a matched design **builds** a null world a reader can check;
+parallel trends **assumes** one a reader must take on faith.
+
+## Summary
+
+ - Staggered timing breaks the fixed-baseline design of day 12.
+ - Risk-set matching rebuilds the comparison set at each event time.
+ - DiD trades covariate matching for a parallel-trends assumption; staggered TWFE
+   needs modern estimators, and parallel trends needs HonestDiD.
+ - Both are designs: assumption stated, checked, and stress-tested.
+
+## References {.allowframebreaks}
