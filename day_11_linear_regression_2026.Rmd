@@ -1,0 +1,669 @@
+---
+title: |
+  | "Controlling For": Linear Regression Adjustment and Its Limits
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+author: |
+  | ICPSR 2026 Session 1
+  | Jake Bowers \& Tom Leavitt
+bibliography:
+ - 'BIB/MasterBibliography.bib'
+fontsize: 10pt
+geometry: margin=1in
+graphics: yes
+biblio-style: authoryear-comp
+biblatexoptions:
+  - natbib=true
+output:
+  beamer_presentation:
+    slide_level: 2
+    keep_tex: true
+    latex_engine: xelatex
+    citation_package: biblatex
+    template: styles/icpsr-beamer-template
+    incremental: true
+    includes:
+        in_header:
+           - defs-all.sty
+    md_extensions: +raw_attribute-tex_math_single_backslash+autolink_bare_uris+ascii_identifiers+tex_math_dollars
+    pandoc_args: [ "--csl", "chicago-author-date.csl" ]
+---
+
+```{r setup1_env, echo=FALSE, include=FALSE}
+library(here)
+source(here::here("rmd_setup.R"))
+```
+
+```{r setup2_loadlibs, echo=FALSE, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(estimatr)
+library(splines)
+library(optmatch)
+library(olsrr)
+options(show.signif.stars = FALSE)
+```
+
+```{r simdata, echo=FALSE, include=FALSE, cache=TRUE}
+## A self-contained fake observational study where we KNOW the truth.
+## Z (downloaded a COVID info kit) is confounded by x1: people with higher x1
+## are more likely to have Z=1, AND x1 drives the outcome y0 NON-linearly
+## (the -0.2*x1^2 term). So linear "controlling for" cannot fully remove the
+## confounding, and the right functional form is unknown to the analyst.
+N <- 100
+tau <- .3
+set.seed(12345)
+dat <- data.frame(
+  id = 1:N,
+  x1 = rpois(n = N, lambda = 10),
+  x2 = sample(1:6, size = N, replace = TRUE)
+)
+dat <- mutate(dat,
+  y0 = .2 * x1 - .2 * x1^2 + .2 * (x2 < 2) + runif(n = N, min = -2 * sd(x1), max = 2 * sd(x1)),
+  y0 = round(y0 + abs(min(y0)) / max(y0)),
+  y0 = abs(ifelse(x1 < 3, 0, y0)),
+  y1 = round(y0 + tau * sd(y0) + runif(n = N, min = -2 * tau * sd(y0), max = .5 * sd(y0))),
+  x3 = rnorm(n(), mean = mean(x2), sd = sd(x2)),
+  x4 = rbinom(n(), size = 1, prob = mean(x1 > 10))
+)
+dat$Z <- with(dat, as.numeric((.4 * sd(x1) * x1 + runif(n = N, min = -20, max = 0)) > 0))
+dat <- mutate(dat, Y = Z * y1 + (1 - Z) * y0)
+dat$tau <- with(dat, y1 - y0)
+
+## The truth we are trying to recover (never observed in practice):
+true_ate <- mean(dat$tau)
+
+## Four ways of looking at the Z -> Y relationship
+dim0      <- coef(lm_robust(Y ~ Z, data = dat))[["Z"]]            # unadjusted
+b_x1      <- coef(lm(Y ~ Z + x1, data = dat))[["Z"]]              # +x1, linear
+b_x1sq    <- coef(lm(Y ~ Z + x1 + I(x1^2), data = dat))[["Z"]]    # +x1 + x1^2
+b_all     <- coef(lm(Y ~ Z + x1 + x2 + x3 + x4, data = dat))[["Z"]]
+```
+
+## Today
+
+1. **Review:** sensitivity analysis for matched designs --- how much hidden
+   bias would overturn our conclusion ($\Gamma$)? That question presumes we
+   already *have* a design.
+2. **Today:** the much more common alternative to a design --- "controlling
+   for" covariates in a linear regression. We ask:
+   - What does "controlling for" actually compute? (residualization; the
+     Frisch-Waugh-Lovell theorem)
+   - What three questions does it raise --- about functional form,
+     extrapolation, and influential points?
+   - Why are those questions answerable with **one** covariate but not with
+     several?
+   - When is regression adjustment a defensible tool, and what does
+     stratification do instead?
+
+\medskip
+
+Questions? Comments?
+
+# Review: Sensitivity Analysis for Matched Designs
+
+## What we did Monday
+
+We built a matched design for the UN-peacekeeping study: episodes grouped into
+sets that are similar on nine covariates, so that within a set a UN mission
+looks **as-if** randomly assigned.
+
+\medskip
+
+Then, and only then, we looked at the outcome and tested the hypothesis of no
+effect. The one-sided test rejected ($p \approx 0.03$): UN presence is
+associated with longer peace, by as much as a block-randomized experiment would
+let us claim.
+
+\medskip
+
+The order matters. We made every design decision --- which covariates, which
+calipers, how many controls per treated, whether balance was good enough ---
+using only the covariates and treatment, **before** seeing a single outcome.
+
+## Sensitivity analysis: the formal worry {.fragile}
+
+> "In an observational study, a sensitivity analysis replaces qualitative
+> claims about whether unmeasured biases are present with an objective
+> quantitative statement about the magnitude of bias that would need to be
+> present to change the conclusions." (Rosenbaum, `sensitivitymv` manual)
+
+\medskip
+
+\begin{center}
+\begin{tikzcd}[column sep=large,every arrow/.append style=-latex]
+u \arrow[from=1-1,to=2-2, bend right, "\Gamma" near start] \arrow[from=1-1,to=2-3, bend left, "\rho" near start] \\
+& Z \arrow[from=2-2,to=2-3, "\tau"] & y \\
+x \arrow[from=3-1,to=2-2, "{\color{red}\text{\scriptsize$\times$}}"{marking, pos=0.3}] \arrow[from=3-1,to=2-3,grey]
+\end{tikzcd}
+\end{center}
+
+We matched on $\bx$. $\Gamma$ asks: how many times more likely (in treatment
+odds) would one set-mate have to be to receive treatment, because of an
+unobserved $u$, before the test stops rejecting?
+
+## The Monday result, in one line
+
+For the UN study the rejection was **real but fragile**: a confounder making one
+episode only about $1.5$ times more likely than its match to receive a mission
+($\Gamma^{*} \approx 1.5$) would already overturn the one-sided test. The
+`sensemakr` robustness value told the same story.
+
+\medskip
+
+The point to carry into today: **sensitivity analysis presumes a design.** It
+perturbs the assignment probabilities of a matched comparison we already built
+and checked. There is one estimate, one test, and a curve describing how that
+single conclusion bends under hidden bias.
+
+\medskip
+
+Now we turn to the tool most observational papers use *instead* of a design.
+
+# "Regression is basically research design." Is it?
+
+## The temptation
+
+A colleague has data on whether people downloaded a COVID information kit (`Z`)
+and how far they would travel to be tested (`Y`). The unadjusted difference is
+easy:
+
+```{r unadj, echo=TRUE}
+coef(lm_robust(Y ~ Z, data = dat))[["Z"]]
+```
+
+It looks like the kit *reduces* willingness to travel. But people who download
+kits differ from those who do not --- in age, income, health interest. The
+common move is to put those covariates `x1, ..., x4` into the regression and
+read off the coefficient on `Z`:
+
+```{r adj1, echo=TRUE}
+coef(lm(Y ~ Z + x1 + x2 + x3 + x4, data = dat))[["Z"]]
+```
+
+"We controlled for $x_1$ through $x_4$." The sign even flipped. Are we done?
+
+## A study where we know the answer
+
+This is simulated data, so we know each person's $y_i(1)$ and $y_i(0)$ and the
+true average effect:
+
+```{r truth, echo=TRUE}
+true_ate <- mean(dat$tau)   # average of y_i(1) - y_i(0)
+round(true_ate, 2)
+```
+
+\medskip
+
+The truth is $\approx `r round(true_ate,2)`$. Here is what four standard moves
+report:
+
+```{r fourmoves, echo=FALSE}
+round(c(`unadjusted`        = dim0,
+        `+ x1 (linear)`     = b_x1,
+        `+ x1 + x1^2`       = b_x1sq,
+        `+ x1..x4 (linear)` = b_all,
+        `TRUTH`             = true_ate), 2)
+```
+
+\footnotesize
+Unadjusted is the wrong sign. Adjusting helps, but no specification lands on the
+truth, and they disagree with each other. Which one would we report --- if we
+could not see this `TRUTH` column? \normalsize
+
+## The confounding, as a picture {.fragile}
+
+`x1` (think: health interest) drives **both** who downloads the kit and how the
+outcome behaves. And its effect on the outcome is **not** a straight line.
+
+\begin{center}
+\begin{tikzcd}[column sep=large,every arrow/.append style=-latex]
+ Z \arrow[from=1-1,to=1-3, "\tau = ?"] & & Y \\
+ & x_1 \arrow[from=2-2,to=1-1] \arrow[from=2-2,to=1-3, "\text{curved}"'] &
+\end{tikzcd}
+\end{center}
+
+\medskip
+
+To "control for $x_1$" we have to remove its influence on the $Z \to Y$
+comparison. So the first question is concrete: **what does a linear regression
+actually do when we add $x_1$?**
+
+# What "Controlling For" Computes
+
+## "Controlling for" is residualization (one covariate) {.fragile}
+
+The coefficient on `Z` in `Y ~ Z + x1` is *not* a comparison at fixed `x1`. It
+is what remains after removing the **linear** relationship of `x1` with `Y` and
+with `Z`, then relating the two leftovers:
+
+```{r fwl, echo=TRUE}
+b_direct <- coef(lm(Y ~ Z + x1, data = dat))[["Z"]]
+## residualize: strip the linear part of x1 out of Y and out of Z
+eY <- resid(lm(Y ~ x1, data = dat))
+eZ <- resid(lm(Z ~ x1, data = dat))
+b_resid <- coef(lm(eY ~ eZ))[[2]]
+c(direct = b_direct, residualized = b_resid)
+```
+
+\footnotesize
+This identity is the **Frisch-Waugh-Lovell theorem** [@lovell2008;
+@angrist2009mostly, "regression anatomy"]. As the FWL theorem makes precise: to
+"hold $x_1$ constant" with OLS is to remove the least-squares linear projection
+of $x_1$ from both $Z$ and $Y$ --- no more, no less. It does **not** compare
+people with identical $x_1$. \normalsize
+
+## What residualization looks like (one covariate)
+
+```{r residplots, echo=FALSE, out.width=".8\\textwidth"}
+lm_Y_x1 <- lm(Y ~ x1, data = dat)
+lm_Z_x1 <- lm(Z ~ x1, data = dat)
+dat$eY <- resid(lm_Y_x1)
+dat$eZ <- resid(lm_Z_x1)
+cols <- c("black", "blue")[dat$Z + 1]
+pchs <- c(1, 19)[dat$Z + 1]
+par(mfrow = c(2, 2), mar = c(3, 3, 1.2, 0.4), mgp = c(1.6, .5, 0), oma = rep(0, 4))
+with(dat, plot(x1, Y, col = cols, pch = pchs, main = "Y on x1")); abline(lm_Y_x1)
+with(dat, plot(x1, eY, col = cols, pch = pchs, ylab = "Y minus its linear fit on x1",
+               main = "Residual Y")); abline(h = 0, lty = 2)
+with(dat, plot(x1, Z, col = cols, pch = pchs, main = "Z on x1")); abline(lm_Z_x1)
+with(dat, plot(x1, eZ, col = cols, pch = pchs, ylab = "Z minus its linear fit on x1",
+               main = "Residual Z")); abline(h = 0, lty = 2)
+```
+
+\footnotesize
+Blue = downloaded the kit. The adjusted estimate is the slope of `eY` on `eZ`.
+With **one** covariate we can draw this and judge it. Does the relationship of
+`x1` with `Y` (top left) look like the straight line we removed? \normalsize
+
+## The payoff: with one covariate, the questions are answerable
+
+"Controlling for $x_1$" raises three questions. With a single covariate, each
+one is a plot you can actually make and defend:
+
+ - **Functional form.** Is the `x1`--`Y` relationship the straight line OLS
+   removed? Look at the scatter and a smoother. Try `x1^2`.
+ - **Extrapolation.** Do treated and control overlap along `x1`, or is the
+   adjustment filling an empty region?
+ - **Influential points.** Are a few units swinging the slope of `eY` on `eZ`?
+   Find them on the plot.
+
+\medskip
+
+This is the case Jake usually shows in lecture. One covariate, one axis, three
+diagnostics you can look at. Now watch what happens to each question as we add
+covariates.
+
+# Three Questions, and How Each Gets Harder
+
+## Question 1: which functional form? {.fragile}
+
+The estimate *is* the residualization, so changing the form of a covariate
+changes the estimate. With `x1` alone:
+
+```{r ff1, echo=TRUE}
+round(c(`x1`       = coef(lm(Y ~ Z + x1, data = dat))[["Z"]],
+        `x1 + x1^2`= coef(lm(Y ~ Z + x1 + I(x1^2), data = dat))[["Z"]],
+        `log x1`   = coef(lm(Y ~ Z + log(x1 + 1), data = dat))[["Z"]]), 2)
+```
+
+\medskip
+
+With one covariate that is three numbers you can plot and choose between. The
+skeptic's question --- "why *that* function of the covariate?" --- has a
+visual answer. With four covariates, how many functions are there?
+
+## How many ways to "control for" four covariates?
+
+Each covariate can enter as itself, or cut into $2, 3, \ldots$ categories, in
+any combination. Draw 10,000 of these specifications at random and collect the
+estimate of the `Z` effect:
+
+```{r specsim, echo=TRUE, cache=TRUE}
+lmadjfn <- function() {
+  covs     <- c("x1", "x2", "x3", "x4")
+  somecovs <- sample(covs, size = sample(1:4, 1))            # which covariates
+  ncuts    <- round(runif(length(somecovs), min = 1, max = 8))  # how to bin each
+  theterms <- ifelse(ncuts == 1, somecovs,
+                     paste0("cut(", somecovs, ",", ncuts, ")"))
+  coef(lm(reformulate(c("Z", theterms), response = "Y"), data = dat))[["Z"]]
+}
+set.seed(12345)
+res <- replicate(10000, lmadjfn())
+round(c(summary(res), `SD` = sd(res), `pct_wrong_sign` = mean(res < 0) * 100), 2)
+```
+
+\footnotesize
+Same data, same four covariates, same outcome. The estimate ranges from about
+`r round(min(res),1)` to `r round(max(res),1)`; `r round(mean(res<0)*100)`\% of
+these "adjustments" get the **wrong sign**. The truth is
+`r round(true_ate,2)`. \normalsize
+
+## The specification curve
+
+```{r speccurve, echo=FALSE, out.width=".7\\textwidth"}
+par(mar = c(3.4, 3.4, 1, 1), mgp = c(2, .6, 0))
+plot(density(res), main = "", xlab = "Estimated effect of Z across 10,000 specifications",
+     lwd = 2)
+rug(res, col = rgb(0, 0, 0, 0.15))
+abline(v = true_ate, col = "blue", lwd = 2)
+abline(v = 0, col = "grey50", lty = 2)
+text(true_ate, par("usr")[4] * 0.9, "truth", col = "blue", pos = 4)
+```
+
+\footnotesize
+Each tick is one way to "control for" the four covariates. Reporting a single
+number from this cloud, without saying it is one of thousands, is what
+@simonsohn2015specification and @simmonsetal2011 call exploiting researcher
+degrees of freedom. We have no agreed standard that picks the right tick.
+\normalsize
+
+## Question 2: extrapolation and common support
+
+OLS returns a coefficient even where treated and control units do not overlap.
+Where there is no overlap, the **functional form**, not any comparison, fills
+the gap. Along one covariate you can see it:
+
+```{r overlap, echo=FALSE, out.width=".8\\textwidth", fig.width=7, fig.height=3.4, warning=FALSE, message=FALSE}
+par(mar = c(3.2, 3.2, 1.2, 1), mgp = c(1.9, .6, 0))
+plot(density(dat$x1[dat$Z == 0]), lwd = 2, col = "grey40", main = "Overlap on x1",
+     xlab = "x1", ylim = c(0, max(density(dat$x1)$y) * 1.2))
+lines(density(dat$x1[dat$Z == 1]), lwd = 2, lty = 2)
+rug(dat$x1[dat$Z == 0], col = "grey40")
+rug(dat$x1[dat$Z == 1], line = 1)
+legend("topright", c("control", "treated"), lwd = 2, lty = c(1, 2),
+       col = c("grey40", "black"), bty = "n")
+```
+
+\footnotesize
+Controls span `x1` $\approx `r min(dat$x1[dat$Z==0])`$--$`r max(dat$x1[dat$Z==0])`$,
+treated $`r min(dat$x1[dat$Z==1])`$--$`r max(dat$x1[dat$Z==1])`$: the high-`x1`
+treated units have **no** control match. OLS still reports an "adjusted"
+comparison there, by extending the line [@kingzeng2006; @gelmanhill2006].
+\normalsize
+
+## Extrapolation you can see vs. extrapolation you cannot
+
+With **one** covariate, "no overlap" is a gap on a number line.
+
+\medskip
+
+With **four** covariates, overlap means overlap in a four-dimensional cloud.
+Two groups can overlap on every covariate one at a time and still share almost
+no region jointly. The chance that some treated unit sits in a corner with no
+nearby controls grows fast with the number of covariates --- the **curse of
+dimensionality**. OLS never warns you: it returns a coefficient regardless.
+
+\medskip
+
+The question "am I extrapolating?" stays the same. The ability to **answer** it
+by looking disappears.
+
+## Question 3: influential points in higher dimensions
+
+Residualizing projects the data into a new space. A point that was unremarkable
+in the raw `(Z, Y)` plane can become high-leverage among the residuals. Count
+how many points exceed the usual Cook's-distance flag ($> 4/n$) as we add
+covariates:
+
+```{r cooks, echo=TRUE}
+cookcount <- function(fmla) {
+  sum(cooks.distance(lm(fmla, data = dat)) > 4 / nrow(dat))
+}
+c(`Z+x1`         = cookcount(Y ~ Z + x1),
+  `+x2`          = cookcount(Y ~ Z + x1 + x2),
+  `+x3`          = cookcount(Y ~ Z + x1 + x2 + x3),
+  `+x4`          = cookcount(Y ~ Z + x1 + x2 + x3 + x4),
+  `interactions` = cookcount(Y ~ Z * x1 * x2 * x3 * x4))
+```
+
+\footnotesize
+More covariates, more flagged points --- not because the data got worse, but
+because the projection has more dimensions in which a point can be extreme. The
+probability that *some* observation is unduly influential rises mechanically as
+you add controls. \normalsize
+
+## Cook's distance across specifications
+
+```{r cooksgrid, echo=FALSE, out.width=".92\\linewidth", warning=FALSE, message=FALSE, cache=TRUE}
+mods <- list(
+  "Z + x1"              = lm(Y ~ Z + x1, data = dat),
+  "Z + x1 + x2"         = lm(Y ~ Z + x1 + x2, data = dat),
+  "Z + x1..x4"          = lm(Y ~ Z + x1 + x2 + x3 + x4, data = dat),
+  "polynomials"         = lm(Y ~ Z + poly(x1, 3) + poly(x2, 2) + poly(x3, 4) + x4, data = dat),
+  "splines + interact"  = lm(Y ~ Z + ns(x1, 3) + ns(x2, 3) * ns(x3, 3) * x4, data = dat),
+  "full interactions"   = lm(Y ~ Z * x1 * x2 * x3 * x4, data = dat)
+)
+par(mfrow = c(2, 3), mar = c(3, 3, 2, 0.5), mgp = c(1.7, .5, 0), oma = rep(0, 4))
+for (nm in names(mods)) {
+  cd <- cooks.distance(mods[[nm]])
+  plot(cd, type = "h", main = nm, xlab = "observation", ylab = "Cook's D",
+       col = ifelse(cd > 4 / nrow(dat), "red", "grey40"))
+  abline(h = 4 / nrow(dat), lty = 2)
+}
+```
+
+\footnotesize
+Red bars exceed $4/n$. As the specification grows richer, more single
+neighborhoods can move the estimate. With one covariate you could name and
+inspect them; here, which model's influential points should you worry about?
+\normalsize
+
+# Why "Controlling For" Is Not a Design
+
+## To answer the three questions, you read the estimate
+
+Notice how you would actually choose among the specifications. You fit one, look
+at the coefficient on `Z` and its $p$-value; you try another functional form,
+look again; you drop an influential point, look again. Every diagnostic decision
+is made **while watching the answer**.
+
+\medskip
+
+That is the opposite of the matched design. There, we settled the design on
+covariates alone, **before** the outcome was unblinded. Here, design and outcome
+analysis are the same act, repeated.
+
+\medskip
+
+Choosing a specification by looking at $\hat\tau$ and its $p$-value, over and
+over, is testing the same hypothesis many times and reporting once. The nominal
+$p$-value no longer means what it claims [@simmonsetal2011; @young2019].
+
+## "Regression is a fine calculator"
+
+@berk2010 argues that regression is not a research design; @ache:05 warns that
+piling in covariates without justification --- "garbage-can regression" --- can
+make things worse, not better.
+
+\medskip
+
+> Regression is a fine calculator. But you have to tell it what to calculate.
+
+\medskip
+
+The formula `Y ~ Z + x1 + x2 + x3 + x4` does not supply a design. It supplies a
+set of comparisons --- a particular residualization, a particular weighting, a
+particular extrapolation --- that you did not choose deliberately and usually
+cannot see.
+
+## Even when it "works", which average is it?
+
+Suppose the form is right and overlap is fine. OLS still does not return the ATE
+you have in mind. It returns a **variance-weighted** average of unit- or
+stratum-level effects, weighting hardest where treatment is most variable
+[@aronowsamii2016; @angrist2009mostly].
+
+\medskip
+
+The units that dominate the estimate --- the implied "effective sample" --- need
+not resemble your target population. Two analysts who both "control for the same
+covariates" can be estimating effects for different, unstated sets of people.
+
+## The problem does not stop at observational studies
+
+The credibility revolution changed which **identification strategies** count as
+credible. It did not change how most studies handle covariate adjustment
+*within* a strategy.
+
+\medskip
+
+A difference-in-differences with covariates ("conditional DiD"), a regression
+discontinuity with covariate controls, an experiment "adjusted" for baseline
+imbalance --- each adds covariates to a regression and so inherits the same three
+questions: which functional form, how much extrapolation, which influential
+points. A good design upstream does not excuse an unexamined residualization
+downstream.
+
+# When Is Regression Adjustment Defensible?
+
+## The narrow case for "controlling for"
+
+Regression adjustment answers its three questions only when you can make all of
+the following true, and say so:
+
+ - **Few covariates**, so that functional form, overlap, and influence can each
+   be inspected --- the one-covariate plots, repeated and defended, not waved at.
+ - **Genuine common support**: treated and control occupy the same region, so
+   no coefficient rests on extrapolation.
+ - **A relationship you can defend as roughly linear and additive** on that
+   region --- checked against a smoother, not assumed.
+ - **One specification, fixed before the outcomes are analyzed.** Not chosen
+   from the cloud after seeing $\hat\tau$.
+
+\medskip
+
+When the covariates are many and the form is unknown, these conditions fail, and
+"we controlled for them" is a description of what software did, not a
+justification.
+
+## Regression as a precision tool inside a design
+
+There is a setting where putting covariates in a regression is on firm ground:
+**inside a design you already have.**
+
+\medskip
+
+In a randomized experiment, $Z$ is not confounded. Covariate adjustment there is
+not removing confounding; it is removing noise from the outcome to gain
+precision, with a known small bias that vanishes as $n$ grows [@lin2013]. The
+same logic applies after matching: estimate the effect within sets you built and
+balanced first.
+
+\medskip
+
+The distinction is the whole lecture: adjustment as a **precision** tool *within*
+a design is fine; adjustment as the **device that creates the comparison** is the
+move that raises the three unanswerable questions.
+
+## Flexible models do not dissolve the problem
+
+"Use splines, or a machine learner, and let the data pick the form." These help
+with functional form, and tools like kernel regularized least squares
+[@hainmuellerhazlett2013] are built for exactly that. But they trade one set of
+choices for another --- basis size, penalty, tuning --- and they still:
+
+ - extrapolate silently where there is no support, and
+ - estimate while you tune, with no separation of design from outcome.
+
+\medskip
+
+Flexibility buys a better functional form. It does not buy a design.
+
+# The Alternative: Stratification Holds Constant
+
+## Compare like with like
+
+Instead of removing a *linear* function of `x1`, compare units with *similar*
+`x1`. Bin `x1` and take the difference in means inside each bin:
+
+```{r strat, echo=TRUE}
+dat$x1cut <- cut(dat$x1, breaks = c(0, 5, 8, 11, 14, 20))
+stratab <- dat %>% group_by(x1cut) %>%
+  summarize(nT = sum(Z), nC = sum(1 - Z),
+            diff = ifelse(nT > 0 & nC > 0, mean(Y[Z == 1]) - mean(Y[Z == 0]), NA),
+            .groups = "drop")
+as.data.frame(stratab)
+```
+
+\footnotesize
+No functional form: just within-bin differences. Look at the last row.
+\normalsize
+
+## Stratification reveals what regression hides
+
+```{r stratest, echo=TRUE}
+usable <- filter(stratab, nT > 0 & nC > 0) %>%
+  mutate(nb = nT + nC, wt = nb / sum(nb))
+strat_est  <- with(usable, sum(diff * wt))                 # weight by set size
+no_overlap <- with(filter(stratab, nT == 0 | nC == 0), sum(nT + nC))
+c(strat_estimate = round(strat_est, 2),
+  truth          = round(true_ate, 2),
+  units_no_overlap = no_overlap)
+```
+
+\footnotesize
+The `(14,20]` bin has `r stratab$nT[stratab$x1cut=="(14,20]"]` treated and **0**
+controls --- `r no_overlap` units with no comparison. Regression silently
+extrapolates into that region; stratification shows the gap and sets it aside,
+reporting `r round(strat_est,2)` for the population it can actually support
+(truth `r round(true_ate,2)`). \normalsize
+
+## Why stratification answers the three questions
+
+For each problem that "controlling for" leaves open, comparing within strata
+gives an answer you can state:
+
+ - **Functional form**: none assumed. Within a bin we compare like with like, so
+   no curve to choose.
+ - **Extrapolation**: a bin with only treated or only control units is *visible*
+   --- it drops out, and we report which units we cannot speak to.
+ - **Influential points**: each unit moves only its own small set, not a slope
+   fit across the whole range.
+
+\medskip
+
+And the order is restored: we build and balance the strata on covariates alone
+(Monday's `balanceTest`), and only then look at outcomes. Design first, analysis
+second.
+
+## Honest caveat: matching is not magic
+
+Stratification is not a guarantee of the truth; it is a way to make the
+questions answerable.
+
+ - You still choose how to form sets (cutpoints, calipers, distances), and a
+   careless full match with no caliper can itself extrapolate --- which is
+   exactly why Monday's UN design used calipers, exact matching on region, and a
+   balance test.
+ - It estimates an effect for the matched population, which may not be your
+   target population --- the same weighting question regression hides, now made
+   explicit.
+
+\medskip
+
+The gain is not certainty. The gain is that "did we adjust enough?" becomes a
+question about a design we can show you, decided before we saw the outcome
+[@ho:etal:07; @rosenbaum2010design].
+
+# Summary
+
+## What to take away
+
+ - **"Controlling for" = residualization** (Frisch-Waugh-Lovell). It removes a
+   *linear* function of the covariates; it does not hold them constant.
+ - With **one** covariate, the three questions --- functional form,
+   extrapolation, influential points --- are plots you can make and defend.
+ - With **several** covariates the same questions remain but become
+   unanswerable: thousands of forms (here, `r round(mean(res<0)*100)`\% the wrong
+   sign), joint support you cannot see, influence that grows with dimension.
+ - You resolve those questions by **looking at the estimate and its
+   $p$-value**, repeatedly. That is not a design; it is estimating and testing
+   the same hypothesis many times.
+ - **Reasonable use is narrow**: few covariates, real overlap, a defensible
+   form, one pre-specified specification --- or regression as a *precision* tool
+   *within* a design you already have.
+ - **Stratification** makes the three questions answerable and keeps design
+   decisions outcome-free. Wednesday and Thursday build the designs that do this
+   for continuous treatments and over time.
+
+## References {.allowframebreaks}
