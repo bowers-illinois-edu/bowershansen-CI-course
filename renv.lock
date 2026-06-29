@@ -86,6 +86,43 @@
       "Repository": "https://packagemanager.posit.co/cran/latest",
       "Encoding": "UTF-8"
     },
+    "BMisc": {
+      "Package": "BMisc",
+      "Version": "1.4.9",
+      "Source": "Repository",
+      "Title": "Miscellaneous Functions for Panel Data, Quantiles, and Printing Results",
+      "Authors@R": "person(\"Brantly\", \"Callaway\", email = \"brantly.callaway@uga.edu\", role = c(\"aut\", \"cre\"))",
+      "Description": "These are miscellaneous functions for working with panel data, quantiles, and printing results.  For panel data, the package includes functions for making a panel data balanced (that is, dropping missing individuals that have missing observations in any time period), converting id numbers to row numbers, and to treat repeated cross sections as panel data under the assumption of rank invariance.  For quantiles, there are functions to make distribution functions from a set of data points (this is particularly useful when a distribution function is created in several steps), to combine distribution functions based on some external weights, and to invert distribution functions.  Finally, there are several other miscellaneous functions for obtaining weighted means, weighted distribution functions, and weighted quantiles; to generate summary statistics and their differences for two groups; and to add or drop covariates from formulas.  Additional utilities support staggered treatment adoption settings, including functions for identifying treatment groups, recovering pre-treatment outcomes and covariate averages, and computing lagged outcomes and first differences in panel data.",
+      "Depends": [
+        "R (>= 4.1.0)"
+      ],
+      "Imports": [
+        "data.table",
+        "dplyr",
+        "Rcpp",
+        "tidyr"
+      ],
+      "License": "GPL-3",
+      "Suggests": [
+        "testthat (>= 3.0.0)",
+        "plm",
+        "tibble",
+        "caret"
+      ],
+      "Encoding": "UTF-8",
+      "Config/testthat/edition": "3",
+      "LinkingTo": [
+        "Rcpp",
+        "RcppArmadillo"
+      ],
+      "URL": "https://bcallaway11.github.io/BMisc/",
+      "BugReports": "https://github.com/bcallaway11/BMisc/issues",
+      "Config/roxygen2/version": "8.0.0",
+      "NeedsCompilation": "yes",
+      "Author": "Brantly Callaway [aut, cre]",
+      "Maintainer": "Brantly Callaway <brantly.callaway@uga.edu>",
+      "Repository": "CRAN"
+    },
     "BiasedUrn": {
       "Package": "BiasedUrn",
       "Version": "2.0.12",
@@ -126,6 +163,71 @@
       "NeedsCompilation": "no",
       "Author": "Robin K. S. Hankin [aut, cre] (<https://orcid.org/0000-0001-5982-0415>)",
       "Encoding": "UTF-8"
+    },
+    "CVXR": {
+      "Package": "CVXR",
+      "Version": "1.9.1",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Disciplined Convex Optimization",
+      "Date": "2026-06-05",
+      "Authors@R": "c( person(\"Anqi\", \"Fu\", role = c(\"aut\", \"cre\"), email = \"anqif@alumni.stanford.edu\"), person(\"Balasubramanian\", \"Narasimhan\", role = c(\"aut\"), email = \"naras@stat.stanford.edu\"), person(\"Steven\", \"Diamond\", role = c(\"aut\")), person(\"John\", \"Miller\", role = c(\"aut\")), person(\"Stephen\", \"Boyd\", role = c(\"ctb\"), email = \"boyd@stanford.edu\") )",
+      "URL": "https://cvxr.rbind.io, https://www.cvxgrp.org/CVXR/",
+      "BugReports": "https://github.com/cvxgrp/CVXR/issues",
+      "Description": "An object-oriented modeling language for disciplined convex programming (DCP) as described in Fu, Narasimhan, and Boyd (2020, <doi:10.18637/jss.v094.i14>). It allows the user to formulate convex optimization problems in a natural way following mathematical convention and DCP rules. The system analyzes the problem, verifies its convexity, converts it into a canonical form, and hands it off to an appropriate solver to obtain the solution. This version uses the S7 object system for improved performance and maintainability.",
+      "Depends": [
+        "R (>= 4.3.0)"
+      ],
+      "Imports": [
+        "S7 (>= 0.2)",
+        "methods",
+        "Matrix (>= 1.7)",
+        "Rcpp (>= 1.1)",
+        "clarabel (>= 0.11)",
+        "cli (>= 3.6)",
+        "gmp (>= 0.7)",
+        "highs (>= 1.14)",
+        "osqp (>= 1.0)",
+        "scs (>= 3.2)",
+        "slam (>= 0.1)"
+      ],
+      "Suggests": [
+        "jsonlite (>= 1.9)",
+        "knitr",
+        "rmarkdown",
+        "testthat (>= 3.3)",
+        "rlang"
+      ],
+      "Enhances": [
+        "Rmosek",
+        "gurobi (>= 13.0)",
+        "Rglpk (>= 0.6)",
+        "ECOSolveR (>= 0.6)",
+        "Rcplex (>= 0.3)",
+        "cccp (>= 0.3)",
+        "piqp (>= 0.6)",
+        "scip",
+        "xpress",
+        "diffcp (>= 0.1)",
+        "ipopt",
+        "sparsediff",
+        "Uno"
+      ],
+      "Additional_repositories": "https://bnaras.r-universe.dev, https://bnaras.github.io/drat",
+      "LinkingTo": [
+        "Rcpp",
+        "RcppEigen"
+      ],
+      "License": "Apache License 2.0 | file LICENSE",
+      "LazyData": "true",
+      "Encoding": "UTF-8",
+      "VignetteBuilder": "knitr",
+      "Config/testthat/edition": "3",
+      "Config/roxygen2/version": "8.0.0",
+      "NeedsCompilation": "yes",
+      "Author": "Anqi Fu [aut, cre], Balasubramanian Narasimhan [aut], Steven Diamond [aut], John Miller [aut], Stephen Boyd [ctb]",
+      "Maintainer": "Anqi Fu <anqif@alumni.stanford.edu>",
+      "Repository": "CRAN"
     },
     "DBI": {
       "Package": "DBI",
@@ -206,6 +308,46 @@
       "Repository/R-Forge/Revision": "1025",
       "Repository/R-Forge/DateTimeStamp": "2026-06-07 16:58:58",
       "NeedsCompilation": "no"
+    },
+    "DRDID": {
+      "Package": "DRDID",
+      "Version": "1.3.0",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Doubly Robust Difference-in-Differences Estimators",
+      "Authors@R": "c(person(\"Pedro H. C.\", \"Sant'Anna\", email = \"pedrohcgs@gmail.com\", role = c(\"aut\", \"cre\", \"cph\")), person(\"Jun\", \"Zhao\", email = \"beanzhaojun11@gmail.com\",role = c(\"aut\")) )",
+      "Description": "Implements the locally efficient doubly robust difference-in-differences (DiD) estimators for the average treatment effect proposed by Sant'Anna and Zhao (2020) <doi:10.1016/j.jeconom.2020.06.003>. The estimator combines inverse probability weighting and outcome regression estimators (also implemented in the package) to form estimators with more attractive statistical properties. Two different estimation methods can be used to estimate the nuisance functions.",
+      "URL": "https://psantanna.com/DRDID/, https://github.com/pedrohcgs/DRDID",
+      "License": "GPL-3",
+      "Encoding": "UTF-8",
+      "LazyData": "true",
+      "Depends": [
+        "R (>= 3.5)"
+      ],
+      "Imports": [
+        "stats",
+        "trust",
+        "BMisc (>= 1.4.1)",
+        "Rcpp (>= 1.0.12)",
+        "fastglm (>= 0.0.3)"
+      ],
+      "LinkingTo": [
+        "Rcpp (>= 1.0.12)"
+      ],
+      "RoxygenNote": "7.3.2",
+      "Suggests": [
+        "knitr",
+        "rmarkdown",
+        "spelling",
+        "testthat"
+      ],
+      "Date": "2026-06-09",
+      "Language": "en-US",
+      "BugReports": "https://github.com/pedrohcgs/DRDID/issues",
+      "NeedsCompilation": "yes",
+      "Author": "Pedro H. C. Sant'Anna [aut, cre, cph], Jun Zhao [aut]",
+      "Maintainer": "Pedro H. C. Sant'Anna <pedrohcgs@gmail.com>",
+      "Repository": "CRAN"
     },
     "DT": {
       "Package": "DT",
@@ -359,6 +501,39 @@
       "Maintainer": "Jasper Cooper <jjc2247@columbia.edu>",
       "Repository": "CRAN"
     },
+    "ECOSolveR": {
+      "Package": "ECOSolveR",
+      "Version": "0.6.1",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Embedded Conic Solver in R",
+      "Date": "2026-02-18",
+      "VignetteBuilder": "knitr",
+      "Authors@R": "c(person(\"Anqi\", \"Fu\", role = c(\"aut\"), email = \"anqi.fu.1987@gmail.com\"), person(\"Balasubramanian\", \"Narasimhan\", role = c(\"aut\", \"cre\"), email = \"naras@stat.Stanford.EDU\"), person(\"Florian\", \"Schwendinger\", role = c(\"ctb\"), email = \"FlorianSchwendinger@gmx.at\"), person(\"Martin\", \"Maechler\", role = \"ctb\", email = \"maechler@stat.math.ethz.ch\") )",
+      "SystemRequirements": "GNU make",
+      "URL": "https://bnaras.github.io/ECOSolveR/",
+      "BugReports": "https://github.com/bnaras/ECOSolveR/issues",
+      "Imports": [
+        "cli",
+        "methods"
+      ],
+      "Suggests": [
+        "knitr",
+        "rmarkdown",
+        "testthat",
+        "Matrix",
+        "covr",
+        "slam"
+      ],
+      "Description": "R interface to the Embedded COnic Solver (ECOS), an efficient and robust C library for convex problems. Conic and equality constraints can be specified in addition to integer and boolean variable constraints for mixed-integer problems. This R interface is inspired by the python interface and has similar calling conventions.",
+      "License": "GPL (>= 3)",
+      "Encoding": "UTF-8",
+      "RoxygenNote": "7.3.3",
+      "NeedsCompilation": "yes",
+      "Author": "Anqi Fu [aut], Balasubramanian Narasimhan [aut, cre], Florian Schwendinger [ctb], Martin Maechler [ctb]",
+      "Maintainer": "Balasubramanian Narasimhan <naras@stat.Stanford.EDU>",
+      "Repository": "CRAN"
+    },
     "Formula": {
       "Package": "Formula",
       "Version": "1.2-5",
@@ -451,6 +626,51 @@
       "Author": "Frank E Harrell Jr [aut, cre] (ORCID: <https://orcid.org/0000-0002-8271-5493>), Cole Beck [ctb], Charles Dupont [ctb]",
       "Maintainer": "Frank E Harrell Jr <fh@fharrell.com>",
       "Repository": "CRAN"
+    },
+    "HonestDiD": {
+      "Package": "HonestDiD",
+      "Version": "0.2.8",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Robust Inference in Difference-in-Differences and Event Study Designs",
+      "Depends": [
+        "R (>= 3.6.0)"
+      ],
+      "Imports": [
+        "stats",
+        "rlang",
+        "foreach (>= 1.4.7)",
+        "matrixStats (>= 0.63.0)",
+        "CVXR (>= 1.8)",
+        "ECOSolveR",
+        "latex2exp (>= 0.4.0)",
+        "lpSolveAPI (>= 5.5.2.0-17)",
+        "Matrix (>= 1.2-17)",
+        "pracma (>= 2.2.5)",
+        "purrr (>= 0.3.4)",
+        "tibble (>= 1.3.4)",
+        "dplyr (>= 0.7.4)",
+        "ggplot2 (>= 2.2.1)",
+        "Rglpk (>= 0.6-4)",
+        "mvtnorm (>= 1.1-3)",
+        "TruncatedNormal (>= 1.0)"
+      ],
+      "Suggests": [
+        "knitr",
+        "testthat",
+        "haven",
+        "lfe",
+        "rmarkdown"
+      ],
+      "Authors@R": "c(person(given = \"Ashesh\", family = \"Rambachan\", role = c(\"aut\", \"cph\", \"cre\"), email = \"ashesh.a.rambachan@gmail.com\"), person(given = \"Jonathan\", family = \"Roth\", role = c(\"aut\", \"cph\"), email = \"jonathan_roth@brown.edu\"))",
+      "Description": "Provides functions to conduct robust inference in difference-in-differences and event study designs by implementing the methods developed in Rambachan & Roth (2023) <doi:10.1093/restud/rdad018>, \"A More Credible Approach to Parallel Trends\" [Previously titled \"An Honest Approach...\"]. Inference is conducted under a weaker version of the parallel trends assumption. Uniformly valid confidence sets are constructed based upon conditional confidence sets, fixed-length confidence sets and hybridized confidence sets.",
+      "Encoding": "UTF-8",
+      "LazyData": "true",
+      "License": "MIT + file LICENSE",
+      "NeedsCompilation": "no",
+      "Author": "Ashesh Rambachan [aut, cph, cre], Jonathan Roth [aut, cph]",
+      "Maintainer": "Ashesh Rambachan <ashesh.a.rambachan@gmail.com>",
+      "Repository": "https://packagemanager.posit.co/cran/latest"
     },
     "MASS": {
       "Package": "MASS",
@@ -961,6 +1181,25 @@
       "Maintainer": "Georgi N. Boshnakov <georgi.boshnakov@manchester.ac.uk>",
       "Repository": "https://packagemanager.posit.co/cran/latest"
     },
+    "Rglpk": {
+      "Package": "Rglpk",
+      "Version": "0.6-5.1",
+      "Source": "Repository",
+      "Title": "R/GNU Linear Programming Kit Interface",
+      "Description": "R interface to the GNU Linear Programming Kit. 'GLPK' is open source software for solving large-scale linear programming (LP), mixed integer linear programming ('MILP') and other related problems.",
+      "Authors@R": "c(person(\"Stefan\", \"Theussl\", role = c(\"aut\", \"cre\"), email = \"Stefan.Theussl@R-project.org\", comment = c(ORCID = \"0000-0002-6523-4620\")), person(\"Kurt\", \"Hornik\", role = \"aut\", comment = c(ORCID = \"0000-0003-4198-9911\")), person(\"Christian\", \"Buchta\", role = \"ctb\"), person(\"Florian\", \"Schwendinger\", role = \"ctb\", comment = c(ORCID = \"0000-0002-3983-9773\")), person(\"Heinrich\", \"Schuchardt\", role = \"ctb\"))",
+      "Depends": [
+        "slam (>= 0.1-9)"
+      ],
+      "SystemRequirements": "GLPK library package (e.g., libglpk-dev on Debian/Ubuntu)",
+      "License": "GPL-2 | GPL-3",
+      "URL": "https://R-Forge.R-project.org/projects/rglp/, https://www.gnu.org/software/glpk/",
+      "NeedsCompilation": "yes",
+      "Author": "Stefan Theussl [aut, cre] (<https://orcid.org/0000-0002-6523-4620>), Kurt Hornik [aut] (<https://orcid.org/0000-0003-4198-9911>), Christian Buchta [ctb], Florian Schwendinger [ctb] (<https://orcid.org/0000-0002-3983-9773>), Heinrich Schuchardt [ctb]",
+      "Maintainer": "Stefan Theussl <Stefan.Theussl@R-project.org>",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "Encoding": "UTF-8"
+    },
     "Rsolnp": {
       "Package": "Rsolnp",
       "Version": "2.0.1",
@@ -1140,6 +1379,45 @@
       "Maintainer": "Torsten Hothorn <Torsten.Hothorn@R-project.org>",
       "Repository": "CRAN"
     },
+    "TruncatedNormal": {
+      "Package": "TruncatedNormal",
+      "Version": "2.3",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Truncated Multivariate Normal and Student Distributions",
+      "Authors@R": "c(person(given=\"Zdravko\", family=\"Botev\", role = \"aut\", email = \"botev@unsw.edu.au\", comment = c(ORCID = \"0000-0001-9054-3452\")), person(given=\"Leo\", family=\"Belzile\", role = c(\"aut\", \"cre\"), email = \"belzilel@gmail.com\", comment = c(ORCID = \"0000-0002-9135-014X\")))",
+      "Description": "A collection of functions to deal with the truncated univariate and multivariate normal and Student distributions, described in Botev (2017) <doi:10.1111/rssb.12162> and Botev and L'Ecuyer (2015) <doi:10.1109/WSC.2015.7408180>.",
+      "License": "GPL-3",
+      "BugReports": "https://github.com/lbelzile/TruncatedNormal/issues",
+      "Depends": [
+        "R (>= 2.10)"
+      ],
+      "Imports": [
+        "nleqslv",
+        "qrng",
+        "spacefillr",
+        "alabama",
+        "Rcpp (>= 0.12.16)"
+      ],
+      "LinkingTo": [
+        "Rcpp",
+        "RcppArmadillo"
+      ],
+      "RoxygenNote": "7.3.2",
+      "VignetteBuilder": "knitr",
+      "Encoding": "UTF-8",
+      "Suggests": [
+        "knitr",
+        "rmarkdown",
+        "mvtnorm",
+        "carData",
+        "tinytest"
+      ],
+      "NeedsCompilation": "yes",
+      "Author": "Zdravko Botev [aut] (<https://orcid.org/0000-0001-9054-3452>), Leo Belzile [aut, cre] (<https://orcid.org/0000-0002-9135-014X>)",
+      "Maintainer": "Leo Belzile <belzilel@gmail.com>",
+      "Repository": "CRAN"
+    },
     "abind": {
       "Package": "abind",
       "Version": "1.4-8",
@@ -1160,6 +1438,27 @@
       "NeedsCompilation": "no",
       "Author": "Tony Plate [aut, cre], Richard Heiberger [aut]",
       "Repository": "https://packagemanager.posit.co/cran/latest",
+      "Encoding": "UTF-8"
+    },
+    "alabama": {
+      "Package": "alabama",
+      "Version": "2025.1.0",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Constrained Nonlinear Optimization",
+      "Description": "Augmented Lagrangian Adaptive Barrier Minimization Algorithm for optimizing smooth nonlinear objective functions with constraints. Linear or nonlinear equality and inequality constraints are allowed.",
+      "Depends": [
+        "R (>= 4.0)",
+        "numDeriv"
+      ],
+      "Date": "2025-12-29",
+      "Authors@R": "person(given = \"Ravi\", family = \"Varadhan\", role = c(\"aut\", \"cre\"), email = \"ravi.varadhan@jhu.edu\", comment = \"with contributions from Gabor Grothendieck\")",
+      "Maintainer": "Ravi Varadhan <ravi.varadhan@jhu.edu>",
+      "License": "GPL (>= 2)",
+      "LazyLoad": "yes",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "NeedsCompilation": "no",
+      "Author": "Ravi Varadhan [aut, cre] (with contributions from Gabor Grothendieck)",
       "Encoding": "UTF-8"
     },
     "arm": {
@@ -1318,6 +1617,70 @@
       "Config/testthat/edition": "3",
       "NeedsCompilation": "no",
       "Author": "Jonah Gabry [aut, cre], Tristan Mahr [aut] (ORCID: <https://orcid.org/0000-0002-8890-5116>), Paul-Christian Bürkner [ctb], Martin Modrák [ctb], Malcolm Barrett [ctb], Frank Weber [ctb], Eduardo Coronado Sroka [ctb], Teemu Sailynoja [ctb], Aki Vehtari [ctb], Behram Ulukır [ctb], Visruth Srimath Kandali [ctb]",
+      "Repository": "https://packagemanager.posit.co/cran/latest"
+    },
+    "bigmemory": {
+      "Package": "bigmemory",
+      "Version": "4.6.6",
+      "Source": "Repository",
+      "Title": "Manage Massive Matrices with Shared Memory and Memory-Mapped Files",
+      "Authors@R": "c( person(given = \"Michael J.\", family = \"Kane\", role = c(\"aut\", \"cre\"), email = \"bigmemoryauthors@gmail.com\", comment = c(ORCID = \"0000-0003-1899-6662\")), person(given = \"John W.\", family = \"Emerson\", role = \"aut\", email = \"jayemerson@gmail.com\"), person(given = \"Peter\", family = \"Haverty\", role = \"aut\", email = \"haverty.peter@gene.com\"), person(given = \"Charles\", family = \"Determan\", role = \"aut\", email = \"cdetermanjr@gmail.com\") )",
+      "Depends": [
+        "R (>= 3.2.0)"
+      ],
+      "Imports": [
+        "bigmemory.sri",
+        "methods",
+        "utils",
+        "Rcpp",
+        "uuid (>= 1.0-2)"
+      ],
+      "Enhances": [
+        "biganalytics",
+        "bigtabulate"
+      ],
+      "LinkingTo": [
+        "BH",
+        "uuid (>= 1.0-2)",
+        "Rcpp"
+      ],
+      "Encoding": "UTF-8",
+      "Description": "Create, store, access, and manipulate massive matrices. Matrices are allocated to shared memory and may use memory-mapped files.  Packages 'biganalytics', 'bigtabulate', 'synchronicity', and 'bigalgebra' provide advanced functionality.",
+      "License": "LGPL-3 | Apache License 2.0",
+      "URL": "https://github.com/kaneplusplus/bigmemory",
+      "BugReports": "https://github.com/kaneplusplus/bigmemory/issues",
+      "LazyLoad": "yes",
+      "Suggests": [
+        "testthat",
+        "remotes"
+      ],
+      "RoxygenNote": "7.3.3",
+      "NeedsCompilation": "yes",
+      "Author": "Michael J. Kane [aut, cre] (ORCID: <https://orcid.org/0000-0003-1899-6662>), John W. Emerson [aut], Peter Haverty [aut], Charles Determan [aut]",
+      "Maintainer": "Michael J. Kane <bigmemoryauthors@gmail.com>",
+      "Repository": "CRAN"
+    },
+    "bigmemory.sri": {
+      "Package": "bigmemory.sri",
+      "Version": "0.1.8",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "A Shared Resource Interface for Bigmemory Project Packages",
+      "Authors@R": "c( person(given = \"Michael J.\", family = \"Kane\", role = c(\"aut\", \"cre\"), email = \"bigmemoryauthors@gmail.com\", comment = c(ORCID = \"0000-0003-1899-6662\")) )",
+      "Description": "A shared resource interface for the bigmemory and synchronicity packages.",
+      "Encoding": "UTF-8",
+      "Language": "en-US",
+      "License": "LGPL-3 | Apache License 2.0",
+      "Enhances": [
+        "bigmemory"
+      ],
+      "Imports": [
+        "methods"
+      ],
+      "RoxygenNote": "7.2.3",
+      "NeedsCompilation": "no",
+      "Author": "Michael J. Kane [aut, cre] (<https://orcid.org/0000-0003-1899-6662>)",
+      "Maintainer": "Michael J. Kane <bigmemoryauthors@gmail.com>",
       "Repository": "https://packagemanager.posit.co/cran/latest"
     },
     "bit": {
@@ -2271,6 +2634,36 @@
       "Maintainer": "Kurt Hornik <Kurt.Hornik@R-project.org>",
       "Repository": "CRAN"
     },
+    "clarabel": {
+      "Package": "clarabel",
+      "Version": "0.11.2",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Interior Point Conic Optimization Solver",
+      "Authors@R": "c(person(\"Balasubramanian\", \"Narasimhan\", role = c(\"aut\", \"cre\"), email = \"naras@stanford.edu\"), person(\"Paul\", \"Goulart\", role = c(\"aut\", \"cph\")), person(\"Yuwen\", \"Chen\", role = c(\"aut\")), person(\"Hiroaki\", \"Yutani\", role = c(\"ctb\"), comment = \"For vendoring/Makefile hints/R scripts for generating crate authors/licenses\"), person(\"David\", \"Zimmermann-Kollenda\", role = c(\"ctb\"), comment = \"For configure scripts and tools/msvr.R lifted from rtiktoken package\"),  person(given = \"The authors of the dependency Rust crates\", role = c(\"ctb\"),\t comment = \"see inst/AUTHORS file for details\"))",
+      "Description": "A versatile interior point solver that solves linear programs (LPs), quadratic programs (QPs), second-order cone programs (SOCPs), semidefinite programs (SDPs), and problems with exponential and power cone constraints (<https://clarabel.org/stable/>). For quadratic objectives, unlike interior point solvers based on the standard homogeneous self-dual embedding (HSDE) model, Clarabel handles quadratic objective without requiring any epigraphical reformulation of its objective function. It can therefore be significantly faster than other HSDE-based solvers for problems with quadratic objective functions. Infeasible problems are detected using using a homogeneous embedding technique.",
+      "License": "Apache License (== 2.0)",
+      "Encoding": "UTF-8",
+      "RoxygenNote": "7.3.3",
+      "URL": "https://oxfordcontrol.github.io/clarabel-r/",
+      "BugReports": "https://github.com/oxfordcontrol/clarabel-r/issues",
+      "Suggests": [
+        "knitr",
+        "Matrix",
+        "rmarkdown",
+        "tinytest"
+      ],
+      "VignetteBuilder": "knitr",
+      "SystemRequirements": "Cargo (Rust's package manager), rustc (>= 1.70.0), and GNU Make",
+      "Imports": [
+        "cli",
+        "methods"
+      ],
+      "NeedsCompilation": "yes",
+      "Author": "Balasubramanian Narasimhan [aut, cre], Paul Goulart [aut, cph], Yuwen Chen [aut], Hiroaki Yutani [ctb] (For vendoring/Makefile hints/R scripts for generating crate authors/licenses), David Zimmermann-Kollenda [ctb] (For configure scripts and tools/msvr.R lifted from rtiktoken package), The authors of the dependency Rust crates [ctb] (see inst/AUTHORS file for details)",
+      "Maintainer": "Balasubramanian Narasimhan <naras@stanford.edu>",
+      "Repository": "https://packagemanager.posit.co/cran/latest"
+    },
     "class": {
       "Package": "class",
       "Version": "7.3-23",
@@ -3113,6 +3506,53 @@
       "Maintainer": "Jennifer Bryan <jenny@posit.co>",
       "Repository": "https://packagemanager.posit.co/cran/latest"
     },
+    "did": {
+      "Package": "did",
+      "Version": "2.5.0",
+      "Source": "Repository",
+      "Title": "Treatment Effects with Multiple Periods and Groups",
+      "Authors@R": "c(person(\"Brantly\", \"Callaway\", email = \"brantly.callaway@uga.edu\", role = c(\"aut\", \"cre\")), person(\"Pedro H. C.\", \"Sant'Anna\", email=\"pedro.santanna@emory.edu\", role = c(\"aut\")))",
+      "URL": "https://bcallaway11.github.io/did/, https://github.com/bcallaway11/did/",
+      "Description": "The standard Difference-in-Differences (DID) setup involves two periods and two groups -- a treated group and untreated group.  Many applications of DID methods involve more than two periods and have individuals that are treated at different points in time.  This package contains tools for computing average treatment effect parameters in Difference in Differences setups with more than two periods and with variation in treatment timing using the methods developed in Callaway and Sant'Anna (2021) <doi:10.1016/j.jeconom.2020.12.001>.  The main parameters are group-time average treatment effects which are the average treatment effect for a particular group at a particular time.  These can be aggregated into a fewer number of treatment effect parameters, and the package deals with the cases where there is selective treatment timing, dynamic treatment effects, calendar time effects, or combinations of these.  There are also functions for testing the Difference in Differences assumption, and plotting group-time average treatment effects.",
+      "Depends": [
+        "R (>= 4.1.0)"
+      ],
+      "License": "GPL-3",
+      "Encoding": "UTF-8",
+      "LazyData": "true",
+      "Imports": [
+        "BMisc (>= 1.4.4)",
+        "Matrix",
+        "pbapply",
+        "ggplot2",
+        "DRDID (>= 1.3.0)",
+        "generics",
+        "methods",
+        "tidyr",
+        "fastglm",
+        "data.table (>= 1.15.4)",
+        "dreamerr (>= 1.4.0)"
+      ],
+      "VignetteBuilder": "knitr",
+      "Suggests": [
+        "rmarkdown",
+        "plm",
+        "here",
+        "knitr",
+        "covr",
+        "backports",
+        "broom",
+        "testthat (>= 3.0.0)",
+        "withr",
+        "remotes",
+        "callr"
+      ],
+      "Config/roxygen2/version": "8.0.0",
+      "NeedsCompilation": "no",
+      "Author": "Brantly Callaway [aut, cre], Pedro H. C. Sant'Anna [aut]",
+      "Maintainer": "Brantly Callaway <brantly.callaway@uga.edu>",
+      "Repository": "CRAN"
+    },
     "diffobj": {
       "Package": "diffobj",
       "Version": "0.3.6",
@@ -3436,6 +3876,35 @@
       "Author": "Hadley Wickham [aut, cre] (ORCID: <https://orcid.org/0000-0003-4757-117X>), Romain François [aut] (ORCID: <https://orcid.org/0000-0002-2444-4226>), Lionel Henry [aut], Kirill Müller [aut] (ORCID: <https://orcid.org/0000-0002-1416-3412>), Davis Vaughan [aut] (ORCID: <https://orcid.org/0000-0003-4777-038X>), Posit Software, PBC [cph, fnd]",
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
       "Repository": "CRAN"
+    },
+    "dreamerr": {
+      "Package": "dreamerr",
+      "Version": "1.5.0",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Error Handling Made Easy",
+      "Authors@R": "person(\"Laurent\", \"Berge\", email = \"laurent.berge@u-bordeaux.fr\", role = c(\"aut\", \"cre\"))",
+      "Imports": [
+        "Formula",
+        "utils",
+        "stringmagic(>= 1.2.0)"
+      ],
+      "Suggests": [
+        "knitr",
+        "rmarkdown",
+        "stats",
+        "graphics"
+      ],
+      "Description": "Set of tools to facilitate package development and make R a more user-friendly place. Mostly for developers (or anyone who writes/shares functions). Provides a simple, powerful and flexible way to check the arguments passed to functions.  The developer can easily describe the type of argument needed. If the user provides a wrong argument, then an informative error message is prompted with the requested type and the problem clearly stated--saving the user a lot of time in debugging.",
+      "License": "GPL-3",
+      "Encoding": "UTF-8",
+      "VignetteBuilder": "knitr",
+      "BugReports": "https://github.com/lrberge/dreamerr/issues",
+      "RoxygenNote": "7.3.2",
+      "NeedsCompilation": "no",
+      "Author": "Laurent Berge [aut, cre]",
+      "Maintainer": "Laurent Berge <laurent.berge@u-bordeaux.fr>",
+      "Repository": "https://packagemanager.posit.co/cran/latest"
     },
     "dtplyr": {
       "Package": "dtplyr",
@@ -3803,6 +4272,58 @@
       "NeedsCompilation": "yes",
       "Author": "Thomas Lin Pedersen [cre, aut] (<https://orcid.org/0000-0002-5147-4711>), Berendea Nicolae [aut] (Author of the ColorSpace C++ library), Romain François [aut] (<https://orcid.org/0000-0002-2444-4226>), Posit, PBC [cph, fnd]",
       "Maintainer": "Thomas Lin Pedersen <thomas.pedersen@posit.co>",
+      "Repository": "CRAN"
+    },
+    "fastglm": {
+      "Package": "fastglm",
+      "Version": "0.1.1",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Fast and Stable Fitting of Generalized Linear Models using 'RcppEigen'",
+      "Authors@R": "c( person(\"Jared\", \"Huling\", , email = \"jaredhuling@gmail.com\", c(\"aut\", \"cre\")), person(\"Douglas\", \"Bates\", , , c(\"cph\")), person(\"Dirk\", \"Eddelbuettel\", , , c(\"cph\")), person(\"Romain\", \"Francois\", , , c(\"cph\")), person(\"Yixuan\", \"Qiu\", , , c(\"cph\")), person(\"Noah\", \"Greifer\", role=c(\"ctb\"),  email = \"noah.greifer@gmail.com\", comment=c(ORCID=\"0000-0003-3067-7154\")) )",
+      "Description": "Fits generalized linear models efficiently using 'RcppEigen'. The iteratively reweighted least squares  implementation utilizes the step-halving approach of Marschner (2011) <doi:10.32614/RJ-2011-012> to help safeguard against convergence issues.",
+      "BugReports": "https://github.com/jaredhuling/fastglm/issues",
+      "URL": "https://github.com/jaredhuling/fastglm, https://jaredhuling.org/fastglm/",
+      "License": "GPL (>= 2)",
+      "Encoding": "UTF-8",
+      "Depends": [
+        "R (>= 4.0.0)"
+      ],
+      "Imports": [
+        "Rcpp (>= 0.12.13)",
+        "bigmemory",
+        "methods",
+        "Matrix",
+        "Formula"
+      ],
+      "LinkingTo": [
+        "Rcpp",
+        "RcppEigen",
+        "BH",
+        "bigmemory"
+      ],
+      "Suggests": [
+        "glm2",
+        "knitr",
+        "rmarkdown",
+        "testthat (>= 3.0.0)",
+        "sandwich",
+        "microbenchmark",
+        "MASS",
+        "statmod",
+        "logistf",
+        "brglm2",
+        "pscl",
+        "speedglm",
+        "tweedie",
+        "ggplot2"
+      ],
+      "Config/testthat/edition": "3",
+      "RoxygenNote": "7.3.3",
+      "VignetteBuilder": "knitr",
+      "NeedsCompilation": "yes",
+      "Author": "Jared Huling [aut, cre], Douglas Bates [cph], Dirk Eddelbuettel [cph], Romain Francois [cph], Yixuan Qiu [cph], Noah Greifer [ctb] (ORCID: <https://orcid.org/0000-0003-3067-7154>)",
+      "Maintainer": "Jared Huling <jaredhuling@gmail.com>",
       "Repository": "CRAN"
     },
     "fastmap": {
@@ -4926,6 +5447,35 @@
       "NeedsCompilation": "yes",
       "Author": "Jim Hester [aut] (ORCID: <https://orcid.org/0000-0002-2739-7082>), Jennifer Bryan [aut, cre] (ORCID: <https://orcid.org/0000-0002-6983-2759>), Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Jennifer Bryan <jenny@posit.co>",
+      "Repository": "CRAN"
+    },
+    "gmp": {
+      "Package": "gmp",
+      "Version": "0.7-5.1",
+      "Source": "Repository",
+      "Date": "2024-08-23",
+      "Title": "Multiple Precision Arithmetic",
+      "Authors@R": "c(person(\"Antoine\",\"Lucas\",role = c(\"aut\",\"cre\"), email = \"antoinelucas@gmail.com\", comment = c(ORCID=\"0000-0002-8059-9767\")), person(\"Immanuel\",\"Scholz\", role= \"aut\"), person(\"Rainer\",\"Boehme\", role = \"ctb\", email= \"rb-gmp@reflex-studio.de\"), person(\"Sylvain\",\"Jasson\", role = \"ctb\", email= \"Sylvain.Jasson@inrae.fr\"), person(\"Martin\", \"Maechler\", role = \"ctb\", email=\"maechler@stat.math.ethz.ch\"))",
+      "Maintainer": "Antoine Lucas <antoinelucas@gmail.com>",
+      "Description": "Multiple Precision Arithmetic (big integers and rationals, prime number tests, matrix computation), \"arithmetic without limitations\" using the C library GMP (GNU Multiple Precision Arithmetic).",
+      "Depends": [
+        "R (>= 3.5.0)"
+      ],
+      "Imports": [
+        "methods"
+      ],
+      "Suggests": [
+        "Rmpfr",
+        "MASS",
+        "round"
+      ],
+      "SystemRequirements": "gmp (>= 4.2.3)",
+      "License": "GPL (>= 2)",
+      "BuildResaveData": "no",
+      "LazyDataNote": "not available, as we use data/*.R *and* our classes",
+      "NeedsCompilation": "yes",
+      "URL": "https://forgemia.inra.fr/sylvain.jasson/gmp",
+      "Author": "Antoine Lucas [aut, cre] (ORCID: <https://orcid.org/0000-0002-8059-9767>), Immanuel Scholz [aut], Rainer Boehme [ctb], Sylvain Jasson [ctb], Martin Maechler [ctb]",
       "Repository": "CRAN"
     },
     "goftest": {
@@ -6536,6 +7086,22 @@
       "Maintainer": "Gábor Csárdi <csardi.gabor@gmail.com>",
       "Repository": "https://packagemanager.posit.co/cran/latest"
     },
+    "lpSolveAPI": {
+      "Package": "lpSolveAPI",
+      "Version": "5.5.2.0-17.15",
+      "Source": "Repository",
+      "Title": "R Interface to 'lp_solve' Version 5.5.2.0",
+      "Authors@R": "c(person(family = \"lp_solve\", role = \"aut\", email = \"https://lpsolve.sourceforge.net/\"), person(given = \"Kjell\", family = \"Konis\", role = \"aut\"), person(given = \"Florian\", family = \"Schwendinger\", role = c(\"aut\", \"cre\"), email = \"FlorianSchwendinger@gmx.at\"), person(given = \"Kurt\", family = \"Hornik\", role = \"ctb\"))",
+      "Description": "The lpSolveAPI package provides an R interface to 'lp_solve', a Mixed Integer Linear Programming (MILP) solver with support for pure linear, (mixed) integer/binary, semi-continuous and special ordered sets (SOS) models.",
+      "URL": "https://github.com/FlorianSchwendinger/lpSolveAPI",
+      "BugReports": "https://github.com/FlorianSchwendinger/lpSolveAPI/issues",
+      "License": "LGPL-2",
+      "RoxygenNote": "7.2.0",
+      "NeedsCompilation": "yes",
+      "Author": "lp_solve [aut], Kjell Konis [aut], Florian Schwendinger [aut, cre], Kurt Hornik [ctb]",
+      "Maintainer": "Florian Schwendinger <FlorianSchwendinger@gmx.at>",
+      "Repository": "CRAN"
+    },
     "lubridate": {
       "Package": "lubridate",
       "Version": "1.9.5",
@@ -7400,6 +7966,44 @@
       "Maintainer": "Josh Errickson <jerrick@umich.edu>",
       "Repository": "CRAN"
     },
+    "osqp": {
+      "Package": "osqp",
+      "Version": "1.0.0",
+      "Source": "Repository",
+      "Title": "Quadratic Programming Solver using the 'OSQP' Library",
+      "Date": "2026-02-27",
+      "Authors@R": "c( person(\"Bartolomeo\", \"Stellato\", role = c(\"aut\", \"ctb\", \"cph\"), email = \"bartolomeo.stellato@gmail.com\"), person(\"Goran\", \"Banjac\", role = c(\"aut\", \"ctb\", \"cph\")), person(\"Paul\", \"Goulart\", role = c(\"aut\", \"ctb\", \"cph\"), email = \"paul.goulart@eng.ox.ac.uk\"), person(\"Stephen\", \"Boyd\", role = c(\"aut\", \"ctb\", \"cph\")), person(\"Eric\", \"Anderson\", role = c(\"ctb\")), person(\"Vineet\", \"Bansal\", role = c(\"aut\", \"ctb\"), email = \"vineetb@princeton.edu\"), person(\"Balasubramanian\", \"Narasimhan\", role = c(\"cre\", \"aut\"), email = \"naras@stanford.edu\"))",
+      "Copyright": "file COPYRIGHT",
+      "Description": "Provides bindings to the 'OSQP' solver. The 'OSQP' solver is a numerical optimization package for solving convex quadratic programs written in 'C' and based on the alternating direction method of multipliers. See <doi:10.48550/arXiv.1711.08013> for details.",
+      "License": "Apache License 2.0 | file LICENSE",
+      "SystemRequirements": "C++17, GNU make",
+      "Imports": [
+        "Rcpp (>= 0.12.14)",
+        "methods",
+        "Matrix (>= 1.6.1)",
+        "S7",
+        "cli"
+      ],
+      "LinkingTo": [
+        "Rcpp"
+      ],
+      "RoxygenNote": "7.3.3",
+      "Collate": "'RcppExports.R' 'osqp-package.R' 'sparse.R' 'solve.R' 'osqp.R' 'params.R'",
+      "NeedsCompilation": "yes",
+      "VignetteBuilder": "knitr",
+      "Suggests": [
+        "knitr",
+        "rmarkdown",
+        "slam",
+        "testthat"
+      ],
+      "Encoding": "UTF-8",
+      "BugReports": "https://github.com/osqp/osqp-r/issues",
+      "URL": "https://osqp.org",
+      "Author": "Bartolomeo Stellato [aut, ctb, cph], Goran Banjac [aut, ctb, cph], Paul Goulart [aut, ctb, cph], Stephen Boyd [aut, ctb, cph], Eric Anderson [ctb], Vineet Bansal [aut, ctb], Balasubramanian Narasimhan [cre, aut]",
+      "Maintainer": "Balasubramanian Narasimhan <naras@stanford.edu>",
+      "Repository": "CRAN"
+    },
     "otel": {
       "Package": "otel",
       "Version": "0.2.0",
@@ -8069,6 +8673,37 @@
       "Maintainer": "Paul-Christian Bürkner <paul.buerkner@gmail.com>",
       "Repository": "https://packagemanager.posit.co/cran/latest"
     },
+    "pracma": {
+      "Package": "pracma",
+      "Version": "2.4.6",
+      "Source": "Repository",
+      "Type": "Package",
+      "Date": "2025-10-20",
+      "Title": "Practical Numerical Math Functions",
+      "Authors@R": "person(\"Hans W.\", \"Borchers\",  email=\"hwborchers@googlemail.com\",  role=c(\"aut\", \"cre\"))",
+      "Depends": [
+        "R (>= 3.1.0)"
+      ],
+      "Imports": [
+        "graphics",
+        "grDevices",
+        "stats",
+        "utils"
+      ],
+      "Suggests": [
+        "NlcOptim",
+        "quadprog"
+      ],
+      "Description": "Provides a large number of functions from numerical analysis and linear algebra, numerical optimization, differential equations, time series, plus some well-known special mathematical functions. Uses 'MATLAB' function names where appropriate to simplify porting.",
+      "License": "GPL (>= 3)",
+      "ByteCompile": "true",
+      "LazyData": "yes",
+      "NeedsCompilation": "no",
+      "Author": "Hans W. Borchers [aut, cre]",
+      "Maintainer": "Hans W. Borchers <hwborchers@googlemail.com>",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "Encoding": "UTF-8"
+    },
     "praise": {
       "Package": "praise",
       "Version": "1.0.0",
@@ -8447,6 +9082,33 @@
       "NeedsCompilation": "yes",
       "Author": "Hadley Wickham [aut, cre] (ORCID: <https://orcid.org/0000-0003-4757-117X>), Lionel Henry [aut], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
+      "Repository": "CRAN"
+    },
+    "qrng": {
+      "Package": "qrng",
+      "Version": "0.0-11",
+      "Source": "Repository",
+      "Encoding": "UTF-8",
+      "Title": "(Randomized) Quasi-Random Number Generators",
+      "Description": "Functionality for generating (randomized) quasi-random numbers in high dimensions.",
+      "Authors@R": "c(person(given = \"Marius\", family = \"Hofert\", role = c(\"aut\", \"cre\"), email = \"mhofert@hku.hk\"), person(given = \"Christiane\", family = \"Lemieux\", role = \"aut\", email = \"clemieux@uwaterloo.ca\"))",
+      "Author": "Marius Hofert [aut, cre], Christiane Lemieux [aut]",
+      "Maintainer": "Marius Hofert <mhofert@hku.hk>",
+      "Depends": [
+        "R (>= 3.0.0)"
+      ],
+      "Imports": [
+        "utils"
+      ],
+      "Suggests": [
+        "spacefillr",
+        "randtoolbox",
+        "copula",
+        "simsalapar"
+      ],
+      "Enhances": [],
+      "License": "GPL-2 | GPL-3",
+      "NeedsCompilation": "yes",
       "Repository": "CRAN"
     },
     "quantreg": {
@@ -9918,6 +10580,31 @@
       "Maintainer": "Fredrik Savje <rpackages@fredriksavje.com>",
       "Repository": "CRAN"
     },
+    "scs": {
+      "Package": "scs",
+      "Version": "3.2.7",
+      "Source": "Repository",
+      "Title": "Splitting Conic Solver",
+      "Authors@R": "c( person(\"Florian\", \"Schwendinger\", role = c(\"aut\", \"cre\"), email = \"FlorianSchwendinger@gmx.at\"), person(\"Brendan\", \"O'Donoghue\", role = c(\"aut\", \"cph\")), person(\"Balasubramanian\", \"Narasimhan\", role = c(\"aut\")), person(\"Timothy A.\", \"Davis\", role = \"cph\"), person(\"Patrick R.\", \"Amestory\", role = \"cph\"), person(\"Iain S.\", \"Duff\", role = \"cph\"))",
+      "Description": "Solves convex cone programs via operator splitting. Can solve: linear programs ('LPs'), second-order cone programs ('SOCPs'), semidefinite programs ('SDPs'), exponential cone programs ('ECPs'), and power cone programs ('PCPs'), or problems with any combination of those cones. 'SCS' uses 'AMD' (a set of routines for permuting sparse matrices prior to factorization) and 'LDL' (a sparse 'LDL' factorization and solve package) from 'SuiteSparse' (<https://people.engr.tamu.edu/davis/suitesparse.html>).",
+      "Depends": [
+        "R (>= 3.5.0)"
+      ],
+      "SystemRequirements": "GNU Make",
+      "Suggests": [
+        "Matrix",
+        "slam",
+        "tinytest"
+      ],
+      "Encoding": "UTF-8",
+      "License": "GPL-3",
+      "URL": "https://github.com/FlorianSchwendinger/scs",
+      "RoxygenNote": "7.2.0",
+      "NeedsCompilation": "yes",
+      "Author": "Florian Schwendinger [aut, cre], Brendan O'Donoghue [aut, cph], Balasubramanian Narasimhan [aut], Timothy A. Davis [cph], Patrick R. Amestory [cph], Iain S. Duff [cph]",
+      "Maintainer": "Florian Schwendinger <FlorianSchwendinger@gmx.at>",
+      "Repository": "CRAN"
+    },
     "selectr": {
       "Package": "selectr",
       "Version": "0.6-0",
@@ -10423,6 +11110,32 @@
       "Maintainer": "Edzer Pebesma <edzer.pebesma@uni-muenster.de>",
       "Repository": "CRAN"
     },
+    "spacefillr": {
+      "Package": "spacefillr",
+      "Version": "0.4.0",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Space-Filling Random and Quasi-Random Sequences",
+      "Authors@R": "c(person(\"Tyler\", \"Morgan-Wall\", email = \"tylermw@gmail.com\",  role = c(\"aut\", \"cph\", \"cre\"), comment = c(ORCID = \"0000-0002-3131-3814\")), person(\"Andrew\", \"Helmer\", role = c(\"ctb\", \"cph\")), person(\"Leonhard\", \"Grünschloß\", role = c(\"ctb\", \"cph\")), person(\"Eric\", \"Heitz\", role = c(\"ctb\", \"cph\")))",
+      "Maintainer": "Tyler Morgan-Wall <tylermw@gmail.com>",
+      "Description": "Generates random and quasi-random space-filling sequences. Supports the following sequences: 'Halton', 'Sobol', 'Owen'-scrambled 'Sobol',  'Owen'-scrambled 'Sobol' with errors distributed as blue noise, progressive jittered, progressive multi-jittered ('PMJ'), 'PMJ' with blue noise, 'PMJ02', and 'PMJ02' with blue noise. Includes a 'C++' 'API'. Methods derived from \"Constructing Sobol sequences with better two-dimensional projections\" (2012) <doi:10.1137/070709359> S. Joe and F. Y. Kuo, \"Progressive Multi-Jittered Sample Sequences\" (2018) <https://graphics.pixar.com/library/ProgressiveMultiJitteredSampling/paper.pdf> Christensen, P., Kensler, A. and Kilpatrick, C., and \"A Low-Discrepancy Sampler that Distributes Monte Carlo Errors as a Blue Noise in Screen Space\" (2019) E. Heitz, B. Laurent, O. Victor, C. David and I. Jean-Claude, <doi:10.1145/3306307.3328191>.",
+      "License": "MIT + file LICENSE",
+      "Imports": [
+        "Rcpp (>= 1.0.0)"
+      ],
+      "LinkingTo": [
+        "Rcpp"
+      ],
+      "Encoding": "UTF-8",
+      "RoxygenNote": "7.3.2",
+      "URL": "https://github.com/tylermorganwall/spacefillr",
+      "BugReports": "https://github.com/tylermorganwall/spacefillr/issues",
+      "SystemRequirements": "C++17",
+      "Config/build/compilation-database": "true",
+      "NeedsCompilation": "yes",
+      "Author": "Tyler Morgan-Wall [aut, cph, cre] (<https://orcid.org/0000-0002-3131-3814>), Andrew Helmer [ctb, cph], Leonhard Grünschloß [ctb, cph], Eric Heitz [ctb, cph]",
+      "Repository": "CRAN"
+    },
     "specr": {
       "Package": "specr",
       "Version": "1.0.0",
@@ -10505,6 +11218,38 @@
       "Author": "Marek Gagolewski [aut, cre, cph] (<https://orcid.org/0000-0003-0637-6028>), Bartek Tartanus [ctb], Unicode, Inc. and others [ctb] (ICU4C source code, Unicode Character Database)",
       "Maintainer": "Marek Gagolewski <marek@gagolewski.com>",
       "License_is_FOSS": "yes",
+      "Repository": "CRAN"
+    },
+    "stringmagic": {
+      "Package": "stringmagic",
+      "Version": "1.2.0",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Character String Operations and Interpolation, Magic Edition",
+      "Authors@R": "c(person(given = \"Laurent R\", family = \"Berge\", role = c(\"aut\", \"cre\"), email = \"laurent.berge@u-bordeaux.fr\", comment = c(ORCID = \"0000-0003-2736-1917\")), person(given = \"Morgan\", family = \"Jacob\", role = \"ctb\"))",
+      "Imports": [
+        "Rcpp(>= 1.0.5)",
+        "utils",
+        "stats"
+      ],
+      "Suggests": [
+        "knitr",
+        "rmarkdown",
+        "data.table"
+      ],
+      "LinkingTo": [
+        "Rcpp"
+      ],
+      "Description": "Performs complex string operations compactly and efficiently. Supports string interpolation jointly with over 50 string operations. Also enhances regular string functions (like grep() and co). See an introduction at <https://lrberge.github.io/stringmagic/>.",
+      "License": "GPL (>= 2)",
+      "Encoding": "UTF-8",
+      "BugReports": "https://github.com/lrberge/stringmagic/issues",
+      "URL": "https://lrberge.github.io/stringmagic/, https://github.com/lrberge/stringmagic",
+      "VignetteBuilder": "knitr",
+      "RoxygenNote": "7.3.2",
+      "NeedsCompilation": "yes",
+      "Author": "Laurent R Berge [aut, cre] (<https://orcid.org/0000-0003-2736-1917>), Morgan Jacob [ctb]",
+      "Maintainer": "Laurent R Berge <laurent.berge@u-bordeaux.fr>",
       "Repository": "CRAN"
     },
     "stringr": {
@@ -11364,6 +12109,29 @@
       "Author": "Olaf Mersmann [aut, cre], Heike Trautmann [aut], Detlef Steuer [aut], Björn Bornkamp [aut]",
       "Maintainer": "Olaf Mersmann <olafm@p-value.net>",
       "Repository": "CRAN"
+    },
+    "trust": {
+      "Package": "trust",
+      "Version": "0.1-9",
+      "Source": "Repository",
+      "Authors@R": "person(given = c(\"Charles\", \"J.\"), family = \"Geyer\", role = c(\"aut\", \"cre\"), email = \"geyer@umn.edu\", comment = c(ORCID = \"0000-0003-1471-1703\"))",
+      "Date": "2026-02-10",
+      "Title": "Trust Region Optimization",
+      "Depends": [
+        "R (>= 4.2.0)"
+      ],
+      "Imports": [
+        "stats"
+      ],
+      "ByteCompile": "TRUE",
+      "Description": "Does local optimization using two derivatives and trust regions. Guaranteed to converge to local minimum of objective function.",
+      "License": "MIT + file LICENSE",
+      "URL": "http://www.stat.umn.edu/geyer/trust/",
+      "NeedsCompilation": "no",
+      "Author": "Charles J. Geyer [aut, cre] (ORCID: <https://orcid.org/0000-0003-1471-1703>)",
+      "Maintainer": "Charles J. Geyer <geyer@umn.edu>",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "Encoding": "UTF-8"
     },
     "tweenr": {
       "Package": "tweenr",
