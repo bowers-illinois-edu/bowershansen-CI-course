@@ -40,6 +40,7 @@ library(estimatr)
 library(splines)
 library(optmatch)
 library(olsrr)
+library(senstrat)
 options(show.signif.stars = FALSE)
 ```
 
@@ -79,21 +80,71 @@ b_x1sq    <- coef(lm(Y ~ Z + x1 + I(x1^2), data = dat))[["Z"]]    # +x1 + x1^2
 b_all     <- coef(lm(Y ~ Z + x1 + x2 + x3 + x4, data = dat))[["Z"]]
 ```
 
+```{r un_setup, echo=FALSE, include=FALSE, cache=TRUE}
+## The UN peacekeeping data --- the study we matched on Monday (day_10).
+peace <- readRDS(url(
+  "https://raw.githubusercontent.com/tl2624/matching-guide/main/data/peace_pre_match.rds"))
+uncovs <- c("lwdeaths", "lwdurat", "ethfrac", "pop", "lmtnest",
+            "milper", "bwgdp", "bwplty2", "region")
+uncont <- setdiff(uncovs, "region")
+nC_un  <- sum(1 - peace$UN)
+
+## Estimated propensity score; how many controls fall outside the treated range?
+psm <- glm(reformulate(uncont, "UN"), family = binomial("logit"), data = peace)
+peace$logit_ps <- psm$linear.predictors
+trt_lo <- min(peace$logit_ps[peace$UN == 1]); trt_hi <- max(peace$logit_ps[peace$UN == 1])
+n_out_un <- sum(peace$logit_ps[peace$UN == 0] < trt_lo | peace$logit_ps[peace$UN == 0] > trt_hi)
+
+## One influential episode in the linear-9 model
+lm9_un    <- lm(reformulate(c("UN", uncovs), "ldur"), data = peace)
+infl_un   <- which.max(abs(dfbeta(lm9_un)[, "UN"]))
+f_lin_un  <- coef(lm9_un)[["UN"]]
+f_drop_un <- coef(lm(reformulate(c("UN", uncovs), "ldur"), data = peace[-infl_un, ]))[["UN"]]
+
+## Monday's matched design, recomputed: discard episodes with no counterpart,
+## keep balanced sets, take the block-size-weighted ATE.
+pop_sd_logit <- sqrt(mean((peace$logit_ps - mean(peace$logit_ps))^2))
+fm <- fullmatch(
+  match_on(UN ~ logit_ps, caliper = 0.5 * pop_sd_logit, data = peace,
+           standardization.scale = NULL, method = "euclidean") +
+  match_on(reformulate(uncont, "UN"), data = peace,
+           standardization.scale = NULL, method = "rank_mahalanobis") +
+  match_on(UN ~ ethfrac, caliper = 35, data = peace,
+           standardization.scale = NULL, method = "euclidean") +
+  match_on(UN ~ bwgdp, caliper = 2, data = peace,
+           standardization.scale = NULL, method = "euclidean") +
+  exactMatch(UN ~ region, data = peace), data = peace, max.controls = 4)
+peace$fm <- fm
+md <- droplevels(peace[matched(fm), ])
+un_sets    <- md %>% group_by(fm) %>%
+  summarize(nb = n(), d = mean(ldur[UN == 1]) - mean(ldur[UN == 0]), .groups = "drop")
+design_ate <- with(un_sets, sum((nb / sum(nb)) * d))
+matched_n  <- nrow(md); dropped_n <- nrow(peace) - matched_n
+
+## Monday's sensitivity result, recomputed: smallest Gamma whose worst-case
+## one-sided p (mean statistic, upper tail) exceeds 0.05 --- the day_10 search.
+un_pval     <- function(g) as.numeric(senstrat(
+  md$ldur, z = md$UN, st = md$fm, gamma = g, alternative = "greater")$Result["P-value"])
+p_design_un <- un_pval(1)                                   # ~0.034 at Gamma = 1
+gstar_un    <- uniroot(function(g) un_pval(g) - 0.05, c(1, 3))$root
+```
+
 ## Today
 
+0. **Your questions** Anything that came up in other classes, in reading, in
+   your own work, or just after the class?
 1. **Review:** sensitivity analysis for matched designs --- how much hidden
-   bias would overturn our conclusion ($\Gamma$)? That question presumes we
-   already *have* a design.
-2. **Today:** the much more common alternative to a design --- "controlling
-   for" covariates in a linear regression. We ask:
-   - What does "controlling for" actually compute? (residualization; the
-     Frisch-Waugh-Lovell theorem)
+   bias would overturn our conclusion?  That question presumes we already
+   *have* a design.
+2. **Today:**  "controlling for" covariates in a linear regression. We ask:
+   - What does "controlling for" actually compute? (Rather than
+     $(\mathbf{X}^{T}\mathbf{X})^{-1}\mathbf{X}^{T}\mathbf{y}$ we explain it as
+     residualization; the Frisch-Waugh-Lovell theorem)
    - What three questions does it raise --- about functional form,
      extrapolation, and influential points?
-   - Why are those questions answerable with **one** covariate but not with
-     several?
-   - When is regression adjustment a defensible tool, and what does
-     stratification do instead?
+   - Why are those questions (partly) answerable with **one** covariate but not
+     with several?
+   - When is regression adjustment a defensible tool?
 
 \medskip
 
@@ -110,9 +161,9 @@ looks **as-if** randomly assigned.
 \medskip
 
 Then, and only then, we looked at the outcome and tested the hypothesis of no
-effect. The one-sided test rejected ($p \approx 0.03$): UN presence is
-associated with longer peace, by as much as a block-randomized experiment would
-let us claim.
+effect under acting as if UN peace keeper were assigned at random with equal
+probability within each set. The one-sided test rejected ($p \approx 0.03$): UN
+presence is associated with longer peace.
 
 \medskip
 
@@ -120,7 +171,7 @@ The order matters. We made every design decision --- which covariates, which
 calipers, how many controls per treated, whether balance was good enough ---
 using only the covariates and treatment, **before** seeing a single outcome.
 
-## Sensitivity analysis: the formal worry {.fragile}
+## Sensitivity analysis: making concrete worries about the unobserved {.fragile}
 
 > "In an observational study, a sensitivity analysis replaces qualitative
 > claims about whether unmeasured biases are present with an objective
@@ -141,12 +192,13 @@ We matched on $\bx$. $\Gamma$ asks: how many times more likely (in treatment
 odds) would one set-mate have to be to receive treatment, because of an
 unobserved $u$, before the test stops rejecting?
 
-## The Monday result, in one line
+## The Monday result: relatively sensitive.
 
 For the UN study the rejection was **real but fragile**: a confounder making one
-episode only about $1.5$ times more likely than its match to receive a mission
-($\Gamma^{*} \approx 1.5$) would already overturn the one-sided test. The
-`sensemakr` robustness value told the same story.
+episode only about `r round(gstar_un,2)` times more likely than its match to
+receive a mission ($\Gamma^{*} \approx `r round(gstar_un,2)`$) would already
+overturn the one-sided test. The `sensemakr` robustness value told the same
+story.
 
 \medskip
 
@@ -157,7 +209,9 @@ single conclusion bends under hidden bias.
 
 \medskip
 
-Now we turn to the tool most observational papers use *instead* of a design.
+Now we turn to the tool many studies use *instead* of a design to strength the
+argument in favor of conditional ignorability: covariance adjustment within
+linear regression.
 
 # "Regression is basically research design." Is it?
 
@@ -205,7 +259,6 @@ round(c(`unadjusted`        = dim0,
         `TRUTH`             = true_ate), 2)
 ```
 
-\footnotesize
 Unadjusted is the wrong sign. Adjusting helps, but no specification lands on the
 truth, and they disagree with each other. Which one would we report --- if we
 could not see this `TRUTH` column? \normalsize
@@ -245,12 +298,13 @@ b_resid <- coef(lm(eY ~ eZ))[[2]]
 c(direct = b_direct, residualized = b_resid)
 ```
 
-\footnotesize
 This identity is the **Frisch-Waugh-Lovell theorem** [@lovell2008;
-@angrist2009mostly, "regression anatomy"]. As the FWL theorem makes precise: to
-"hold $x_1$ constant" with OLS is to remove the least-squares linear projection
-of $x_1$ from both $Z$ and $Y$ --- no more, no less. It does **not** compare
-people with identical $x_1$. \normalsize
+@angrist2009mostly, "regression anatomy"]. To "hold $x_1$ constant" with OLS is
+to remove the least-squares linear prediction of $x_1$ from both $Z$ and $Y$
+--- no more, no less. It does **not** compare people with identical $x_1$. It
+does not hold constant $x_1$ in any intuitive sense.
+
+\normalsize
 
 ## What residualization looks like (one covariate)
 
@@ -272,26 +326,28 @@ with(dat, plot(x1, eZ, col = cols, pch = pchs, ylab = "Z minus its linear fit on
 
 \footnotesize
 Blue = downloaded the kit. The adjusted estimate is the slope of `eY` on `eZ`.
-With **one** covariate we can draw this and judge it. Does the relationship of
-`x1` with `Y` (top left) look like the straight line we removed? \normalsize
+With **one** covariate we can draw this and judge it. Did we remove **all** of the relevant relationship betwee `x1` and `Y`?
+\normalsize
 
-## The payoff: with one covariate, the questions are answerable
+## Questions arising about covariance adjustment.
 
 "Controlling for $x_1$" raises three questions. With a single covariate, each
 one is a plot you can actually make and defend:
 
- - **Functional form.** Is the `x1`--`Y` relationship the straight line OLS
-   removed? Look at the scatter and a smoother. Try `x1^2`.
- - **Extrapolation.** Do treated and control overlap along `x1`, or is the
-   adjustment filling an empty region?
+ - **Functional form.** Is there systematic patterns left after removing the
+   `x1`--`Y` and `x1`--`Z` straight line OLS relationships? Look at the scatter
+   and a smoother. Would another function of that covariate remove more?
+   **Would it remove enough?**
+ - **Extrapolation.** Do treated and control overlap along `x1`? Are there
+   areas treatment or control units where we cannot realistically say that we
+   are controlling for `x1`? (See the right side of the top-left plot.)
  - **Influential points.** Are a few units swinging the slope of `eY` on `eZ`?
-   Find them on the plot.
 
-\medskip
+ \medskip
 
-This is the case Jake usually shows in lecture. One covariate, one axis, three
-diagnostics you can look at. Now watch what happens to each question as we add
-covariates.
+ The overarching question of all techniques for causal inference or even just
+ adjustment in observational studies: **did this technique adjust enough?**
+
 
 # Three Questions, and How Each Gets Harder
 
@@ -400,27 +456,40 @@ by looking disappears.
 
 ## Question 3: influential points in higher dimensions
 
-Residualizing projects the data into a new space. A point that was unremarkable
-in the raw `(Z, Y)` plane can become high-leverage among the residuals. Count
-how many points exceed the usual Cook's-distance flag ($> 4/n$) as we add
-covariates:
+Residualizing projects the data into a higher-dimensional space, where a point
+unremarkable in the raw `(Z, Y)` plane can come to dominate the fit. The
+mechanism is exact: leverage (hat) values sum to the number of fitted terms $p$,
+so **average leverage is $p/n$** --- every term you add raises it. Build the model
+up one term at a time (polynomials, then interactions) and watch:
 
-```{r cooks, echo=TRUE}
-cookcount <- function(fmla) {
-  sum(cooks.distance(lm(fmla, data = dat)) > 4 / nrow(dat))
-}
-c(`Z+x1`         = cookcount(Y ~ Z + x1),
-  `+x2`          = cookcount(Y ~ Z + x1 + x2),
-  `+x3`          = cookcount(Y ~ Z + x1 + x2 + x3),
-  `+x4`          = cookcount(Y ~ Z + x1 + x2 + x3 + x4),
-  `interactions` = cookcount(Y ~ Z * x1 * x2 * x3 * x4))
+```{r leverage_curve, echo=FALSE, out.width=".95\\linewidth", fig.width=9, fig.height=3.4, warning=FALSE, message=FALSE, cache=TRUE}
+## Add terms one at a time (Z always in) and track leverage and influence.
+## poly() terms come first so p grows smoothly before the interactions.
+mm <- model.matrix(~ poly(x1, 3) + poly(x2, 2) + poly(x3, 3) + x4 +
+                     x1:x2 + x1:x3 + x2:x3 + x1:x4 + x2:x4 + x3:x4 +
+                     x1:x2:x3 + x1:x2:x4 + x1:x3:x4 + x2:x3:x4 + x1:x2:x3:x4,
+                   data = dat)[, -1]
+n_obs <- nrow(dat)
+lev <- do.call(rbind, lapply(seq_len(ncol(mm)), function(k) {
+  fit <- lm(dat$Y ~ dat$Z + mm[, 1:k])
+  cd  <- cooks.distance(fit)
+  data.frame(p = fit$rank, maxlev = max(hatvalues(fit)), ncook = sum(cd > 4 / n_obs))
+}))
+par(mfrow = c(1, 2), mar = c(3.4, 3.4, 1.8, 1), mgp = c(2, .6, 0))
+plot(lev$p, lev$maxlev, type = "b", pch = 19, ylim = c(0, 1),
+     xlab = "number of fitted terms p", ylab = "leverage (hat value)",
+     main = "Most-leveraged point")
+lines(lev$p, lev$p / n_obs, col = "blue", lwd = 2)
+legend("topleft", c("max leverage", "average = p/n"), pch = c(19, NA),
+       lty = 1, col = c("black", "blue"), bty = "n")
+plot(lev$p, lev$ncook, type = "b", pch = 19, xlab = "number of fitted terms p",
+     ylab = "# points with Cook's D > 4/n", main = "How many points flagged")
 ```
 
 \footnotesize
-More covariates, more flagged points --- not because the data got worse, but
-because the projection has more dimensions in which a point can be extreme. The
-probability that *some* observation is unduly influential rises mechanically as
-you add controls. \normalsize
+Average leverage (`p/n`, blue) rises and the single
+most-leveraged point climbs from `r round(lev$maxlev[1],2)` to
+`r round(max(lev$maxlev),2)`. The count flagged by Cook's distance rises with it. This is just a function of increasing dimensions. \normalsize
 
 ## Cook's distance across specifications
 
@@ -448,6 +517,113 @@ neighborhoods can move the estimate. With one covariate you could name and
 inspect them; here, which model's influential points should you worry about?
 \normalsize
 
+# The Same Questions on the UN Data
+
+```{r un_specsim, echo=FALSE, include=FALSE, cache=TRUE}
+## 5,000 random ways to "control for" the nine covariates
+un_adjfn <- function() {
+  somecont <- sample(uncont, size = sample(seq_along(uncont), 1))
+  ncuts    <- round(runif(length(somecont), min = 1, max = 6))
+  terms_c  <- ifelse(ncuts == 1, somecont, paste0("cut(", somecont, ",", ncuts, ")"))
+  terms    <- if (runif(1) < 0.5) c(terms_c, "region") else terms_c   # region in or out
+  tryCatch(coef(lm(reformulate(c("UN", terms), "ldur"), data = peace))[["UN"]],
+           error = function(e) NA_real_, warning = function(w) NA_real_)
+}
+set.seed(12345)
+resUN <- replicate(5000, un_adjfn())
+resUN <- resUN[is.finite(resUN)]
+```
+
+## From a toy to the study of the week {.shrink}
+
+The UN data has no answer key, but the same three questions --- and the overall
+one, **have we adjusted enough?** --- still apply. Five ways to "control for" the
+nine covariates (`ldur` = log peace duration):
+
+```{r un_named_tab, echo=TRUE}
+specs <- list(
+  unadjusted  = ldur ~ UN,
+  linear      = ldur ~ UN + lwdeaths + lwdurat + ethfrac + pop + lmtnest +
+                  milper + bwgdp + bwplty2 + region,
+  polynomials = ldur ~ UN + poly(lwdeaths, 2) + poly(pop, 2) + poly(milper, 2) +
+                  poly(bwgdp, 2) + lwdurat + ethfrac + lmtnest + bwplty2 + region,
+  interact    = ldur ~ UN + (lwdeaths + pop + milper + bwgdp) * region +
+                  lwdurat + ethfrac + lmtnest + bwplty2,
+  splines     = ldur ~ UN + ns(lwdeaths, 3) + ns(pop, 3) + ns(milper, 3) +
+                  ns(bwgdp, 3) + lwdurat + ethfrac + lmtnest + bwplty2 + region
+)
+## coefficient on UN from each of the five specifications
+un_specs <- sapply(specs, function(f) coef(lm(f, data = peace))[["UN"]])
+round(un_specs, 3)
+```
+
+\footnotesize
+They range from `r round(min(un_specs),2)`--`r round(max(un_specs),2)`, and all
+sit above Monday's matched-design estimate of `r round(design_ate,3)`.
+\normalsize
+
+## Question 1 on the UN data: a four-fold range
+
+```{r un_curve, echo=FALSE, out.width=".7\\textwidth", fig.width=7, fig.height=3.6}
+par(mar = c(3.4, 3.4, 1, 1), mgp = c(2, .6, 0))
+plot(density(resUN), main = "", lwd = 2,
+     xlab = "Estimated effect of UN on log-duration across 5,000 specifications")
+rug(resUN, col = rgb(0, 0, 0, 0.12))
+abline(v = design_ate, col = "blue", lwd = 2)
+text(design_ate, par("usr")[4] * 0.9, "Monday's design ATE", col = "blue", pos = 4)
+```
+
+\footnotesize
+The estimate ranges from `r round(min(resUN),2)` to `r round(max(resUN),2)` --- a
+four-fold spread --- and `r round(mean(resUN > design_ate)*100)`\% land above
+Monday's design estimate (`r round(design_ate,3)`). None is negative: here the
+question is not the sign but *which positive number* to report, and the choice of
+functional form --- not the data --- decides it. \normalsize
+
+## Where the larger numbers come from: extrapolation
+
+Almost every specification beats the matched-design estimate. Overlap on the
+estimated propensity score shows why:
+
+```{r un_overlap_plot, echo=FALSE, out.width=".7\\textwidth", fig.width=7, fig.height=3.4, warning=FALSE, message=FALSE}
+par(mar = c(3.2, 3.2, 1.8, 1), mgp = c(1.9, .6, 0))
+plot(density(peace$logit_ps[peace$UN == 0]), lwd = 2, col = "grey40",
+     main = "Overlap on the estimated propensity score",
+     xlab = "logit propensity score", ylim = c(0, max(density(peace$logit_ps)$y) * 1.35))
+lines(density(peace$logit_ps[peace$UN == 1]), lwd = 2, lty = 2)
+## controls ticked below the axis, treated above it --- so the no-overlap
+## region (control ticks with nothing above them) is visible
+rug(peace$logit_ps[peace$UN == 0], side = 1, col = "grey40", lwd = 1)
+rug(peace$logit_ps[peace$UN == 1], side = 3, col = "black", lwd = 1.5)
+legend("left", c("control (no UN): ticks below", "treated (UN): ticks above"),
+       lwd = 2, lty = c(1, 2), col = c("grey40", "black"), bty = "n")
+```
+
+\footnotesize
+`r n_out_un` of the `r nC_un` control episodes sit outside the treated range
+entirely --- "controls" with no treated counterpart (the left tail has control
+ticks below the axis but none above). Regression keeps them and extrapolates. And
+one episode alone moves the linear-9 estimate from `r round(f_lin_un,2)` to
+`r round(f_drop_un,2)` when dropped. \normalsize
+
+## Regression vs the Monday design, on the same data
+
+ - **Regression on all `r nrow(peace)` episodes**: a number anywhere from
+   `r round(min(resUN),2)` to `r round(max(resUN),2)`, leaning on the
+   `r n_out_un` controls with no treated match and movable by a single episode.
+   You pick one specification while looking at the outcome.
+ - **The matched design (Monday)**: discard the `r dropped_n` episodes with no
+   counterpart, keep `r matched_n` in balanced sets (`r sum(md$UN)` treated,
+   `r sum(1 - md$UN)` control), estimate one ATE ($\approx
+   `r round(design_ate,3)`$), and stress-test it ($\Gamma^{*} \approx
+   `r round(gstar_un,2)`$). Every design choice was made before the outcome.
+
+\medskip
+
+Same data, same covariates. Regression hides the extrapolation inside a
+coefficient; the design shows you exactly which episodes it can and cannot
+compare.
+
 # Why "Controlling For" Is Not a Design
 
 ## To answer the three questions, you read the estimate
@@ -468,6 +644,26 @@ analysis are the same act, repeated.
 Choosing a specification by looking at $\hat\tau$ and its $p$-value, over and
 over, is testing the same hypothesis many times and reporting once. The nominal
 $p$-value no longer means what it claims [@simmonsetal2011; @young2019].
+
+## "Enough" has no standard in regression
+
+The three questions are really one: **did we adjust enough?** Regression gives no
+standard for "enough" --- no quantity you compute, compare to a threshold, and
+stop. You can always add a term, and the estimate moves.
+
+\medskip
+
+A design answers the same question with a standard that never touches the
+outcome: **balance.** "Does this matched comparison look like a block-randomized
+experiment on the observed covariates?" --- the omnibus test and the within-set
+differences from Monday decide it, *before* $Y$ is unblinded. "Enough, on the
+observed covariates" becomes a check you pass or fail and can show.
+
+\medskip
+
+And for what balance cannot see --- the unobserved --- the design still has an
+answer: the sensitivity analysis ($\Gamma$) we ran Monday. Regression's
+"enough?" has neither.
 
 ## "Regression is a fine calculator"
 
@@ -511,8 +707,8 @@ A difference-in-differences with covariates ("conditional DiD"), a regression
 discontinuity with covariate controls, an experiment "adjusted" for baseline
 imbalance --- each adds covariates to a regression and so inherits the same three
 questions: which functional form, how much extrapolation, which influential
-points. A good design upstream does not excuse an unexamined residualization
-downstream.
+points. **A good design upstream does not excuse an unexamined residualization
+downstream.**
 
 # When Is Regression Adjustment Defensible?
 
@@ -527,8 +723,8 @@ the following true, and say so:
    no coefficient rests on extrapolation.
  - **A relationship you can defend as roughly linear and additive** on that
    region --- checked against a smoother, not assumed.
- - **One specification, fixed before the outcomes are analyzed.** Not chosen
-   from the cloud after seeing $\hat\tau$.
+ - **One specification, fixed before the outcomes are analyzed.** Pre-declared before 
+   seeing $\hat\tau$.
 
 \medskip
 
@@ -543,17 +739,10 @@ There is a setting where putting covariates in a regression is on firm ground:
 
 \medskip
 
-In a randomized experiment, $Z$ is not confounded. Covariate adjustment there is
-not removing confounding; it is removing noise from the outcome to gain
-precision, with a known small bias that vanishes as $n$ grows [@lin2013]. The
-same logic applies after matching: estimate the effect within sets you built and
-balanced first.
-
-\medskip
-
-The distinction is the whole lecture: adjustment as a **precision** tool *within*
-a design is fine; adjustment as the **device that creates the comparison** is the
-move that raises the three unanswerable questions.
+In a randomized experiment, $Z$ is not confounded. Covariate adjustment in an
+RCT removes noise from the outcome to gain precision, with a known small bias
+that vanishes as $n$ grows [@lin2013]. The same logic applies after matching:
+estimate the effect within sets you built and balanced first.
 
 ## Flexible models do not dissolve the problem
 
@@ -563,11 +752,18 @@ with functional form, and tools like kernel regularized least squares
 choices for another --- basis size, penalty, tuning --- and they still:
 
  - extrapolate silently where there is no support, and
- - estimate while you tune, with no separation of design from outcome.
+ - estimate while you look and test, with no separation of design from outcome.
+ - have no standard of comparison for **adjusted enough**.
 
 \medskip
 
 Flexibility buys a better functional form. It does not buy a design.
+
+\smallskip
+
+Data splitting for tuning can help, but "good fit" is not the same as "strong
+argument for conditional ignorability" (let alone worries about overly
+influential points, extrapolation, interpolation.)
 
 # The Alternative: Stratification Holds Constant
 
@@ -656,9 +852,18 @@ question about a design we can show you, decided before we saw the outcome
  - With **several** covariates the same questions remain but become
    unanswerable: thousands of forms (here, `r round(mean(res<0)*100)`\% the wrong
    sign), joint support you cannot see, influence that grows with dimension.
+ - **Which problem matters most depends on the data.** On the UN data the sign
+   was stable, but extrapolation (`r n_out_un` of `r nC_un` controls with no
+   treated match) and single episodes pushed nearly every specification above the
+   matched-design estimate. You cannot tell in advance which of the three will
+   move your estimate.
  - You resolve those questions by **looking at the estimate and its
    $p$-value**, repeatedly. That is not a design; it is estimating and testing
    the same hypothesis many times.
+ - **The one question under all three: did you adjust enough?** Regression has no
+   standard for "enough"; a design does --- balance on the observed covariates,
+   checked before outcomes (Monday), with sensitivity analysis ($\Gamma$) for the
+   unobserved.
  - **Reasonable use is narrow**: few covariates, real overlap, a defensible
    form, one pre-specified specification --- or regression as a *precision* tool
    *within* a design you already have.

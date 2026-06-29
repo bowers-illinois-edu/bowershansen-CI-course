@@ -185,6 +185,12 @@ psm <- glm(reformulate(setdiff(covs, "region"), "UN"),
 peace$logit_ps <- psm$linear.predictors
 pop_sd_logit <- sqrt(mean((peace$logit_ps - mean(peace$logit_ps))^2))
 
+ethfrac_dist <-  match_on(UN ~ ethfrac, data = peace,
+           standardization.scale = NULL, method = "euclidean")
+ethfrac_dist[1:5,1:10]
+quantile(as.vector(ethfrac_dist),seq(0,1,.1))
+summary(ethfrac_dist)
+
 ## A full match: rank-Mahalanobis + a 0.5-SD PS caliper + exact on region
 ## + calipers on ethfrac (35) and bwgdp (2); at most 4 controls per treated.
 fm <- fullmatch(
@@ -228,6 +234,7 @@ block-randomized experiment on the covariates we balanced?
 ## Hansen & Bowers omnibus balance test; the "fm" row is within the matched sets
 balfmla <- reformulate(covs, "UN")            # UN ~ lwdeaths + ... + region
 balanceTest(update(balfmla, . ~ . + strata(fm)), data = md)$overall["fm", ]
+bt1 <- balanceTest(update(balfmla, . ~ . + strata(fm)), data = md)
 ```
 
 \medskip
