@@ -632,15 +632,13 @@ text(c(sym, 3), amplify(g_round, c(sym, 3)),
 ```
 
 \footnotesize
-$\Lambda$ is the $u \to Z$ arrow ($\Gamma$ in the DAG): how much, in odds, a hidden
-$u$ raises the chance of a UN mission. $\Delta$ is the $u \to y$ arrow ($\rho$): how
-much $u$ raises the odds of longer peace. The same $\Gamma^{*} = `r g_round`$ comes
-from $`r round(sym, 2)`\times$ on *both* arms, or $3\times$ on treatment with only
-$`r round(amplify(g_round, 3), 2)`\times$ on the outcome --- more on one arm means
-less is needed on the other. Each point on the curve produces exactly $\Gamma^{*}$:
-a weaker confounder (nearer no effect, $\Lambda = \Delta = 1$) leaves the result
-significant, a stronger one overturns it --- so the curve is the strength a real
-confounder would need, on *both* arms, to undo the finding.
+The same $\Gamma^{*} = `r g_round`$ comes from $`r round(sym, 2)`\times$ on *both*
+arms, or $3\times$ on treatment with only $`r round(amplify(g_round, 3), 2)`\times$
+on the outcome --- more on one arm means less on the other. Each point on the curve
+produces exactly $\Gamma^{*}$: a weaker confounder (nearer no effect,
+$\Lambda = \Delta = 1$) leaves the result significant, a stronger one overturns it
+--- so the curve is the strength a real confounder would need, on *both* arms, to
+undo the finding.
 \normalsize
 
 ## From $\Gamma$ to $R^2$.
@@ -686,14 +684,13 @@ meets the red line is `rv_qa` $\approx `r round(sens$sensitivity_stats$rv_qa,3)`
 
 ## Be honest about what each analysis assumes
 
- - The **estimate** is design-based: matched sets, as-if randomization, a CLT
-   for the SE. No outcome model.
+ - The **statistical inference** is design-based: matched sets, as-if randomized,
+   maybe a CLT. No outcome model.
  - The **$\Gamma$ analysis** stays design-based: it perturbs the *assignment*
    probabilities and recomputes a randomization test.
- - The **`sensemakr` analysis** is a *regression* argument: Cinelli and
-   Hazlett's partial-$R^2$ result is an omitted-variable-bias bound for linear
-   models. Passing a matched ATE to `sensemakr` is a pragmatic approximation,
-   not a design-based guarantee.
+ - The **`sensemakr` analysis** is a *regression* argument: Cinelli and Hazlett's
+   partial-$R^2$ result bounds omitted-variable bias in an *OLS coefficient*. Our
+   matched ATE is not one, so `sensemakr` treats it *as if* it were.
 
 \medskip
 
