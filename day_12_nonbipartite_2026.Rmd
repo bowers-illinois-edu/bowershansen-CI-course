@@ -47,15 +47,15 @@ options(show.signif.stars = FALSE)
 
 0. **Your questions.** Anything from the reading, other classes, or your own
    work?
-1. **Review (days 8--11):** stratified designs for a *binary* treatment ---
-   match, check balance against a block-randomized experiment, then test or
-   estimate as-if randomized, and stress-test with sensitivity analysis.
-2. **Today:** what to do when the cause of interest is **not** binary --- a
-   degree of democratization, a dose of a campaign, a proportion. We build
-   stratified comparisons without ever sorting units into "treated" and
-   "control." This is **non-bipartite matching**.
-   - The idea: pair units that are *close on covariates*, then read off which
-     one got more treatment.
+1. **Review:** stratified designs for a *binary* treatment --- match, check
+   balance against a block-randomized experiment, assess the design using
+   substantive knowledge (comparing within-set differences to your own
+   judgement of what is "small enough"),  test or estimate as-if randomized,
+   and engage with assumptions using sensitivity analysis.
+2. **Today: non-bipartite matching** what to do when the cause of interest is **not** binary.
+   - The idea: pair units that are *close on covariates*, then compare the
+     outcomes of the one which got *more* treatment versus the outcomes of
+     the one which got *less* treatment.
    - The same workflow as before: design first (before outcomes), check
      balance, then estimate and test.
 
@@ -63,20 +63,24 @@ options(show.signif.stars = FALSE)
 
 Questions? Comments?
 
-## Where this sits in the week
+## Where this fits in the week
 
 - **Mon (day 10):** sensitivity analysis --- how much hidden bias would
   overturn a matched-design conclusion?
 - **Tues (day 11):** "controlling for" in a regression, and why it is not a
-  design.
+  design (it doesn't occur *before* and *separate from* statistical inference
+  about causal effects), and why it is such a hassle or burden. How can you communicate that you **adjusted enough**?
+
+  - How can you know that the functional form is adequate? Good fit is not the
+    same as adjusted enough. 
+  -  How do assess extrapolation? (Some might be ok, but how much is too much?)
+  -  Did you check for overly influential points (using Cook's D for
+     example) *without looking at the $p$-values or confidence intervals or
+     dividing the estimates by the standard error each time*?
 - **Today (day 12):** matching when the treatment is continuous or
   multi-valued.
 - **Thurs (day 13):** longitudinal data --- risk-set matching *over time* and
   its contrast with difference-in-differences.
-
-\medskip
-
-Today is the basics. Thursday we let the comparison set change with time.
 
 # Review: Designs for a Binary Treatment
 
@@ -86,63 +90,38 @@ For a binary treatment $Z \in \{0, 1\}$ we have a workflow that never looks at
 the outcome until the design is settled:
 
  - **Stratify.** Build matched sets that are similar on covariates $\bx$
-   (`optmatch::fullmatch`, distances from `match_on`, calipers, exact matching).
+   (`optmatch::fullmatch`, distances from `match_on`, calipers, exact
+   matching).
  - **Check.** Does the matched comparison resemble a block-randomized
    experiment on $\bx$? The omnibus balance test and within-set differences
    decide it --- *before* $Y$ is unblinded.
  - **Estimate and test as-if randomized.** Treat the matched sets like the
    blocks of a block-randomized experiment.
- - **Stress-test.** A sensitivity analysis ($\Gamma$) asks how much hidden bias
-   would overturn the conclusion.
+ - **Assess assumptions.** A sensitivity analysis asks how much an unobserved
+   confounder (a variable that we could not match-on) would overturn the
+   conclusion.
 
-\medskip
+## The not-so-hidden assumption: there are two groups
 
-Every step from days 8--11 assumed two groups: a set of treated units and a set
-of control units to pair them with.
-
-## The hidden assumption: there are two groups
-
-Matching as we have done it is **bipartite**: two sides --- treated and control
---- and we draw edges only *between* the sides. The optimization pairs each
+Matching as we have done it is **bipartite**: two sides. The optimization pairs each
 treated unit with control units, never a treated unit with another treated unit.
 
 \medskip
 
 But many causes we care about do not come as two groups:
 
- - **A degree, not a switch.** How *democratic* a country becomes; how *much* of
-   a media campaign a city received [@lu:etal:2001]; what *proportion* of a
-   neighborhood owns their homes.
+ - **A degree, not a switch.** How *democratic* a country becomes; how *much*
+   of a media campaign a city received [@lu:etal:2001]; what *proportion* of a
+   neighborhood owns their homes; an answer to a survey question of "How many
+   people in your family are likely to get the COVID vaccine?" [@rabb2022pnas].
  - **Several doses.** Low, medium, high exposure, with no natural "control."
-
-\medskip
-
-We could dichotomize --- call the top third "treated" and the bottom third
-"control" --- but that discards the middle and throws away the gradation that
-carries the information.
 
 ## The move: one pool, not two {.fragile}
 
 \textbf{Non-bipartite matching} drops the two-group structure. Start with a
 single pool of units. Pair each unit with the one *most similar on covariates*,
-wherever it sits on the treatment. Only *after* the pairs are fixed do we ask, within each
+whatever its level of treatment. Only *after* the pairs are fixed do we ask, within each
 pair, which unit had more of the treatment.
-
-\medskip
-
-\begin{center}
-\begin{tikzcd}[column sep=large,every arrow/.append style=-latex]
- D \arrow[from=1-1,to=1-3, "\tau = ?"] & & Y \\
- & x \arrow[from=2-2,to=1-1] \arrow[from=2-2,to=1-3] &
-\end{tikzcd}
-\end{center}
-
-\medskip
-
-$D$ is the treatment (now a degree, not a switch), $Y$ the outcome, $\bx$ the
-covariates that drive both. Pairing on $\bx$ is meant to break the
-$\bx \rightarrow D$ relationship within pairs, just as stratifying did for a
-binary $Z$.
 
 # The Question: Does Democratization Reduce Corruption?
 
@@ -180,11 +159,10 @@ and follow them:
    freedom from physical violence, civil-society participation, rule of law,
    logged GDP per capita (and an indicator for missing GDP).
  - **Treatment** ($D$): how much each country democratized by 2005 --- a *degree*
-   (change in the polyarchy index), which we can also coarsen to "reached
-   democracy: yes/no."
+   (change in the polyarchy index).
  - **Outcome** ($Y$): the corruption index in 2010 ($0$ = none, $1$ = high).
 
-## The naive comparison, and why to distrust it
+## The naive comparison, and why to distrust it {.allowframebreaks}
 
 ```{r vdem_build, echo=TRUE, cache=TRUE}
 load(here::here("data", "vdem_democracy_transitions.rda"))
@@ -206,41 +184,31 @@ dat <- baseline %>% inner_join(treatment, by = "country_text_id") %>%
     log_gdppc_90 = ifelse(is.na(log_gdppc_90), median(log_gdppc_90, na.rm = TRUE), log_gdppc_90))
 ```
 
+## The naive comparison, and why to distrust it {.allowframebreaks}
+
 ```{r naive, echo=TRUE}
 naive <- lm_robust(corr_10 ~ democratized, data = dat)
 c(diff = coef(naive)[["democratized"]], p = naive$p.value[["democratized"]])
 ```
 
-## The naive comparison, and why to distrust it
+\medskip
 
-Among `r nrow(dat)` autocracies in 1990, `r sum(dat$democratized)` had reached
-democracy by 2005 and `r sum(1 - dat$democratized)` had not. The democratizers
-have markedly *lower* 2010 corruption: a difference of about
-`r round(coef(lm_robust(corr_10 ~ democratized, data = dat))[["democratized"]], 2)`
-on the $0$--$1$ scale ($p \approx `r round(lm_robust(corr_10 ~ democratized, data = dat)$p.value[["democratized"]], 3)`$).
+Among `r nrow(dat)` autocracies in 1990, `r sum(dat$democratized)` had reached democracy by 2005 and `r sum(1 - dat$democratized)` had not. The democratizers have markedly *lower* 2010 corruption: a difference of about `r round(coef(lm_robust(corr_10 ~ democratized, data = dat))[["democratized"]], 2)` on the $0$--$1$ scale. The sd of the outcome is `r sd(dat$corr_10)` and range of the outcome is `r range(dat$corr_10)` ($p \approx `r round(lm_robust(corr_10 ~ democratized, data = dat)$p.value[["democratized"]], 3)`$).
 
 \medskip
 
-Taken at face value: democratization cuts corruption. But this is the
-confounded story's natural prediction too. The democratizers differ from the
-non-democratizers on exactly the covariates $\bx$ that the second story names.
-We need to compare like with like.
+Taken at face value: democratization cuts corruption. But democratizers differ
+from the non-democratizers on exactly the covariates $\bx$: places likely to
+have low corruption choose to democratize (find it easier to democractize).
 
 # Non-bipartite Matching: The Idea
 
 ## From two groups to one pool
 
-\textbf{Bipartite} (days 8--11): a treated side and a control side; the
-optimizer draws edges only across the divide and pairs each treated unit with
-control(s) to minimize the total treated-to-control distance.
-
-\medskip
-
-\textbf{Non-bipartite}: no divide. Every unit can be paired with every other.
-Split the whole pool of $N$ units into $N/2$ pairs so as to minimize the
-**total within-pair distance** on covariates. There is no "treated group" until
-we look, within each formed pair, at which unit got more of $D$
-[@lu2011optimal].
+Every unit can be paired with every other. Split the whole pool of $N$ units
+into $N/2$ pairs so as to minimize the **total within-pair distance** on
+covariates. There is no "treated group" until we look, within each formed pair,
+at which unit got more of $D$ [@lu2011optimal].
 
 \medskip
 
@@ -248,7 +216,7 @@ Optimal non-bipartite matching solves this partition exactly --- the same kind
 of optimization behind `fullmatch`, but on one undivided set of units rather
 than across two.
 
-## Why pairs help: the as-if-randomized analogy
+## Why pairs help: 
 
 Suppose two countries were nearly identical in 1990 --- same corruption, same
 civil society, same income --- and then one democratized more than the other.
@@ -256,13 +224,12 @@ civil society, same income --- and then one democratized more than the other.
 \medskip
 
 If covariates do not predict *which* one democratized more, then, within that
-pair, "which country got the higher dose" looks like the flip of a coin. That is
-the paired-randomized-experiment analogy: hold $\bx$ fixed by pairing, and let
-the difference in $D$ stand in for an assignment we did not control.
+pair, "which country got the higher dose of democracy" looks like the flip of a coin. That is
+the paired-randomized-experiment analogy.
 
 \medskip
 
-The design's job, before any outcome, is to make that analogy defensible: pairs
+The **design's job**, is to make that analogy defensible: pairs
 close enough on $\bx$ that covariates no longer forecast the within-pair
 direction of treatment.
 
@@ -280,15 +247,19 @@ treatment varies --- countries democratizing in different years --- the risk set
 must move with time. That is **risk-set matching**, and it is Thursday's topic
 [@rosenbaum2017; @rosenbaum2020book, ch. 12].
 
+\medskip
+
+Today we are focusing on the cross-sectional comparison to understand
+non-bipartite matching.
+
 # Building the Design (before outcomes)
 
 ## Step 1: a distance between every pair of units
 
-Bipartite matching needs distances from treated units to control units.
-Non-bipartite matching needs a distance between *every* pair. Here we summarize
-each country by its Mahalanobis distance from the pool's covariate center --- one
-number per country --- and let the distance between two countries be how far apart
-those numbers are.
+Non-bipartite matching needs a distance between *every* pair of units. Here we
+summarize each country by its Mahalanobis distance from the pool's covariate
+center. The distance between two countries can be how far apart those numbers
+are.
 
 ```{r dist, echo=TRUE, cache=TRUE}
 row.names(dat) <- dat$country_text_id
@@ -305,11 +276,11 @@ mhdist[1:4, 1:4]
 
 ## Step 2: optimal non-bipartite matching
 
-`designmatch::nmatch` partitions the pool into pairs minimizing total within-pair
-distance. We add two **calipers** (`near` constraints): no pair may bridge
-countries more than one unit apart on logged GDP, or more than $0.10$ apart on
-civil-society participation --- the confounded story's central variable, which we
-refuse to leave imbalanced. The open-source HiGHS solver finds the optimum.
+`designmatch::nmatch` partitions the pool into pairs minimizing total
+within-pair distance. We add two **calipers** (`near` constraints): no pair may
+bridge countries more than one unit apart on logged GDP, or more than $0.10$
+apart on civil-society participation --- the rival story's central variable.
+The open-source HiGHS solver finds the optimum.
 
 ```{r match, echo=TRUE, cache=TRUE, results='hide', message=FALSE, warning=FALSE}
 ## designmatch prefers normalized, rounded distances.
@@ -321,6 +292,8 @@ solverlist <- list(name = "highs", approximate = 0, t_max = 1000, trace = 0)
 set.seed(12345)
 nb <- nmatch(dist_mat = matchdist, near = nearlist, subset_weight = 1, solver = solverlist)
 ```
+
+## Step 2: optimal non-bipartite matching
 
 ```{r match_to_df, echo=TRUE}
 ## Turn nmatch output into a pair-id we can merge back onto the countries.
@@ -344,20 +317,24 @@ pairs:
 dat_m %>% arrange(pair_id) %>%
   transmute(pair = pair_id, country = country_name,
             poly_change = round(polyarchy_change, 2),
-            corr_2010 = round(corr_10, 2), logGDP = round(log_gdppc_90, 2)) %>%
+            corr_2010 = round(corr_10, 2), 
+            logGDP = round(log_gdppc_90, 2)) %>%
   head(6) %>% as.data.frame()
 ```
 
 \footnotesize
 Each pair is two countries close on 1990 covariates. Within a pair they differ
-in how much they democratized (`poly_change`) --- that difference is the
-treatment contrast we will use. \normalsize
+in how much they democratized (`poly_change`). `poly_change` is the 1990--2005
+change in the polyarchy index, so it can be negative (backsliding). Within a
+pair, "higher dose" simply means the larger of the two changes --- the country
+that moved more toward democracy, or backslid less --- regardless of sign.
+\normalsize
 
 # Checking the Design (still before outcomes)
 
 ## The trick: a pseudo-binary treatment within pairs
 
-To borrow the balance machinery from days 8--11, we manufacture a binary
+To borrow the balance tools from days 8--11, we manufacture a binary
 treatment *inside each pair*. Rank the two countries by how much they
 democratized; the larger increase gets `rank_dem = 1`, the smaller gets $0$.
 
@@ -368,11 +345,20 @@ table(dat_m$rank_dem)   # 0.5 marks a tie (both changed identically)
 dat_notie <- dat_m %>% filter(rank_dem != 0.5)
 ```
 
+```{r pairs_examples2, echo=FALSE}
+dat_m %>% arrange(pair_id) %>%
+  transmute(pair = pair_id, country = country_name,
+            poly_change = round(polyarchy_change, 2),
+            rank_dem = rank_dem,
+            corr_2010 = round(corr_10, 2), 
+            logGDP = round(log_gdppc_90, 2)) %>% arrange(pair,rank_dem) %>%
+  head(6) %>% as.data.frame()
+```
 \medskip
 
-Now "treated" means "the more-democratizing country in its pair." If the pairing
-worked, covariates should not predict which country that is --- exactly the
-balance question we already know how to ask.
+Now "treated" means "the more-democratizing country in its pair." If the
+pairing worked, covariates should not predict which country democratized more
+versus less within pair. 
 
 ## Balance: does $\bx$ predict who democratized more?
 
@@ -386,8 +372,7 @@ xb$overall["pair_id", ]
 
 \medskip
 
-The omnibus test is the same one from day 10: a *high* $p$-value is the good
-case. Across the covariates jointly, the within-pair imbalance is no larger than
+Across the covariates jointly, the within-pair imbalance is no larger than
 a paired-randomized experiment would routinely produce
 ($p \approx `r round(xb$overall["pair_id", "p.value"], 2)`$).
 
@@ -399,12 +384,7 @@ round(xbv[order(xbv$p), ], 3)
 ```
 
 \footnotesize
-The standardized within-pair differences are all small. Because we calipered on
-civil-society participation (`cspart_90`) --- the confounded story's central
-variable --- it now balances closely rather than tilting toward the
-more-democratizing country. The largest remaining difference is baseline
-corruption (`corr_90`), still well inside what a paired experiment produces (the
-omnibus $p$ above). The design is settled; now we unblind the outcome.
+The standardized within-pair differences are all small. 
 \normalsize
 
 ## What the balance check is really doing
@@ -418,15 +398,14 @@ chance. The balance test compares our actual design against that ideal.
 A useful exercise (and a check on the logic): replace `rank_dem` with a genuine
 within-pair coin flip and rerun `balanceTest`. You should see the kind of
 $p$-values the null produces --- which is what we want our real design to
-resemble. We settle all of this *before* touching 2010 corruption.
+resemble.
 
 # From Design to Effect
 
 ## Outcome analysis 1: higher vs. lower democratizer
 
-With the design fixed, unblind the outcome. The most transparent estimate is the
-mean, across pairs, of the within-pair difference in 2010 corruption between the
-more- and less-democratizing country.
+With the design fixed now we can analyze the outcome. Start with within-pair
+difference in 2010 corruption between the more- and less-democratizing country.
 
 ```{r est_binary, echo=TRUE}
 pair_diffs <- dat_m %>% filter(rank_dem != 0.5) %>% group_by(pair_id) %>%
@@ -434,7 +413,6 @@ pair_diffs <- dat_m %>% filter(rank_dem != 0.5) %>% group_by(pair_id) %>%
             poly_diff = polyarchy_change[rank_dem == 1] - polyarchy_change[rank_dem == 0],
             .groups = "drop")
 est1 <- mean(pair_diffs$corr_diff)
-## Same number, as a within-pair (fixed-effects) regression, with an HC2 SE:
 est2 <- lm_robust(corr_10 ~ rank_dem, fixed_effects = ~ factor(pair_id),
                   data = dat_m, subset = rank_dem != 0.5)
 c(mean_diff = est1, lm_coef = coef(est2)[["rank_dem"]],
@@ -449,20 +427,9 @@ scale --- roughly a quarter of the naive gap, and not distinguishable from zero
 
 \medskip
 
-Compare with the naive difference of `r round(coef(naive)[["democratized"]], 2)`.
-Comparing countries that looked alike in 1990, and balanced on civil society,
-shrinks the strong "democratization lowers corruption" gap to a small, uncertain
-number. Much of the naive association was the confounded story: democratizers
-were already on a different path.
+Notice that higher-vs-lower democratizers (or backsliders) differ by amounts and we are tossing that when convert the continuous differences to 0-vs-1. Next we use it.
 
-\medskip
-
-The estimators agree by construction --- the mean of within-pair differences *is*
-the `rank_dem` coefficient in a pair-fixed-effects regression. But comparing the
-higher- against the lower-democratizer discards *how much* more one country
-democratized. Next we use it.
-
-## Outcome analysis 2: use the size of the dose
+## Outcome analysis 2: use the size of the "dose"
 
 Ranking throws away *how much* more one country democratized. The continuous
 version keeps it: relate the within-pair difference in democratization to the
@@ -482,7 +449,7 @@ The slope is negative and now distinguishable from zero
 gap in democratization show a larger drop in corruption. Keeping the dose
 magnitude recovers a signal the higher-vs-lower comparison diluted --- in a pair
 where one country barely out-democratized the other, "higher vs. lower" is a tiny
-treatment, and lumping it with large-gap pairs washes the effect out.
+treatment, and lumping it with large-gap pairs pulls the estimate toward zero.
 
 \medskip
 
@@ -520,7 +487,7 @@ round(c(`naive difference (dem - non-dem)` = naive_d,
 
 \footnotesize
 The naive and higher-vs-lower numbers share a scale (a difference in the
-corruption level): the naive leans on countries that were never comparable, and
+corruption level): the naive relies on countries that were never comparable, and
 matching shrinks it by about three-quarters --- Tuesday's lesson, reached by
 stratifying instead of residualizing. The dose-response slope is a *different*
 scale (change in corruption per unit of within-pair democratization difference)
@@ -541,7 +508,7 @@ caliper.
 
 There is no fixed "treated group" here: every country is the higher-dose member
 of *some* potential pair and the lower-dose member of another. The matched
-comparison speaks to the units in the overlap --- the same restriction we met as
+comparison applies to the units in the overlap --- the same restriction we met as
 the difference between an effect for the matched sample and an effect for the
 whole population. Countries we dropped, or that anchor an extreme of the dose,
 are outside what this design can support.
@@ -576,9 +543,9 @@ question under different assumptions (no anticipation, parallel trends) --- and
 how to bound the conclusion when parallel trends holds only approximately
 (HonestDiD).
 
-## Other places non-bipartite matching earns its place
+## Other places non-bipartite matching is used
 
-The same machinery, different substance:
+The same approach, different substance:
 
  - **Matching with doses.** @lu:etal:2001 pair communities by covariates to
    study a media campaign against drug abuse whose *intensity* varied --- the
