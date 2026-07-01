@@ -446,16 +446,12 @@ c(slope = coef(est_cont)[["poly_diff"]], se = est_cont$std.error[["poly_diff"]],
 
 The slope is negative and now distinguishable from zero
 ($p \approx `r round(est_cont$p.value[["poly_diff"]], 2)`$): pairs with a larger
-gap in democratization show a larger drop in corruption. Keeping the dose
-magnitude recovers a signal the higher-vs-lower comparison diluted --- in a pair
-where one country barely out-democratized the other, "higher vs. lower" is a tiny
-treatment, and lumping it with large-gap pairs pulls the estimate toward zero.
+gap in democratization show a larger drop in corruption.
 
 \medskip
 
-Read it cautiously: this rests on `r nrow(pair_diffs)` pairs and one design, and a
-through-origin slope is sensitive to a few points. It is a reason to run the
-sensitivity tools from Monday, not a settled magnitude.
+This rests on `r nrow(pair_diffs)` pairs and one design. What about influential
+points? What about sensitivity analysis?
 
 ## The within-pair relationship, drawn
 
@@ -465,35 +461,30 @@ ggplot(pair_diffs, aes(x = poly_diff, y = corr_diff)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE, formula = y ~ x - 1) +
   geom_smooth(method = "loess", se = FALSE, color = "orange",
-              method.args = list(family = "symmetric", degree = 1), span = 0.9) +
+              method.args = list(family = "symmetric", degree = 2), span = 0.5) +
   labs(x = "Within-pair difference in democratization (1990-2005)",
        y = "Within-pair difference in corruption (2010)") +
   theme_minimal(base_size = 13)
 ```
 
 \footnotesize
-Each point is one matched pair. Blue: the through-origin linear fit; orange: a
-robust loess. Both tilt negative --- the dose-response --- but the cloud is wide,
-so the slope rests on a modest number of pairs. \normalsize
+Each point is one matched pair. Blue: the linear fit; orange: a
+robust loess. \normalsize
 
 ## Naive vs. design, side by side
 
 ```{r compare_tab, echo=FALSE}
 naive_d <- coef(lm_robust(corr_10 ~ democratized, data = dat))[["democratized"]]
-round(c(`naive difference (dem - non-dem)` = naive_d,
-        `within-pair: higher vs lower democratizer` = est1,
-        `within-pair dose-response slope` = coef(est_cont)[["poly_diff"]]), 3)
+compare <- data.frame(
+  comparison = c("naive difference (dem - non-dem)",
+                 "within-pair: higher vs lower",
+                 "within-pair dose-response slope"),
+  estimate = round(c(naive_d, est1, coef(est_cont)[["poly_diff"]]), 3))
+## format = "latex" emits a booktabs tabular (not a longtable), which avoids the
+## pandoc/beamer "No counter 'none' defined" error from caption-less longtables.
+kable(compare, format = "latex", booktabs = TRUE, row.names = FALSE,
+      col.names = c("comparison", "estimate"))
 ```
-
-\footnotesize
-The naive and higher-vs-lower numbers share a scale (a difference in the
-corruption level): the naive relies on countries that were never comparable, and
-matching shrinks it by about three-quarters --- Tuesday's lesson, reached by
-stratifying instead of residualizing. The dose-response slope is a *different*
-scale (change in corruption per unit of within-pair democratization difference)
-and a different question: not "is the more-democratic country less corrupt?" but
-"does more democratization go with less corruption?" The answers diverge because
-the higher-vs-lower comparison ignores dose size. \normalsize
 
 # What This Does and Does Not Settle
 
@@ -507,11 +498,7 @@ caliper.
 \medskip
 
 There is no fixed "treated group" here: every country is the higher-dose member
-of *some* potential pair and the lower-dose member of another. The matched
-comparison applies to the units in the overlap --- the same restriction we met as
-the difference between an effect for the matched sample and an effect for the
-whole population. Countries we dropped, or that anchor an extreme of the dose,
-are outside what this design can support.
+of *some* potential pair and the lower-dose member of another. 
 
 ## The unobserved, again
 
@@ -519,33 +506,37 @@ Balance only certifies the covariates we matched on. The confounded story warns
 about forces we did *not* measure --- a reform movement, an external shock ---
 that could drive both democratization and corruption.
 
-\medskip
+## How much hidden bias would overturn the dose-response? {.allowframebreaks}
 
-That is exactly Monday's question, and the same tools apply: a sensitivity
-analysis ($\Gamma$) asks how strong such an unobserved confounder would have to
-be, within pairs, to overturn the conclusion. With a near-zero point estimate
-here, the more useful sensitivity question runs the other way: how confident can
-we be that the effect is *small*, not that it is nonzero?
+Monday's $\Gamma$ perturbed assignment odds in a matched *test*; the
+dose-response is an OLS *slope*, so @cinellihazlett2020 ask the same question in
+a regression metric --- how strongly an unobserved pair-level confounder must
+relate to *both* the within-pair dose difference and the within-pair corruption
+difference before the slope is no longer detectable.
 
-## What changes Thursday
+```{r sens_dose, echo=TRUE, message=FALSE}
+library(sensemakr)
+## estimate, robust SE, and residual df from the through-origin fit (est_cont)
+sens_dose <- sensemakr(estimate  = coef(est_cont)[["poly_diff"]],
+                       se        = est_cont$std.error[["poly_diff"]],
+                       treatment = "poly_diff",
+                       dof       = est_cont$df.residual)
+round(sens_dose$sensitivity_stats[, c("rv_q", "rv_qa")], 3)
+```
 
-We fixed the risk set at 1990. Real histories are staggered: Colombia
-democratized around 1991, Indonesia around 1999, Georgia around 2004. A country
-that democratized in 1999 should be compared with countries *still autocratic in
-1999*, not with ones already democratic for a decade.
-
-\medskip
-
-Letting the risk set move with time is **risk-set matching**
-[@rosenbaum2017; @rosenbaum2020book, ch. 12]. Thursday we build it, and set it
-against **difference-in-differences**, which answers the same longitudinal
-question under different assumptions (no anticipation, parallel trends) --- and
-how to bound the conclusion when parallel trends holds only approximately
-(HonestDiD).
+\footnotesize
+`RV_qa` is the value to report: a confounder explaining only about
+`r round(100 * sens_dose$sensitivity_stats$rv_qa, 1)` percent of the residual
+variation in *both* within-pair differences would push the slope back across the
+$0.05$ line. That is a weak confounder --- the slope is detectable but fragile,
+its $p$-value ($\approx `r round(est_cont$p.value[["poly_diff"]], 2)`$) already
+at the edge. Driving the point *estimate* to zero takes much more (`RV_q`
+$\approx `r round(100 * sens_dose$sensitivity_stats$rv_q)`$ percent); the gap
+between the two is the sampling uncertainty `RV_qa` builds in. Whether even a
+weak pair-level force like that is plausible is a substantive judgment.
+\normalsize
 
 ## Other places non-bipartite matching is used
-
-The same approach, different substance:
 
  - **Matching with doses.** @lu:etal:2001 pair communities by covariates to
    study a media campaign against drug abuse whose *intensity* varied --- the
@@ -554,11 +545,6 @@ The same approach, different substance:
    matching with a continuous treatment in a recent published design.
  - **Perceptions of place.** @wong2012jop and @wong2025maps pair survey
    respondents to study how perceived neighborhood composition shapes attitudes.
-
-\medskip
-
-Whenever the cause is a degree rather than a switch, pairing on covariates lets
-you keep the gradation instead of dichotomizing it away.
 
 # Summary
 
@@ -583,8 +569,7 @@ you keep the gradation instead of dichotomizing it away.
    and detectable. Same design, two questions, two answers.
  - **Scope and limits**: the estimand is for the matched pairs; balance covers
    only observed covariates; sensitivity analysis ($\Gamma$) handles the rest.
- - **Tools**: `designmatch::nmatch` (with `near`/`far` calipers and a solver);
-   the classic `nbpMatching` package implements the same optimization
+ - **Tools**: `designmatch::nmatch` (with `near`/`far` calipers and a solver)
    [@lu2011optimal; @rosenbaum2020book, ch. 11].
 
 ## References {.allowframebreaks}
