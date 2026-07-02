@@ -64,5 +64,17 @@ Tom_Slides/matching-guide/**/*.RData
 *-Rex.tex
 unit01-fishercombs.tex
 day[0-9]*.tex
+day_[0-9]*.tex
 *-scratch.R
 styles/daily-announcement.tex
+
+# html knitted from tracked Rmd/tex sources
+day_*.html
+child_files_/*.html
+syllabus/*/*mathml.html
+
+# knitr figure cache
+figs/
+
+# separate git repo nested in this working directory (own remote, not part of this repo)
+Causal-Inference-Textbook/
