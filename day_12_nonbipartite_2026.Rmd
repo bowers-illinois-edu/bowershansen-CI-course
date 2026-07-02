@@ -440,6 +440,11 @@ within-pair difference in corruption.
 est_cont <- lm_robust(corr_diff ~ poly_diff - 1, data = pair_diffs)
 c(slope = coef(est_cont)[["poly_diff"]], se = est_cont$std.error[["poly_diff"]],
   p = est_cont$p.value[["poly_diff"]])
+## Another way to do the same thing
+est_cont2 <- lm_robust(corr_10~polyarchy_change,
+                       fixed_effects = ~ factor(pair_id),
+                       data = dat_m, subset = rank_dem != 0.5)
+est_cont2
 ```
 
 \medskip
