@@ -262,44 +262,89 @@ pool %>% arrange(desc(newly), abs(v2x_polyarchy - dz)) %>%   # democratizer, the
 \footnotesize
 `r nrow(pool) - 1` still-autocratic countries are eligible for possible matching. \normalsize
 
-## Build it: wrap the pool, match, repeat {.shrink}
+## How wide should the polyarchy caliper be? {.shrink}
 
-```{r rs_build, echo=TRUE}
-mvars <- c("v2x_polyarchy", "v2x_corr", "v2x_cspart", "v2x_rule", "log_gdp")
-build_pair_at <- function(g, used = character(0)) {
+We will force pairs to be close on polyarchy. Before fixing a width, look at
+the distances the caliper will act on: every treated-control polyarchy gap,
+within each transition year's pool.
+
+```{r pol_caliper, echo=TRUE}
+cohorts <- sort(unique(v$first_treat[v$first_treat >= WIN_LO + 1 & v$first_treat <= WIN_HI - POST]))
+pools <- map_dfr(cohorts, function(g) {              # the pool lines, run at every g
+  v %>% filter(year == g - 1) %>%
+    mutate(newly = as.integer(first_treat == g), cohort = g) %>%
+    filter(first_treat == g | first_treat == 0 | first_treat > g + POST)
+}) %>% as.data.frame()
+mat <- match_on(newly ~ v2x_polyarchy, data = pools, method = "euclidean",
+                within = exactMatch(newly ~ cohort, data = pools))   # blocked by cohort
+summary(mat)
+```
+
+## How wide should the polyarchy caliper be? {.shrink}
+
+```{r pol_caliper2, echo=TRUE}
+dists <- findSubproblems(mat)                        # one distance matrix per cohort
+gaps  <- unlist(lapply(dists, as.vector))            # every treated-control gap
+round(quantile(gaps, seq(0, 1, .1)), 2)              # deciles, all cohorts pooled
+nearest <- sapply(dists, function(x) { min(as.vector(x)) })  # nearest gap, per cohort
+round(nearest, 2)
+```
+
+\footnotesize
+A width of $0.05$ keeps the closest
+`r round(100 * mean(gaps <= 0.05))`\% of the available comparisons (the 10th
+percentile of gaps is `r round(quantile(gaps, .1), 2)`; the median is
+`r round(median(gaps), 2)`). 
+
+\normalsize
+
+## Build it (1): the pool at $g$ {.shrink}
+
+```{r rs_pool_fn, echo=TRUE}
+find_pool_at <- function(g, used = character(0)) {
   pool <- v %>% filter(year == g - 1) %>%                   # <- the pool from the last slide
     mutate(newly = as.integer(first_treat == g)) %>%
     filter(first_treat == g | first_treat == 0 | first_treat > g + POST) %>%
     filter(newly == 1 | !(country_text_id %in% used))       # a control serves in one pair only
   ok <- v %>% filter(country_text_id %in% pool$country_text_id, year %in% c(g - 1, g + POST)) %>%
     count(country_text_id) %>% filter(n == 2) %>% pull(country_text_id)
-  pool <- pool %>% filter(country_text_id %in% ok) %>% as.data.frame()
+  pool <- pool %>% filter(country_text_id %in% ok) %>% mutate(g = g) %>% as.data.frame()
   rownames(pool) <- pool$country_text_id
-  if (sum(pool$newly) < 1 || sum(pool$newly == 0) < 1) return(NULL)
+  if (sum(pool$newly) < 1 || sum(pool$newly == 0) < 1) return(NULL)  # nobody to compare
+  pool
+}
+```
+
+## Build it (2): match within a pool, calipers as arguments {.shrink}
+
+```{r rs_match_fn, echo=TRUE}
+mvars <- c("v2x_polyarchy", "v2x_corr", "v2x_cspart", "v2x_rule", "log_gdp")
+match_pool <- function(pool, ps_width = 2, pol_width = 0.05) {
   fml  <- reformulate(mvars, response = "newly")
   dmat <- match_on(fml, data = pool, method = "rank_mahalanobis")       # covariate distance
-  ps   <- caliper(match_on(glm(fml, pool, family = binomial()), data = pool), width = 2)
-  pv   <- pool$v2x_polyarchy; names(pv) <- rownames(pool)               # caliper on the
-  pcal <- ifelse(abs(outer(pv, pv, "-")) > 0.05, Inf, 0)               # cusp variable
-  total <- dmat + ps + as.InfinitySparseMatrix(pcal[pool$newly == 1, pool$newly == 0, drop = FALSE])
+  ps   <- caliper(match_on(glm(fml, pool, family = binomial()), data = pool),
+                  width = ps_width)                         # propensity-score caliper
+  pol  <- match_on(newly ~ v2x_polyarchy, data = pool, method = "euclidean")   # raw units
+  total <- dmat + ps + caliper(pol, width = pol_width)  # democratizers sit just below the line
   m <- tryCatch(pairmatch(total, controls = 1, data = pool), error = function(e) NULL)
   if (is.null(m)) return(NULL)
   pool$pair <- as.character(m)                              # always character (NA-safe)
   out <- pool %>% filter(!is.na(pair)) %>%
-    mutate(pair = paste0(g, "_", pair), g = g) %>%
+    mutate(pair = paste0(g, "_", pair)) %>%
     select(country_text_id, country_name, pair, g, newly, all_of(mvars))
   if (nrow(out) < 2) return(NULL)                           # this cohort formed no pair
   out
 }
 ```
 
-## Build it: wrap the pool, match, repeat {.shrink}
+## Build it (3): repeat across transitions {.shrink}
 
 ```{r usefn, echo=TRUE}
-cohorts <- sort(unique(v$first_treat[v$first_treat >= WIN_LO + 1 & v$first_treat <= WIN_HI - POST]))
 matched <- NULL; used <- character(0)        # controls already matched at earlier transitions
 for (g in cohorts) {                         # transitions in time order, as they happen
-  out <- suppressWarnings(build_pair_at(g, used))
+  gpool <- find_pool_at(g, used)             # 1. who is at risk at g
+  if (is.null(gpool)) next
+  out <- suppressWarnings(match_pool(gpool, ps_width = 2, pol_width = 0.05))  # 2. match
   if (is.null(out)) next                     # no defensible pair at this transition
   used <- c(used, out$country_text_id[out$newly == 0])     # matched controls leave the pool
   matched <- bind_rows(matched, out)
@@ -319,9 +364,8 @@ Each control country serves in **one pair only**: once matched,
 it leaves the control pool for every later transition. A country used as a
 control can still appear later as the *treated* side of its own pair:
 eligibility already requires its transition to fall after $g + `r POST`$, past
-its outcome window as a control. The signed-rank test and the $\Gamma$ analysis
-below treat pairs as independent, and a country sitting in several pairs would
-tie those pairs together. \normalsize
+its outcome window as a control. The analyses
+below treat pairs as independent. \normalsize
 
 ## Balance: does history predict who democratized?
 
@@ -333,9 +377,16 @@ round(xb$results[, c("Treatment", "Control", "std.diff", "p"), "pair"], 2)
 ```
 
 \footnotesize
-Covariates do not predict who democratized. \normalsize
+Covariates do not predict who democratized within pair. 
+\normalsize
 
-## Estimate: within-pair change in corruption
+## Estimate: the difference in the differences via a change score {.shrink}
+
+Outcome per country: the **change score** --- corruption at $g+`r POST`$ minus
+at $g-1$. Estimate the effect of democratizing per pair: the
+democratizer's change minus its match's change --- **the difference in the
+differences**. Averaging the pair differences estimates the **ATT**: the
+average effect of democratization on the matched democratizers.
 
 ```{r rs_est, echo=TRUE}
 ## change score: corruption at g+POST minus at g-1, for each matched country
@@ -350,18 +401,31 @@ c(mean_diff = est_rs, HL = hl$estimate[[1]],
   ci_lo = hl$conf.int[1], ci_hi = hl$conf.int[2], p = hl$p.value)
 ```
 
-\footnotesize
+## Estimate: the difference in the differences {.shrink}
+
 The newly-democratic country's corruption falls about
 `r round(abs(est_rs), 2)` more than its still-autocratic match's over five years
-(signed-rank $p \approx `r round(wilcox.test(pd$diff)$p.value, 3)`$). The change
-score differences out any fixed within-pair gap --- a robustness device serving the
-conditional-ignorability design, not a separate parallel-trends assumption.
-\normalsize
+(signed-rank $p \approx `r round(wilcox.test(pd$diff)$p.value, 3)`$).
 
-## Sensitivity: how much hidden bias would it take?
+\medskip
+
+The same ATT by regression:
+
+```{r rs_lmrobust, echo=TRUE}
+est_lm <- lm_robust(dcorr ~ newly, fixed_effects = ~ pair, data = chg)
+est_lm
+```
+
+\footnotesize
+With one treated and one control per pair, the pair-fixed-effects coefficient
+on `newly` *is* the mean within-pair difference --- the same
+`r round(est_rs, 2)`, now with an HC2 standard error (two-sided
+$p \approx `r round(est_lm$p.value[["newly"]], 3)`$, near the signed-rank
+$p$). \normalsize
+
+## Sensitivity: assess consequences of possible hidden bias
 
 ```{r rs_gamma, echo=TRUE}
-## Rosenbaum-Krieger sum-statistic sensitivity on the within-pair change scores.
 ## alternative = "less": the democratizer's corruption falls relative to its match.
 pval_g <- function(g) as.numeric(senstrat(sc = chg$dcorr, z = chg$newly,
                      st = as.integer(factor(chg$pair)), gamma = g,   # senstrat needs integer strata
@@ -374,17 +438,21 @@ round(c(p_at_1 = pval_g(1), p_at_1.5 = pval_g(1.5), Gamma_star = gstar), 3)
 $\Gamma^{*} \approx `r round(gstar, 2)`$:
 an unobserved confounder would have to give one country in a pair about
 `r round(gstar, 2)`
-times the odds of being the democratizer before the test stops rejecting. Hold
-this number. We compare it with the DiD's robustness at the end. \normalsize
+times the odds of being the democratizer before the test stops rejecting. \normalsize
 
 # Difference-in-Differences
 
 ## The other strategy: assume parallel trends
 
-Do not match on covariates. Assume that, absent democratization, the corruption
-paths of democratizers and non-democratizers would have moved in **parallel**.
-Then the post-minus-pre change for the treated, minus the same change for
-controls, is the effect.
+We can make a causal inference **without adjusting for covariates** and the conditional ignorability assumption.
+
+\medskip
+
+Assume that, absent democratization, the corruption
+paths of democratizers and non-democratizers would have moved in **parallel** over time.
+Then the democratizers' **average** change (post minus pre), minus the
+non-democratizers' average change, identifies the **ATT**: the average effect
+of democratization on the countries that democratized.
 
 \medskip
 
@@ -400,7 +468,7 @@ corruption just before (1989) and a few years after (1995).
 ```{r did_2x2, echo=TRUE}
 yr_pre <- 1989; yr_post <- 1995
 bb <- panel %>% filter(year %in% c(yr_pre, yr_post), first_treat %in% c(0, 1990)) %>%
-  group_by(country_num) %>% filter(n() == 2) %>% ungroup() %>%      # balanced 2x2
+  group_by(country_num) %>% filter(n() == 2) %>% ungroup() %>%     
   mutate(grp = ifelse(first_treat == 1990, "democratized", "never"),
          per = ifelse(year == yr_post, "post", "pre"))
 cells <- tapply(bb$v2x_corr, list(bb$grp, bb$per), mean)
@@ -410,11 +478,27 @@ round(cells, 2)
 ```
 
 \footnotesize
-The estimate is the democratizers' change minus the non-democratizers' change:
-$`r round(cells["democratized","post"]-cells["democratized","pre"],2)` - (`r round(cells["never","post"]-cells["never","pre"],2)`) = `r round(did2,2)`$.
-Corruption rose among non-democratizers and held steady among the new democracies.
-The whole estimate depends on **parallel trends**: that the two groups would have
-moved together absent democratization. \normalsize
+`cells` holds the four averages the estimate is built from --- each group's mean
+corruption before (1989) and after (1995). We turn them into the DiD next.
+\normalsize
+
+## From the four cells to the estimate
+
+`cells` is four averages: mean corruption for each group in each period. Read each
+row across for its **change over time** (post minus pre); then difference the changes.
+
+```{r did_cells_again, echo=TRUE}
+round(cells[, c("pre", "post")], 2)                    # (a) four means, pre then post
+changes <- cells[, "post"] - cells[, "pre"]            # (b) each group's change: post - pre
+round(changes, 2)
+round(unname(changes["democratized"] - changes["never"]), 2)  # (c) DiD = difference of changes
+```
+
+\medskip
+
+- Democratizers' average change: $`r round(cells["democratized","post"],2)` - `r round(cells["democratized","pre"],2)` = `r round(cells["democratized","post"]-cells["democratized","pre"],2)`$ (roughly steady).
+- Non-democratizers' average change: $`r round(cells["never","post"],2)` - `r round(cells["never","pre"],2)` = `r round(cells["never","post"]-cells["never","pre"],2)`$ (rose).
+- DiD $= `r round(cells["democratized","post"]-cells["democratized","pre"],2)` - (`r round(cells["never","post"]-cells["never","pre"],2)`) = `r round(did2,2)`$: the new democracies fell about $`r round(abs(did2),2)`$ relative to the non-democratizers.
 
 ## Parallel trends as a picture
 
@@ -454,8 +538,7 @@ text(1990, max(c(dem, nev, cf)) + 0.015, "1990: the wave democratizes", cex = .7
 ```
 
 \footnotesize
-Nothing in the data draws the dashed line: with one pre-period it is pure
-assumption. The two solid lines are all we observe; the whole design is the
+The two solid lines are all we observe; the whole design is the
 claim that the blue line, absent democratization, would have run parallel to
 the grey one. Whether that claim is even plausible is what more pre-periods
 can address --- the event study, next. \normalsize
@@ -463,8 +546,13 @@ can address --- the event study, next. \normalsize
 ## Checking the assumption: the event study
 
 A single pre/post comparison cannot show whether the trends were parallel
-*before* treatment. Add pre-periods and look --- aligning every democratizer at its
-own transition and comparing to the never-treated:
+*before* treatment, so add pre-periods. For each cohort (group of countries), compare its average corruption
+change --- from the year before it democratized (its base year) to each other
+year --- against the never-treated countries' average change over the same years. The
+horizontal axis below is years relative to each cohort's transition: negative
+before, zero at the transition, positive after.
+
+## Checking the assumption: the event study
 
 ```{r did_cs, echo=TRUE, cache=TRUE, message=FALSE, warning=FALSE, results='hide'}
 ## event study + pooled estimate, never-treated controls, all cohorts
@@ -490,17 +578,72 @@ points(esd$e, esd$att, pch = 19, col = ifelse(esd$e < 0, "darkred", "black"))
 
 \footnotesize
 Red = pre-transition. The pre-trends are **not** flat: would-be democracies
-already had higher, *declining* corruption before the transition --- exactly what
-parallel trends rules out. The pooled estimate (all cohorts) is about
+already had higher, *declining* corruption before the transition --- not parallel trends. The pooled estimate (all cohorts) is about
 `r round(cs_simple$overall.att, 2)`. \normalsize
+
+## What each comparison is: the 1990 cohort {.shrink}
+
+One comparison, concretely. The 2x2 you saw --- the 1990 democratizers against
+the never-treated, 1989 to 1995 --- is one of these building blocks:
+$\mathrm{ATT}(1990, 1995) \approx -0.15$. Its two groups:
+
+```{r cs_cohort90, echo=TRUE}
+## treated group: the countries that democratized in 1990
+panel %>% distinct(country_name, first_treat) %>%
+  filter(first_treat == 1990) %>% pull(country_name)
+## control group: EVERY never-treated country (the same pool for every cohort)
+never <- panel %>% distinct(country_name, first_treat) %>% filter(first_treat == 0)
+c(n_never_treated = nrow(never))
+head(sort(never$country_name), 6)  # a few, for illustration
+```
+
+\footnotesize
+CS compares all six 1990 democratizers to all `r nrow(never)` never-treated
+countries at once --- no matching. The base year is 1989 ($g-1$), and **this same
+never-treated pool is the control group for every cohort**. \normalsize
+
+## Matching used different comparisons {.shrink}
+
+Section A's risk-set matching took the same democratizers but built different
+comparisons: each is paired to one still-at-risk country chosen on covariates,
+and each control is used only once.
+
+```{r rs_cohort90, echo=TRUE}
+matched %>% filter(g == 1990) %>% group_by(pair) %>%
+  summarize(democratizer    = country_name[newly == 1],
+            matched_control = country_name[newly == 0], .groups = "drop") %>%
+  select(democratizer, matched_control)
+```
+
+\footnotesize
+Five pairs, not six: the German Democratic Republic reunified in 1990 and has no
+1995 outcome, so it gets no matched control --- yet it is still counted in the CS
+1990 cohort. The matched controls are covariate-close autocracies, each used
+once. \normalsize
+
+## The comparisons differ {.shrink}
+
+Same democratizers, different counterfactuals:
+
+ - **Control pool.** CS uses all `r nrow(never)` never-treated countries, the
+   same set for every cohort and every year. Matching gives each democratizer
+   one still-at-risk control and uses it in a single pair.
+ - **Who can be a control.** CS uses never-treated countries only --- so Mexico,
+   which democratizes in 1996, is *not* a CS control, yet it is Poland's matched
+   control in 1990. 
+ - **How controls are chosen.** CS takes all of them, unmatched --- its
+   credibility rests on parallel trends. Matching keeps only countries close on
+   polyarchy and the other covariates (the calipers) --- its credibility rests
+   on the balance table.
+ - **Timing.** CS reads the change from $g-1$ to every year $t$ (the whole
+   event-time path). Matching reads one horizon, $g-1$ to $g+5$, within the pair.
 
 ## A note on staggered timing
 
-We aligned each democratizer at its own transition and used only
-**never-treated** countries as controls --- controls carrying no treatment effect
-of their own. The tempting
-shortcut, two-way fixed effects with a 0/1 treatment, instead reuses
-*already-democratic* countries as controls, which can distort the estimate when
+We used only **never-treated** countries as controls --- countries carrying no
+treatment effect of their own. The tempting
+shortcut, two-way fixed effects with a 0/1 treatment, instead lets
+*already-democratic* countries act as controls, which can distort the estimate when
 effects grow or fade over time.
 
 \medskip
@@ -516,33 +659,53 @@ staggered designs of your own.
 ## Passing a pre-trend test is not proof
 
 The event study showed a pre-trend. Even when it does not, "no significant
-pre-trend" is weak comfort: pre-trend tests have low power, and selecting analyses
-that pass them distorts inference [@rothetal2023].
+pre-trend" judged by looking at pattern of pre-treatment CIs is weak comfort:
+pre-trend tests have low power, and selecting analyses that pass them distorts
+inference [@rothetal2023].
 
 \medskip
 
 So instead of asking "are pre-trends flat?", ask "**how badly would parallel
 trends have to fail to overturn the result?**" That is HonestDiD.
 
-## HonestDiD: bound the bias by the pre-trend
+## HonestDiD: bound the bias by the pre-trend {.shrink}
+
+$\bar M$ answers a question: *how much could parallel trends fail after
+treatment before our result goes away?* We cannot see the post-treatment
+violation, but we can see the pre-treatment one --- how far from parallel the two
+groups' trends already were before treatment. $\bar M$ lets the post-treatment
+violation be at most $\bar M$ times that largest pre-treatment violation
+[@rambachanroth2023]. 
 
 ```{r did_hdid, echo=TRUE, cache=TRUE, message=FALSE, warning=FALSE}
-## drive HonestDiD off the CS event study (handles never-treated correctly)
-ifc <- cs_dyn$inf.function$dynamic.inf.func.e
-Sig <- t(ifc) %*% ifc / nrow(ifc)^2
-npre <- sum(cs_dyn$egt < 0); npost <- sum(cs_dyn$egt >= 0)
+## HonestDiD needs the event-study coefficients AND their covariance matrix.
+## did returns the coefficients (att.egt) but gives the covariance only through
+## an influence function (n units x k coefficients); its crossproduct, scaled
+## by 1/n^2, is the usual influence-function estimate of that covariance.
+ifc <- cs_dyn$inf.function$dynamic.inf.func.e    # influence fn: row = unit, col = coef
+Sig <- t(ifc) %*% ifc / nrow(ifc)^2              # -> covariance matrix of the coefs
+npre <- sum(cs_dyn$egt < 0); npost <- sum(cs_dyn$egt >= 0)  # leads (pre), lags (post)
 hd <- createSensitivityResults_relativeMagnitudes(
   betahat = cs_dyn$att.egt, sigma = Sig, numPrePeriods = npre, numPostPeriods = npost,
-  Mbarvec = c(0, 0.25, 0.5), l_vec = rep(1/npost, npost))
-hd[, c("Mbar", "lb", "ub")]
+  Mbarvec = c(0, 0.25, 0.5),      # how much post-period drift to allow (M-bar; see below)
+  l_vec   = rep(1/npost, npost))  # target = simple average of the post-period effects
+hd[, c("Mbar", "lb", "ub")]       # robust CI [lb, ub] at each M-bar
 ```
 
+## HonestDiD: bound the bias by the pre-trend {.shrink}
+
 \footnotesize
-$\bar M$ caps the post-period violation as a multiple of the **worst pre-period
-violation** [@rambachanroth2023]. At $\bar M = 0$ the robust CI excludes zero. By
-$\bar M = 0.25$ it already covers zero. The **breakdown** is below $\bar M = 0.25$:
-allowing post-treatment trends to bend even a quarter as much as the visible
-pre-trend is enough to erase the result. \normalsize
+$\bar M = 0$ is exact parallel trends (the usual DiD
+interval); larger $\bar M$ allows more post-treatment divergence and widens the
+interval. Here the interval excludes zero at $\bar M = 0$ but already covers
+zero by $\bar M = 0.25$: we only have to allow the two groups' trends to differ
+*after* treatment by one quarter of how much they visibly differed *before* it,
+and the effect is no longer distinguishable from zero. A low breakdown, so the
+DiD result is fragile. \normalsize
+
+```{r mbar2, echo=TRUE}
+hd[, c("Mbar", "lb", "ub")]       # robust CI [lb, ub] at each M-bar
+```
 
 # Putting It Together
 
@@ -564,14 +727,14 @@ difference-in-differences & $\approx `r round(cs_simple$overall.att,2)`$ & paral
 \medskip
 
 The two designs agree the effect is negative and similar in size. Both are
-faily sensitive to violations in their different assumptions. 
+fairly sensitive to violations in their different assumptions.
 
 ## Why the verdicts differ
 
 Both designs face the same threat: countries on the path to democracy were
-already changing before they crossed the regime line --- already scoring near
-the democracy threshold on `v2x_polyarchy` (that is all "on the cusp" means),
-with corruption already falling.
+already changing before they crossed the regime line --- already scoring just
+below the democracy threshold on `v2x_polyarchy`, with corruption already
+falling.
 
 \medskip
 
@@ -581,11 +744,13 @@ with corruption already falling.
    the balance table shows the pairs comparable on what we measured. What is
    left is what we did not measure: $\Gamma^{*} \approx `r round(gstar, 2)`$
    says a modest unmeasured within-pair difference would overturn the result.
- - **DiD leaves the threat in** and bets the two groups' corruption would have
-   moved in parallel. The event study shows the bet failing --- corruption
-   already falling among the would-be democracies --- and HonestDiD bounds the
-   damage: post-period trends bending a quarter as much as the visible
-   pre-trend erase the result.
+ - **DiD leaves the threat in** and bets the two groups would have moved in
+   parallel. The event study shows the bet failing --- corruption already
+   falling among the would-be democracies. HonestDiD then asks how much
+   post-treatment divergence the result can absorb --- very little: allowing the
+   two groups' trends to differ after treatment by just a quarter of how much
+   they visibly differed before it already makes the confidence interval
+   include zero.
 
 \medskip
 
@@ -620,8 +785,8 @@ same: state the assumption, check what can be checked, and report the sensitivit
  - Staggered timing breaks the fixed-baseline design of day 12. Two repairs:
    move the risk set, or assume parallel trends.
  - **Risk-set matching** rebuilds the comparison at each event time, uses each
-   control country in at most one pair, balances on history (the cusp variable
-   is the hard one), and reports $\Gamma$.
+   control country in at most one pair, balances on history (the hard variable:
+   polyarchy, already just below the democracy threshold), and reports $\Gamma$.
  - **DiD** assumes parallel trends; staggered TWFE needs care (Goodman-Bacon,
    Callaway--Sant'Anna), and the assumption needs HonestDiD.
  - On V-Dem both say democratization lowers corruption by a similar amount, and
